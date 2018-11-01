@@ -80,7 +80,7 @@ public class JavascriptTabModalDialog implements ModalDialogView.Controller {
         mModalDialogManager = activity.getModalDialogManager();
         mDialogView = JavascriptModalDialogView.create(this, mTitle, mMessage, mDefaultPromptText,
                 false, mPositiveButtonTextId, mNegativeButtonTextId);
-        mModalDialogManager.showDialog(mDialogView, ModalDialogManager.TAB_MODAL);
+        mModalDialogManager.showDialog(mDialogView, ModalDialogManager.ModalDialogType.TAB);
     }
 
     @CalledByNative
@@ -97,11 +97,11 @@ public class JavascriptTabModalDialog implements ModalDialogView.Controller {
     @Override
     public void onClick(@ModalDialogView.ButtonType int buttonType) {
         switch (buttonType) {
-            case ModalDialogView.BUTTON_POSITIVE:
+            case ModalDialogView.ButtonType.POSITIVE:
                 accept(mDialogView.getPromptText());
                 mModalDialogManager.dismissDialog(mDialogView);
                 break;
-            case ModalDialogView.BUTTON_NEGATIVE:
+            case ModalDialogView.ButtonType.NEGATIVE:
                 cancel();
                 mModalDialogManager.dismissDialog(mDialogView);
                 break;

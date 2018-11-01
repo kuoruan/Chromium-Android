@@ -145,9 +145,15 @@ class BackgroundTaskSchedulerJobService implements BackgroundTaskSchedulerDelega
         if (!taskInfo.shouldUpdateCurrent() && hasPendingJob(jobScheduler, taskInfo.getTaskId())) {
             return true;
         }
-
-        int result = jobScheduler.schedule(jobInfo);
-        return result == JobScheduler.RESULT_SUCCESS;
+        // This can fail on heavily modified android builds.  Catch so we don't crash.
+        try {
+            return jobScheduler.schedule(jobInfo) == JobScheduler.RESULT_SUCCESS;
+        } catch (Exception e) {
+            // Typically we don't catch RuntimeException, but this time we do want to catch it
+            // because we are worried about android as modified by device manufacturers.
+            Log.e(TAG, "Unable to schedule with Android.", e);
+            return false;
+        }
     }
 
     @Override
@@ -155,7 +161,11 @@ class BackgroundTaskSchedulerJobService implements BackgroundTaskSchedulerDelega
         ThreadUtils.assertOnUiThread();
         JobScheduler jobScheduler =
                 (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
-        jobScheduler.cancel(taskId);
+        try {
+            jobScheduler.cancel(taskId);
+        } catch (NullPointerException exception) {
+            Log.e(TAG, "Failed to cancel task: " + taskId);
+        }
     }
 
     private boolean hasPendingJob(JobScheduler jobScheduler, int jobId) {

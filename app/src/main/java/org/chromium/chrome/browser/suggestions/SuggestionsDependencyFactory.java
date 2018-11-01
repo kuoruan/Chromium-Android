@@ -4,11 +4,15 @@
 
 package org.chromium.chrome.browser.suggestions;
 
+import static org.chromium.chrome.browser.ChromeFeatureList.INTEREST_FEED_CONTENT_SUGGESTIONS;
+
 import org.chromium.base.DiscardableReferencePool;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.favicon.FaviconHelper;
 import org.chromium.chrome.browser.favicon.LargeIconBridge;
+import org.chromium.chrome.browser.ntp.snippets.EmptySuggestionsSource;
 import org.chromium.chrome.browser.ntp.snippets.SnippetsBridge;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
@@ -40,7 +44,9 @@ public class SuggestionsDependencyFactory {
     }
 
     public SuggestionsSource createSuggestionSource(Profile profile) {
-        return new SnippetsBridge(profile);
+        return ChromeFeatureList.isEnabled(INTEREST_FEED_CONTENT_SUGGESTIONS)
+                ? new EmptySuggestionsSource()
+                : new SnippetsBridge(profile);
     }
 
     public SuggestionsEventReporter createEventReporter() {

@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.notifications;
 
 import android.annotation.TargetApi;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.SharedPreferences;
@@ -26,11 +27,6 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class NotificationUmaTracker {
     private static final String TAG = "NotifsUMATracker";
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({DOWNLOAD_FILES, DOWNLOAD_PAGES, CLOSE_INCOGNITO, CONTENT_SUGGESTION, MEDIA_CAPTURE,
-            PHYSICAL_WEB, MEDIA, SITES, SYNC, WEBAPK, BROWSER_ACTIONS, WEBAPP_ACTIONS,
-            SYSTEM_NOTIFICATION_TYPE_BOUNDARY, OFFLINE_CONTENT_SUGGESTION})
-    public @interface SystemNotificationType {}
 
     /*
      * A list of notification types.  To add a type to this list please update
@@ -39,24 +35,34 @@ public class NotificationUmaTracker {
      *
      * A SystemNotificationType value can also be saved in shared preferences.
      */
-    public static final int DOWNLOAD_FILES = 0;
+    @IntDef({SystemNotificationType.DOWNLOAD_FILES, SystemNotificationType.DOWNLOAD_PAGES,
+            SystemNotificationType.CLOSE_INCOGNITO, SystemNotificationType.CONTENT_SUGGESTION,
+            SystemNotificationType.MEDIA_CAPTURE, SystemNotificationType.PHYSICAL_WEB,
+            SystemNotificationType.MEDIA, SystemNotificationType.SITES, SystemNotificationType.SYNC,
+            SystemNotificationType.WEBAPK, SystemNotificationType.BROWSER_ACTIONS,
+            SystemNotificationType.WEBAPP_ACTIONS,
+            SystemNotificationType.OFFLINE_CONTENT_SUGGESTION})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface SystemNotificationType {
+        int DOWNLOAD_FILES = 0;
 
-    public static final int DOWNLOAD_PAGES = 1;
+        int DOWNLOAD_PAGES = 1;
 
-    public static final int CLOSE_INCOGNITO = 2;
+        int CLOSE_INCOGNITO = 2;
 
-    public static final int CONTENT_SUGGESTION = 3;
-    public static final int MEDIA_CAPTURE = 4;
-    public static final int PHYSICAL_WEB = 5;
-    public static final int MEDIA = 6;
-    public static final int SITES = 7;
-    public static final int SYNC = 8;
-    public static final int WEBAPK = 9;
-    public static final int BROWSER_ACTIONS = 10;
-    public static final int WEBAPP_ACTIONS = 11;
-    public static final int OFFLINE_CONTENT_SUGGESTION = 12;
+        int CONTENT_SUGGESTION = 3;
+        int MEDIA_CAPTURE = 4;
+        int PHYSICAL_WEB = 5;
+        int MEDIA = 6;
+        int SITES = 7;
+        int SYNC = 8;
+        int WEBAPK = 9;
+        int BROWSER_ACTIONS = 10;
+        int WEBAPP_ACTIONS = 11;
+        int OFFLINE_CONTENT_SUGGESTION = 12;
 
-    private static final int SYSTEM_NOTIFICATION_TYPE_BOUNDARY = 13;
+        int NUM_ENTRIES = 13;
+    }
 
     private static final String LAST_SHOWN_NOTIFICATION_TYPE_KEY =
             "NotificationUmaTracker.LastShownNotificationType";
@@ -83,10 +89,18 @@ public class NotificationUmaTracker {
      * types.  Splits the logs by the global enabled state of notifications and also logs the last
      * notification shown prior to the global notifications state being disabled by the user.
      * @param type The type of notification that was shown.
-     * @param channelId The id of the notification channel set on the notification.
+     * @param notification The notification that was shown.
      * @see SystemNotificationType
      */
-    public void onNotificationShown(
+    public void onNotificationShown(@SystemNotificationType int type, Notification notification) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            logNotificationShown(type, notification.getChannelId());
+        } else {
+            logNotificationShown(type, null);
+        }
+    }
+
+    private void logNotificationShown(
             @SystemNotificationType int type, @ChannelDefinitions.ChannelId String channelId) {
         if (!mNotificationManager.areNotificationsEnabled()) {
             logPotentialBlockedCause();
@@ -124,7 +138,7 @@ public class NotificationUmaTracker {
     }
 
     private static void recordHistogram(String name, @SystemNotificationType int type) {
-        if (!LibraryLoader.isInitialized()) return;
-        RecordHistogram.recordEnumeratedHistogram(name, type, SYSTEM_NOTIFICATION_TYPE_BOUNDARY);
+        if (!LibraryLoader.getInstance().isInitialized()) return;
+        RecordHistogram.recordEnumeratedHistogram(name, type, SystemNotificationType.NUM_ENTRIES);
     }
 }

@@ -16,6 +16,7 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.widget.animation.CancelAwareAnimatorListener;
 
 /**
  * A tablet specific version of the {@link FindToolbar}.
@@ -58,16 +59,16 @@ public class FindToolbarTablet extends FindToolbar {
         mAnimationEnter = ObjectAnimator.ofFloat(this, View.TRANSLATION_X, translateWidth, 0);
         mAnimationEnter.setDuration(ENTER_EXIT_ANIMATION_DURATION_MS);
         mAnimationEnter.setInterpolator(new DecelerateInterpolator());
-        mAnimationEnter.addListener(new AnimatorListenerAdapter() {
+        mAnimationEnter.addListener(new CancelAwareAnimatorListener() {
             @Override
-            public void onAnimationStart(Animator animation) {
+            public void onStart(Animator animation) {
                 setVisibility(View.VISIBLE);
                 postInvalidateOnAnimation();
-                superActivate();
+                FindToolbarTablet.super.handleActivate();
             }
 
             @Override
-            public void onAnimationEnd(Animator animation) {
+            public void onEnd(Animator animation) {
                 mCurrentAnimation = null;
             }
         });
@@ -75,15 +76,15 @@ public class FindToolbarTablet extends FindToolbar {
         mAnimationLeave = ObjectAnimator.ofFloat(this, View.TRANSLATION_X, 0, translateWidth);
         mAnimationLeave.setDuration(ENTER_EXIT_ANIMATION_DURATION_MS);
         mAnimationLeave.setInterpolator(new DecelerateInterpolator());
-        mAnimationLeave.addListener(new AnimatorListenerAdapter() {
+        mAnimationLeave.addListener(new CancelAwareAnimatorListener() {
             @Override
-            public void onAnimationStart(Animator animation) {
+            public void onStart(Animator animator) {
                 setVisibility(View.VISIBLE);
                 postInvalidateOnAnimation();
             }
 
             @Override
-            public void onAnimationEnd(Animator animation) {
+            public void onEnd(Animator animator) {
                 setVisibility(View.GONE);
                 mCurrentAnimation = null;
             }
@@ -91,19 +92,16 @@ public class FindToolbarTablet extends FindToolbar {
     }
 
     @Override
-    public void activate() {
+    protected void handleActivate() {
         if (mCurrentAnimation == mAnimationEnter) return;
-
-        if (isViewAvailable()) setShowState(true);
+        assert isWebContentAvailable();
+        setShowState(true);
     }
 
     @Override
-    public void deactivate(boolean clearSelection) {
-        super.deactivate(clearSelection);
-
-        if (mCurrentAnimation == mAnimationLeave) return;
-
-        setShowState(false);
+    protected void handleDeactivation(boolean clearSelection) {
+        if (mCurrentAnimation != mAnimationLeave) setShowState(false);
+        super.handleDeactivation(clearSelection);
     }
 
     @Override
@@ -135,23 +133,31 @@ public class FindToolbarTablet extends FindToolbar {
     private void setMakeRoomForResults(boolean makeRoom) {
         float translationY = makeRoom ? -(getHeight() - mYInsetPx) : 0.f;
 
-        if (translationY != getTranslationY()) {
-            mCurrentAnimation = ObjectAnimator.ofFloat(this, View.TRANSLATION_Y, translationY);
-            mCurrentAnimation.setDuration(MAKE_ROOM_ANIMATION_DURATION_MS);
-            mAnimationLeave.setInterpolator(new DecelerateInterpolator());
-            mAnimationLeave.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-                    postInvalidateOnAnimation();
-                }
+        if (translationY == getTranslationY()) return;
 
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mCurrentAnimation = null;
-                }
-            });
-            startAnimationOverContent(mCurrentAnimation);
+        if (mCurrentAnimation != null) {
+            if (mCurrentAnimation == mAnimationEnter || mCurrentAnimation == mAnimationLeave) {
+                mCurrentAnimation.end();
+            } else {
+                mCurrentAnimation.cancel();
+            }
         }
+
+        mCurrentAnimation = ObjectAnimator.ofFloat(this, View.TRANSLATION_Y, translationY);
+        mCurrentAnimation.setDuration(MAKE_ROOM_ANIMATION_DURATION_MS);
+        mCurrentAnimation.setInterpolator(new DecelerateInterpolator());
+        mCurrentAnimation.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                postInvalidateOnAnimation();
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mCurrentAnimation = null;
+            }
+        });
+        startAnimationOverContent(mCurrentAnimation);
     }
 
     private void setShowState(boolean show) {
@@ -169,16 +175,11 @@ public class FindToolbarTablet extends FindToolbar {
         }
 
         if (nextAnimator != null) {
+            if (mCurrentAnimation != null) mCurrentAnimation.cancel();
+
             mCurrentAnimation = nextAnimator;
             startAnimationOverContent(nextAnimator);
             postInvalidateOnAnimation();
         }
-    }
-
-    /**
-     * This is here so that Animation inner classes can access the parent activate methods.
-     */
-    private void superActivate() {
-        super.activate();
     }
 }

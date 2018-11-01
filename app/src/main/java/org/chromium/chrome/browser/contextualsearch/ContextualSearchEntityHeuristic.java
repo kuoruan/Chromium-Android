@@ -103,9 +103,9 @@ class ContextualSearchEntityHeuristic extends ContextualSearchHeuristic {
     }
 
     @Override
-    protected void logRankerTapSuppression(ContextualSearchRankerLogger logger) {
-        logger.logFeature(ContextualSearchRankerLogger.Feature.IS_ENTITY, mIsProbablyEntity);
-        logger.logFeature(ContextualSearchRankerLogger.Feature.IS_ENTITY_ELIGIBLE,
+    protected void logRankerTapSuppression(ContextualSearchInteractionRecorder logger) {
+        logger.logFeature(ContextualSearchInteractionRecorder.Feature.IS_ENTITY, mIsProbablyEntity);
+        logger.logFeature(ContextualSearchInteractionRecorder.Feature.IS_ENTITY_ELIGIBLE,
                 mIsContextCamelCaseForProperNouns);
     }
 

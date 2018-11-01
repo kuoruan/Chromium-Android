@@ -8,6 +8,7 @@ import android.graphics.Rect;
 import android.view.View;
 
 import org.chromium.chrome.browser.compositor.layouts.LayoutUpdateHost;
+import org.chromium.chrome.browser.widget.ScrimView;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
 
 /**
@@ -111,4 +112,9 @@ public interface Toolbar {
      * @return height of the tab strip in px.
      */
     int getTabStripHeight();
+
+    /**
+     * @param scrim The scrim for this location bar to use.
+     */
+    void setScrim(ScrimView scrim);
 }

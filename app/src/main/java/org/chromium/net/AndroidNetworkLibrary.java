@@ -23,6 +23,7 @@ import android.security.NetworkSecurityPolicy;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
@@ -213,8 +214,11 @@ class AndroidNetworkLibrary {
     }
 
     /**
-     * Gets the SSID of the currently associated WiFi access point if there is one. Otherwise,
-     * returns empty string.
+     * Gets the SSID of the currently associated WiFi access point if there is one, and it is
+     * available. SSID may not be available if the app does not have permissions to access it. On
+     * Android M+, the app accessing SSID needs to have ACCESS_COARSE_LOCATION or
+     * ACCESS_FINE_LOCATION. If there is no WiFi access point or its SSID is unavailable, an empty
+     * string is returned.
      */
     @CalledByNative
     public static String getWifiSSID() {
@@ -224,7 +228,9 @@ class AndroidNetworkLibrary {
             final WifiInfo wifiInfo = intent.getParcelableExtra(WifiManager.EXTRA_WIFI_INFO);
             if (wifiInfo != null) {
                 final String ssid = wifiInfo.getSSID();
-                if (ssid != null) {
+                // On Android M+, the platform APIs may return "<unknown ssid>" as the SSID if the
+                // app does not have sufficient permissions. In that case, return an empty string.
+                if (ssid != null && !ssid.equals("<unknown ssid>")) {
                     return ssid;
                 }
             }
@@ -276,6 +282,10 @@ class AndroidNetworkLibrary {
         }
     }
 
+    /**
+     * Returns list of IP addresses of DNS servers.
+     * If private DNS is active, then returns a 1x1 array.
+     */
     @TargetApi(Build.VERSION_CODES.M)
     @CalledByNative
     private static byte[][] getDnsServers() {
@@ -292,6 +302,19 @@ class AndroidNetworkLibrary {
         LinkProperties linkProperties = connectivityManager.getLinkProperties(network);
         if (linkProperties == null) {
             return new byte[0][0];
+        }
+        if (BuildInfo.isAtLeastP()) {
+            // TODO(pauljensen): When Android P SDK is available, remove reflection.
+            try {
+                if (((Boolean) linkProperties.getClass()
+                                    .getMethod("isPrivateDnsActive")
+                                    .invoke(linkProperties))
+                                .booleanValue()) {
+                    return new byte[1][1];
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Can not call LinkProperties.isPrivateDnsActive():", e);
+            }
         }
         List<InetAddress> dnsServersList = linkProperties.getDnsServers();
         byte[][] dnsServers = new byte[dnsServersList.size()][];

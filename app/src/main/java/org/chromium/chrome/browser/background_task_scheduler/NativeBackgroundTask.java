@@ -9,6 +9,7 @@ import android.support.annotation.IntDef;
 
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
+import org.chromium.base.VisibleForTesting;
 import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.chrome.browser.init.BrowserParts;
@@ -17,7 +18,7 @@ import org.chromium.chrome.browser.init.EmptyBrowserParts;
 import org.chromium.components.background_task_scheduler.BackgroundTask;
 import org.chromium.components.background_task_scheduler.BackgroundTaskSchedulerExternalUma;
 import org.chromium.components.background_task_scheduler.TaskParameters;
-import org.chromium.content.browser.BrowserStartupController;
+import org.chromium.content_public.browser.BrowserStartupController;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -30,15 +31,17 @@ public abstract class NativeBackgroundTask implements BackgroundTask {
     private static final String TAG = "BTS_NativeBkgrdTask";
 
     /** Specifies which action to take following onStartTaskBeforeNativeLoaded. */
+    @IntDef({StartBeforeNativeResult.LOAD_NATIVE, StartBeforeNativeResult.RESCHEDULE,
+            StartBeforeNativeResult.DONE})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({LOAD_NATIVE, RESCHEDULE, DONE})
-    public @interface StartBeforeNativeResult {}
-    /** Task should continue to load native parts of browser. */
-    public static final int LOAD_NATIVE = 0;
-    /** Task should request rescheduling, without loading native parts of browser. */
-    public static final int RESCHEDULE = 1;
-    /** Task should neither load native parts of browser nor reschedule. */
-    public static final int DONE = 2;
+    public @interface StartBeforeNativeResult {
+        /** Task should continue to load native parts of browser. */
+        int LOAD_NATIVE = 0;
+        /** Task should request rescheduling, without loading native parts of browser. */
+        int RESCHEDULE = 1;
+        /** Task should neither load native parts of browser nor reschedule. */
+        int DONE = 2;
+    }
 
     protected NativeBackgroundTask() {}
 
@@ -57,14 +60,14 @@ public abstract class NativeBackgroundTask implements BackgroundTask {
         @StartBeforeNativeResult
         int beforeNativeResult = onStartTaskBeforeNativeLoaded(context, taskParameters, callback);
 
-        if (beforeNativeResult == DONE) return false;
+        if (beforeNativeResult == StartBeforeNativeResult.DONE) return false;
 
-        if (beforeNativeResult == RESCHEDULE) {
+        if (beforeNativeResult == StartBeforeNativeResult.RESCHEDULE) {
             ThreadUtils.postOnUiThread(buildRescheduleRunnable(callback));
             return true;
         }
 
-        assert beforeNativeResult == LOAD_NATIVE;
+        assert beforeNativeResult == StartBeforeNativeResult.LOAD_NATIVE;
         runWithNative(context, buildStartWithNativeRunnable(context, taskParameters, callback),
                 buildRescheduleRunnable(callback));
         return true;
@@ -187,7 +190,11 @@ public abstract class NativeBackgroundTask implements BackgroundTask {
 
     /** Whether the native part of the browser is loaded. */
     private boolean isNativeLoaded() {
-        return BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
-                .isStartupSuccessfullyCompleted();
+        return getBrowserStartupController().isStartupSuccessfullyCompleted();
+    }
+
+    @VisibleForTesting
+    protected BrowserStartupController getBrowserStartupController() {
+        return BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER);
     }
 }

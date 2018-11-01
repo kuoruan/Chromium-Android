@@ -7,7 +7,6 @@ package org.chromium.chrome.browser.services.gcm;
 import android.accounts.Account;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.support.annotation.MainThread;
@@ -16,6 +15,8 @@ import android.util.Log;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.ipc.invalidation.ticl.android2.channel.GcmUpstreamSenderService;
 
+import org.chromium.base.AsyncTask;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.browser.init.ProcessInitializationHandler;
 import org.chromium.chrome.browser.signin.OAuth2TokenService;
@@ -40,16 +41,18 @@ public class InvalidationGcmUpstreamSender extends GcmUpstreamSenderService {
     @Override
     public void deliverMessage(final String to, final Bundle data) {
         final Bundle dataToSend = createDeepCopy(data);
-        final Context applicationContext = getApplicationContext();
 
         ThreadUtils.postOnUiThread(new Runnable() {
             @Override
             public void run() {
-                doDeliverMessage(applicationContext, to, dataToSend);
+                doDeliverMessage(ContextUtils.getApplicationContext(), to, dataToSend);
             }
         });
     }
 
+    // Incorrectly infers that this is called on a worker thread because of AsyncTask doInBackground
+    // overriding.
+    @SuppressWarnings("WrongThread")
     @MainThread
     private void doDeliverMessage(
             final Context applicationContext, final String to, final Bundle data) {
@@ -71,19 +74,20 @@ public class InvalidationGcmUpstreamSender extends GcmUpstreamSenderService {
                 new AccountManagerFacade.GetAuthTokenCallback() {
                     @Override
                     public void tokenAvailable(final String token) {
-                        new AsyncTask<Void, Void, Void>() {
+                        new AsyncTask<Void>() {
                             @Override
-                            protected Void doInBackground(Void... voids) {
+                            protected Void doInBackground() {
                                 sendUpstreamMessage(to, data, token, applicationContext);
                                 return null;
                             }
-                        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                        }
+                                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                     }
 
                     @Override
                     public void tokenUnavailable(boolean isTransientError) {
-                        GcmUma.recordGcmUpstreamHistogram(
-                                getApplicationContext(), GcmUma.UMA_UPSTREAM_TOKEN_REQUEST_FAILED);
+                        GcmUma.recordGcmUpstreamHistogram(ContextUtils.getApplicationContext(),
+                                GcmUma.UMA_UPSTREAM_TOKEN_REQUEST_FAILED);
                     }
                 });
     }
@@ -100,7 +104,8 @@ public class InvalidationGcmUpstreamSender extends GcmUpstreamSenderService {
         }
         String msgId = UUID.randomUUID().toString();
         try {
-            GoogleCloudMessaging.getInstance(getApplicationContext()).send(to, msgId, 1, data);
+            GoogleCloudMessaging.getInstance(ContextUtils.getApplicationContext())
+                    .send(to, msgId, 1, data);
         } catch (IOException | IllegalArgumentException exception) {
             Log.w(TAG, "Send message failed");
             GcmUma.recordGcmUpstreamHistogram(context, GcmUma.UMA_UPSTREAM_SEND_FAILED);

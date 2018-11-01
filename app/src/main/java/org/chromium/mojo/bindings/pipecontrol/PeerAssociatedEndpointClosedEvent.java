@@ -40,9 +40,6 @@ public final class PeerAssociatedEndpointClosedEvent extends org.chromium.mojo.b
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static PeerAssociatedEndpointClosedEvent deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,16 +53,18 @@ public final class PeerAssociatedEndpointClosedEvent extends org.chromium.mojo.b
         PeerAssociatedEndpointClosedEvent result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new PeerAssociatedEndpointClosedEvent(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new PeerAssociatedEndpointClosedEvent(elementsOrVersion);
+                {
+                    
                 result.id = decoder0.readInt(8);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, true);
                 result.disconnectReason = DisconnectReason.decode(decoder1);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -80,36 +79,5 @@ public final class PeerAssociatedEndpointClosedEvent extends org.chromium.mojo.b
         encoder0.encode(this.id, 8);
         
         encoder0.encode(this.disconnectReason, 16, true);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        PeerAssociatedEndpointClosedEvent other = (PeerAssociatedEndpointClosedEvent) object;
-        if (this.id!= other.id)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.disconnectReason, other.disconnectReason))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.id);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disconnectReason);
-        return result;
     }
 }

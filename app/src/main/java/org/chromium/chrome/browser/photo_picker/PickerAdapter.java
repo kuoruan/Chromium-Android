@@ -21,12 +21,13 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class PickerAdapter extends Adapter<ViewHolder> {
     // The possible types of actions required during decoding.
-    @IntDef({NO_ACTION, FROM_CACHE, DECODE})
+    @IntDef({DecodeActions.NO_ACTION, DecodeActions.FROM_CACHE, DecodeActions.DECODE})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface DecodeActions {}
-    public static final int NO_ACTION = 0; // Gallery/Camera tile: No action.
-    public static final int FROM_CACHE = 1; // Image already decoded.
-    public static final int DECODE = 2; // Image needed to be decoded.
+    public @interface DecodeActions {
+        int NO_ACTION = 0; // Gallery/Camera tile: No action.
+        int FROM_CACHE = 1; // Image already decoded.
+        int DECODE = 2; // Image needed to be decoded.
+    }
 
     // The category view to use to show the images.
     private PickerCategoryView mCategoryView;
@@ -62,10 +63,11 @@ public class PickerAdapter extends Adapter<ViewHolder> {
     public void onBindViewHolder(ViewHolder holder, int position) {
         if (holder instanceof PickerBitmapViewHolder) {
             PickerBitmapViewHolder myHolder = (PickerBitmapViewHolder) holder;
+            @DecodeActions
             int result = myHolder.displayItem(mCategoryView, position);
-            if (result == FROM_CACHE) {
+            if (result == DecodeActions.FROM_CACHE) {
                 mCacheHits++;
-            } else if (result == DECODE) {
+            } else if (result == DecodeActions.DECODE) {
                 mDecodeRequests++;
             }
         }

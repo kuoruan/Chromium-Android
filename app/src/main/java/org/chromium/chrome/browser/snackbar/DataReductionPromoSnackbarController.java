@@ -13,6 +13,7 @@ import org.chromium.chrome.browser.preferences.PreferencesLauncher;
 import org.chromium.chrome.browser.preferences.datareduction.DataReductionPreferences;
 import org.chromium.chrome.browser.preferences.datareduction.DataReductionPromoUtils;
 import org.chromium.chrome.browser.preferences.datareduction.DataReductionProxyUma;
+import org.chromium.chrome.browser.util.ConversionUtils;
 import org.chromium.components.variations.VariationsAssociatedData;
 
 /**
@@ -30,8 +31,6 @@ public class DataReductionPromoSnackbarController implements SnackbarManager.Sna
     public static final String PROMO_FIELD_TRIAL_NAME = "DataCompressionProxyPromoVisibility";
     private static final String ENABLE_DATA_REDUCTION_PROXY_SAVINGS_PROMO_SWITCH =
             "enable-data-reduction-proxy-savings-promo";
-    private static final long BYTES_PER_MEGABYTE = 1024 * 1024;
-    private static final long BYTES_PER_GIGABYTE = 1024 * 1024 * 1024;
 
     private final SnackbarManager mSnackbarManager;
     private final Context mContext;
@@ -95,7 +94,7 @@ public class DataReductionPromoSnackbarController implements SnackbarManager.Sna
         }
 
         for (int promoDataSavingsMB : mPromoDataSavingsMB) {
-            long promoDataSavingsBytes = promoDataSavingsMB * BYTES_PER_MEGABYTE;
+            long promoDataSavingsBytes = promoDataSavingsMB * ConversionUtils.BYTES_PER_MEGABYTE;
             if (promoDataSavingsMB > 0 && dataSavingsInBytes >= promoDataSavingsBytes
                     && DataReductionPromoUtils
                             .getDisplayedSnackbarPromoSavedBytes() < promoDataSavingsBytes) {
@@ -117,12 +116,12 @@ public class DataReductionPromoSnackbarController implements SnackbarManager.Sna
         int resourceId;
         int bytesInCorrectUnits;
 
-        if (bytes < BYTES_PER_GIGABYTE) {
+        if (bytes < ConversionUtils.BYTES_PER_GIGABYTE) {
             resourceId =  R.string.data_reduction_promo_snackbar_text_mb;
-            bytesInCorrectUnits = (int) (bytes / BYTES_PER_MEGABYTE);
+            bytesInCorrectUnits = (int) ConversionUtils.bytesToMegabytes(bytes);
         } else {
             resourceId =  R.string.data_reduction_promo_snackbar_text_gb;
-            bytesInCorrectUnits = (int) (bytes / BYTES_PER_GIGABYTE);
+            bytesInCorrectUnits = (int) ConversionUtils.bytesToGigabytes(bytes);
         }
 
         return mContext.getResources().getString(resourceId, bytesInCorrectUnits);

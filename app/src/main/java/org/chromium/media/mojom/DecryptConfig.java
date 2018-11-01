@@ -16,12 +16,14 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class DecryptConfig extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 32;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
+    private static final int STRUCT_SIZE = 48;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(48, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+    public int encryptionMode;
     public String keyId;
     public String iv;
     public SubsampleEntry[] subsamples;
+    public EncryptionPattern encryptionPattern;
 
     private DecryptConfig(int version) {
         super(STRUCT_SIZE, version);
@@ -41,9 +43,6 @@ public final class DecryptConfig extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static DecryptConfig deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -57,18 +56,24 @@ public final class DecryptConfig extends org.chromium.mojo.bindings.Struct {
         DecryptConfig result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new DecryptConfig(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.keyId = decoder0.readString(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.iv = decoder0.readString(16, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new DecryptConfig(elementsOrVersion);
+                {
+                    
+                result.encryptionMode = decoder0.readInt(8);
+                    EncryptionMode.validate(result.encryptionMode);
+                }
+                {
+                    
+                result.keyId = decoder0.readString(16, false);
+                }
+                {
+                    
+                result.iv = decoder0.readString(24, false);
+                }
+                {
+                    
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
                     result.subsamples = new SubsampleEntry[si1.elementsOrVersion];
@@ -78,7 +83,13 @@ public final class DecryptConfig extends org.chromium.mojo.bindings.Struct {
                         result.subsamples[i1] = SubsampleEntry.decode(decoder2);
                     }
                 }
-            }
+                }
+                {
+                    
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(40, true);
+                result.encryptionPattern = EncryptionPattern.decode(decoder1);
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -90,52 +101,22 @@ public final class DecryptConfig extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(this.keyId, 8, false);
+        encoder0.encode(this.encryptionMode, 8);
         
-        encoder0.encode(this.iv, 16, false);
+        encoder0.encode(this.keyId, 16, false);
+        
+        encoder0.encode(this.iv, 24, false);
         
         if (this.subsamples == null) {
-            encoder0.encodeNullPointer(24, false);
+            encoder0.encodeNullPointer(32, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.subsamples.length, 24, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.subsamples.length, 32, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
             for (int i0 = 0; i0 < this.subsamples.length; ++i0) {
                 
                 encoder1.encode(this.subsamples[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        DecryptConfig other = (DecryptConfig) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.keyId, other.keyId))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.iv, other.iv))
-            return false;
-        if (!java.util.Arrays.deepEquals(this.subsamples, other.subsamples))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.keyId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.iv);
-        result = prime * result + java.util.Arrays.deepHashCode(this.subsamples);
-        return result;
+        
+        encoder0.encode(this.encryptionPattern, 40, true);
     }
 }

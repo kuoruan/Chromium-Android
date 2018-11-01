@@ -54,7 +54,7 @@ public class NotificationsPreferences extends PreferenceFragment {
 
         mFromWebsitesPref = findPreference(PREF_FROM_WEBSITES);
         mFromWebsitesPref.getExtras().putString(SingleCategoryPreferences.EXTRA_CATEGORY,
-                SiteSettingsCategory.CATEGORY_NOTIFICATIONS);
+                SiteSettingsCategory.preferenceKey(SiteSettingsCategory.Type.NOTIFICATIONS));
     }
 
     @Override
@@ -83,6 +83,7 @@ public class NotificationsPreferences extends PreferenceFragment {
 
         mFromWebsitesPref.setSummary(ContentSettingsResources.getCategorySummary(
                 ContentSettingsType.CONTENT_SETTINGS_TYPE_NOTIFICATIONS,
-                PrefServiceBridge.getInstance().isNotificationsEnabled()));
+                PrefServiceBridge.getInstance().isCategoryEnabled(
+                        ContentSettingsType.CONTENT_SETTINGS_TYPE_NOTIFICATIONS)));
     }
 }

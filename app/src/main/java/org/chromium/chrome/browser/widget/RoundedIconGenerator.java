@@ -99,18 +99,30 @@ public class RoundedIconGenerator {
     }
 
     /**
-     * Generates an icon based on |text|.
+     * Generates an icon based on |text| (using the first character).
      *
      * @param text The text to render the first character of on the icon.
      * @return The generated icon.
      */
     public Bitmap generateIconForText(String text) {
+        return generateIconForText(text, 1);
+    }
+
+    /**
+     * Generates an icon based on |text|.
+     *
+     * @param text The text to render on the icon.
+     * @param numChars The maximum number of characters to return.
+     * @return The generated icon.
+     */
+    public Bitmap generateIconForText(String text, int numChars) {
         Bitmap icon = Bitmap.createBitmap(mIconWidthPx, mIconHeightPx, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(icon);
 
         canvas.drawRoundRect(mBackgroundRect, mCornerRadiusPx, mCornerRadiusPx, mBackgroundPaint);
 
-        String displayText = text.substring(0, 1).toUpperCase(Locale.getDefault());
+        int length = Math.min(numChars, text.length());
+        String displayText = text.substring(0, length).toUpperCase(Locale.getDefault());
         float textWidth = mTextPaint.measureText(displayText);
 
         canvas.drawText(

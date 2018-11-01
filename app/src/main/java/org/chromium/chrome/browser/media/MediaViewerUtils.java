@@ -5,8 +5,11 @@
 package org.chromium.chrome.browser.media;
 
 import android.app.PendingIntent;
+import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -18,10 +21,13 @@ import android.text.TextUtils;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
+import org.chromium.base.StrictModeContext;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider;
 import org.chromium.chrome.browser.document.ChromeLauncherActivity;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 
 import java.util.Locale;
 
@@ -30,7 +36,11 @@ import java.util.Locale;
  */
 public class MediaViewerUtils {
     private static final String DEFAULT_MIME_TYPE = "*/*";
+    private static final String MIMETYPE_AUDIO = "audio";
     private static final String MIMETYPE_IMAGE = "image";
+    private static final String MIMETYPE_VIDEO = "video";
+
+    private static boolean sIsMediaLauncherActivityForceEnabledForTest = false;
 
     /**
      * Creates an Intent that allows viewing the given file in an internal media viewer.
@@ -70,10 +80,15 @@ public class MediaViewerUtils {
         }
 
         // Create a PendingIntent that shares the file with external apps.
-        PendingIntent pendingShareIntent = PendingIntent.getActivity(context, 0,
-                createShareIntent(contentUri, mimeType), PendingIntent.FLAG_CANCEL_CURRENT);
-        builder.setActionButton(
-                shareIcon, context.getString(R.string.share), pendingShareIntent, true);
+        // If the URI is a file URI and the Android version is N or later, this will throw a
+        // FileUriExposedException. In this case, we just don't add the share button.
+        if (!contentUri.getScheme().equals(ContentResolver.SCHEME_FILE)
+                || Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+            PendingIntent pendingShareIntent = PendingIntent.getActivity(context, 0,
+                    createShareIntent(contentUri, mimeType), PendingIntent.FLAG_CANCEL_CURRENT);
+            builder.setActionButton(
+                    shareIcon, context.getString(R.string.share), pendingShareIntent, true);
+        }
 
         // The color of the media viewer is dependent on the file type.
         int backgroundRes;
@@ -89,7 +104,7 @@ public class MediaViewerUtils {
         intent.setPackage(context.getPackageName());
         intent.setData(contentUri);
         intent.putExtra(CustomTabIntentDataProvider.EXTRA_UI_TYPE,
-                CustomTabIntentDataProvider.CUSTOM_TABS_UI_TYPE_MEDIA_VIEWER);
+                CustomTabIntentDataProvider.CustomTabsUiType.MEDIA_VIEWER);
         intent.putExtra(CustomTabIntentDataProvider.EXTRA_MEDIA_VIEWER_URL, displayUri.toString());
         intent.putExtra(CustomTabIntentDataProvider.EXTRA_ENABLE_EMBEDDED_MEDIA_EXPERIENCE, true);
         intent.putExtra(CustomTabIntentDataProvider.EXTRA_INITIAL_BACKGROUND_COLOR, mediaColor);
@@ -137,6 +152,75 @@ public class MediaViewerUtils {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) return;
         if (originalUrl != null) intent.putExtra(Intent.EXTRA_ORIGINATING_URI, originalUrl);
         if (referrer != null) intent.putExtra(Intent.EXTRA_REFERRER, referrer);
+    }
+
+    /**
+     * Determines the media type from the given MIME type.
+     * @param mimeType The MIME type to check.
+     * @return MediaLauncherActivity.MediaType enum value for determined media type.
+     */
+    static int getMediaTypeFromMIMEType(String mimeType) {
+        if (TextUtils.isEmpty(mimeType)) return MediaLauncherActivity.MediaType.UNKNOWN;
+
+        String[] pieces = mimeType.toLowerCase(Locale.getDefault()).split("/");
+        if (pieces.length != 2) return MediaLauncherActivity.MediaType.UNKNOWN;
+
+        switch (pieces[0]) {
+            case MIMETYPE_AUDIO:
+                return MediaLauncherActivity.MediaType.AUDIO;
+            case MIMETYPE_IMAGE:
+                return MediaLauncherActivity.MediaType.IMAGE;
+            case MIMETYPE_VIDEO:
+                return MediaLauncherActivity.MediaType.VIDEO;
+            default:
+                return MediaLauncherActivity.MediaType.UNKNOWN;
+        }
+    }
+
+    /**
+     * Selectively enables or disables the MediaLauncherActivity.
+     * @param context The application Context.
+     */
+    public static void updateMediaLauncherActivityEnabled(Context context) {
+        PackageManager packageManager = context.getPackageManager();
+        ComponentName componentName = new ComponentName(context, MediaLauncherActivity.class);
+        int newState = shouldEnableMediaLauncherActivity()
+                ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                : PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+        // This indicates that we don't want to kill Chrome when changing component enabled state.
+        int flags = PackageManager.DONT_KILL_APP;
+
+        if (packageManager.getComponentEnabledSetting(componentName) != newState) {
+            // setComponentEnabledSetting ends up both reading and writing to disk, which ends up
+            // causing StrictMode violations. So, explicitly allow them briefly.
+            try (StrictModeContext unused = StrictModeContext.allowDiskReads().allowDiskWrites()) {
+                packageManager.setComponentEnabledSetting(componentName, newState, flags);
+            }
+        }
+    }
+
+    /**
+     * Force MediaLauncherActivity to be enabled for testing.
+     * @param context The application Context.
+     */
+    public static void forceEnableMediaLauncherActivityForTest(Context context) {
+        sIsMediaLauncherActivityForceEnabledForTest = true;
+        updateMediaLauncherActivityEnabled(context);
+    }
+
+    /**
+     * Stops forcing MediaLauncherActivity to be enabled for testing.
+     * @param context The application Context.
+     */
+    public static void stopForcingEnableMediaLauncherActivityForTest(Context context) {
+        sIsMediaLauncherActivityForceEnabledForTest = false;
+        updateMediaLauncherActivityEnabled(context);
+    }
+
+    private static boolean shouldEnableMediaLauncherActivity() {
+        return sIsMediaLauncherActivityForceEnabledForTest
+                || (FeatureUtilities.isAndroidGo()
+                           && ChromeFeatureList.isEnabled(ChromeFeatureList.HANDLE_MEDIA_INTENTS));
     }
 
     private static Intent createShareIntent(Uri fileUri, String mimeType) {

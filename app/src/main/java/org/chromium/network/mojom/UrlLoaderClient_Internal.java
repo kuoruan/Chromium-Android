@@ -18,28 +18,28 @@ class UrlLoaderClient_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<UrlLoaderClient, UrlLoaderClient.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<UrlLoaderClient, UrlLoaderClient.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "network::mojom::URLLoaderClient";
+            return "network.mojom.URLLoaderClient";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, UrlLoaderClient impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public UrlLoaderClient[] buildArray(int size) {
           return new UrlLoaderClient[size];
@@ -51,17 +51,15 @@ class UrlLoaderClient_Internal {
 
     private static final int ON_RECEIVE_REDIRECT_ORDINAL = 1;
 
-    private static final int ON_DATA_DOWNLOADED_ORDINAL = 2;
+    private static final int ON_UPLOAD_PROGRESS_ORDINAL = 2;
 
-    private static final int ON_UPLOAD_PROGRESS_ORDINAL = 3;
+    private static final int ON_RECEIVE_CACHED_METADATA_ORDINAL = 3;
 
-    private static final int ON_RECEIVE_CACHED_METADATA_ORDINAL = 4;
+    private static final int ON_TRANSFER_SIZE_UPDATED_ORDINAL = 4;
 
-    private static final int ON_TRANSFER_SIZE_UPDATED_ORDINAL = 5;
+    private static final int ON_START_LOADING_RESPONSE_BODY_ORDINAL = 5;
 
-    private static final int ON_START_LOADING_RESPONSE_BODY_ORDINAL = 6;
-
-    private static final int ON_COMPLETE_ORDINAL = 7;
+    private static final int ON_COMPLETE_ORDINAL = 6;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements UrlLoaderClient.Proxy {
@@ -74,15 +72,11 @@ class UrlLoaderClient_Internal {
 
         @Override
         public void onReceiveResponse(
-UrlResponseHead head, SslInfo sslInfo, DownloadedTempFile downloadedFile) {
+UrlResponseHead head) {
 
             UrlLoaderClientOnReceiveResponseParams _message = new UrlLoaderClientOnReceiveResponseParams();
 
             _message.head = head;
-
-            _message.sslInfo = sslInfo;
-
-            _message.downloadedFile = downloadedFile;
 
 
             getProxyHandler().getMessageReceiver().accept(
@@ -108,25 +102,6 @@ UrlRequestRedirectInfo redirectInfo, UrlResponseHead head) {
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(ON_RECEIVE_REDIRECT_ORDINAL)));
-
-        }
-
-
-        @Override
-        public void onDataDownloaded(
-long dataLength, long encodedLength) {
-
-            UrlLoaderClientOnDataDownloadedParams _message = new UrlLoaderClientOnDataDownloadedParams();
-
-            _message.dataLength = dataLength;
-
-            _message.encodedLength = encodedLength;
-
-
-            getProxyHandler().getMessageReceiver().accept(
-                    _message.serializeWithHeader(
-                            getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(ON_DATA_DOWNLOADED_ORDINAL)));
 
         }
 
@@ -241,105 +216,92 @@ UrlLoaderCompletionStatus status) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 UrlLoaderClient_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_RECEIVE_RESPONSE_ORDINAL: {
-            
+
                         UrlLoaderClientOnReceiveResponseParams data =
                                 UrlLoaderClientOnReceiveResponseParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().onReceiveResponse(data.head, data.sslInfo, data.downloadedFile);
+
+                        getImpl().onReceiveResponse(data.head);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_RECEIVE_REDIRECT_ORDINAL: {
-            
+
                         UrlLoaderClientOnReceiveRedirectParams data =
                                 UrlLoaderClientOnReceiveRedirectParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onReceiveRedirect(data.redirectInfo, data.head);
                         return true;
                     }
-            
-            
-            
-            
-            
-                    case ON_DATA_DOWNLOADED_ORDINAL: {
-            
-                        UrlLoaderClientOnDataDownloadedParams data =
-                                UrlLoaderClientOnDataDownloadedParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().onDataDownloaded(data.dataLength, data.encodedLength);
-                        return true;
-                    }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case ON_RECEIVE_CACHED_METADATA_ORDINAL: {
-            
+
                         UrlLoaderClientOnReceiveCachedMetadataParams data =
                                 UrlLoaderClientOnReceiveCachedMetadataParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onReceiveCachedMetadata(data.data);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_TRANSFER_SIZE_UPDATED_ORDINAL: {
-            
+
                         UrlLoaderClientOnTransferSizeUpdatedParams data =
                                 UrlLoaderClientOnTransferSizeUpdatedParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onTransferSizeUpdated(data.transferSizeDiff);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_START_LOADING_RESPONSE_BODY_ORDINAL: {
-            
+
                         UrlLoaderClientOnStartLoadingResponseBodyParams data =
                                 UrlLoaderClientOnStartLoadingResponseBodyParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onStartLoadingResponseBody(data.body);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_COMPLETE_ORDINAL: {
-            
+
                         UrlLoaderClientOnCompleteParams data =
                                 UrlLoaderClientOnCompleteParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onComplete(data.status);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -359,41 +321,39 @@ UrlLoaderCompletionStatus status) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), UrlLoaderClient_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
                     case ON_UPLOAD_PROGRESS_ORDINAL: {
-            
+
                         UrlLoaderClientOnUploadProgressParams data =
                                 UrlLoaderClientOnUploadProgressParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onUploadProgress(data.currentPosition, data.totalSize, new UrlLoaderClientOnUploadProgressResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -407,39 +367,34 @@ UrlLoaderCompletionStatus status) {
 
     
     static final class UrlLoaderClientOnReceiveResponseParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 32;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public UrlResponseHead head;
-        public SslInfo sslInfo;
-        public DownloadedTempFile downloadedFile;
-    
+
         private UrlLoaderClientOnReceiveResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public UrlLoaderClientOnReceiveResponseParams() {
             this(0);
         }
-    
+
         public static UrlLoaderClientOnReceiveResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static UrlLoaderClientOnReceiveResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static UrlLoaderClientOnReceiveResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -449,71 +404,26 @@ UrlLoaderCompletionStatus status) {
             UrlLoaderClientOnReceiveResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new UrlLoaderClientOnReceiveResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new UrlLoaderClientOnReceiveResponseParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.head = UrlResponseHead.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, true);
-                    result.sslInfo = SslInfo.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.downloadedFile = decoder0.readServiceInterface(24, true, DownloadedTempFile.MANAGER);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.head, 8, false);
-            
-            encoder0.encode(this.sslInfo, 16, true);
-            
-            encoder0.encode(this.downloadedFile, 24, true, DownloadedTempFile.MANAGER);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            UrlLoaderClientOnReceiveResponseParams other = (UrlLoaderClientOnReceiveResponseParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.head, other.head))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sslInfo, other.sslInfo))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.downloadedFile, other.downloadedFile))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.head);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sslInfo);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.downloadedFile);
-            return result;
         }
     }
 
@@ -521,38 +431,35 @@ UrlLoaderCompletionStatus status) {
 
     
     static final class UrlLoaderClientOnReceiveRedirectParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public UrlRequestRedirectInfo redirectInfo;
         public UrlResponseHead head;
-    
+
         private UrlLoaderClientOnReceiveRedirectParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public UrlLoaderClientOnReceiveRedirectParams() {
             this(0);
         }
-    
+
         public static UrlLoaderClientOnReceiveRedirectParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static UrlLoaderClientOnReceiveRedirectParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static UrlLoaderClientOnReceiveRedirectParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -562,23 +469,25 @@ UrlLoaderCompletionStatus status) {
             UrlLoaderClientOnReceiveRedirectParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new UrlLoaderClientOnReceiveRedirectParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new UrlLoaderClientOnReceiveRedirectParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.redirectInfo = UrlRequestRedirectInfo.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.head = UrlResponseHead.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -588,177 +497,41 @@ UrlLoaderCompletionStatus status) {
             
             encoder0.encode(this.head, 16, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            UrlLoaderClientOnReceiveRedirectParams other = (UrlLoaderClientOnReceiveRedirectParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.redirectInfo, other.redirectInfo))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.head, other.head))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.redirectInfo);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.head);
-            return result;
-        }
-    }
-
-
-
-    
-    static final class UrlLoaderClientOnDataDownloadedParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
-        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public long dataLength;
-        public long encodedLength;
-    
-        private UrlLoaderClientOnDataDownloadedParams(int version) {
-            super(STRUCT_SIZE, version);
-        }
-    
-        public UrlLoaderClientOnDataDownloadedParams() {
-            this(0);
-        }
-    
-        public static UrlLoaderClientOnDataDownloadedParams deserialize(org.chromium.mojo.bindings.Message message) {
-            return decode(new org.chromium.mojo.bindings.Decoder(message));
-        }
-    
-        /**
-         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
-         *
-         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
-         */
-        public static UrlLoaderClientOnDataDownloadedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
-            return deserialize(new org.chromium.mojo.bindings.Message(
-                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
-        }
-    
-        @SuppressWarnings("unchecked")
-        public static UrlLoaderClientOnDataDownloadedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
-            if (decoder0 == null) {
-                return null;
-            }
-            decoder0.increaseStackDepth();
-            UrlLoaderClientOnDataDownloadedParams result;
-            try {
-                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new UrlLoaderClientOnDataDownloadedParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.dataLength = decoder0.readLong(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.encodedLength = decoder0.readLong(16);
-                }
-            } finally {
-                decoder0.decreaseStackDepth();
-            }
-            return result;
-        }
-    
-        @SuppressWarnings("unchecked")
-        @Override
-        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
-            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-            
-            encoder0.encode(this.dataLength, 8);
-            
-            encoder0.encode(this.encodedLength, 16);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            UrlLoaderClientOnDataDownloadedParams other = (UrlLoaderClientOnDataDownloadedParams) object;
-            if (this.dataLength!= other.dataLength)
-                return false;
-            if (this.encodedLength!= other.encodedLength)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.dataLength);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.encodedLength);
-            return result;
-        }
     }
 
 
 
     
     static final class UrlLoaderClientOnUploadProgressParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public long currentPosition;
         public long totalSize;
-    
+
         private UrlLoaderClientOnUploadProgressParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public UrlLoaderClientOnUploadProgressParams() {
             this(0);
         }
-    
+
         public static UrlLoaderClientOnUploadProgressParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static UrlLoaderClientOnUploadProgressParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static UrlLoaderClientOnUploadProgressParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -768,21 +541,23 @@ UrlLoaderCompletionStatus status) {
             UrlLoaderClientOnUploadProgressParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new UrlLoaderClientOnUploadProgressParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new UrlLoaderClientOnUploadProgressParams(elementsOrVersion);
+                    {
+                        
                     result.currentPosition = decoder0.readLong(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.totalSize = decoder0.readLong(16);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -792,73 +567,39 @@ UrlLoaderCompletionStatus status) {
             
             encoder0.encode(this.totalSize, 16);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            UrlLoaderClientOnUploadProgressParams other = (UrlLoaderClientOnUploadProgressParams) object;
-            if (this.currentPosition!= other.currentPosition)
-                return false;
-            if (this.totalSize!= other.totalSize)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.currentPosition);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.totalSize);
-            return result;
-        }
     }
 
 
 
     
     static final class UrlLoaderClientOnUploadProgressResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private UrlLoaderClientOnUploadProgressResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public UrlLoaderClientOnUploadProgressResponseParams() {
             this(0);
         }
-    
+
         public static UrlLoaderClientOnUploadProgressResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static UrlLoaderClientOnUploadProgressResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static UrlLoaderClientOnUploadProgressResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -868,41 +609,19 @@ UrlLoaderCompletionStatus status) {
             UrlLoaderClientOnUploadProgressResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new UrlLoaderClientOnUploadProgressResponseParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new UrlLoaderClientOnUploadProgressResponseParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -967,37 +686,34 @@ UrlLoaderCompletionStatus status) {
 
     
     static final class UrlLoaderClientOnReceiveCachedMetadataParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public byte[] data;
-    
+
         private UrlLoaderClientOnReceiveCachedMetadataParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public UrlLoaderClientOnReceiveCachedMetadataParams() {
             this(0);
         }
-    
+
         public static UrlLoaderClientOnReceiveCachedMetadataParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static UrlLoaderClientOnReceiveCachedMetadataParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static UrlLoaderClientOnReceiveCachedMetadataParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1007,17 +723,19 @@ UrlLoaderCompletionStatus status) {
             UrlLoaderClientOnReceiveCachedMetadataParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new UrlLoaderClientOnReceiveCachedMetadataParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new UrlLoaderClientOnReceiveCachedMetadataParams(elementsOrVersion);
+                    {
+                        
                     result.data = decoder0.readBytes(8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1025,71 +743,40 @@ UrlLoaderCompletionStatus status) {
             
             encoder0.encode(this.data, 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            UrlLoaderClientOnReceiveCachedMetadataParams other = (UrlLoaderClientOnReceiveCachedMetadataParams) object;
-            if (!java.util.Arrays.equals(this.data, other.data))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + java.util.Arrays.hashCode(this.data);
-            return result;
-        }
     }
 
 
 
     
     static final class UrlLoaderClientOnTransferSizeUpdatedParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int transferSizeDiff;
-    
+
         private UrlLoaderClientOnTransferSizeUpdatedParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public UrlLoaderClientOnTransferSizeUpdatedParams() {
             this(0);
         }
-    
+
         public static UrlLoaderClientOnTransferSizeUpdatedParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static UrlLoaderClientOnTransferSizeUpdatedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static UrlLoaderClientOnTransferSizeUpdatedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1099,17 +786,19 @@ UrlLoaderCompletionStatus status) {
             UrlLoaderClientOnTransferSizeUpdatedParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new UrlLoaderClientOnTransferSizeUpdatedParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new UrlLoaderClientOnTransferSizeUpdatedParams(elementsOrVersion);
+                    {
+                        
                     result.transferSizeDiff = decoder0.readInt(8);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1117,72 +806,41 @@ UrlLoaderCompletionStatus status) {
             
             encoder0.encode(this.transferSizeDiff, 8);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            UrlLoaderClientOnTransferSizeUpdatedParams other = (UrlLoaderClientOnTransferSizeUpdatedParams) object;
-            if (this.transferSizeDiff!= other.transferSizeDiff)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.transferSizeDiff);
-            return result;
-        }
     }
 
 
 
     
     static final class UrlLoaderClientOnStartLoadingResponseBodyParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.system.DataPipe.ConsumerHandle body;
-    
+
         private UrlLoaderClientOnStartLoadingResponseBodyParams(int version) {
             super(STRUCT_SIZE, version);
             this.body = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
-    
+
         public UrlLoaderClientOnStartLoadingResponseBodyParams() {
             this(0);
         }
-    
+
         public static UrlLoaderClientOnStartLoadingResponseBodyParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static UrlLoaderClientOnStartLoadingResponseBodyParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static UrlLoaderClientOnStartLoadingResponseBodyParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1192,17 +850,19 @@ UrlLoaderCompletionStatus status) {
             UrlLoaderClientOnStartLoadingResponseBodyParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new UrlLoaderClientOnStartLoadingResponseBodyParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new UrlLoaderClientOnStartLoadingResponseBodyParams(elementsOrVersion);
+                    {
+                        
                     result.body = decoder0.readConsumerHandle(8, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1210,71 +870,40 @@ UrlLoaderCompletionStatus status) {
             
             encoder0.encode(this.body, 8, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            UrlLoaderClientOnStartLoadingResponseBodyParams other = (UrlLoaderClientOnStartLoadingResponseBodyParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.body, other.body))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.body);
-            return result;
-        }
     }
 
 
 
     
     static final class UrlLoaderClientOnCompleteParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public UrlLoaderCompletionStatus status;
-    
+
         private UrlLoaderClientOnCompleteParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public UrlLoaderClientOnCompleteParams() {
             this(0);
         }
-    
+
         public static UrlLoaderClientOnCompleteParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static UrlLoaderClientOnCompleteParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static UrlLoaderClientOnCompleteParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1284,52 +913,26 @@ UrlLoaderCompletionStatus status) {
             UrlLoaderClientOnCompleteParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new UrlLoaderClientOnCompleteParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new UrlLoaderClientOnCompleteParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.status = UrlLoaderCompletionStatus.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.status, 8, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            UrlLoaderClientOnCompleteParams other = (UrlLoaderClientOnCompleteParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.status, other.status))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
-            return result;
         }
     }
 

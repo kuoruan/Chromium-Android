@@ -61,11 +61,7 @@ public class FullscreenMediaRouteButton extends MediaRouteButton {
         // If the button is being set to visible, first make sure that it can even cast
         // to anything before making it actually visible.
         if (visibility == View.VISIBLE) {
-            if (isEnabled()) {
-                setVisibility(View.VISIBLE);
-            } else {
-                setVisibility(View.GONE);
-            }
+            setVisibility(isEnabled() ? View.VISIBLE : View.GONE);
         } else {
             setVisibility(visibility);
         }

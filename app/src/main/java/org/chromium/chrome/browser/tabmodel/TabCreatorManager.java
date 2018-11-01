@@ -39,7 +39,7 @@ public interface TabCreatorManager {
          */
         @Nullable
         public abstract Tab createNewTab(
-                LoadUrlParams loadUrlParams, TabModel.TabLaunchType type, Tab parent);
+                LoadUrlParams loadUrlParams, @TabModel.TabLaunchType int type, Tab parent);
 
         /**
          * On restore, allows us to create a frozen version of a tab using saved tab state we read
@@ -60,7 +60,7 @@ public interface TabCreatorManager {
          * @return The new tab or null if no tab was created.
          */
         @Nullable
-        public abstract Tab launchUrl(String url, TabModel.TabLaunchType type);
+        public abstract Tab launchUrl(String url, @TabModel.TabLaunchType int type);
 
         /**
          * Creates a Tab to host the given WebContents.
@@ -72,7 +72,7 @@ public interface TabCreatorManager {
          * @return            Whether a Tab was created successfully.
          */
         public abstract boolean createTabWithWebContents(Tab parent, WebContents webContents,
-                int parentId, TabLaunchType type, String url);
+                int parentId, @TabLaunchType int type, String url);
 
         /**
          * Creates a tab around the native web contents pointer.
@@ -82,8 +82,8 @@ public interface TabCreatorManager {
          * @param type        The TabLaunchType describing how this tab was created.
          * @return            Whether a Tab was created successfully.
          */
-        public final boolean createTabWithWebContents(Tab parent,
-                WebContents webContents, int parentId, TabLaunchType type) {
+        public final boolean createTabWithWebContents(
+                Tab parent, WebContents webContents, int parentId, @TabLaunchType int type) {
             return createTabWithWebContents(
                     parent, webContents, parentId, type, webContents.getVisibleUrl());
         }

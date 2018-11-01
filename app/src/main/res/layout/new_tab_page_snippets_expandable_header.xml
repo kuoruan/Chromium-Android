@@ -3,10 +3,11 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<LinearLayout
+<org.chromium.chrome.browser.ntp.snippets.SectionHeaderView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:minHeight="@dimen/snippets_article_header_height"
     android:orientation="horizontal"
     android:paddingStart="@dimen/snippets_padding"
     android:paddingEnd="@dimen/snippets_padding"
@@ -17,12 +18,13 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:textAlignment="viewStart"
         android:textAppearance="@style/BlackCaption" />
 
-    <org.chromium.chrome.browser.widget.TintedImageView
-        android:id="@+id/header_icon"
+    <TextView
+        android:id="@+id/header_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:visibility="gone" />
-</LinearLayout>
+        android:textAppearance="@style/BlueLink3" />
+
+</org.chromium.chrome.browser.ntp.snippets.SectionHeaderView>

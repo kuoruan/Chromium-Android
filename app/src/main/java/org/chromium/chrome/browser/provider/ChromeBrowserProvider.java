@@ -22,6 +22,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.UserHandle;
 import android.provider.BaseColumns;
+import android.support.annotation.IntDef;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.LongSparseArray;
@@ -38,8 +39,10 @@ import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.database.SQLiteCursor;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
-import org.chromium.content.browser.BrowserStartupController;
+import org.chromium.content_public.browser.BrowserStartupController;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -255,7 +258,7 @@ public class ChromeBrowserProvider extends ContentProvider {
                         .addStartupCompletedObserver(
                                 new BrowserStartupController.StartupCallback() {
                                     @Override
-                                    public void onSuccess(boolean alreadyStarted) {
+                                    public void onSuccess() {
                                         ensureNativeSideInitialized();
                                     }
 
@@ -670,12 +673,16 @@ public class ChromeBrowserProvider extends ContentProvider {
     /**
      * The type of a BookmarkNode.
      */
-    public enum Type {
-        URL,
-        FOLDER,
-        BOOKMARK_BAR,
-        OTHER_NODE,
-        MOBILE
+    @IntDef({Type.URL, Type.FOLDER, Type.BOOKMARK_BAR, Type.OTHER_NODE, Type.MOBILE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Type {
+        // Values should be numerated from 0 and can't have gaps.
+        int URL = 0;
+        int FOLDER = 1;
+        int BOOKMARK_BAR = 2;
+        int OTHER_NODE = 3;
+        int MOBILE = 4;
+        int NUM_ENTRIES = 5;
     }
 
     /**
@@ -685,7 +692,7 @@ public class ChromeBrowserProvider extends ContentProvider {
         private final long mId;
         private final String mName;
         private final String mUrl;
-        private final Type mType;
+        private final @Type int mType;
         private final BookmarkNode mParent;
         private final List<BookmarkNode> mChildren = new ArrayList<BookmarkNode>();
 
@@ -695,7 +702,7 @@ public class ChromeBrowserProvider extends ContentProvider {
 
         /** Used to pass structured data back from the native code. */
         @VisibleForTesting
-        public BookmarkNode(long id, Type type, String name, String url, BookmarkNode parent) {
+        public BookmarkNode(long id, @Type int type, String name, String url, BookmarkNode parent) {
             mId = id;
             mName = name;
             mUrl = url;
@@ -727,7 +734,7 @@ public class ChromeBrowserProvider extends ContentProvider {
         /**
          * @return The type of this bookmark entry.
          */
-        public Type type() {
+        public @Type int type() {
             return mType;
         }
 
@@ -847,7 +854,7 @@ public class ChromeBrowserProvider extends ContentProvider {
             dest.writeLong(mId);
             dest.writeString(mName);
             dest.writeString(mUrl);
-            dest.writeInt(mType.ordinal());
+            dest.writeInt(mType);
             dest.writeByteArray(mFavicon);
             dest.writeByteArray(mThumbnail);
             dest.writeLong(mParent != null ? mParent.mId : INVALID_BOOKMARK_ID);
@@ -889,13 +896,12 @@ public class ChromeBrowserProvider extends ContentProvider {
                 byte[] favicon = source.createByteArray();
                 byte[] thumbnail = source.createByteArray();
                 long parentId = source.readLong();
-                if (type < 0 || type >= Type.values().length) {
+                if (type < 0 || type >= Type.NUM_ENTRIES) {
                     Log.w(TAG, "Invalid node type ordinal value.");
                     return null;
                 }
 
-                BookmarkNode node = new BookmarkNode(id, Type.values()[type], name, url,
-                        getNode(parentId));
+                BookmarkNode node = new BookmarkNode(id, type, name, url, getNode(parentId));
                 node.setFavicon(favicon);
                 node.setThumbnail(thumbnail);
                 return node;
@@ -1226,11 +1232,11 @@ public class ChromeBrowserProvider extends ContentProvider {
         String[] packages = pm.getPackagesForUid(callingUid);
         if (packages.length == 0) return;
 
-        IntentHandler.ExternalAppId externalId =
-                IntentHandler.mapPackageToExternalAppId(packages[0]);
+        @IntentHandler.ExternalAppId
+        int externalId = IntentHandler.mapPackageToExternalAppId(packages[0]);
         RecordHistogram.recordEnumeratedHistogram(
                 "Android.ChromeBrowserProvider." + permissionCheckType + "." + permission,
-                externalId.ordinal(), IntentHandler.ExternalAppId.INDEX_BOUNDARY.ordinal());
+                externalId, IntentHandler.ExternalAppId.NUM_ENTRIES);
     }
 
     private native long nativeInit();

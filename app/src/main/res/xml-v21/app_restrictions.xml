@@ -74,9 +74,9 @@
         android:restrictionType="bool"/>
 
     <restriction
-        android:key="AutoFillEnabled"
-        android:title="@string/AutoFillEnabledTitle"
-        android:description="@string/AutoFillEnabledDesc"
+        android:key="AutofillAddressEnabled"
+        android:title="@string/AutofillAddressEnabledTitle"
+        android:description="@string/AutofillAddressEnabledDesc"
         android:restrictionType="bool"/>
 
     <restriction
@@ -234,14 +234,6 @@
         android:restrictionType="choice"/>
 
     <restriction
-        android:key="DefaultImagesSetting"
-        android:title="@string/DefaultImagesSettingTitle"
-        android:description="@string/DefaultImagesSettingDesc"
-        android:entries="@array/DefaultImagesSettingEntries"
-        android:entryValues="@array/DefaultImagesSettingValues"
-        android:restrictionType="choice"/>
-
-    <restriction
         android:key="DefaultJavaScriptSetting"
         android:title="@string/DefaultJavaScriptSettingTitle"
         android:description="@string/DefaultJavaScriptSettingDesc"
@@ -274,6 +266,26 @@
         android:restrictionType="choice"/>
 
     <restriction
+        android:key="DefaultWebUsbGuardSetting"
+        android:title="@string/DefaultWebUsbGuardSettingTitle"
+        android:description="@string/DefaultWebUsbGuardSettingDesc"
+        android:entries="@array/DefaultWebUsbGuardSettingEntries"
+        android:entryValues="@array/DefaultWebUsbGuardSettingValues"
+        android:restrictionType="choice"/>
+
+    <restriction
+        android:key="WebUsbAskForUrls"
+        android:title="@string/WebUsbAskForUrlsTitle"
+        android:description="@string/WebUsbAskForUrlsDesc"
+        android:restrictionType="string"/>
+
+    <restriction
+        android:key="WebUsbBlockedForUrls"
+        android:title="@string/WebUsbBlockedForUrlsTitle"
+        android:description="@string/WebUsbBlockedForUrlsDesc"
+        android:restrictionType="string"/>
+
+    <restriction
         android:key="CookiesAllowedForUrls"
         android:title="@string/CookiesAllowedForUrlsTitle"
         android:description="@string/CookiesAllowedForUrlsDesc"
@@ -289,18 +301,6 @@
         android:key="CookiesSessionOnlyForUrls"
         android:title="@string/CookiesSessionOnlyForUrlsTitle"
         android:description="@string/CookiesSessionOnlyForUrlsDesc"
-        android:restrictionType="string"/>
-
-    <restriction
-        android:key="ImagesAllowedForUrls"
-        android:title="@string/ImagesAllowedForUrlsTitle"
-        android:description="@string/ImagesAllowedForUrlsDesc"
-        android:restrictionType="string"/>
-
-    <restriction
-        android:key="ImagesBlockedForUrls"
-        android:title="@string/ImagesBlockedForUrlsTitle"
-        android:description="@string/ImagesBlockedForUrlsDesc"
         android:restrictionType="string"/>
 
     <restriction
@@ -396,10 +396,12 @@
         android:restrictionType="multi-select"/>
 
     <restriction
-        android:key="ForceBrowserSignin"
-        android:title="@string/ForceBrowserSigninTitle"
-        android:description="@string/ForceBrowserSigninDesc"
-        android:restrictionType="bool"/>
+        android:key="BrowserSignin"
+        android:title="@string/BrowserSigninTitle"
+        android:description="@string/BrowserSigninDesc"
+        android:entries="@array/BrowserSigninEntries"
+        android:entryValues="@array/BrowserSigninValues"
+        android:restrictionType="choice"/>
 
     <restriction
         android:key="SSLVersionMin"
@@ -421,6 +423,18 @@
         android:key="CertificateTransparencyEnforcementDisabledForUrls"
         android:title="@string/CertificateTransparencyEnforcementDisabledForUrlsTitle"
         android:description="@string/CertificateTransparencyEnforcementDisabledForUrlsDesc"
+        android:restrictionType="string"/>
+
+    <restriction
+        android:key="CertificateTransparencyEnforcementDisabledForCas"
+        android:title="@string/CertificateTransparencyEnforcementDisabledForCasTitle"
+        android:description="@string/CertificateTransparencyEnforcementDisabledForCasDesc"
+        android:restrictionType="string"/>
+
+    <restriction
+        android:key="CertificateTransparencyEnforcementDisabledForLegacyCas"
+        android:title="@string/CertificateTransparencyEnforcementDisabledForLegacyCasTitle"
+        android:description="@string/CertificateTransparencyEnforcementDisabledForLegacyCasDesc"
         android:restrictionType="string"/>
 
     <restriction
@@ -460,9 +474,39 @@
         android:restrictionType="string"/>
 
     <restriction
+        android:key="IsolateOriginsAndroid"
+        android:title="@string/IsolateOriginsAndroidTitle"
+        android:description="@string/IsolateOriginsAndroidDesc"
+        android:restrictionType="string"/>
+
+    <restriction
+        android:key="SitePerProcessAndroid"
+        android:title="@string/SitePerProcessAndroidTitle"
+        android:description="@string/SitePerProcessAndroidDesc"
+        android:restrictionType="bool"/>
+
+    <restriction
         android:key="RestrictAccountsToPatterns"
         android:title="@string/RestrictAccountsToPatternsTitle"
         android:description="@string/RestrictAccountsToPatternsDesc"
         android:restrictionType="string"/>
+
+    <restriction
+        android:key="ContextualSuggestionsEnabled"
+        android:title="@string/ContextualSuggestionsEnabledTitle"
+        android:description="@string/ContextualSuggestionsEnabledDesc"
+        android:restrictionType="bool"/>
+
+    <restriction
+        android:key="OverrideSecurityRestrictionsOnInsecureOrigin"
+        android:title="@string/OverrideSecurityRestrictionsOnInsecureOriginTitle"
+        android:description="@string/OverrideSecurityRestrictionsOnInsecureOriginDesc"
+        android:restrictionType="string"/>
+
+    <restriction
+        android:key="UrlKeyedAnonymizedDataCollectionEnabled"
+        android:title="@string/UrlKeyedAnonymizedDataCollectionEnabledTitle"
+        android:description="@string/UrlKeyedAnonymizedDataCollectionEnabledDesc"
+        android:restrictionType="bool"/>
 
 </restrictions>

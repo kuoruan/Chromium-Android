@@ -15,12 +15,10 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.device.DeviceClassManager;
-import org.chromium.chrome.browser.physicalweb.PhysicalWeb;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.survey.SurveyController;
 import org.chromium.components.minidump_uploader.util.CrashReportingPermissionManager;
 import org.chromium.components.minidump_uploader.util.NetworkPermissionUtil;
-import org.chromium.ui.base.DeviceFormFactor;
 
 /**
  * Reads, writes, and migrates preferences related to network usage and privacy.
@@ -30,6 +28,38 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
     static final String DEPRECATED_PREF_CRASH_DUMP_UPLOAD_NO_CELLULAR =
             "crash_dump_upload_no_cellular";
     private static final String DEPRECATED_PREF_CELLULAR_EXPERIMENT = "cellular_experiment";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB = "physical_web";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_SHARING = "physical_web_sharing";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_HAS_DEFERRED_METRICS_KEY =
+            "PhysicalWeb.HasDeferredMetrics";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_OPT_IN_DECLINE_BUTTON_PRESS_COUNT =
+            "PhysicalWeb.OptIn.DeclineButtonPressed";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_OPT_IN_ENABLE_BUTTON_PRESS_COUNT =
+            "PhysicalWeb.OptIn.EnableButtonPressed";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_PREFS_FEATURE_DISABLED_COUNT =
+            "PhysicalWeb.Prefs.FeatureDisabled";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_PREFS_FEATURE_ENABLED_COUNT =
+            "PhysicalWeb.Prefs.FeatureEnabled";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_PREFS_LOCATION_DENIED_COUNT =
+            "PhysicalWeb.Prefs.LocationDenied";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_PREFS_LOCATION_GRANTED_COUNT =
+            "PhysicalWeb.Prefs.LocationGranted";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_PWS_BACKGROUND_RESOLVE_TIMES =
+            "PhysicalWeb.ResolveTime.Background";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_PWS_FOREGROUND_RESOLVE_TIMES =
+            "PhysicalWeb.ResolveTime.Foreground";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_PWS_REFRESH_RESOLVE_TIMES =
+            "PhysicalWeb.ResolveTime.Refresh";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_URL_SELECTED_COUNT =
+            "PhysicalWeb.UrlSelected";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_TOTAL_URLS_INITIAL_COUNTS =
+            "PhysicalWeb.TotalUrls.OnInitialDisplay";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_TOTAL_URLS_REFRESH_COUNTS =
+            "PhysicalWeb.TotalUrls.OnRefresh";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_ACTIVITY_REFERRALS =
+            "PhysicalWeb.ActivityReferral";
+    private static final String DEPRECATED_PREF_PHYSICAL_WEB_PHYSICAL_WEB_STATE =
+            "PhysicalWeb.State";
 
     public static final String PREF_METRICS_REPORTING = "metrics_reporting";
     private static final String PREF_METRICS_IN_SAMPLE = "in_metrics_sample";
@@ -37,10 +67,6 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
     private static final String PREF_BANDWIDTH_OLD = "prefetch_bandwidth";
     private static final String PREF_BANDWIDTH_NO_CELLULAR_OLD = "prefetch_bandwidth_no_cellular";
     private static final String ALLOW_PRERENDER_OLD = "allow_prefetch";
-    private static final String PREF_PHYSICAL_WEB = "physical_web";
-    private static final int PHYSICAL_WEB_OFF = 0;
-    private static final int PHYSICAL_WEB_ON = 1;
-    private static final int PHYSICAL_WEB_ONBOARDING = 2;
 
     @SuppressLint("StaticFieldLeak")
     private static PrivacyPreferencesManager sInstance;
@@ -53,6 +79,7 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
         mContext = context;
         mSharedPreferences = ContextUtils.getAppSharedPreferences();
 
+        migratePhysicalWebPreferences();
         migrateUsageAndCrashPreferences();
     }
 
@@ -61,6 +88,29 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
             sInstance = new PrivacyPreferencesManager(ContextUtils.getApplicationContext());
         }
         return sInstance;
+    }
+
+    // TODO(https://crbug.com/826540): Remove some time after 5/2019.
+    public void migratePhysicalWebPreferences() {
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.remove(DEPRECATED_PREF_PHYSICAL_WEB)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_SHARING)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_HAS_DEFERRED_METRICS_KEY)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_OPT_IN_DECLINE_BUTTON_PRESS_COUNT)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_OPT_IN_ENABLE_BUTTON_PRESS_COUNT)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_PREFS_FEATURE_DISABLED_COUNT)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_PREFS_FEATURE_ENABLED_COUNT)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_PREFS_LOCATION_DENIED_COUNT)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_PREFS_LOCATION_GRANTED_COUNT)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_PWS_BACKGROUND_RESOLVE_TIMES)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_PWS_FOREGROUND_RESOLVE_TIMES)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_PWS_REFRESH_RESOLVE_TIMES)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_URL_SELECTED_COUNT)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_TOTAL_URLS_INITIAL_COUNTS)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_TOTAL_URLS_REFRESH_COUNTS)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_ACTIVITY_REFERRALS)
+                .remove(DEPRECATED_PREF_PHYSICAL_WEB_PHYSICAL_WEB_STATE)
+                .apply();
     }
 
     public void migrateUsageAndCrashPreferences() {
@@ -128,7 +178,8 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
         // Migrate if the old preferences are at their default values.
         // (Note that for PREF_BANDWIDTH*, if the setting is default, then there is no way to tell
         // whether the user has set it.)
-        final String prefBandwidthDefault = BandwidthType.PRERENDER_ON_WIFI.title();
+        final String prefBandwidthDefault =
+                BandwidthType.title(BandwidthType.Type.PRERENDER_ON_WIFI);
         final String prefBandwidth =
                 mSharedPreferences.getString(PREF_BANDWIDTH_OLD, prefBandwidthDefault);
         boolean prefBandwidthNoCellularDefault = true;
@@ -141,24 +192,20 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
             // Observe PREF_BANDWIDTH on mobile network capable devices.
             if (isMobileNetworkCapable()) {
                 if (mSharedPreferences.contains(PREF_BANDWIDTH_OLD)) {
-                    BandwidthType prefetchBandwidthTypePref = BandwidthType.getBandwidthFromTitle(
-                            prefBandwidth);
-                    if (BandwidthType.NEVER_PRERENDER.equals(prefetchBandwidthTypePref)) {
+                    @BandwidthType.Type
+                    int prefetchBandwidthTypePref =
+                            BandwidthType.getBandwidthFromTitle(prefBandwidth);
+                    if (BandwidthType.Type.NEVER_PRERENDER == prefetchBandwidthTypePref) {
                         newValue = false;
-                    } else if (BandwidthType.PRERENDER_ON_WIFI.equals(prefetchBandwidthTypePref)) {
-                        newValue = true;
-                    } else if (BandwidthType.ALWAYS_PRERENDER.equals(prefetchBandwidthTypePref)) {
+                    } else if (BandwidthType.Type.PRERENDER_ON_WIFI == prefetchBandwidthTypePref
+                            || BandwidthType.Type.ALWAYS_PRERENDER == prefetchBandwidthTypePref) {
                         newValue = true;
                     }
                 }
             // Observe PREF_BANDWIDTH_NO_CELLULAR on devices without mobile network.
             } else {
                 if (mSharedPreferences.contains(PREF_BANDWIDTH_NO_CELLULAR_OLD)) {
-                    if (prefBandwidthNoCellular) {
-                        newValue = true;
-                    } else {
-                        newValue = false;
-                    }
+                    newValue = prefBandwidthNoCellular;
                 }
             }
             // Save new value in Chrome PrefService.
@@ -226,7 +273,7 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
     public void setUsageAndCrashReporting(boolean enabled) {
         mSharedPreferences.edit().putBoolean(PREF_METRICS_REPORTING, enabled).apply();
         syncUsageAndCrashReportingPrefs();
-        if (!enabled && !DeviceFormFactor.isTablet()) {
+        if (!enabled) {
             SurveyController.getInstance().clearCache(ContextUtils.getApplicationContext());
         }
     }
@@ -305,38 +352,5 @@ public class PrivacyPreferencesManager implements CrashReportingPermissionManage
     public boolean isMetricsUploadPermitted() {
         return isNetworkAvailable()
                 && (isUsageAndCrashReportingPermittedByUser() || isUploadEnabledForTests());
-    }
-
-    /**
-     * Sets the Physical Web preference, which enables background scanning for bluetooth beacons
-     * and displays a notification when beacons are found.
-     *
-     * @param enabled A boolean indicating whether to notify on nearby beacons.
-     */
-    public void setPhysicalWebEnabled(boolean enabled) {
-        mSharedPreferences.edit()
-            .putInt(PREF_PHYSICAL_WEB, enabled ? PHYSICAL_WEB_ON : PHYSICAL_WEB_OFF)
-            .apply();
-        PhysicalWeb.updateScans();
-    }
-
-    /**
-     * Check whether the user is still in the Physical Web onboarding flow.
-     *
-     * @return boolean {@code true} if onboarding is not yet complete.
-     */
-    public boolean isPhysicalWebOnboarding() {
-        int state = mSharedPreferences.getInt(PREF_PHYSICAL_WEB, PHYSICAL_WEB_ONBOARDING);
-        return (state == PHYSICAL_WEB_ONBOARDING);
-    }
-
-    /**
-     * Check whether Physical Web is configured to notify on nearby beacons.
-     *
-     * @return boolean {@code true} if the feature is enabled.
-     */
-    public boolean isPhysicalWebEnabled() {
-        int state = mSharedPreferences.getInt(PREF_PHYSICAL_WEB, PHYSICAL_WEB_ONBOARDING);
-        return (state == PHYSICAL_WEB_ON);
     }
 }

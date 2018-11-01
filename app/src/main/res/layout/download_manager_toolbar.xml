@@ -5,6 +5,15 @@
 
 <org.chromium.chrome.browser.download.ui.DownloadManagerToolbar
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    style="@style/ModernToolbar" />
+    style="@style/ModernToolbar" >
+
+    <android.support.v7.widget.AppCompatSpinner
+        android:id="@+id/spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:backgroundTint="@color/dark_mode_tint" />
+
+</org.chromium.chrome.browser.download.ui.DownloadManagerToolbar>

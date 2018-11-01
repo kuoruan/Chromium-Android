@@ -45,10 +45,10 @@ public class WebApkUpdateTask extends NativeBackgroundTask {
             if (!isWebApkActivityRunning(storage.getWebApkPackageName())) {
                 mStorageToUpdate = storage;
                 mMoreToUpdate = ids.size() > 1;
-                return LOAD_NATIVE;
+                return StartBeforeNativeResult.LOAD_NATIVE;
             }
         }
-        return ids.isEmpty() ? DONE : RESCHEDULE;
+        return ids.isEmpty() ? StartBeforeNativeResult.DONE : StartBeforeNativeResult.RESCHEDULE;
     }
 
     @Override

@@ -4,6 +4,7 @@
 
 package org.chromium.components.download.internal;
 
+import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.net.NetworkChangeNotifierAutoDetect;
@@ -21,6 +22,12 @@ import org.chromium.net.RegistrationPolicyAlwaysRegister;
 public final class NetworkStatusListenerAndroid implements Observer {
     private long mNativePtr;
     private final NetworkChangeNotifierAutoDetect mNotifier;
+    private static AutoDetectFactory sAutoDetectFactory = new AutoDetectFactory();
+
+    @VisibleForTesting
+    public static void setAutoDetectFactory(AutoDetectFactory factory) {
+        sAutoDetectFactory = factory;
+    }
 
     @CalledByNative
     private int getCurrentConnectionType() {
@@ -32,8 +39,7 @@ public final class NetworkStatusListenerAndroid implements Observer {
         mNativePtr = nativePtr;
         // Register policy that can fire network change events when the application is in the
         // background.
-        mNotifier =
-                new NetworkChangeNotifierAutoDetect(this, new RegistrationPolicyAlwaysRegister());
+        mNotifier = sAutoDetectFactory.create(this, new RegistrationPolicyAlwaysRegister());
     }
 
     @CalledByNative
@@ -54,6 +60,19 @@ public final class NetworkStatusListenerAndroid implements Observer {
     public void onConnectionTypeChanged(int newConnectionType) {
         if (mNativePtr != 0) {
             nativeNotifyNetworkChange(mNativePtr, newConnectionType);
+        }
+    }
+
+    /**
+     * Creates the NetworkChangeNotifierAutoDetect used in this class. Included so that tests
+     * can override it.
+     */
+    @VisibleForTesting
+    public static class AutoDetectFactory {
+        public NetworkChangeNotifierAutoDetect create(
+                NetworkChangeNotifierAutoDetect.Observer observer,
+                NetworkChangeNotifierAutoDetect.RegistrationPolicy policy) {
+            return new NetworkChangeNotifierAutoDetect(observer, policy);
         }
     }
 

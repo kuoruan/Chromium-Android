@@ -78,4 +78,12 @@ public interface ImeAdapter {
      */
     @VisibleForTesting
     InputConnection getInputConnectionForTest();
+
+    /**
+     * Replace the currently composing text with the given text, and set the new cursor position.
+     * @param text The composing text.
+     * @param newCursorPosition The new cursor position around the text.
+     */
+    @VisibleForTesting
+    void setComposingTextForTest(final CharSequence text, final int newCursorPosition);
 }

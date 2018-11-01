@@ -205,9 +205,9 @@ public class TraceEvent implements AutoCloseable {
     /**
      * Constructor used to support the "try with resource" construct.
      */
-    private TraceEvent(String name) {
+    private TraceEvent(String name, String arg) {
         mName = name;
-        begin(name);
+        begin(name, arg);
     }
 
     @Override
@@ -221,11 +221,19 @@ public class TraceEvent implements AutoCloseable {
      * Note that if tracing is not enabled, this will not result in allocating an object.
      *
      * @param name Trace event name.
+     * @param name The arguments of the event.
      * @return a TraceEvent, or null if tracing is not enabled.
      */
-    public static TraceEvent scoped(String name) {
+    public static TraceEvent scoped(String name, String arg) {
         if (!(EarlyTraceEvent.enabled() || enabled())) return null;
-        return new TraceEvent(name);
+        return new TraceEvent(name, arg);
+    }
+
+    /**
+     * Similar to {@link #scoped(String, String arg)}, but uses null for |arg|.
+     */
+    public static TraceEvent scoped(String name) {
+        return scoped(name, null);
     }
 
     /**
@@ -316,6 +324,7 @@ public class TraceEvent implements AutoCloseable {
      * @param id   The id of the asynchronous event.
      */
     public static void startAsync(String name, long id) {
+        EarlyTraceEvent.startAsync(name, id);
         if (sEnabled) nativeStartAsync(name, id);
     }
 
@@ -325,6 +334,7 @@ public class TraceEvent implements AutoCloseable {
      * @param id   The id of the asynchronous event.
      */
     public static void finishAsync(String name, long id) {
+        EarlyTraceEvent.finishAsync(name, id);
         if (sEnabled) nativeFinishAsync(name, id);
     }
 

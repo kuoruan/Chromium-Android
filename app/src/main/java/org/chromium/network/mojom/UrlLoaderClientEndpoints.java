@@ -40,9 +40,6 @@ public final class UrlLoaderClientEndpoints extends org.chromium.mojo.bindings.S
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static UrlLoaderClientEndpoints deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,15 +53,17 @@ public final class UrlLoaderClientEndpoints extends org.chromium.mojo.bindings.S
         UrlLoaderClientEndpoints result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new UrlLoaderClientEndpoints(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new UrlLoaderClientEndpoints(elementsOrVersion);
+                {
+                    
                 result.urlLoader = decoder0.readServiceInterface(8, false, UrlLoader.MANAGER);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.urlLoaderClient = decoder0.readInterfaceRequest(16, false);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -79,36 +78,5 @@ public final class UrlLoaderClientEndpoints extends org.chromium.mojo.bindings.S
         encoder0.encode(this.urlLoader, 8, false, UrlLoader.MANAGER);
         
         encoder0.encode(this.urlLoaderClient, 16, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        UrlLoaderClientEndpoints other = (UrlLoaderClientEndpoints) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.urlLoader, other.urlLoader))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.urlLoaderClient, other.urlLoaderClient))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.urlLoader);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.urlLoaderClient);
-        return result;
     }
 }

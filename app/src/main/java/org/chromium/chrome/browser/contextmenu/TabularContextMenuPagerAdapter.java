@@ -33,10 +33,7 @@ class TabularContextMenuPagerAdapter extends PagerAdapter {
 
     // Addresses the RTL display bug: https://code.google.com/p/android/issues/detail?id=56831
     private int adjustIndexForDirectionality(int index, int count) {
-        if (mIsRightToLeft) {
-            return count - 1 - index;
-        }
-        return index;
+        return mIsRightToLeft ? count - 1 - index : index;
     }
 
     @Override

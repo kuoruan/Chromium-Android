@@ -41,9 +41,6 @@ public final class Identity extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static Identity deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -57,19 +54,21 @@ public final class Identity extends org.chromium.mojo.bindings.Struct {
         Identity result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new Identity(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new Identity(elementsOrVersion);
+                {
+                    
                 result.name = decoder0.readString(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.userId = decoder0.readString(16, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.instance = decoder0.readString(24, false);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -86,39 +85,5 @@ public final class Identity extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.userId, 16, false);
         
         encoder0.encode(this.instance, 24, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        Identity other = (Identity) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.name, other.name))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.userId, other.userId))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.instance, other.instance))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.name);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.userId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.instance);
-        return result;
     }
 }

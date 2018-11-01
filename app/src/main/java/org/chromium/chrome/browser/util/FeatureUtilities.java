@@ -16,7 +16,9 @@ import android.os.UserManager;
 import android.speech.RecognizerIntent;
 
 import org.chromium.base.CommandLine;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.StrictModeContext;
+import org.chromium.base.SysUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
@@ -24,9 +26,12 @@ import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.firstrun.FirstRunUtils;
+import org.chromium.chrome.browser.locale.LocaleManager;
+import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomizations;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.tabmodel.DocumentModeAssassin;
 import org.chromium.components.signin.AccountManagerFacade;
+import org.chromium.components.variations.VariationsAssociatedData;
 import org.chromium.ui.base.DeviceFormFactor;
 
 import java.util.List;
@@ -37,14 +42,21 @@ import java.util.List;
  */
 public class FeatureUtilities {
     private static final String TAG = "FeatureUtilities";
+    private static final Integer CONTEXTUAL_SUGGESTIONS_TOOLBAR_MIN_DP = 320;
 
     private static Boolean sHasGoogleAccountAuthenticator;
     private static Boolean sHasRecognitionIntentHandler;
     private static String sChromeHomeSwipeLogicType;
 
     private static Boolean sIsSoleEnabled;
-    private static Boolean sIsChromeModernDesignEnabled;
     private static Boolean sIsHomePageButtonForceEnabled;
+    private static Boolean sIsHomepageTileEnabled;
+    private static Boolean sIsNewTabPageButtonEnabled;
+    private static Boolean sIsBottomToolbarEnabled;
+    private static Boolean sShouldInflateToolbarOnBackgroundThread;
+
+    private static final String NTP_BUTTON_TRIAL_NAME = "NewTabPage";
+    private static final String NTP_BUTTON_VARIANT_PARAM_NAME = "variation";
 
     /**
      * Determines whether or not the {@link RecognizerIntent#ACTION_WEB_SEARCH} {@link Intent}
@@ -146,12 +158,14 @@ public class FeatureUtilities {
      * Caches flags that must take effect on startup but are set via native code.
      */
     public static void cacheNativeFlags() {
-        cacheChromeHomeEnabled();
         cacheSoleEnabled();
         cacheCommandLineOnNonRootedEnabled();
         FirstRunUtils.cacheFirstRunPrefs();
-        cacheChromeModernDesignEnabled();
         cacheHomePageButtonForceEnabled();
+        cacheHomepageTileEnabled();
+        cacheNewTabPageButtonEnabled();
+        cacheBottomToolbarEnabled();
+        cacheInflateToolbarOnBackgroundThread();
 
         // Propagate DONT_PREFETCH_LIBRARIES feature value to LibraryLoader. This can't
         // be done in LibraryLoader itself because it lives in //base and can't depend
@@ -171,23 +185,13 @@ public class FeatureUtilities {
     }
 
     /**
-     * Cache whether or not modern design is enabled so on next startup, the value can be made
-     * available immediately.
-     */
-    public static void cacheChromeModernDesignEnabled() {
-        boolean isModernEnabled =
-                ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_MODERN_DESIGN);
-
-        ChromePreferenceManager manager = ChromePreferenceManager.getInstance();
-        manager.setChromeModernDesignEnabled(isModernEnabled);
-    }
-
-    /**
      * Cache whether or not the home page button is force enabled so on next startup, the value can
      * be made available immediately.
      */
     public static void cacheHomePageButtonForceEnabled() {
-        ChromePreferenceManager.getInstance().setHomePageButtonForceEnabled(
+        if (PartnerBrowserCustomizations.isHomepageProviderAvailableAndEnabled()) return;
+        ChromePreferenceManager.getInstance().writeBoolean(
+                ChromePreferenceManager.HOME_PAGE_BUTTON_FORCE_ENABLED_KEY,
                 ChromeFeatureList.isEnabled(ChromeFeatureList.HOME_PAGE_BUTTON_FORCE_ENABLED));
     }
 
@@ -199,7 +203,8 @@ public class FeatureUtilities {
             ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
 
             try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
-                sIsHomePageButtonForceEnabled = prefManager.isHomePageButtonForceEnabled();
+                sIsHomePageButtonForceEnabled = prefManager.readBoolean(
+                        ChromePreferenceManager.HOME_PAGE_BUTTON_FORCE_ENABLED_KEY, false);
             }
         }
         return sIsHomePageButtonForceEnabled;
@@ -214,15 +219,116 @@ public class FeatureUtilities {
     }
 
     /**
-     * DEPRECATED: DO NOT USE.
-     *
-     * Cache whether or not Chrome Home and related features are enabled. If this method is called
-     * multiple times, the existing cached state is cleared and re-computed.
+     * Cache whether or not the toolbar should be inflated on a background thread so on next
+     * startup, the value can be made available immediately.
      */
-    public static void cacheChromeHomeEnabled() {
-        // Chrome Home doesn't work with tablets.
-        if (DeviceFormFactor.isTablet()) return;
-        ChromePreferenceManager.getInstance().clearObsoleteChromeHomePrefs();
+    public static void cacheInflateToolbarOnBackgroundThread() {
+        boolean onBackgroundThread =
+                ChromeFeatureList.isEnabled(ChromeFeatureList.INFLATE_TOOLBAR_ON_BACKGROUND_THREAD);
+
+        ChromePreferenceManager.getInstance().writeBoolean(
+                ChromePreferenceManager.INFLATE_TOOLBAR_ON_BACKGROUND_THREAD_KEY,
+                onBackgroundThread);
+    }
+
+    public static boolean shouldInflateToolbarOnBackgroundThread() {
+        if (sShouldInflateToolbarOnBackgroundThread == null) {
+            ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
+
+            try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+                sShouldInflateToolbarOnBackgroundThread = prefManager.readBoolean(
+                        ChromePreferenceManager.INFLATE_TOOLBAR_ON_BACKGROUND_THREAD_KEY, false);
+            }
+        }
+        return sShouldInflateToolbarOnBackgroundThread;
+    }
+
+    /**
+     * Cache whether or not the new tab page button is enabled so on next startup, the value can
+     * be made available immediately.
+     */
+    public static void cacheHomepageTileEnabled() {
+        ChromePreferenceManager.getInstance().writeBoolean(
+                ChromePreferenceManager.HOMEPAGE_TILE_ENABLED_KEY,
+                ChromeFeatureList.isEnabled(ChromeFeatureList.HOMEPAGE_TILE));
+    }
+
+    /**
+     * @return Whether or not the new tab page button is enabled.
+     */
+    public static boolean isHomepageTileEnabled() {
+        if (sIsHomepageTileEnabled == null) {
+            ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
+
+            try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+                sIsHomepageTileEnabled = prefManager.readBoolean(
+                        ChromePreferenceManager.HOMEPAGE_TILE_ENABLED_KEY, false);
+            }
+        }
+        return sIsHomepageTileEnabled;
+    }
+
+    /**
+     * Cache whether or not the new tab page button is enabled so that on next startup, it can be
+     * made available immediately.
+     */
+    private static void cacheNewTabPageButtonEnabled() {
+        boolean isNTPButtonEnabled = ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_BUTTON);
+        ChromePreferenceManager.getInstance().writeBoolean(
+                ChromePreferenceManager.NTP_BUTTON_ENABLED_KEY, isNTPButtonEnabled);
+    }
+
+    /**
+     * Gets the new tab page button variant from variations associated data.
+     * Native must be initialized before this method is called.
+     * @return The new tab page button variant.
+     */
+    public static String getNTPButtonVariant() {
+        return VariationsAssociatedData.getVariationParamValue(
+                NTP_BUTTON_TRIAL_NAME, NTP_BUTTON_VARIANT_PARAM_NAME);
+    }
+
+    /**
+     * @return Whether or not the new tab page button is enabled.
+     */
+    public static boolean isNewTabPageButtonEnabled() {
+        if (sIsNewTabPageButtonEnabled == null) {
+            ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
+
+            try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+                sIsNewTabPageButtonEnabled = prefManager.readBoolean(
+                        ChromePreferenceManager.NTP_BUTTON_ENABLED_KEY, false);
+            }
+        }
+        return sIsNewTabPageButtonEnabled;
+    }
+
+    /**
+     * Cache whether or not the bottom toolbar is enabled so on next startup, the value can
+     * be made available immediately.
+     */
+    public static void cacheBottomToolbarEnabled() {
+        ChromePreferenceManager.getInstance().writeBoolean(
+                ChromePreferenceManager.BOTTOM_TOOLBAR_ENABLED_KEY,
+                ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_DUET));
+    }
+
+    /**
+     * @return Whether or not the bottom toolbar is enabled.
+     */
+    public static boolean isBottomToolbarEnabled() {
+        if (sIsBottomToolbarEnabled == null) {
+            ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
+
+            try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+                sIsBottomToolbarEnabled =
+                        prefManager.readBoolean(
+                                ChromePreferenceManager.BOTTOM_TOOLBAR_ENABLED_KEY, false)
+                        && !DeviceFormFactor.isNonMultiDisplayContextOnTablet(
+                                   ContextUtils.getApplicationContext());
+            }
+        }
+        return sIsBottomToolbarEnabled;
     }
 
     /**
@@ -232,32 +338,15 @@ public class FeatureUtilities {
         boolean isCommandLineOnNonRootedEnabled =
                 ChromeFeatureList.isEnabled(ChromeFeatureList.COMMAND_LINE_ON_NON_ROOTED);
         ChromePreferenceManager manager = ChromePreferenceManager.getInstance();
-        manager.setCommandLineOnNonRootedEnabled(isCommandLineOnNonRootedEnabled);
+        manager.writeBoolean(ChromePreferenceManager.COMMAND_LINE_ON_NON_ROOTED_ENABLED_KEY,
+                isCommandLineOnNonRootedEnabled);
     }
 
     /**
-     * DEPRECATED: DO NOT USE.
-     *
-     * @return Whether or not chrome should attach the toolbar to the bottom of the screen.
+     * @return Whether or not the download progress infobar is enabled.
      */
-    @CalledByNative
-    public static boolean isChromeHomeEnabled() {
-        return false;
-    }
-
-    /**
-     * Resets whether Chrome Home is enabled for tests. After this is called, the next call to
-     * #isChromeHomeEnabled() will retrieve the value from shared preferences.
-     */
-    @Deprecated
-    public static void resetChromeHomeEnabledForTests() {}
-
-    /**
-     * @return Whether Chrome Duplex, split toolbar Chrome Home, is enabled.
-     */
-    public static boolean isChromeDuplexEnabled() {
-        return ChromeFeatureList.isInitialized()
-                && ChromeFeatureList.isEnabled(ChromeFeatureList.CHROME_DUPLEX);
+    public static boolean isDownloadProgressInfoBarEnabled() {
+        return ChromeFeatureList.isEnabled(ChromeFeatureList.DOWNLOAD_PROGRESS_INFOBAR);
     }
 
     /**
@@ -280,10 +369,12 @@ public class FeatureUtilities {
     public static void cacheSoleEnabled() {
         boolean featureEnabled = ChromeFeatureList.isEnabled(ChromeFeatureList.SOLE_INTEGRATION);
         ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
-        boolean prefEnabled = prefManager.isSoleEnabled();
+        boolean prefEnabled =
+                prefManager.readBoolean(ChromePreferenceManager.SOLE_INTEGRATION_ENABLED_KEY, true);
         if (featureEnabled == prefEnabled) return;
 
-        prefManager.setSoleEnabled(featureEnabled);
+        prefManager.writeBoolean(
+                ChromePreferenceManager.SOLE_INTEGRATION_ENABLED_KEY, featureEnabled);
     }
 
     /**
@@ -295,27 +386,46 @@ public class FeatureUtilities {
 
             // Allow disk access for preferences while Sole is in experimentation.
             try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
-                sIsSoleEnabled = prefManager.isSoleEnabled();
+                sIsSoleEnabled = prefManager.readBoolean(
+                        ChromePreferenceManager.SOLE_INTEGRATION_ENABLED_KEY, true);
             }
         }
         return sIsSoleEnabled;
     }
 
     /**
+     * Deprecated!
      * @return Whether Chrome modern design is enabled. This returns true if Chrome Home is enabled.
      */
     @CalledByNative
     public static boolean isChromeModernDesignEnabled() {
-        if (isChromeHomeEnabled()) return true;
+        return true;
+    }
 
-        if (sIsChromeModernDesignEnabled == null) {
-            ChromePreferenceManager prefManager = ChromePreferenceManager.getInstance();
-            try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
-                sIsChromeModernDesignEnabled = prefManager.isChromeModernDesignEnabled();
-            }
-        }
+    /**
+     * @param activityContext The context for the containing activity.
+     * @return Whether contextual suggestions are enabled.
+     */
+    public static boolean areContextualSuggestionsEnabled(Context activityContext) {
+        int smallestScreenWidth =
+                activityContext.getResources().getConfiguration().smallestScreenWidthDp;
+        return !DeviceFormFactor.isNonMultiDisplayContextOnTablet(activityContext)
+                && !LocaleManager.getInstance().needToCheckForSearchEnginePromo()
+                && isChromeModernDesignEnabled()
+                && (ChromeFeatureList.isEnabled(
+                            ChromeFeatureList.CONTEXTUAL_SUGGESTIONS_BOTTOM_SHEET)
+                    || (smallestScreenWidth >= CONTEXTUAL_SUGGESTIONS_TOOLBAR_MIN_DP
+                        && ChromeFeatureList.isEnabled(
+                                ChromeFeatureList.CONTEXTUAL_SUGGESTIONS_BUTTON)));
+    }
 
-        return sIsChromeModernDesignEnabled;
+    /**
+     * @return Whether this device is running Android Go. This is assumed when we're running Android
+     * O or later and we're on a low-end device.
+     */
+    public static boolean isAndroidGo() {
+        return SysUtils.isLowEndDevice()
+                && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O;
     }
 
     private static native void nativeSetCustomTabVisible(boolean visible);

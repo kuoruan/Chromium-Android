@@ -61,9 +61,14 @@ public interface NavigationController {
     public void loadIfNecessary();
 
     /**
+     * @return Whether a reload has been requested.
+     */
+    public boolean needsReload();
+
+    /**
      * Requests the current navigation to be loaded upon the next call to loadIfNecessary().
      */
-    public void requestRestoreLoad();
+    public void setNeedsReload();
 
     /**
      * Reload the current page.

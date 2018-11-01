@@ -18,28 +18,28 @@ class RestrictedCookieManager_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<RestrictedCookieManager, RestrictedCookieManager.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<RestrictedCookieManager, RestrictedCookieManager.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "network::mojom::RestrictedCookieManager";
+            return "network.mojom.RestrictedCookieManager";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, RestrictedCookieManager impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public RestrictedCookieManager[] buildArray(int size) {
           return new RestrictedCookieManager[size];
@@ -50,6 +50,8 @@ class RestrictedCookieManager_Internal {
     private static final int GET_ALL_FOR_URL_ORDINAL = 0;
 
     private static final int SET_CANONICAL_COOKIE_ORDINAL = 1;
+
+    private static final int ADD_CHANGE_LISTENER_ORDINAL = 2;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements RestrictedCookieManager.Proxy {
@@ -112,6 +114,32 @@ SetCanonicalCookieResponse callback) {
         }
 
 
+        @Override
+        public void addChangeListener(
+org.chromium.url.mojom.Url url, org.chromium.url.mojom.Url siteForCookies, CookieChangeListener listener, 
+AddChangeListenerResponse callback) {
+
+            RestrictedCookieManagerAddChangeListenerParams _message = new RestrictedCookieManagerAddChangeListenerParams();
+
+            _message.url = url;
+
+            _message.siteForCookies = siteForCookies;
+
+            _message.listener = listener;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    ADD_CHANGE_LISTENER_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new RestrictedCookieManagerAddChangeListenerResponseParamsForwardToCallback(callback));
+
+        }
+
+
     }
 
     static final class Stub extends org.chromium.mojo.bindings.Interface.Stub<RestrictedCookieManager> {
@@ -130,16 +158,18 @@ SetCanonicalCookieResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 RestrictedCookieManager_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -159,42 +189,57 @@ SetCanonicalCookieResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), RestrictedCookieManager_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case GET_ALL_FOR_URL_ORDINAL: {
-            
+
                         RestrictedCookieManagerGetAllForUrlParams data =
                                 RestrictedCookieManagerGetAllForUrlParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().getAllForUrl(data.url, data.siteForCookies, data.options, new RestrictedCookieManagerGetAllForUrlResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case SET_CANONICAL_COOKIE_ORDINAL: {
-            
+
                         RestrictedCookieManagerSetCanonicalCookieParams data =
                                 RestrictedCookieManagerSetCanonicalCookieParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().setCanonicalCookie(data.cookie, data.url, data.siteForCookies, new RestrictedCookieManagerSetCanonicalCookieResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
+
+
+
+
+
+
+
+                    case ADD_CHANGE_LISTENER_ORDINAL: {
+
+                        RestrictedCookieManagerAddChangeListenerParams data =
+                                RestrictedCookieManagerAddChangeListenerParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().addChangeListener(data.url, data.siteForCookies, data.listener, new RestrictedCookieManagerAddChangeListenerResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
                     default:
                         return false;
                 }
@@ -208,39 +253,36 @@ SetCanonicalCookieResponse callback) {
 
     
     static final class RestrictedCookieManagerGetAllForUrlParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.url.mojom.Url url;
         public org.chromium.url.mojom.Url siteForCookies;
         public CookieManagerGetOptions options;
-    
+
         private RestrictedCookieManagerGetAllForUrlParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public RestrictedCookieManagerGetAllForUrlParams() {
             this(0);
         }
-    
+
         public static RestrictedCookieManagerGetAllForUrlParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static RestrictedCookieManagerGetAllForUrlParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static RestrictedCookieManagerGetAllForUrlParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -250,28 +292,30 @@ SetCanonicalCookieResponse callback) {
             RestrictedCookieManagerGetAllForUrlParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new RestrictedCookieManagerGetAllForUrlParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new RestrictedCookieManagerGetAllForUrlParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.url = org.chromium.url.mojom.Url.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.siteForCookies = org.chromium.url.mojom.Url.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                     result.options = CookieManagerGetOptions.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -283,77 +327,40 @@ SetCanonicalCookieResponse callback) {
             
             encoder0.encode(this.options, 24, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            RestrictedCookieManagerGetAllForUrlParams other = (RestrictedCookieManagerGetAllForUrlParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.url, other.url))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.siteForCookies, other.siteForCookies))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.options, other.options))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.url);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.siteForCookies);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.options);
-            return result;
-        }
     }
 
 
 
     
     static final class RestrictedCookieManagerGetAllForUrlResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public CanonicalCookie[] cookies;
-    
+
         private RestrictedCookieManagerGetAllForUrlResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public RestrictedCookieManagerGetAllForUrlResponseParams() {
             this(0);
         }
-    
+
         public static RestrictedCookieManagerGetAllForUrlResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static RestrictedCookieManagerGetAllForUrlResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static RestrictedCookieManagerGetAllForUrlResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -363,9 +370,10 @@ SetCanonicalCookieResponse callback) {
             RestrictedCookieManagerGetAllForUrlResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new RestrictedCookieManagerGetAllForUrlResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new RestrictedCookieManagerGetAllForUrlResponseParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     {
                         org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -376,13 +384,14 @@ SetCanonicalCookieResponse callback) {
                             result.cookies[i1] = CanonicalCookie.decode(decoder2);
                         }
                     }
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -397,34 +406,6 @@ SetCanonicalCookieResponse callback) {
                     encoder1.encode(this.cookies[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
                 }
             }
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            RestrictedCookieManagerGetAllForUrlResponseParams other = (RestrictedCookieManagerGetAllForUrlResponseParams) object;
-            if (!java.util.Arrays.deepEquals(this.cookies, other.cookies))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + java.util.Arrays.deepHashCode(this.cookies);
-            return result;
         }
     }
 
@@ -493,39 +474,36 @@ SetCanonicalCookieResponse callback) {
 
     
     static final class RestrictedCookieManagerSetCanonicalCookieParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public CanonicalCookie cookie;
         public org.chromium.url.mojom.Url url;
         public org.chromium.url.mojom.Url siteForCookies;
-    
+
         private RestrictedCookieManagerSetCanonicalCookieParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public RestrictedCookieManagerSetCanonicalCookieParams() {
             this(0);
         }
-    
+
         public static RestrictedCookieManagerSetCanonicalCookieParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static RestrictedCookieManagerSetCanonicalCookieParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static RestrictedCookieManagerSetCanonicalCookieParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -535,28 +513,30 @@ SetCanonicalCookieResponse callback) {
             RestrictedCookieManagerSetCanonicalCookieParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new RestrictedCookieManagerSetCanonicalCookieParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new RestrictedCookieManagerSetCanonicalCookieParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.cookie = CanonicalCookie.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.url = org.chromium.url.mojom.Url.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                     result.siteForCookies = org.chromium.url.mojom.Url.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -568,77 +548,40 @@ SetCanonicalCookieResponse callback) {
             
             encoder0.encode(this.siteForCookies, 24, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            RestrictedCookieManagerSetCanonicalCookieParams other = (RestrictedCookieManagerSetCanonicalCookieParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.cookie, other.cookie))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.url, other.url))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.siteForCookies, other.siteForCookies))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cookie);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.url);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.siteForCookies);
-            return result;
-        }
     }
 
 
 
     
     static final class RestrictedCookieManagerSetCanonicalCookieResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean success;
-    
+
         private RestrictedCookieManagerSetCanonicalCookieResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public RestrictedCookieManagerSetCanonicalCookieResponseParams() {
             this(0);
         }
-    
+
         public static RestrictedCookieManagerSetCanonicalCookieResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static RestrictedCookieManagerSetCanonicalCookieResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static RestrictedCookieManagerSetCanonicalCookieResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -648,51 +591,25 @@ SetCanonicalCookieResponse callback) {
             RestrictedCookieManagerSetCanonicalCookieResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new RestrictedCookieManagerSetCanonicalCookieResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new RestrictedCookieManagerSetCanonicalCookieResponseParams(elementsOrVersion);
+                    {
+                        
                     result.success = decoder0.readBoolean(8, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.success, 8, 0);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            RestrictedCookieManagerSetCanonicalCookieResponseParams other = (RestrictedCookieManagerSetCanonicalCookieResponseParams) object;
-            if (this.success!= other.success)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
-            return result;
         }
     }
 
@@ -751,6 +668,198 @@ SetCanonicalCookieResponse callback) {
                             mCore,
                             new org.chromium.mojo.bindings.MessageHeader(
                                     SET_CANONICAL_COOKIE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class RestrictedCookieManagerAddChangeListenerParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 32;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public org.chromium.url.mojom.Url url;
+        public org.chromium.url.mojom.Url siteForCookies;
+        public CookieChangeListener listener;
+
+        private RestrictedCookieManagerAddChangeListenerParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public RestrictedCookieManagerAddChangeListenerParams() {
+            this(0);
+        }
+
+        public static RestrictedCookieManagerAddChangeListenerParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static RestrictedCookieManagerAddChangeListenerParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static RestrictedCookieManagerAddChangeListenerParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            RestrictedCookieManagerAddChangeListenerParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new RestrictedCookieManagerAddChangeListenerParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.url = org.chromium.url.mojom.Url.decode(decoder1);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    result.siteForCookies = org.chromium.url.mojom.Url.decode(decoder1);
+                    }
+                    {
+                        
+                    result.listener = decoder0.readServiceInterface(24, false, CookieChangeListener.MANAGER);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.url, 8, false);
+            
+            encoder0.encode(this.siteForCookies, 16, false);
+            
+            encoder0.encode(this.listener, 24, false, CookieChangeListener.MANAGER);
+        }
+    }
+
+
+
+    
+    static final class RestrictedCookieManagerAddChangeListenerResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 8;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+
+        private RestrictedCookieManagerAddChangeListenerResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public RestrictedCookieManagerAddChangeListenerResponseParams() {
+            this(0);
+        }
+
+        public static RestrictedCookieManagerAddChangeListenerResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static RestrictedCookieManagerAddChangeListenerResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static RestrictedCookieManagerAddChangeListenerResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            RestrictedCookieManagerAddChangeListenerResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new RestrictedCookieManagerAddChangeListenerResponseParams(elementsOrVersion);
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+        }
+    }
+
+    static class RestrictedCookieManagerAddChangeListenerResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final RestrictedCookieManager.AddChangeListenerResponse mCallback;
+
+        RestrictedCookieManagerAddChangeListenerResponseParamsForwardToCallback(RestrictedCookieManager.AddChangeListenerResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(ADD_CHANGE_LISTENER_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                mCallback.call();
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class RestrictedCookieManagerAddChangeListenerResponseParamsProxyToResponder implements RestrictedCookieManager.AddChangeListenerResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        RestrictedCookieManagerAddChangeListenerResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call() {
+            RestrictedCookieManagerAddChangeListenerResponseParams _response = new RestrictedCookieManagerAddChangeListenerResponseParams();
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    ADD_CHANGE_LISTENER_ORDINAL,
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
                                     mRequestId));
             mMessageReceiver.accept(_message);

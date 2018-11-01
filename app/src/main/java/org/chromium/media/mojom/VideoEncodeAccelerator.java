@@ -19,17 +19,17 @@ public interface VideoEncodeAccelerator extends org.chromium.mojo.bindings.Inter
 
 
     public static final class Error {
-    
-    
+
+
         public static final int ILLEGAL_STATE = 0;
-    
+
         public static final int INVALID_ARGUMENT = ILLEGAL_STATE + 1;
-    
+
         public static final int PLATFORM_FAILURE = INVALID_ARGUMENT + 1;
-    
-    
+
+
         private static final boolean IS_EXTENSIBLE = false;
-    
+
         public static boolean isKnownValue(int value) {
             switch (value) {
                 case 0:
@@ -39,16 +39,16 @@ public interface VideoEncodeAccelerator extends org.chromium.mojo.bindings.Inter
             }
             return false;
         }
-    
+
         public static void validate(int value) {
             if (IS_EXTENSIBLE || isKnownValue(value))
                 return;
-    
+
             throw new DeserializationException("Invalid enum value.");
         }
-    
+
         private Error() {}
-    
+
     }
 
 
@@ -59,7 +59,7 @@ public interface VideoEncodeAccelerator extends org.chromium.mojo.bindings.Inter
 
 
     void initialize(
-int inputFormat, org.chromium.gfx.mojom.Size inputVisibleSize, int outputProfile, int initialBitrate, VideoEncodeAcceleratorClient client, 
+VideoEncodeAcceleratorConfig config, VideoEncodeAcceleratorClient client, 
 InitializeResponse callback);
 
     interface InitializeResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Boolean> { }
@@ -80,7 +80,7 @@ int bitstreamBufferId, org.chromium.mojo.system.SharedBufferHandle buffer);
 
 
     void requestEncodingParametersChange(
-int bitrate, int framerate);
+VideoBitrateAllocation bitrateAllocation, int framerate);
 
 
 }

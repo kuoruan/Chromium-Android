@@ -8,9 +8,12 @@ import android.support.annotation.Nullable;
 
 import org.chromium.base.Callback;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder.PartialBindCallback;
+import org.chromium.chrome.browser.modelutil.ListObservable;
+import org.chromium.chrome.browser.modelutil.ListObservable.ListObserver;
+import org.chromium.chrome.browser.modelutil.RecyclerViewAdapter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -18,9 +21,13 @@ import java.util.Set;
 
 /**
  * An inner node in the tree: the root of a subtree, with a list of child nodes.
+ *
+ * @param <VH> The view holder type.
+ * @param <P> The payload type for partial updates, or Void if the node doesn't support partial
+ *         updates.
  */
-public class InnerNode extends ChildNode implements NodeParent {
-    private final List<TreeNode> mChildren = new ArrayList<>();
+public class InnerNode<VH, P> extends ChildNode<VH, P> implements ListObserver<P> {
+    private final List<RecyclerViewAdapter.Delegate<VH, P>> mChildren = new ArrayList<>();
 
     private int getChildIndexForPosition(int position) {
         checkIndex(position);
@@ -47,21 +54,14 @@ public class InnerNode extends ChildNode implements NodeParent {
         return offset;
     }
 
-    int getStartingOffsetForChild(TreeNode child) {
+    protected int getStartingOffsetForChild(ListObservable child) {
         return getStartingOffsetForChildIndex(mChildren.indexOf(child));
-    }
-
-    /**
-     * Returns the child whose subtree contains the item at the given position.
-     */
-    TreeNode getChildForPosition(int position) {
-        return mChildren.get(getChildIndexForPosition(position));
     }
 
     @Override
     protected int getItemCountForDebugging() {
         int numItems = 0;
-        for (TreeNode child : mChildren) {
+        for (RecyclerViewAdapter.Delegate<VH, P> child : mChildren) {
             numItems += child.getItemCount();
         }
         return numItems;
@@ -76,10 +76,10 @@ public class InnerNode extends ChildNode implements NodeParent {
     }
 
     @Override
-    public void onBindViewHolder(NewTabPageViewHolder holder, int position) {
+    public void onBindViewHolder(VH holder, int position, P callback) {
         int index = getChildIndexForPosition(position);
         mChildren.get(index).onBindViewHolder(
-                holder, position - getStartingOffsetForChildIndex(index));
+                holder, position - getStartingOffsetForChildIndex(index), callback);
     }
 
     @Override
@@ -99,51 +99,45 @@ public class InnerNode extends ChildNode implements NodeParent {
     }
 
     @Override
-    public void visitItems(NodeVisitor visitor) {
-        for (TreeNode child : getChildren()) {
-            child.visitItems(visitor);
-        }
+    public String describeItemForTesting(int position) {
+        int index = getChildIndexForPosition(position);
+        return getChildren().get(index).describeItemForTesting(
+                position - getStartingOffsetForChildIndex(index));
     }
 
     @Override
     public void onItemRangeChanged(
-            TreeNode child, int index, int count, @Nullable PartialBindCallback callback) {
-        notifyItemRangeChanged(getStartingOffsetForChild(child) + index, count, callback);
+            ListObservable<P> source, int index, int count, @Nullable P payload) {
+        notifyItemRangeChanged(getStartingOffsetForChild(source) + index, count, payload);
     }
 
     @Override
-    public void onItemRangeInserted(TreeNode child, int index, int count) {
-        notifyItemRangeInserted(getStartingOffsetForChild(child) + index, count);
+    public void onItemRangeInserted(ListObservable source, int index, int count) {
+        notifyItemRangeInserted(getStartingOffsetForChild(source) + index, count);
     }
 
     @Override
-    public void onItemRangeRemoved(TreeNode child, int index, int count) {
-        notifyItemRangeRemoved(getStartingOffsetForChild(child) + index, count);
-    }
-
-    /**
-     * Helper method that adds a new child node and notifies about its insertion.
-     *
-     * @param child The child node to be added.
-     */
-    protected void addChild(TreeNode child) {
-        int insertedIndex = getItemCount();
-        mChildren.add(child);
-        child.setParent(this);
-
-        int count = child.getItemCount();
-        if (count > 0) notifyItemRangeInserted(insertedIndex, count);
+    public void onItemRangeRemoved(ListObservable source, int index, int count) {
+        notifyItemRangeRemoved(getStartingOffsetForChild(source) + index, count);
     }
 
     /**
      * Helper method that adds all the children and notifies about the inserted items.
      */
-    protected void addChildren(TreeNode... children) {
+    @SafeVarargs
+    protected final void addChildren(RecyclerViewAdapter.Delegate<VH, P>... children) {
+        addChildren(Arrays.asList(children));
+    }
+
+    /**
+     * Helper method that adds all the children and notifies about the inserted items.
+     */
+    protected void addChildren(Iterable<RecyclerViewAdapter.Delegate<VH, P>> children) {
         int initialCount = getItemCount();
         int addedCount = 0;
-        for (TreeNode child : children) {
+        for (RecyclerViewAdapter.Delegate<VH, P> child : children) {
             mChildren.add(child);
-            child.setParent(this);
+            child.addObserver(this);
             addedCount += child.getItemCount();
         }
 
@@ -155,14 +149,14 @@ public class InnerNode extends ChildNode implements NodeParent {
      *
      * @param child The child node to be removed.
      */
-    protected void removeChild(TreeNode child) {
+    protected void removeChild(RecyclerViewAdapter.Delegate<VH, P> child) {
         int removedIndex = mChildren.indexOf(child);
         if (removedIndex == -1) throw new IndexOutOfBoundsException();
 
         int count = child.getItemCount();
         int childStartingOffset = getStartingOffsetForChildIndex(removedIndex);
 
-        child.detach();
+        child.removeObserver(this);
         mChildren.remove(removedIndex);
         if (count > 0) notifyItemRangeRemoved(childStartingOffset, count);
     }
@@ -172,15 +166,16 @@ public class InnerNode extends ChildNode implements NodeParent {
      */
     protected void removeChildren() {
         int itemCount = getItemCount();
-        if (itemCount == 0) return;
 
-        for (TreeNode child : mChildren) child.detach();
+        for (RecyclerViewAdapter.Delegate<VH, P> child : mChildren) {
+            child.removeObserver(this);
+        }
         mChildren.clear();
-        notifyItemRangeRemoved(0, itemCount);
+        if (itemCount > 0) notifyItemRangeRemoved(0, itemCount);
     }
 
     @VisibleForTesting
-    final List<TreeNode> getChildren() {
+    protected final List<RecyclerViewAdapter.Delegate<VH, P>> getChildren() {
         return mChildren;
     }
 

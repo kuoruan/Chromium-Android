@@ -14,6 +14,7 @@ import org.chromium.payments.mojom.PaymentMethodData;
 import org.chromium.payments.mojom.PaymentOptions;
 import org.chromium.payments.mojom.PaymentRequest;
 import org.chromium.payments.mojom.PaymentRequestClient;
+import org.chromium.payments.mojom.PaymentValidationErrors;
 import org.chromium.services.service_manager.InterfaceFactory;
 
 /**
@@ -36,7 +37,7 @@ public class PaymentRequestFactory implements InterfaceFactory<PaymentRequest> {
         }
 
         @Override
-        public void show() {
+        public void show(boolean isUserGesture) {
             if (mClient != null) {
                 mClient.onError(PaymentErrorReason.USER_CANCEL);
                 mClient.close();
@@ -54,6 +55,9 @@ public class PaymentRequestFactory implements InterfaceFactory<PaymentRequest> {
 
         @Override
         public void complete(int result) {}
+
+        @Override
+        public void retry(PaymentValidationErrors errors) {}
 
         @Override
         public void canMakePayment() {

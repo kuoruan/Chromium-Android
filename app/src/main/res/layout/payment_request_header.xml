@@ -46,9 +46,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:singleLine="true"
-                android:textColor="@color/default_text_color"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textAppearance="@style/TextAppearance.PaymentRequestHeaderTitle" />
 
             <TextView
                 android:id="@+id/hostname"
@@ -59,8 +57,7 @@
                 android:ellipsize="start"
                 android:maxLines="1"
                 android:singleLine="true"
-                android:textColor="@color/descriptive_text_color"
-                android:textSize="14sp" />
+                android:textAppearance="@style/BlackBody" />
         </LinearLayout>
 
         <ImageView

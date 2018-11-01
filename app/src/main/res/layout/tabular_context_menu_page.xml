@@ -26,7 +26,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:contentDescription="@null"
+            tools:ignore="ContentDescription"
             android:foreground="@drawable/tabular_context_menu_image_border"
             android:minWidth="@dimen/context_menu_header_image_min_size"
             android:minHeight="@dimen/context_menu_header_image_min_size"

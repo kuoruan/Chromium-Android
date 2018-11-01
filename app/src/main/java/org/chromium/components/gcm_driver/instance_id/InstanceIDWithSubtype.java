@@ -10,6 +10,7 @@ import android.text.TextUtils;
 
 import com.google.android.gms.iid.InstanceID;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 
 import java.io.IOException;
@@ -45,11 +46,10 @@ public class InstanceIDWithSubtype {
      * Returns an instance of this class. Unlike {@link InstanceID#getInstance(Context)}, it is not
      * a singleton, but instead a different instance will be returned for each {@code subtype}.
      */
-    public static InstanceIDWithSubtype getInstance(Context context, String subtype) {
+    public static InstanceIDWithSubtype getInstance(String subtype) {
         if (TextUtils.isEmpty(subtype)) {
             throw new IllegalArgumentException("subtype must not be empty");
         }
-        context = context.getApplicationContext();
 
         synchronized (sSubtypeInstancesLock) {
             InstanceIDWithSubtype existing = sSubtypeInstances.get(subtype);
@@ -59,7 +59,8 @@ public class InstanceIDWithSubtype {
                 } else {
                     Bundle options = new Bundle();
                     options.putCharSequence(OPTION_SUBTYPE, subtype);
-                    InstanceID instanceID = InstanceID.getInstance(context, options);
+                    InstanceID instanceID =
+                            InstanceID.getInstance(ContextUtils.getApplicationContext(), options);
                     existing = new InstanceIDWithSubtype(instanceID);
                 }
                 sSubtypeInstances.put(subtype, existing);

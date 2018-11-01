@@ -7,7 +7,7 @@ package org.chromium.chrome.browser.payments;
 import android.graphics.drawable.Drawable;
 
 import org.chromium.base.ThreadUtils;
-import org.chromium.chrome.browser.payments.ui.PaymentOption;
+import org.chromium.chrome.browser.widget.prefeditor.EditableOption;
 import org.chromium.payments.mojom.PaymentDetailsModifier;
 import org.chromium.payments.mojom.PaymentItem;
 import org.chromium.payments.mojom.PaymentMethodData;
@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 /**
  * The base class for a single payment instrument, e.g., a credit card.
  */
-public abstract class PaymentInstrument extends PaymentOption {
+public abstract class PaymentInstrument extends EditableOption {
     /**
      * The interface for the requester of instrument details.
      */
@@ -140,6 +140,11 @@ public abstract class PaymentInstrument extends PaymentOption {
 
     /** @return Whether this payment instrument can be pre-selected for immediate payment. */
     public boolean canPreselect() {
+        return true;
+    }
+
+    /** @return Whether skip-UI flow with this instrument requires a user gesture. */
+    public boolean isUserGestureRequiredToSkipUi() {
         return true;
     }
 

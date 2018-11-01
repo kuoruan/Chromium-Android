@@ -25,7 +25,7 @@ public interface ContentDecryptionModule extends org.chromium.mojo.bindings.Inte
 
 
     void setClient(
-ContentDecryptionModuleClient client);
+org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client);
 
 
 

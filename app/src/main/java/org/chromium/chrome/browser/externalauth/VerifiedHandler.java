@@ -49,9 +49,7 @@ public class VerifiedHandler extends Handler {
     public boolean sendMessageAtTime(Message msg, long uptimeMillis) {
         Messenger client = msg.replyTo;
         if (!mClientTrustMap.containsKey(client)) mClientTrustMap.put(client, checkCallerIsValid());
-        if (!mClientTrustMap.get(client)) return false;
-
-        return super.sendMessageAtTime(msg, uptimeMillis);
+        return (!mClientTrustMap.get(client)) ? false : super.sendMessageAtTime(msg, uptimeMillis);
     }
 
     /**
@@ -59,11 +57,9 @@ public class VerifiedHandler extends Handler {
      *         set during construction.
      */
     public boolean checkCallerIsValid() {
-        if (TextUtils.isEmpty(mCallerPackageToMatch)) {
-            return ExternalAuthUtils.getInstance().isCallerValid(mContext, mAuthRequirements);
-        } else {
-            return ExternalAuthUtils.getInstance().isCallerValidForPackage(
-                    mContext, mAuthRequirements, mCallerPackageToMatch);
-        }
+        return TextUtils.isEmpty(mCallerPackageToMatch)
+                ? ExternalAuthUtils.getInstance().isCallerValid(mContext, mAuthRequirements)
+                : ExternalAuthUtils.getInstance().isCallerValidForPackage(
+                          mContext, mAuthRequirements, mCallerPackageToMatch);
     }
 }

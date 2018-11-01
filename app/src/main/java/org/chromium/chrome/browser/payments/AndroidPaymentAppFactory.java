@@ -26,7 +26,7 @@ import java.util.Map;
 public class AndroidPaymentAppFactory implements PaymentAppFactoryAddition {
     @Override
     public void create(WebContents webContents, Map<String, PaymentMethodData> methodData,
-            PaymentAppCreatedCallback callback) {
+            boolean mayCrawlUnused, PaymentAppCreatedCallback callback) {
         AndroidPaymentAppFinder.find(webContents, methodData.keySet(),
                 new PaymentManifestWebDataService(), new PaymentManifestDownloader(),
                 new PaymentManifestParser(), new PackageManagerDelegate(), callback);

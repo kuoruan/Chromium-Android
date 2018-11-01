@@ -10,9 +10,13 @@ import android.content.Intent;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
-import org.chromium.chrome.browser.preferences.autofill.AutofillAndPaymentsPreferences;
+import org.chromium.chrome.browser.preferences.autofill.AutofillCreditCardsFragment;
+import org.chromium.chrome.browser.preferences.autofill.AutofillProfilesFragment;
 import org.chromium.chrome.browser.preferences.password.SavePasswordsPreferences;
 import org.chromium.chrome.browser.preferences.privacy.ClearBrowsingDataTabsFragment;
+import org.chromium.content_public.browser.WebContents;
+
+import java.lang.ref.WeakReference;
 
 /**
  * A utility class for launching Chrome Settings.
@@ -62,14 +66,24 @@ public class PreferencesLauncher {
     }
 
     @CalledByNative
-    private static void showAutofillSettings() {
-        launchSettingsPage(ContextUtils.getApplicationContext(),
-                AutofillAndPaymentsPreferences.class.getName());
+    private static void showAutofillProfileSettings(WebContents webContents) {
+        showSettingSubpage(webContents, AutofillProfilesFragment.class.getName());
+    }
+
+    @CalledByNative
+    private static void showAutofillCreditCardSettings(WebContents webContents) {
+        showSettingSubpage(webContents, AutofillCreditCardsFragment.class.getName());
     }
 
     @CalledByNative
     private static void showPasswordSettings() {
         launchSettingsPage(
                 ContextUtils.getApplicationContext(), SavePasswordsPreferences.class.getName());
+    }
+
+    private static void showSettingSubpage(WebContents webContents, String className) {
+        WeakReference<Activity> currentActivity =
+                webContents.getTopLevelNativeWindow().getActivity();
+        launchSettingsPage(currentActivity.get(), className);
     }
 }

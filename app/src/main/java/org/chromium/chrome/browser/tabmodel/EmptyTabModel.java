@@ -12,7 +12,6 @@ import org.chromium.chrome.browser.tab.Tab;
  * Singleton class intended to stub out Tab model before it has been created.
  */
 public class EmptyTabModel implements TabModel {
-
     /**
      * Used to mock TabModel. Application code should use getInstance() to construct an
      * EmptyTabModel.
@@ -83,7 +82,12 @@ public class EmptyTabModel implements TabModel {
     }
 
     @Override
-    public void setIndex(int i, TabSelectionType type) {}
+    public void setIndex(int i, @TabSelectionType int type) {}
+
+    @Override
+    public boolean isCurrentModel() {
+        return false;
+    }
 
     @Override
     public void moveTab(int id, int newIndex) {}
@@ -121,7 +125,7 @@ public class EmptyTabModel implements TabModel {
     }
 
     @Override
-    public void addTab(Tab tab, int index, TabLaunchType type) {
+    public void addTab(Tab tab, int index, @TabLaunchType int type) {
         assert false;
     }
 

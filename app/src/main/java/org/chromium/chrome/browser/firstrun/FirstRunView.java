@@ -5,12 +5,12 @@
 package org.chromium.chrome.browser.firstrun;
 
 import android.content.Context;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 
 /**
@@ -102,10 +102,8 @@ public class FirstRunView extends FrameLayout {
         mMainLayout.setPadding(mMainLayout.getPaddingLeft(), topPadding,
                 mMainLayout.getPaddingRight(), mMainLayout.getPaddingBottom());
 
-        ApiCompatibilityUtils.setPaddingRelative(mImageAndContent,
-                imageAndContentPaddingStart,
-                mImageAndContent.getPaddingTop(),
-                ApiCompatibilityUtils.getPaddingEnd(mImageAndContent),
+        ViewCompat.setPaddingRelative(mImageAndContent, imageAndContentPaddingStart,
+                mImageAndContent.getPaddingTop(), ViewCompat.getPaddingEnd(mImageAndContent),
                 mImageAndContent.getPaddingBottom());
 
         mContentWrapper.setLayoutParams(contentWrapperLayout);

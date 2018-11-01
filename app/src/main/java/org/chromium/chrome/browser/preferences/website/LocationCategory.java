@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.res.Resources;
 
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ContentSettingsType;
 import org.chromium.chrome.browser.preferences.LocationSettings;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.components.location.LocationUtils;
@@ -20,9 +19,8 @@ import org.chromium.components.location.LocationUtils;
  */
 public class LocationCategory extends SiteSettingsCategory {
     public LocationCategory() {
-        super(SiteSettingsCategory.CATEGORY_DEVICE_LOCATION,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION);
+        super(SiteSettingsCategory.Type.DEVICE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION);
     }
 
     @Override

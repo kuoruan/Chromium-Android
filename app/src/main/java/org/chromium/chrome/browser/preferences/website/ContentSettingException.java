@@ -4,14 +4,37 @@
 
 package org.chromium.chrome.browser.preferences.website;
 
+import android.support.annotation.IntDef;
+
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 
 import java.io.Serializable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * Exception information for a given origin.
  */
 public class ContentSettingException implements Serializable {
+    @IntDef({Type.ADS, Type.AUTOPLAY, Type.BACKGROUND_SYNC, Type.COOKIE, Type.JAVASCRIPT,
+            Type.POPUP, Type.SOUND})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Type {
+        // Values used to address array index in Website. Should be enumerated from 0
+        // and can't have gaps.
+        int ADS = 0;
+        int AUTOPLAY = 1;
+        int BACKGROUND_SYNC = 2;
+        int COOKIE = 3;
+        int JAVASCRIPT = 4;
+        int POPUP = 5;
+        int SOUND = 6;
+        /**
+         * Number of handled exceptions used for calculating array sizes.
+         */
+        int NUM_ENTRIES = 7;
+    }
+
     private final int mContentSettingType;
     private final String mPattern;
     private final ContentSetting mContentSetting;

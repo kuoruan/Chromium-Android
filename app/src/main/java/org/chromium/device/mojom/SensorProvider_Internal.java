@@ -18,28 +18,28 @@ class SensorProvider_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<SensorProvider, SensorProvider.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<SensorProvider, SensorProvider.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "device::mojom::SensorProvider";
+            return "device.mojom.SensorProvider";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, SensorProvider impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public SensorProvider[] buildArray(int size) {
           return new SensorProvider[size];
@@ -98,14 +98,14 @@ GetSensorResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 SensorProvider_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -125,27 +125,27 @@ GetSensorResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), SensorProvider_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case GET_SENSOR_ORDINAL: {
-            
+
                         SensorProviderGetSensorParams data =
                                 SensorProviderGetSensorParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().getSensor(data.type, new SensorProviderGetSensorResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -159,37 +159,34 @@ GetSensorResponse callback) {
 
     
     static final class SensorProviderGetSensorParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int type;
-    
+
         private SensorProviderGetSensorParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public SensorProviderGetSensorParams() {
             this(0);
         }
-    
+
         public static SensorProviderGetSensorParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static SensorProviderGetSensorParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static SensorProviderGetSensorParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -199,18 +196,20 @@ GetSensorResponse callback) {
             SensorProviderGetSensorParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new SensorProviderGetSensorParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new SensorProviderGetSensorParams(elementsOrVersion);
+                    {
+                        
                     result.type = decoder0.readInt(8);
                         SensorType.validate(result.type);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -218,72 +217,41 @@ GetSensorResponse callback) {
             
             encoder0.encode(this.type, 8);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            SensorProviderGetSensorParams other = (SensorProviderGetSensorParams) object;
-            if (this.type!= other.type)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
-            return result;
-        }
     }
 
 
 
     
     static final class SensorProviderGetSensorResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int result;
         public SensorInitParams initParams;
-    
+
         private SensorProviderGetSensorResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public SensorProviderGetSensorResponseParams() {
             this(0);
         }
-    
+
         public static SensorProviderGetSensorResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static SensorProviderGetSensorResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static SensorProviderGetSensorResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -293,23 +261,25 @@ GetSensorResponse callback) {
             SensorProviderGetSensorResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new SensorProviderGetSensorResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new SensorProviderGetSensorResponseParams(elementsOrVersion);
+                    {
+                        
                     result.result = decoder0.readInt(8);
                         SensorCreationResult.validate(result.result);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, true);
                     result.initParams = SensorInitParams.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -318,37 +288,6 @@ GetSensorResponse callback) {
             encoder0.encode(this.result, 8);
             
             encoder0.encode(this.initParams, 16, true);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            SensorProviderGetSensorResponseParams other = (SensorProviderGetSensorResponseParams) object;
-            if (this.result!= other.result)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.initParams, other.initParams))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.result);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.initParams);
-            return result;
         }
     }
 

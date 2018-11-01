@@ -20,8 +20,9 @@ import org.chromium.components.feature_engagement.FeatureConstants;
  * becomes front-most.  If that infobar is closed or another infobar comes to the front the window
  * will be dismissed.
  */
-class IPHInfoBarSupport implements OnDismissListener, InfoBarContainer.InfoBarAnimationListener,
-                                   InfoBarContainerObserver {
+public class IPHInfoBarSupport implements OnDismissListener,
+                                          InfoBarContainer.InfoBarAnimationListener,
+                                          InfoBarContainerObserver {
     /** Helper class to hold all relevant display parameters for an in-product help window. */
     public static class TrackerParameters {
         public TrackerParameters(

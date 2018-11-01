@@ -10,13 +10,9 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.metrics.ImpressionTracker.Listener;
-import org.chromium.chrome.browser.metrics.OneShotImpressionListener;
 import org.chromium.chrome.browser.ntp.NewTabPageUma;
 import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 
 import java.util.Calendar;
 
@@ -25,13 +21,6 @@ import java.util.Calendar;
  * to restore the dismissed sections and load new suggestions from the server.
  */
 public class AllDismissedItem extends OptionalLeaf {
-    private final OneShotImpressionListener mOneShotImpressionTracker =
-            new OneShotImpressionListener(() -> {
-                if (FeatureUtilities.isChromeHomeEnabled()) {
-                    RecordUserAction.record("Suggestions.AllDismissed.Shown");
-                }
-            });
-
     @Override
     @ItemViewType
     public int getItemViewType() {
@@ -40,14 +29,12 @@ public class AllDismissedItem extends OptionalLeaf {
 
     @Override
     public void onBindViewHolder(NewTabPageViewHolder holder) {
-        ((ViewHolder) holder)
-                .onBindViewHolder(Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
-                        mOneShotImpressionTracker);
+        ((ViewHolder) holder).onBindViewHolder(Calendar.getInstance().get(Calendar.HOUR_OF_DAY));
     }
 
     @Override
-    public void visitOptionalItem(NodeVisitor visitor) {
-        visitor.visitAllDismissedItem();
+    public String describeForTesting() {
+        return "ALL_DISMISSED";
     }
 
     public void setVisible(boolean visible) {
@@ -70,7 +57,7 @@ public class AllDismissedItem extends OptionalLeaf {
             });
         }
 
-        public void onBindViewHolder(int hourOfDay, Listener listener) {
+        public void onBindViewHolder(int hourOfDay) {
             @StringRes
             final int messageId;
             if (hourOfDay >= 0 && hourOfDay < 12) {
@@ -81,7 +68,6 @@ public class AllDismissedItem extends OptionalLeaf {
                 messageId = R.string.ntp_all_dismissed_body_text_evening;
             }
             mBodyTextView.setText(messageId);
-            setImpressionListener(listener);
         }
 
         @LayoutRes

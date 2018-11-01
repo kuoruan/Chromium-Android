@@ -139,7 +139,7 @@ public class OmniboxResultsAdapter extends BaseAdapter {
          * Triggered when the user indicates they want to delete a suggestion.
          * @param position The position of the suggestion in the drop down view.
          */
-        public void onDeleteSuggestion(int position);
+        public void onDeleteSuggestion(OmniboxSuggestion suggestion, int position);
 
         /**
          * Triggered when the user touches the suggestion view.

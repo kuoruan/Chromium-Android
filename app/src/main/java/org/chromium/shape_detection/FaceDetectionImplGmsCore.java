@@ -99,26 +99,33 @@ public class FaceDetectionImplGmsCore implements FaceDetection {
             for (int j = 0; j < landmarks.size(); j++) {
                 final Landmark landmark = landmarks.get(j);
                 final int landmarkType = landmark.getType();
-                if (landmarkType == Landmark.LEFT_EYE || landmarkType == Landmark.RIGHT_EYE
-                        || landmarkType == Landmark.BOTTOM_MOUTH) {
-                    org.chromium.shape_detection.mojom.Landmark mojoLandmark =
-                            new org.chromium.shape_detection.mojom.Landmark();
-                    mojoLandmark.location = new org.chromium.gfx.mojom.PointF();
-                    mojoLandmark.location.x = landmark.getPosition().x;
-                    mojoLandmark.location.y = landmark.getPosition().y;
-                    mojoLandmark.type = landmarkType == Landmark.BOTTOM_MOUTH ? LandmarkType.MOUTH
-                                                                              : LandmarkType.EYE;
-                    mojoLandmarks.add(mojoLandmark);
-
-                    if (landmarkType == Landmark.LEFT_EYE) {
-                        leftEyeIndex = j;
-                    } else if (landmarkType == Landmark.RIGHT_EYE) {
-                        rightEyeIndex = j;
-                    } else {
-                        assert landmarkType == Landmark.BOTTOM_MOUTH;
-                        bottomMouthIndex = j;
-                    }
+                if (landmarkType != Landmark.LEFT_EYE && landmarkType != Landmark.RIGHT_EYE
+                        && landmarkType != Landmark.BOTTOM_MOUTH
+                        && landmarkType != Landmark.NOSE_BASE) {
+                    continue;
                 }
+
+                org.chromium.shape_detection.mojom.Landmark mojoLandmark =
+                        new org.chromium.shape_detection.mojom.Landmark();
+                mojoLandmark.locations = new org.chromium.gfx.mojom.PointF[1];
+                mojoLandmark.locations[0] = new org.chromium.gfx.mojom.PointF();
+                mojoLandmark.locations[0].x = landmark.getPosition().x;
+                mojoLandmark.locations[0].y = landmark.getPosition().y;
+
+                if (landmarkType == Landmark.LEFT_EYE) {
+                    mojoLandmark.type = LandmarkType.EYE;
+                    leftEyeIndex = j;
+                } else if (landmarkType == Landmark.RIGHT_EYE) {
+                    mojoLandmark.type = LandmarkType.EYE;
+                    rightEyeIndex = j;
+                } else if (landmarkType == Landmark.BOTTOM_MOUTH) {
+                    mojoLandmark.type = LandmarkType.MOUTH;
+                    bottomMouthIndex = j;
+                } else {
+                    assert landmarkType == Landmark.NOSE_BASE;
+                    mojoLandmark.type = LandmarkType.NOSE;
+                }
+                mojoLandmarks.add(mojoLandmark);
             }
             faceArray[i].landmarks = mojoLandmarks.toArray(
                     new org.chromium.shape_detection.mojom.Landmark[mojoLandmarks.size()]);

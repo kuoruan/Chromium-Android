@@ -85,106 +85,108 @@ public class BackgroundTaskSchedulerPrefs {
 
     /** Adds a task to scheduler's preferences, so that it can be rescheduled with OS upgrade. */
     public static void addScheduledTask(TaskInfo taskInfo) {
-        TraceEvent.begin("BackgroundTaskSchedulerPrefs.addScheduledTask",
-                Integer.toString(taskInfo.getTaskId()));
-        SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
-        Set<String> scheduledTasks =
-                prefs.getStringSet(KEY_SCHEDULED_TASKS, new HashSet<String>(1));
-        String prefsEntry = ScheduledTaskPreferenceEntry.createForTaskInfo(taskInfo).toString();
-        if (scheduledTasks.contains(prefsEntry)) return;
+        try (TraceEvent te = TraceEvent.scoped("BackgroundTaskSchedulerPrefs.addScheduledTask",
+                     Integer.toString(taskInfo.getTaskId()))) {
+            SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
+            Set<String> scheduledTasks =
+                    prefs.getStringSet(KEY_SCHEDULED_TASKS, new HashSet<String>(1));
+            String prefsEntry = ScheduledTaskPreferenceEntry.createForTaskInfo(taskInfo).toString();
+            if (scheduledTasks.contains(prefsEntry)) return;
 
-        // Set returned from getStringSet() should not be modified.
-        scheduledTasks = new HashSet<>(scheduledTasks);
-        scheduledTasks.add(prefsEntry);
-        updateScheduledTasks(prefs, scheduledTasks);
-        TraceEvent.end("BackgroundTaskSchedulerPrefs.addScheduledTask");
+            // Set returned from getStringSet() should not be modified.
+            scheduledTasks = new HashSet<>(scheduledTasks);
+            scheduledTasks.add(prefsEntry);
+            updateScheduledTasks(prefs, scheduledTasks);
+        }
     }
 
     /** Removes a task from scheduler's preferences. */
     public static void removeScheduledTask(int taskId) {
-        TraceEvent.begin(
-                "BackgroundTaskSchedulerPrefs.removeScheduledTask", Integer.toString(taskId));
-        SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
-        Set<String> scheduledTasks = getScheduledTaskEntries(prefs);
+        try (TraceEvent te = TraceEvent.scoped("BackgroundTaskSchedulerPrefs.removeScheduledTask",
+                     Integer.toString(taskId))) {
+            SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
+            Set<String> scheduledTasks = getScheduledTaskEntries(prefs);
 
-        String entryToRemove = null;
-        for (String entry : scheduledTasks) {
-            ScheduledTaskPreferenceEntry parsed = ScheduledTaskPreferenceEntry.parseEntry(entry);
-            if (parsed != null && parsed.getTaskId() == taskId) {
-                entryToRemove = entry;
-                break;
+            String entryToRemove = null;
+            for (String entry : scheduledTasks) {
+                ScheduledTaskPreferenceEntry parsed =
+                        ScheduledTaskPreferenceEntry.parseEntry(entry);
+                if (parsed != null && parsed.getTaskId() == taskId) {
+                    entryToRemove = entry;
+                    break;
+                }
             }
+
+            // Entry matching taskId was not found.
+            if (entryToRemove == null) return;
+
+            // Set returned from getStringSet() should not be modified.
+            scheduledTasks = new HashSet<>(scheduledTasks);
+            scheduledTasks.remove(entryToRemove);
+            updateScheduledTasks(prefs, scheduledTasks);
         }
-
-        // Entry matching taskId was not found.
-        if (entryToRemove == null) return;
-
-        // Set returned from getStringSet() should not be modified.
-        scheduledTasks = new HashSet<>(scheduledTasks);
-        scheduledTasks.remove(entryToRemove);
-        updateScheduledTasks(prefs, scheduledTasks);
-        TraceEvent.end("BackgroundTaskSchedulerPrefs.removeScheduledTask");
     }
 
     /** Gets a set of scheduled task class names. */
     public static Set<String> getScheduledTasks() {
-        TraceEvent.begin("BackgroundTaskSchedulerPrefs.getScheduledTasks");
-        SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
-        Set<String> scheduledTask = getScheduledTaskEntries(prefs);
-        Set<String> scheduledTasksClassNames = new HashSet<>(scheduledTask.size());
-        for (String entry : scheduledTask) {
-            ScheduledTaskPreferenceEntry parsed = ScheduledTaskPreferenceEntry.parseEntry(entry);
-            if (parsed != null) {
-                scheduledTasksClassNames.add(parsed.getBackgroundTaskClass());
+        try (TraceEvent te = TraceEvent.scoped("BackgroundTaskSchedulerPrefs.getScheduledTasks")) {
+            SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
+            Set<String> scheduledTask = getScheduledTaskEntries(prefs);
+            Set<String> scheduledTasksClassNames = new HashSet<>(scheduledTask.size());
+            for (String entry : scheduledTask) {
+                ScheduledTaskPreferenceEntry parsed =
+                        ScheduledTaskPreferenceEntry.parseEntry(entry);
+                if (parsed != null) {
+                    scheduledTasksClassNames.add(parsed.getBackgroundTaskClass());
+                }
             }
+            return scheduledTasksClassNames;
         }
-
-        TraceEvent.end("BackgroundTaskSchedulerPrefs.getScheduledTasks");
-        return scheduledTasksClassNames;
     }
 
     /** Gets a set of scheduled task IDs. */
     public static Set<Integer> getScheduledTaskIds() {
-        TraceEvent.begin("BackgroundTaskSchedulerPrefs.getScheduledTaskIds");
-        SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
-        Set<String> scheduledTasks = getScheduledTaskEntries(prefs);
-        Set<Integer> scheduledTaskIds = new HashSet<>(scheduledTasks.size());
-        for (String entry : scheduledTasks) {
-            ScheduledTaskPreferenceEntry parsed = ScheduledTaskPreferenceEntry.parseEntry(entry);
-            if (parsed != null) {
-                scheduledTaskIds.add(parsed.getTaskId());
+        try (TraceEvent te =
+                        TraceEvent.scoped("BackgroundTaskSchedulerPrefs.getScheduledTaskIds")) {
+            SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
+            Set<String> scheduledTasks = getScheduledTaskEntries(prefs);
+            Set<Integer> scheduledTaskIds = new HashSet<>(scheduledTasks.size());
+            for (String entry : scheduledTasks) {
+                ScheduledTaskPreferenceEntry parsed =
+                        ScheduledTaskPreferenceEntry.parseEntry(entry);
+                if (parsed != null) {
+                    scheduledTaskIds.add(parsed.getTaskId());
+                }
             }
+            return scheduledTaskIds;
         }
-
-        TraceEvent.end("BackgroundTaskSchedulerPrefs.getScheduledTaskIds");
-        return scheduledTaskIds;
     }
 
     /** Removes all scheduled tasks from shared preferences store. */
     public static void removeAllTasks() {
-        TraceEvent.begin("BackgroundTaskSchedulerPrefs.removeAllTasks");
-        ContextUtils.getAppSharedPreferences().edit().remove(KEY_SCHEDULED_TASKS).apply();
-        TraceEvent.end("BackgroundTaskSchedulerPrefs.removeAllTasks");
+        try (TraceEvent te = TraceEvent.scoped("BackgroundTaskSchedulerPrefs.removeAllTasks")) {
+            ContextUtils.getAppSharedPreferences().edit().remove(KEY_SCHEDULED_TASKS).apply();
+        }
     }
 
     /** Gets the last SDK version on which this instance ran. Defaults to current SDK version. */
     public static int getLastSdkVersion() {
-        TraceEvent.begin("BackgroundTaskSchedulerPrefs.getLastSdkVersion");
-        int sdkInt = ContextUtils.getAppSharedPreferences().getInt(
-                KEY_LAST_SDK_VERSION, Build.VERSION.SDK_INT);
-        TraceEvent.end("BackgroundTaskSchedulerPrefs.getLastSdkVersion");
-        return sdkInt;
+        try (TraceEvent te = TraceEvent.scoped("BackgroundTaskSchedulerPrefs.getLastSdkVersion")) {
+            int sdkInt = ContextUtils.getAppSharedPreferences().getInt(
+                    KEY_LAST_SDK_VERSION, Build.VERSION.SDK_INT);
+            return sdkInt;
+        }
     }
 
     /** Gets the last SDK version on which this instance ran. */
     public static void setLastSdkVersion(int sdkVersion) {
-        TraceEvent.begin(
-                "BackgroundTaskSchedulerPrefs.setLastSdkVersion", Integer.toString(sdkVersion));
-        ContextUtils.getAppSharedPreferences()
-                .edit()
-                .putInt(KEY_LAST_SDK_VERSION, sdkVersion)
-                .apply();
-        TraceEvent.end("BackgroundTaskSchedulerPrefs.setLastSdkVersion");
+        try (TraceEvent te = TraceEvent.scoped("BackgroundTaskSchedulerPrefs.setLastSdkVersion",
+                     Integer.toString(sdkVersion))) {
+            ContextUtils.getAppSharedPreferences()
+                    .edit()
+                    .putInt(KEY_LAST_SDK_VERSION, sdkVersion)
+                    .apply();
+        }
     }
 
     private static void updateScheduledTasks(SharedPreferences prefs, Set<String> tasks) {

@@ -27,7 +27,7 @@ public final class ChildAccountFeedbackReporter {
         }
 
         new FeedbackCollector(activity, Profile.getLastUsedProfile(), url, null /* categoryTag */,
-                description, true /* takeScreenshot */,
+                description, null, true /* takeScreenshot */,
                 collector -> { sFeedbackReporter.reportFeedback(collector); });
     }
 

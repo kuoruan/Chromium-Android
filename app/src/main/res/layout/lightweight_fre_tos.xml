@@ -1,10 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?><!-- Copyright 2016 The Chromium Authors. All rights reserved.
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2016 The Chromium Authors. All rights reserved.
 
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file.
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -17,7 +19,7 @@
         android:layout_height="24dp"
         android:layout_marginBottom="32dp"
         android:layout_marginStart="24dp"
-        android:contentDescription="@null"
+        tools:ignore="ContentDescription"
         android:scaleType="fitCenter"
         android:src="@drawable/product_logo_name" />
 
@@ -33,30 +35,16 @@
         android:paddingStart="24dp"
         android:textAppearance="@style/BlackBodyDefault" />
 
-    <org.chromium.ui.widget.ButtonCompat
-        android:id="@+id/lightweight_fre_terms_accept"
-        style="@style/WhiteBody"
-        android:layout_width="wrap_content"
-        android:layout_height="36dp"
+    <org.chromium.chrome.browser.widget.DualControlLayout
+        android:id="@+id/lightweight_fre_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_below="@id/lightweight_fre_tos_and_privacy"
-        android:layout_marginEnd="8dp"
-        android:paddingEnd="@dimen/fre_button_padding"
-        android:paddingStart="@dimen/fre_button_padding"
-        android:text="@string/fre_accept_continue"
-        android:textAllCaps="true"
-        chrome:buttonColor="@color/light_active_color"
-        chrome:buttonRaised="false" />
-
-    <Button
-        android:id="@+id/lightweight_fre_cancel"
-        style="@style/ButtonCompatBorderless"
-        android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:layout_below="@id/lightweight_fre_tos_and_privacy"
-        android:layout_toStartOf="@id/lightweight_fre_terms_accept"
-        android:text="@string/cancel"
-        android:textAllCaps="true"
-        android:textColor="@color/light_active_color"
-        android:textSize="@dimen/text_size_medium" />
+        android:paddingEnd="8dp"
+        android:paddingStart="8dp"
+        app:buttonAlignment="end"
+        app:primaryButtonText="@string/fre_accept_continue"
+        app:secondaryButtonText="@string/cancel"
+        app:stackedMargin="@dimen/fre_stacked_button_margin" />
 </RelativeLayout>

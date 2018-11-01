@@ -15,16 +15,23 @@ import android.os.Bundle;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.widget.RemoteViews;
 
+import org.chromium.chrome.browser.notifications.channels.ChannelsInitializer;
+
 /**
  * Wraps a Notification.Builder object.
  */
 public class NotificationBuilder implements ChromeNotificationBuilder {
-    protected final Notification.Builder mBuilder;
+    private final Notification.Builder mBuilder;
     private final Context mContext;
 
-    public NotificationBuilder(Context context) {
+    NotificationBuilder(
+            Context context, String channelId, ChannelsInitializer channelsInitializer) {
         mContext = context;
         mBuilder = new Notification.Builder(mContext);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            channelsInitializer.safeInitialize(channelId);
+            mBuilder.setChannelId(channelId);
+        }
     }
 
     @Override
@@ -154,8 +161,11 @@ public class NotificationBuilder implements ChromeNotificationBuilder {
     }
 
     @Override
-    public ChromeNotificationBuilder setPriority(int pri) {
-        mBuilder.setPriority(pri);
+    @SuppressWarnings("deprecation")
+    public ChromeNotificationBuilder setPriorityBeforeO(int pri) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            mBuilder.setPriority(pri);
+        }
         return this;
     }
 

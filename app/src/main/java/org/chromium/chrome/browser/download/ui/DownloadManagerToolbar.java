@@ -5,15 +5,14 @@
 package org.chromium.chrome.browser.download.ui;
 
 import android.content.Context;
-import android.support.v7.widget.AppCompatSpinner;
 import android.util.AttributeSet;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Spinner;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.download.ui.DownloadManagerUi.DownloadUiObserver;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
 
 import java.util.List;
@@ -21,10 +20,11 @@ import java.util.List;
 /**
  * Handles toolbar functionality for the {@link DownloadManagerUi}.
  */
-public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistoryItemWrapper>
-        implements DownloadUiObserver {
+public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistoryItemWrapper> {
     private Spinner mSpinner;
     private DownloadManagerUi mManager;
+
+    private int mInfoMenuItemId;
 
     public DownloadManagerToolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -39,14 +39,14 @@ public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistor
     }
 
     /**
-     * Initializes the spinner for the download filter.
+     * Initializes UI elements in download toolbar.
      * @param adapter The adapter associated with the spinner.
      */
-    public void initializeFilterSpinner(FilterAdapter adapter) {
-        mSpinner = new AppCompatSpinner(this.getContext());
+    public void initialize(FilterAdapter adapter) {
+        // Initialize the spinner.
+        mSpinner = findViewById(R.id.spinner);
         mSpinner.setAdapter(adapter);
         mSpinner.setOnItemSelectedListener(adapter);
-        addView(mSpinner);
     }
 
     /**
@@ -56,9 +56,16 @@ public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistor
         getMenu().removeItem(R.id.close_menu_id);
     }
 
-    @Override
+    /** Called whenever the selected filter on this adapter should change. */
     public void onFilterChanged(int filter) {
         mSpinner.setSelection(filter);
+    }
+
+    /** Called when this object should be destroyed. */
+    @Override
+    public void destroy() {
+        super.destroy();
+        mSpinner.setAdapter(null);
     }
 
     @Override
@@ -95,14 +102,8 @@ public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistor
     @Override
     protected void onDataChanged(int numItems) {
         super.onDataChanged(numItems);
-        getMenu()
-                .findItem(R.id.info_menu_id)
-                .setVisible(!mIsSearching && !mIsSelectionEnabled && numItems > 0);
-    }
-
-    @Override
-    public void onManagerDestroyed() {
-        mSpinner.setAdapter(null);
+        MenuItem item = getMenu().findItem(mInfoMenuItemId);
+        if (item != null) item.setVisible(!mIsSearching && !mIsSelectionEnabled && numItems > 0);
     }
 
     @Override
@@ -121,6 +122,12 @@ public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistor
     public void hideSearchView() {
         super.hideSearchView();
         mSpinner.setVisibility(VISIBLE);
+    }
+
+    @Override
+    public void setInfoMenuItem(int infoMenuItemId) {
+        super.setInfoMenuItem(infoMenuItemId);
+        mInfoMenuItemId = infoMenuItemId;
     }
 
     /** Returns the {@link Spinner}. */

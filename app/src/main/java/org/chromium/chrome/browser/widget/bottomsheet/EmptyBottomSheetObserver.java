@@ -24,13 +24,16 @@ public class EmptyBottomSheetObserver implements BottomSheetObserver {
     public void onLoadUrl(String url) {}
 
     @Override
-    public void onSheetOffsetChanged(float heightFraction) {}
+    public void onSheetOffsetChanged(float heightFraction, float offsetPx) {}
 
     @Override
     public void onTransitionPeekToHalf(float transitionFraction) {}
 
     @Override
     public void onSheetStateChanged(int newState) {}
+
+    @Override
+    public void onSheetFullyPeeked() {}
 
     @Override
     public void onSheetContentChanged(BottomSheetContent newContent) {}

@@ -35,8 +35,8 @@ import org.chromium.chrome.browser.ntp.snippets.ContentSuggestionsNotificationAc
 import org.chromium.chrome.browser.ntp.snippets.ContentSuggestionsNotificationOptOut;
 import org.chromium.chrome.browser.preferences.NotificationsPreferences;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
-import org.chromium.content.browser.BrowserStartupController;
-import org.chromium.content.browser.BrowserStartupController.StartupCallback;
+import org.chromium.content_public.browser.BrowserStartupController;
+import org.chromium.content_public.browser.BrowserStartupController.StartupCallback;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -176,13 +176,13 @@ public class ContentSuggestionsNotifier {
         ChromeNotificationBuilder builder =
                 NotificationBuilderFactory
                         .createChromeNotificationBuilder(true /* preferCompat */,
-                                ChannelDefinitions.CHANNEL_ID_CONTENT_SUGGESTIONS)
+                                ChannelDefinitions.ChannelId.CONTENT_SUGGESTIONS)
                         .setContentIntent(contentIntent)
                         .setDeleteIntent(deleteIntent)
                         .setContentTitle(title)
                         .setContentText(text)
                         .setGroup(NOTIFICATION_TAG)
-                        .setPriority(priority)
+                        .setPriorityBeforeO(priority)
                         .setLargeIcon(image)
                         .setSmallIcon(R.drawable.ic_chrome);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -193,13 +193,13 @@ public class ContentSuggestionsNotifier {
             builder.addAction(R.drawable.settings_cog, context.getString(R.string.preferences),
                     settingsIntent);
         }
-        if (priority >= 0) {
-            builder.setDefaults(Notification.DEFAULT_ALL);
-        }
-        manager.notify(NOTIFICATION_TAG, nextId, builder.build());
+        if (priority >= 0) builder.setDefaults(Notification.DEFAULT_ALL);
+        Notification notification = builder.build();
+
+        manager.notify(NOTIFICATION_TAG, nextId, notification);
         NotificationUmaTracker.getInstance().onNotificationShown(
-                NotificationUmaTracker.CONTENT_SUGGESTION,
-                ChannelDefinitions.CHANNEL_ID_CONTENT_SUGGESTIONS);
+                NotificationUmaTracker.SystemNotificationType.CONTENT_SUGGESTION, notification);
+
         addActiveNotification(new ActiveNotification(nextId, category, idWithinCategory, uri));
 
         // Set timeout.
@@ -462,10 +462,10 @@ public class ContentSuggestionsNotifier {
                                 Context.NOTIFICATION_SERVICE)),
                 ContextUtils.getApplicationContext().getResources());
         if (enabled) {
-            initializer.ensureInitialized(ChannelDefinitions.CHANNEL_ID_CONTENT_SUGGESTIONS);
+            initializer.ensureInitialized(ChannelDefinitions.ChannelId.CONTENT_SUGGESTIONS);
         } else {
             initializer.ensureInitializedAndDisabled(
-                    ChannelDefinitions.CHANNEL_ID_CONTENT_SUGGESTIONS);
+                    ChannelDefinitions.ChannelId.CONTENT_SUGGESTIONS);
         }
         prefs.edit().putBoolean(PREF_CHANNEL_CREATED, true).apply();
         return true;
@@ -485,7 +485,7 @@ public class ContentSuggestionsNotifier {
         NotificationManagerProxy manager = new NotificationManagerProxyImpl(
                 (NotificationManager) ContextUtils.getApplicationContext().getSystemService(
                         Context.NOTIFICATION_SERVICE));
-        manager.deleteNotificationChannel(ChannelDefinitions.CHANNEL_ID_CONTENT_SUGGESTIONS);
+        manager.deleteNotificationChannel(ChannelDefinitions.ChannelId.CONTENT_SUGGESTIONS);
         prefs.edit().remove(PREF_CHANNEL_CREATED).apply();
     }
 
@@ -503,7 +503,7 @@ public class ContentSuggestionsNotifier {
         if (!browserStartup.isStartupSuccessfullyCompleted()) {
             browserStartup.addStartupCompletedObserver(new StartupCallback() {
                 @Override
-                public void onSuccess(boolean alreadyStarted) {
+                public void onSuccess() {
                     flushCachedMetrics();
                 }
                 @Override

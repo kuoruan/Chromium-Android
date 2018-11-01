@@ -21,21 +21,21 @@ public final class Geoposition extends org.chromium.mojo.bindings.Struct {
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
 
     public static final class ErrorCode {
-    
-    
+
+
         public static final int NONE = (int) (0L);
-    
+
         public static final int PERMISSION_DENIED = (int) (1L);
-    
+
         public static final int POSITION_UNAVAILABLE = (int) (2L);
-    
+
         public static final int TIMEOUT = (int) (3L);
-    
+
         public static final int LAST = (int) (Geoposition.ErrorCode.TIMEOUT);
-    
-    
+
+
         private static final boolean IS_EXTENSIBLE = false;
-    
+
         public static boolean isKnownValue(int value) {
             switch (value) {
                 case 0:
@@ -46,16 +46,16 @@ public final class Geoposition extends org.chromium.mojo.bindings.Struct {
             }
             return false;
         }
-    
+
         public static void validate(int value) {
             if (IS_EXTENSIBLE || isKnownValue(value))
                 return;
-    
+
             throw new DeserializationException("Invalid enum value.");
         }
-    
+
         private ErrorCode() {}
-    
+
     }
     public boolean valid;
     public double latitude;
@@ -65,7 +65,7 @@ public final class Geoposition extends org.chromium.mojo.bindings.Struct {
     public double altitudeAccuracy;
     public double heading;
     public double speed;
-    public org.chromium.mojo.common.mojom.Time timestamp;
+    public org.chromium.mojo_base.mojom.Time timestamp;
     public int errorCode;
     public String errorMessage;
 
@@ -95,9 +95,6 @@ public final class Geoposition extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static Geoposition deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -111,53 +108,55 @@ public final class Geoposition extends org.chromium.mojo.bindings.Struct {
         Geoposition result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new Geoposition(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new Geoposition(elementsOrVersion);
+                {
+                    
                 result.valid = decoder0.readBoolean(8, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.errorCode = decoder0.readInt(12);
                     Geoposition.ErrorCode.validate(result.errorCode);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.latitude = decoder0.readDouble(16);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.longitude = decoder0.readDouble(24);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.altitude = decoder0.readDouble(32);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.accuracy = decoder0.readDouble(40);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.altitudeAccuracy = decoder0.readDouble(48);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.heading = decoder0.readDouble(56);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.speed = decoder0.readDouble(64);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(72, false);
-                result.timestamp = org.chromium.mojo.common.mojom.Time.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                result.timestamp = org.chromium.mojo_base.mojom.Time.decode(decoder1);
+                }
+                {
+                    
                 result.errorMessage = decoder0.readString(80, false);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -190,63 +189,5 @@ public final class Geoposition extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.timestamp, 72, false);
         
         encoder0.encode(this.errorMessage, 80, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        Geoposition other = (Geoposition) object;
-        if (this.valid!= other.valid)
-            return false;
-        if (this.latitude!= other.latitude)
-            return false;
-        if (this.longitude!= other.longitude)
-            return false;
-        if (this.altitude!= other.altitude)
-            return false;
-        if (this.accuracy!= other.accuracy)
-            return false;
-        if (this.altitudeAccuracy!= other.altitudeAccuracy)
-            return false;
-        if (this.heading!= other.heading)
-            return false;
-        if (this.speed!= other.speed)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.timestamp, other.timestamp))
-            return false;
-        if (this.errorCode!= other.errorCode)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.errorMessage, other.errorMessage))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.valid);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.latitude);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.longitude);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.altitude);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.accuracy);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.altitudeAccuracy);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.heading);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.speed);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.timestamp);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.errorCode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.errorMessage);
-        return result;
     }
 }

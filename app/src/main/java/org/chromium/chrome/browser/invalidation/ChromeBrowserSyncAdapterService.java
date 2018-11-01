@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.chrome.browser.init.ProcessInitializationHandler;
 
 /**
@@ -28,7 +29,7 @@ public class ChromeBrowserSyncAdapterService extends Service {
         synchronized (LOCK) {
             if (sSyncAdapter == null) {
                 ProcessInitializationHandler.getInstance().initializePreNative();
-                sSyncAdapter = new ChromeBrowserSyncAdapter(applicationContext, getApplication());
+                sSyncAdapter = new ChromeBrowserSyncAdapter(applicationContext);
             }
         }
         return sSyncAdapter;
@@ -36,6 +37,6 @@ public class ChromeBrowserSyncAdapterService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return getOrCreateSyncAdapter(getApplicationContext()).getSyncAdapterBinder();
+        return getOrCreateSyncAdapter(ContextUtils.getApplicationContext()).getSyncAdapterBinder();
     }
 }

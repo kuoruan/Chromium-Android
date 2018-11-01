@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.preferences.PreferenceUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +33,7 @@ import java.util.Locale;
  * accept languages. There is a {@link SearchView} on its Actionbar to make a quick lookup.
  */
 public class AddLanguageFragment extends Fragment {
-    static final String INTENT_NEW_ACCEPT_LANGAUGE = "AddLanguageFragment.NewLangauge";
+    static final String INTENT_NEW_ACCEPT_LANGUAGE = "AddLanguageFragment.NewLanguage";
 
     /**
      * A host to launch AddLanguageFragment and receive the result.
@@ -95,7 +96,8 @@ public class AddLanguageFragment extends Fragment {
         super.onCreate(savedInstanceState);
         getActivity().setTitle(R.string.prefs_add_language);
         setHasOptionsMenu(true);
-        LanguagesManager.recordImpression(LanguagesManager.PAGE_ADD_LANGUAGE);
+        LanguagesManager.recordImpression(
+                LanguagesManager.LanguageSettingsPageType.PAGE_ADD_LANGUAGE);
     }
 
     @Override
@@ -115,7 +117,7 @@ public class AddLanguageFragment extends Fragment {
         mFullLanguageList = LanguagesManager.getInstance().getLanguageItemsExcludingUserAccept();
         mItemClickListener = item -> {
             Intent intent = new Intent();
-            intent.putExtra(INTENT_NEW_ACCEPT_LANGAUGE, item.getCode());
+            intent.putExtra(INTENT_NEW_ACCEPT_LANGUAGE, item.getCode());
             activity.setResult(Activity.RESULT_OK, intent);
             activity.finish();
         };
@@ -123,6 +125,9 @@ public class AddLanguageFragment extends Fragment {
 
         mRecyclerView.setAdapter(mAdapter);
         mAdapter.reload(mFullLanguageList);
+        mRecyclerView.getViewTreeObserver().addOnScrollChangedListener(
+                PreferenceUtils.getShowShadowOnScrollListener(
+                        mRecyclerView, view.findViewById(R.id.shadow)));
         return view;
     }
 

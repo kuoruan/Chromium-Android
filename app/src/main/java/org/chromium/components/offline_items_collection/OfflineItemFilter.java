@@ -16,22 +16,20 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    OfflineItemFilter.FILTER_ALL, OfflineItemFilter.FILTER_PAGE, OfflineItemFilter.FILTER_VIDEO,
-    OfflineItemFilter.FILTER_AUDIO, OfflineItemFilter.FILTER_IMAGE,
-    OfflineItemFilter.FILTER_DOCUMENT, OfflineItemFilter.FILTER_OTHER,
-    OfflineItemFilter.FILTER_BOUNDARY
+    OfflineItemFilter.FILTER_PAGE, OfflineItemFilter.FILTER_VIDEO, OfflineItemFilter.FILTER_AUDIO,
+    OfflineItemFilter.FILTER_IMAGE, OfflineItemFilter.FILTER_DOCUMENT,
+    OfflineItemFilter.FILTER_OTHER, OfflineItemFilter.FILTER_BOUNDARY
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface OfflineItemFilter {
-  int FILTER_ALL = 0;
-  int FILTER_PAGE = 1;
-  int FILTER_VIDEO = 2;
-  int FILTER_AUDIO = 3;
-  int FILTER_IMAGE = 4;
-  int FILTER_DOCUMENT = 5;
-  int FILTER_OTHER = 6;
+  int FILTER_PAGE = 0;
+  int FILTER_VIDEO = 1;
+  int FILTER_AUDIO = 2;
+  int FILTER_IMAGE = 3;
+  int FILTER_DOCUMENT = 4;
+  int FILTER_OTHER = 5;
   /**
    * Maximum value.
    */
-  int FILTER_BOUNDARY = 7;
+  int FILTER_BOUNDARY = 6;
 }

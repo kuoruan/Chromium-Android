@@ -10,7 +10,6 @@ import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
-import org.chromium.base.annotations.MainDex;
 
 import java.util.concurrent.FutureTask;
 
@@ -22,13 +21,12 @@ import java.util.concurrent.FutureTask;
  * content/browser/geolocation/location_api_adapter_android.h.
  * Based on android.webkit.GeolocationService.java
  */
-@MainDex
 @VisibleForTesting
 public class LocationProviderAdapter {
     private static final String TAG = "cr_LocationProvider";
 
     // Delegate handling the real work in the main thread.
-    private LocationProviderFactory.LocationProvider mImpl;
+    private LocationProvider mImpl;
 
     private LocationProviderAdapter() {
         mImpl = LocationProviderFactory.create();

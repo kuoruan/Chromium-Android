@@ -10,6 +10,19 @@ import org.chromium.mojo.system.Core;
  * Base class for all mojo unions.
  */
 public abstract class Union {
+    /** They type of object that has been set. */
+    protected int mTag;
+
+    /** Returns the type of object being held by this union. */
+    public int which() {
+        return mTag;
+    }
+
+    /** Returns whether the type of object in this union is known. */
+    public boolean isUnknown() {
+        return mTag == -1;
+    }
+
     /**
      * Returns the serialization of the union. This method can close Handles.
      *

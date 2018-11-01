@@ -9,8 +9,7 @@ package org.chromium.chrome.browser.compositor.layouts.eventfilter;
  */
 public class EmptyEdgeSwipeHandler implements EdgeSwipeHandler {
     @Override
-    public void swipeStarted(ScrollDirection direction, float x, float y) {
-    }
+    public void swipeStarted(@ScrollDirection int direction, float x, float y) {}
 
     @Override
     public void swipeUpdated(float x, float y, float dx, float dy, float tx, float ty) {
@@ -25,7 +24,7 @@ public class EmptyEdgeSwipeHandler implements EdgeSwipeHandler {
     }
 
     @Override
-    public boolean isSwipeEnabled(ScrollDirection direction) {
+    public boolean isSwipeEnabled(@ScrollDirection int direction) {
         return true;
     }
 

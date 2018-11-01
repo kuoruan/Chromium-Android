@@ -44,8 +44,9 @@ class TapDurationSuppression extends ContextualSearchHeuristic {
     }
 
     @Override
-    protected void logRankerTapSuppression(ContextualSearchRankerLogger logger) {
-        logger.logFeature(ContextualSearchRankerLogger.Feature.TAP_DURATION_MS, mTapDurationMs);
+    protected void logRankerTapSuppression(ContextualSearchInteractionRecorder logger) {
+        logger.logFeature(
+                ContextualSearchInteractionRecorder.Feature.TAP_DURATION_MS, mTapDurationMs);
     }
 
     @Override

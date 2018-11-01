@@ -6,33 +6,42 @@ package org.chromium.chrome.browser.compositor.layouts.phone.stack;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.support.annotation.IntDef;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.compositor.animation.FloatProperty;
 import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
 import org.chromium.chrome.browser.compositor.layouts.Layout.Orientation;
 import org.chromium.chrome.browser.compositor.layouts.components.LayoutTab;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * StackTab is used to keep track of a thumbnail's bitmap and position and to
  * draw itself onto the GL canvas at the desired Y Offset.
  * @VisibleForTesting
  */
-public class StackTab implements ChromeAnimation.Animatable<StackTab.Property> {
+public class StackTab implements ChromeAnimation.Animatable {
     /**
      * Properties that can be animated by using a
      * {@link org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable}.
      */
-    enum Property {
-        SCALE,
-        SCROLL_OFFSET,
-        ALPHA,
-        X_IN_STACK_INFLUENCE,
-        X_IN_STACK_OFFSET,
-        X_OUT_OF_STACK,
-        Y_IN_STACK_INFLUENCE,
-        Y_IN_STACK_OFFSET,
-        Y_OUT_OF_STACK,
-        DISCARD_AMOUNT
+    @IntDef({Property.SCALE, Property.SCROLL_OFFSET, Property.ALPHA, Property.X_IN_STACK_INFLUENCE,
+            Property.X_IN_STACK_OFFSET, Property.X_OUT_OF_STACK, Property.Y_IN_STACK_INFLUENCE,
+            Property.Y_IN_STACK_OFFSET, Property.Y_OUT_OF_STACK, Property.DISCARD_AMOUNT})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Property {
+        int SCALE = 0;
+        int SCROLL_OFFSET = 1;
+        int ALPHA = 2;
+        int X_IN_STACK_INFLUENCE = 3;
+        int X_IN_STACK_OFFSET = 4;
+        int X_OUT_OF_STACK = 5;
+        int Y_IN_STACK_INFLUENCE = 6;
+        int Y_IN_STACK_OFFSET = 7;
+        int Y_OUT_OF_STACK = 8;
+        int DISCARD_AMOUNT = 9;
     }
 
     // Cached values from values/dimens.xml
@@ -80,6 +89,19 @@ public class StackTab implements ChromeAnimation.Animatable<StackTab.Property> {
     private int mOrderSortingValue; // Sorting value based on distance to selection.
 
     private LayoutTab mLayoutTab;
+
+    public static final FloatProperty<StackTab> SCROLL_OFFSET =
+            new FloatProperty<StackTab>("SCROLL_OFFSET") {
+                @Override
+                public void setValue(StackTab layoutTab, float v) {
+                    layoutTab.setScrollOffset(v);
+                }
+
+                @Override
+                public Float get(StackTab layoutTab) {
+                    return layoutTab.getScrollOffset();
+                }
+            };
 
     /**
      * @param tab The tab this instance is supposed to draw.
@@ -337,44 +359,6 @@ public class StackTab implements ChromeAnimation.Animatable<StackTab.Property> {
     }
 
     /**
-     * The scroll space does not map linearly to the screen so it creates a nice slow down
-     * effect at the top of the screen while scrolling.
-     * Warps x so it matches y(x) = x - warpSize on the positive side and 0 on the negative side
-     * with a smooth transition between [0, 2 * warpSize].
-     * @see #screenToScroll(float, float)
-     *
-     * [-oo, 0] -> 0
-     * [0, 2 * warpSize] -> warpSize * ((x-warpSize) / 2 * warpSize + 0.5) ^ 2.
-     * [2 * warpSize, +oo] -> x
-     * @param x        The offset in scroll space.
-     * @param warpSize The size in scroll space of the slow down effect.
-     * @return         The offset on screen corresponding to the scroll space offset.
-     */
-    public static float scrollToScreen(float x, float warpSize) {
-        if (x <= 0) return 0;
-        if (x >= 2 * warpSize) return x - warpSize;
-        x = (x - warpSize) / (2.0f * warpSize) + 0.5f;
-        return x * x * warpSize;
-    }
-
-    /**
-     * Unwarps x so it matches the above warp function.
-     * @see #scrollToScreen(float, float)
-     *
-     * [-oo, 0] -> -warpSize
-     * [0, warpSize] -> 2 * warpSize * sqrt(x / warpSize).
-     * [warpSize, +oo] -> x + warpSize
-     * @param x        The screen space offset.
-     * @param warpSize The size in scroll space of the slow down effect.
-     * @return         The offset in scroll space corresponding to the offset on screen.
-     */
-    public static float screenToScroll(float x, float warpSize) {
-        if (x <= 0) return 0;
-        if (x >= warpSize) return x + warpSize;
-        return (float) Math.sqrt(x * warpSize) * 2;
-    }
-
-    /**
      * @param orientation The orientation to choose to get the size.
      * @return            The size of the content along the provided orientation.
      */
@@ -482,41 +466,41 @@ public class StackTab implements ChromeAnimation.Animatable<StackTab.Property> {
      * @param val The value to set it to
      */
     @Override
-    public void setProperty(Property prop, float val) {
+    public void setProperty(@Property int prop, float val) {
         switch (prop) {
-            case SCALE:
+            case Property.SCALE:
                 setScale(val);
                 break;
-            case SCROLL_OFFSET:
+            case Property.SCROLL_OFFSET:
                 setScrollOffset(val);
                 break;
-            case ALPHA:
+            case Property.ALPHA:
                 setAlpha(val);
                 break;
-            case X_IN_STACK_INFLUENCE:
+            case Property.X_IN_STACK_INFLUENCE:
                 setXInStackInfluence(val);
                 break;
-            case X_IN_STACK_OFFSET:
+            case Property.X_IN_STACK_OFFSET:
                 setXInStackOffset(val);
                 break;
-            case X_OUT_OF_STACK:
+            case Property.X_OUT_OF_STACK:
                 setXOutOfStack(val);
                 break;
-            case Y_IN_STACK_INFLUENCE:
+            case Property.Y_IN_STACK_INFLUENCE:
                 setYInStackInfluence(val);
                 break;
-            case Y_IN_STACK_OFFSET:
+            case Property.Y_IN_STACK_OFFSET:
                 setYInStackOffset(val);
                 break;
-            case Y_OUT_OF_STACK:
+            case Property.Y_OUT_OF_STACK:
                 setYOutOfStack(val);
                 break;
-            case DISCARD_AMOUNT:
+            case Property.DISCARD_AMOUNT:
                 setDiscardAmount(val);
                 break;
         }
     }
 
     @Override
-    public void onPropertyAnimationFinished(Property prop) {}
+    public void onPropertyAnimationFinished(@Property int prop) {}
 }

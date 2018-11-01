@@ -59,22 +59,24 @@ public class ChromeBackupAgent extends BackupAgent {
 
     // Restore status is used to pass the result of any restore to Chrome's first run, so that
     // it can be recorded as a histogram.
+    @IntDef({RestoreStatus.NO_RESTORE, RestoreStatus.RESTORE_COMPLETED,
+            RestoreStatus.RESTORE_AFTER_FIRST_RUN, RestoreStatus.BROWSER_STARTUP_FAILED,
+            RestoreStatus.NOT_SIGNED_IN, RestoreStatus.RESTORE_STATUS_RECORDED})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({NO_RESTORE, RESTORE_COMPLETED, RESTORE_AFTER_FIRST_RUN, BROWSER_STARTUP_FAILED,
-            NOT_SIGNED_IN, RESTORE_STATUS_RECORDED})
-    public @interface RestoreStatus {}
+    public @interface RestoreStatus {
+        // Values must match those in histogram.xml AndroidRestoreResult.
+        int NO_RESTORE = 0;
+        int RESTORE_COMPLETED = 1;
+        int RESTORE_AFTER_FIRST_RUN = 2;
+        int BROWSER_STARTUP_FAILED = 3;
+        int NOT_SIGNED_IN = 4;
 
-    // Values must match those in histogram.xml AndroidRestoreResult.
-    static final int NO_RESTORE = 0;
-    static final int RESTORE_COMPLETED = 1;
-    static final int RESTORE_AFTER_FIRST_RUN = 2;
-    static final int BROWSER_STARTUP_FAILED = 3;
-    static final int NOT_SIGNED_IN = 4;
-    static final int RESTORE_HISTOGRAM_BOUNDARY = 5;
+        int NUM_ENTRIES = 5;
 
-    // Set RESTORE_STATUS_RECORDED when the histogram has been recorded; so that it is only recorded
-    // once.
-    public static final int RESTORE_STATUS_RECORDED = 5;
+        // Set RESTORE_STATUS_RECORDED when the histogram has been recorded; so that it is only
+        // recorded once.
+        int RESTORE_STATUS_RECORDED = 5;
+    }
 
     private static final String RESTORE_STATUS = "android_restore_status";
 
@@ -285,7 +287,7 @@ public class ChromeBackupAgent extends BackupAgent {
         SharedPreferences sharedPrefs = ContextUtils.getAppSharedPreferences();
         if (FirstRunStatus.getFirstRunFlowComplete()
                 || FirstRunStatus.getLightweightFirstRunFlowComplete()) {
-            setRestoreStatus(RESTORE_AFTER_FIRST_RUN);
+            setRestoreStatus(RestoreStatus.RESTORE_AFTER_FIRST_RUN);
             Log.w(TAG, "Restore attempted after first run");
             return;
         }
@@ -342,13 +344,13 @@ public class ChromeBackupAgent extends BackupAgent {
                 });
         if (!browserStarted) {
             // Something went wrong starting Chrome, skip the restore.
-            setRestoreStatus(BROWSER_STARTUP_FAILED);
+            setRestoreStatus(RestoreStatus.BROWSER_STARTUP_FAILED);
             return;
         }
 
         // If the user hasn't signed in, or can't sign in, then don't restore anything.
         if (restoredUserName == null || !accountExistsOnDevice(restoredUserName)) {
-            setRestoreStatus(NOT_SIGNED_IN);
+            setRestoreStatus(RestoreStatus.NOT_SIGNED_IN);
             Log.i(TAG, "Chrome was not signed in with a known account name, not restoring");
             return;
         }
@@ -395,7 +397,7 @@ public class ChromeBackupAgent extends BackupAgent {
 
         // The silent first run will change things, so there is no point in trying to prevent
         // additional backups at this stage. Don't write anything to |newState|.
-        setRestoreStatus(RESTORE_COMPLETED);
+        setRestoreStatus(RestoreStatus.RESTORE_COMPLETED);
         Log.i(TAG, "Restore complete");
     }
 
@@ -425,7 +427,8 @@ public class ChromeBackupAgent extends BackupAgent {
     @VisibleForTesting
     @RestoreStatus
     static int getRestoreStatus() {
-        return ContextUtils.getAppSharedPreferences().getInt(RESTORE_STATUS, NO_RESTORE);
+        return ContextUtils.getAppSharedPreferences().getInt(
+                RESTORE_STATUS, RestoreStatus.NO_RESTORE);
     }
 
     /**
@@ -442,12 +445,13 @@ public class ChromeBackupAgent extends BackupAgent {
      * Record the restore histogram. To be called from Chrome itself once it is running.
      */
     public static void recordRestoreHistogram() {
+        @RestoreStatus
         int restoreStatus = getRestoreStatus();
         // Ensure restore status is only recorded once
-        if (restoreStatus != RESTORE_STATUS_RECORDED) {
+        if (restoreStatus != RestoreStatus.RESTORE_STATUS_RECORDED) {
             RecordHistogram.recordEnumeratedHistogram(
-                    HISTOGRAM_ANDROID_RESTORE_RESULT, restoreStatus, RESTORE_HISTOGRAM_BOUNDARY);
-            setRestoreStatus(RESTORE_STATUS_RECORDED);
+                    HISTOGRAM_ANDROID_RESTORE_RESULT, restoreStatus, RestoreStatus.NUM_ENTRIES);
+            setRestoreStatus(RestoreStatus.RESTORE_STATUS_RECORDED);
         }
     }
 

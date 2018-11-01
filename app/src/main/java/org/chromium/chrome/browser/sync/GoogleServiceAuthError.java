@@ -4,85 +4,86 @@
 
 package org.chromium.chrome.browser.sync;
 
+import android.support.annotation.IntDef;
+
 import org.chromium.chrome.R;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * This class mirrors the native GoogleServiceAuthError class State enum from:
  * google_apis/gaia/google_service_auth_error.h.
  */
 public class GoogleServiceAuthError {
-
-    public enum State {
+    @IntDef({State.NONE, State.INVALID_GAIA_CREDENTIALS, State.USER_NOT_SIGNED_UP,
+            State.CONNECTION_FAILED, State.CAPTCHA_REQUIRED, State.ACCOUNT_DELETED,
+            State.ACCOUNT_DISABLED, State.SERVICE_UNAVAILABLE, State.TWO_FACTOR,
+            State.REQUEST_CANCELED})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface State {
         // The user is authenticated.
-        NONE(0, R.string.sync_error_generic),
+        int NONE = 0;
 
         // The credentials supplied to GAIA were either invalid, or the locally
         // cached credentials have expired.
-        INVALID_GAIA_CREDENTIALS(1, R.string.sync_error_ga),
+        int INVALID_GAIA_CREDENTIALS = 1;
 
         // The GAIA user is not authorized to use the service.
-        USER_NOT_SIGNED_UP(2, R.string.sync_error_generic),
+        int USER_NOT_SIGNED_UP = 2;
 
         // Could not connect to server to verify credentials. This could be in
         // response to either failure to connect to GAIA or failure to connect to
         // the service needing GAIA tokens during authentication.
-        CONNECTION_FAILED(3, R.string.sync_error_connection),
+        int CONNECTION_FAILED = 3;
 
         // The user needs to satisfy a CAPTCHA challenge to unlock their account.
         // If no other information is available, this can be resolved by visiting
         // https://www.google.com/accounts/DisplayUnlockCaptcha. Otherwise,
         // captcha() will provide details about the associated challenge.
-        CAPTCHA_REQUIRED(4, R.string.sync_error_generic),
+        int CAPTCHA_REQUIRED = 4;
 
         // The user account has been deleted.
-        ACCOUNT_DELETED(5, R.string.sync_error_generic),
+        int ACCOUNT_DELETED = 5;
 
         // The user account has been disabled.
-        ACCOUNT_DISABLED(6, R.string.sync_error_generic),
+        int ACCOUNT_DISABLED = 6;
 
         // The service is not available; try again later.
-        SERVICE_UNAVAILABLE(7, R.string.sync_error_service_unavailable),
+        int SERVICE_UNAVAILABLE = 7;
 
         // The password is valid but we need two factor to get a token.
-        TWO_FACTOR(8, R.string.sync_error_generic),
+        int TWO_FACTOR = 8;
 
         // The requestor of the authentication step cancelled the request
         // prior to completion.
-        REQUEST_CANCELED(9, R.string.sync_error_generic),
+        int REQUEST_CANCELED = 9;
 
         // HOSTED accounts are deprecated; left in enumeration to match
         // GoogleServiceAuthError enum in histograms.xml.
-        HOSTED_NOT_ALLOWED_DEPRECATED(10, R.string.sync_error_generic);
+        // int HOSTED_NOT_ALLOWED = 10;
 
-        private final int mCode;
-        private final int mMessage;
-
-        State(int code, int message) {
-            mCode = code;
-            mMessage = message;
-        }
-
-        public static State fromCode(int code) {
-            for (State state : State.values()) {
-                if (state.mCode == code) {
-                    return state;
-                }
-            }
-            throw new IllegalArgumentException("No state for code: " + code);
-        }
-
-        public int getMessage() {
-            return mMessage;
-        }
+        int NUM_ENTRIES = 11;
     }
 
-    private final State mState;
-
-    GoogleServiceAuthError(int code) {
-        mState = State.fromCode(code);
-    }
-
-    State getState() {
-        return mState;
+    public static int getMessageID(@State int state) {
+        switch (state) {
+            case State.INVALID_GAIA_CREDENTIALS:
+                return R.string.sync_error_ga;
+            case State.CONNECTION_FAILED:
+                return R.string.sync_error_connection;
+            case State.SERVICE_UNAVAILABLE:
+                return R.string.sync_error_service_unavailable;
+            // case State.NONE:
+            // case State.USER_NOT_SIGNED_UP:
+            // case State.CAPTCHA_REQUIRED:
+            // case State.ACCOUNT_DELETED:
+            // case State.ACCOUNT_DISABLED:
+            // case State.TWO_FACTOR:
+            // case State.REQUEST_CANCELED:
+            // case State.HOSTED_NOT_ALLOWED:
+            default:
+                return R.string.sync_error_generic;
+        }
     }
 }

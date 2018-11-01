@@ -12,7 +12,7 @@
         android:layout_width="@dimen/signin_promo_account_image_size"
         android:layout_height="@dimen/signin_promo_account_image_size"
         android:layout_gravity="center"
-        android:contentDescription="@null"
+        tools:ignore="ContentDescription"
         android:scaleType="fitCenter"/>
 
     <ImageButton

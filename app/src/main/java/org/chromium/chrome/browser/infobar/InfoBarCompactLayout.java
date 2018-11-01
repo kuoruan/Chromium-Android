@@ -22,7 +22,6 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Callback;
 import org.chromium.chrome.R;
 import org.chromium.ui.text.NoUnderlineClickableSpan;
-import org.chromium.ui.widget.TextViewWithClickableSpans;
 
 /**
  * Lays out controls along a line, sandwiched between an (optional) icon and close button.
@@ -134,12 +133,8 @@ public class InfoBarCompactLayout extends LinearLayout implements View.OnClickLi
 
             String label = mLayout.getResources().getString(textResId);
             SpannableString link = new SpannableString(label);
-            link.setSpan(new NoUnderlineClickableSpan() {
-                @Override
-                public void onClick(View view) {
-                    onTapCallback.onResult(view);
-                }
-            }, 0, label.length(), Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
+            link.setSpan(new NoUnderlineClickableSpan(onTapCallback), 0, label.length(),
+                    Spanned.SPAN_INCLUSIVE_EXCLUSIVE);
             mLink = link;
 
             return this;
@@ -168,7 +163,7 @@ public class InfoBarCompactLayout extends LinearLayout implements View.OnClickLi
             builder.append(mMessage);
             if (mLink != null) builder.append(" ").append(mLink);
 
-            TextView prompt = new TextViewWithClickableSpans(mLayout.getContext());
+            TextView prompt = new InfoBarMessageView(mLayout.getContext());
             ApiCompatibilityUtils.setTextAppearance(prompt, R.style.BlackBodyDefault);
             prompt.setText(builder);
             prompt.setGravity(Gravity.CENTER_VERTICAL);

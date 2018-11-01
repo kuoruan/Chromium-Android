@@ -10,21 +10,25 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.AsyncTask;
 import android.support.annotation.LayoutRes;
 import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.AsyncTask;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.favicon.IconType;
 import org.chromium.chrome.browser.favicon.LargeIconBridge;
+import org.chromium.chrome.browser.feature_engagement.TrackerFactory;
+import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.util.ViewUtils;
 import org.chromium.chrome.browser.widget.RoundedIconGenerator;
+import org.chromium.components.feature_engagement.EventConstants;
+import org.chromium.components.feature_engagement.Tracker;
 
 import java.util.HashMap;
 import java.util.List;
@@ -121,6 +125,14 @@ public class TileRenderer {
     }
 
     /**
+     * Record that the homepage tile was clicked for IPH reasons.
+     */
+    private void recordHomepageTileClickedForIPH() {
+        Tracker tracker = TrackerFactory.getTrackerForProfile(Profile.getLastUsedProfile());
+        tracker.notifyEvent(EventConstants.HOMEPAGE_TILE_CLICKED);
+    }
+
+    /**
      * Inflates a new tile view, initializes it, and loads an icon for it.
      * @param tile The tile that holds the data to populate the new tile view.
      * @param parentView The parent of the new tile view.
@@ -139,6 +151,10 @@ public class TileRenderer {
         fetchIcon(tile.getData(), setupDelegate.createIconLoadCallback(tile));
 
         TileGroup.TileInteractionDelegate delegate = setupDelegate.createInteractionDelegate(tile);
+        if (tile.getSource() == TileSource.HOMEPAGE) {
+            delegate.setOnClickRunnable(this ::recordHomepageTileClickedForIPH);
+        }
+
         tileView.setOnClickListener(delegate);
         tileView.setOnCreateContextMenuListener(delegate);
 
@@ -152,9 +168,9 @@ public class TileRenderer {
             return;
         }
 
-        AsyncTask<Void, Void, Bitmap> task = new AsyncTask<Void, Void, Bitmap>() {
+        AsyncTask<Bitmap> task = new AsyncTask<Bitmap>() {
             @Override
-            protected Bitmap doInBackground(Void... params) {
+            protected Bitmap doInBackground() {
                 Bitmap bitmap = BitmapFactory.decodeFile(siteData.whitelistIconPath);
                 if (bitmap == null) {
                     Log.d(TAG, "Image decoding failed: %s", siteData.whitelistIconPath);
@@ -180,10 +196,9 @@ public class TileRenderer {
     }
 
     public void setTileIconFromBitmap(Tile tile, Bitmap icon) {
-        RoundedBitmapDrawable roundedIcon = RoundedBitmapDrawableFactory.create(mResources, icon);
-        int cornerRadius = Math.round(ICON_CORNER_RADIUS_DP * mResources.getDisplayMetrics().density
-                * icon.getWidth() / mDesiredIconSize);
-        roundedIcon.setCornerRadius(cornerRadius);
+        RoundedBitmapDrawable roundedIcon = ViewUtils.createRoundedBitmapDrawable(icon,
+                Math.round(ICON_CORNER_RADIUS_DP * mResources.getDisplayMetrics().density
+                        * icon.getWidth() / mDesiredIconSize));
         roundedIcon.setAntiAlias(true);
         roundedIcon.setFilterBitmap(true);
 

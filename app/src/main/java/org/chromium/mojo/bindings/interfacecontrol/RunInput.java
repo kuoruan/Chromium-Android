@@ -20,36 +20,26 @@ public final class RunInput extends org.chromium.mojo.bindings.Union {
         public static final int QueryVersion = 0;
         public static final int FlushForTesting = 1;
     };
-
-    private int mTag_ = -1;
     private QueryVersion mQueryVersion;
     private FlushForTesting mFlushForTesting;
 
-    public int which() {
-      return mTag_;
-    }
-
-    public boolean isUnknown() {
-      return mTag_ == -1;
-    }
-
     public void setQueryVersion(QueryVersion queryVersion) {
-        this.mTag_ = Tag.QueryVersion;
+        this.mTag = Tag.QueryVersion;
         this.mQueryVersion = queryVersion;
     }
 
     public QueryVersion getQueryVersion() {
-        assert this.mTag_ == Tag.QueryVersion;
+        assert this.mTag == Tag.QueryVersion;
         return this.mQueryVersion;
     }
 
     public void setFlushForTesting(FlushForTesting flushForTesting) {
-        this.mTag_ = Tag.FlushForTesting;
+        this.mTag = Tag.FlushForTesting;
         this.mFlushForTesting = flushForTesting;
     }
 
     public FlushForTesting getFlushForTesting() {
-        assert this.mTag_ == Tag.FlushForTesting;
+        assert this.mTag == Tag.FlushForTesting;
         return this.mFlushForTesting;
     }
 
@@ -57,8 +47,8 @@ public final class RunInput extends org.chromium.mojo.bindings.Union {
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder0, int offset) {
         encoder0.encode(org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE, offset);
-        encoder0.encode(this.mTag_, offset + 4);
-        switch (mTag_) {
+        encoder0.encode(this.mTag, offset + 4);
+        switch (mTag) {
             case Tag.QueryVersion: {
                 
                 encoder0.encode(this.mQueryVersion, offset + 8, false);
@@ -90,63 +80,14 @@ public final class RunInput extends org.chromium.mojo.bindings.Union {
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(offset + org.chromium.mojo.bindings.DataHeader.HEADER_SIZE, false);
                 result.mQueryVersion = QueryVersion.decode(decoder1);
-                result.mTag_ = Tag.QueryVersion;
+                result.mTag = Tag.QueryVersion;
                 break;
             }
             case Tag.FlushForTesting: {
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(offset + org.chromium.mojo.bindings.DataHeader.HEADER_SIZE, false);
                 result.mFlushForTesting = FlushForTesting.decode(decoder1);
-                result.mTag_ = Tag.FlushForTesting;
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        RunInput other = (RunInput) object;
-        if (this.mTag_ != other.mTag_)
-            return false;
-        switch (this.mTag_) {
-            case Tag.QueryVersion:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mQueryVersion, other.mQueryVersion);
-            case Tag.FlushForTesting:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mFlushForTesting, other.mFlushForTesting);
-            default:
-                break;
-        }
-        return false;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mTag_);
-        switch (this.mTag_) {
-            case Tag.QueryVersion: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mQueryVersion);
-                break;
-            }
-            case Tag.FlushForTesting: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mFlushForTesting);
+                result.mTag = Tag.FlushForTesting;
                 break;
             }
             default: {

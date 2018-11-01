@@ -40,9 +40,6 @@ public final class DisconnectReason extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static DisconnectReason deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,15 +53,17 @@ public final class DisconnectReason extends org.chromium.mojo.bindings.Struct {
         DisconnectReason result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new DisconnectReason(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new DisconnectReason(elementsOrVersion);
+                {
+                    
                 result.customReason = decoder0.readInt(8);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.description = decoder0.readString(16, false);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -79,36 +78,5 @@ public final class DisconnectReason extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.customReason, 8);
         
         encoder0.encode(this.description, 16, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        DisconnectReason other = (DisconnectReason) object;
-        if (this.customReason!= other.customReason)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.description, other.description))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.customReason);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.description);
-        return result;
     }
 }

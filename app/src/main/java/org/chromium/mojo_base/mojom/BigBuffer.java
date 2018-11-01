@@ -20,36 +20,26 @@ public final class BigBuffer extends org.chromium.mojo.bindings.Union {
         public static final int Bytes = 0;
         public static final int SharedMemory = 1;
     };
-
-    private int mTag_ = -1;
     private byte[] mBytes;
     private BigBufferSharedMemoryRegion mSharedMemory;
 
-    public int which() {
-      return mTag_;
-    }
-
-    public boolean isUnknown() {
-      return mTag_ == -1;
-    }
-
     public void setBytes(byte[] bytes) {
-        this.mTag_ = Tag.Bytes;
+        this.mTag = Tag.Bytes;
         this.mBytes = bytes;
     }
 
     public byte[] getBytes() {
-        assert this.mTag_ == Tag.Bytes;
+        assert this.mTag == Tag.Bytes;
         return this.mBytes;
     }
 
     public void setSharedMemory(BigBufferSharedMemoryRegion sharedMemory) {
-        this.mTag_ = Tag.SharedMemory;
+        this.mTag = Tag.SharedMemory;
         this.mSharedMemory = sharedMemory;
     }
 
     public BigBufferSharedMemoryRegion getSharedMemory() {
-        assert this.mTag_ == Tag.SharedMemory;
+        assert this.mTag == Tag.SharedMemory;
         return this.mSharedMemory;
     }
 
@@ -57,8 +47,8 @@ public final class BigBuffer extends org.chromium.mojo.bindings.Union {
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder0, int offset) {
         encoder0.encode(org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE, offset);
-        encoder0.encode(this.mTag_, offset + 4);
-        switch (mTag_) {
+        encoder0.encode(this.mTag, offset + 4);
+        switch (mTag) {
             case Tag.Bytes: {
                 
                 encoder0.encode(this.mBytes, offset + 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -89,63 +79,14 @@ public final class BigBuffer extends org.chromium.mojo.bindings.Union {
             case Tag.Bytes: {
                 
                 result.mBytes = decoder0.readBytes(offset + org.chromium.mojo.bindings.DataHeader.HEADER_SIZE, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                result.mTag_ = Tag.Bytes;
+                result.mTag = Tag.Bytes;
                 break;
             }
             case Tag.SharedMemory: {
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(offset + org.chromium.mojo.bindings.DataHeader.HEADER_SIZE, false);
                 result.mSharedMemory = BigBufferSharedMemoryRegion.decode(decoder1);
-                result.mTag_ = Tag.SharedMemory;
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        BigBuffer other = (BigBuffer) object;
-        if (this.mTag_ != other.mTag_)
-            return false;
-        switch (this.mTag_) {
-            case Tag.Bytes:
-                return java.util.Arrays.equals(this.mBytes, other.mBytes);
-            case Tag.SharedMemory:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mSharedMemory, other.mSharedMemory);
-            default:
-                break;
-        }
-        return false;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mTag_);
-        switch (this.mTag_) {
-            case Tag.Bytes: {
-                result = prime * result + java.util.Arrays.hashCode(this.mBytes);
-                break;
-            }
-            case Tag.SharedMemory: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mSharedMemory);
+                result.mTag = Tag.SharedMemory;
                 break;
             }
             default: {

@@ -3,7 +3,9 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?android:attr/selectableItemBackground"
@@ -16,7 +18,7 @@
         android:id="@android:id/icon"
         android:layout_width="56dp"
         android:layout_height="40dp"
-        android:contentDescription="@null"
+        tools:ignore="ContentDescription"
         android:scaleType="fitStart" />
 
     <!-- Padding asymmetry (16dp top vs 18dp bottom) is necessary to move text 1dp up according to

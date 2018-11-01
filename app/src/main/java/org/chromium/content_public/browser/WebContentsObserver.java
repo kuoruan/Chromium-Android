@@ -4,8 +4,13 @@
 
 package org.chromium.content_public.browser;
 
+import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 
+import org.chromium.blink.mojom.ViewportFit;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
 
 /**
@@ -160,6 +165,20 @@ public abstract class WebContentsObserver {
      * @param isFullscreen whether fullscreen is being entered or left.
      */
     public void hasEffectivelyFullscreenVideoChange(boolean isFullscreen) {}
+
+    /**
+     * The Viewport Fit Type passed to viewportFitChanged. This is mirrored
+     * in an enum in display_cutout.mojom.
+     */
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({ViewportFit.AUTO, ViewportFit.CONTAIN, ViewportFit.COVER})
+    public @interface ViewportFitType {}
+
+    /**
+     * Called when the viewport fit of the Web Contents changes.
+     * @param value the new viewport fit value.
+     */
+    public void viewportFitChanged(@ViewportFitType int value) {}
 
     /**
      * Stop observing the web contents and clean up associated references.

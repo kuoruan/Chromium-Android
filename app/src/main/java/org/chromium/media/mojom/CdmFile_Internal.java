@@ -18,28 +18,28 @@ class CdmFile_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<CdmFile, CdmFile.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<CdmFile, CdmFile.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::CdmFile";
+            return "media.mojom.CdmFile";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, CdmFile impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public CdmFile[] buildArray(int size) {
           return new CdmFile[size];
@@ -118,16 +118,16 @@ CommitWriteResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 CdmFile_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -147,40 +147,40 @@ CommitWriteResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), CdmFile_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case OPEN_FILE_FOR_WRITING_ORDINAL: {
-            
+
                         CdmFileOpenFileForWritingParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().openFileForWriting(new CdmFileOpenFileForWritingResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case COMMIT_WRITE_ORDINAL: {
-            
+
                         CdmFileCommitWriteParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().commitWrite(new CdmFileCommitWriteResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -194,36 +194,33 @@ CommitWriteResponse callback) {
 
     
     static final class CdmFileOpenFileForWritingParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private CdmFileOpenFileForWritingParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmFileOpenFileForWritingParams() {
             this(0);
         }
-    
+
         public static CdmFileOpenFileForWritingParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmFileOpenFileForWritingParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmFileOpenFileForWritingParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -233,41 +230,19 @@ CommitWriteResponse callback) {
             CdmFileOpenFileForWritingParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmFileOpenFileForWritingParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmFileOpenFileForWritingParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -275,37 +250,34 @@ CommitWriteResponse callback) {
 
     
     static final class CdmFileOpenFileForWritingResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.mojo.common.mojom.File fileForWriting;
-    
+        public org.chromium.mojo_base.mojom.File fileForWriting;
+
         private CdmFileOpenFileForWritingResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmFileOpenFileForWritingResponseParams() {
             this(0);
         }
-    
+
         public static CdmFileOpenFileForWritingResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmFileOpenFileForWritingResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmFileOpenFileForWritingResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -315,52 +287,26 @@ CommitWriteResponse callback) {
             CdmFileOpenFileForWritingResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmFileOpenFileForWritingResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmFileOpenFileForWritingResponseParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, true);
-                    result.fileForWriting = org.chromium.mojo.common.mojom.File.decode(decoder1);
-                }
+                    result.fileForWriting = org.chromium.mojo_base.mojom.File.decode(decoder1);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.fileForWriting, 8, true);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CdmFileOpenFileForWritingResponseParams other = (CdmFileOpenFileForWritingResponseParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.fileForWriting, other.fileForWriting))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.fileForWriting);
-            return result;
         }
     }
 
@@ -409,7 +355,7 @@ CommitWriteResponse callback) {
         }
 
         @Override
-        public void call(org.chromium.mojo.common.mojom.File fileForWriting) {
+        public void call(org.chromium.mojo_base.mojom.File fileForWriting) {
             CdmFileOpenFileForWritingResponseParams _response = new CdmFileOpenFileForWritingResponseParams();
 
             _response.fileForWriting = fileForWriting;
@@ -429,36 +375,33 @@ CommitWriteResponse callback) {
 
     
     static final class CdmFileCommitWriteParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private CdmFileCommitWriteParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmFileCommitWriteParams() {
             this(0);
         }
-    
+
         public static CdmFileCommitWriteParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmFileCommitWriteParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmFileCommitWriteParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -468,41 +411,19 @@ CommitWriteResponse callback) {
             CdmFileCommitWriteParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmFileCommitWriteParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmFileCommitWriteParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -510,37 +431,34 @@ CommitWriteResponse callback) {
 
     
     static final class CdmFileCommitWriteResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.mojo.common.mojom.File updatedFileForReading;
-    
+        public org.chromium.mojo_base.mojom.File updatedFileForReading;
+
         private CdmFileCommitWriteResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmFileCommitWriteResponseParams() {
             this(0);
         }
-    
+
         public static CdmFileCommitWriteResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmFileCommitWriteResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmFileCommitWriteResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -550,52 +468,26 @@ CommitWriteResponse callback) {
             CdmFileCommitWriteResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmFileCommitWriteResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmFileCommitWriteResponseParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, true);
-                    result.updatedFileForReading = org.chromium.mojo.common.mojom.File.decode(decoder1);
-                }
+                    result.updatedFileForReading = org.chromium.mojo_base.mojom.File.decode(decoder1);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.updatedFileForReading, 8, true);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CdmFileCommitWriteResponseParams other = (CdmFileCommitWriteResponseParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.updatedFileForReading, other.updatedFileForReading))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.updatedFileForReading);
-            return result;
         }
     }
 
@@ -644,7 +536,7 @@ CommitWriteResponse callback) {
         }
 
         @Override
-        public void call(org.chromium.mojo.common.mojom.File updatedFileForReading) {
+        public void call(org.chromium.mojo_base.mojom.File updatedFileForReading) {
             CdmFileCommitWriteResponseParams _response = new CdmFileCommitWriteResponseParams();
 
             _response.updatedFileForReading = updatedFileForReading;

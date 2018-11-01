@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.TextUtils;
@@ -17,10 +16,12 @@ import android.text.style.StyleSpan;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.download.DownloadManagerService;
+import org.chromium.chrome.browser.download.DownloadMetrics;
 import org.chromium.chrome.browser.download.DownloadUtils;
 
 import java.io.File;
@@ -78,22 +79,24 @@ public class DuplicateDownloadInfoBar extends ConfirmInfoBar {
         return getMessageText(template, filename, new ClickableSpan() {
             @Override
             public void onClick(View view) {
-                new AsyncTask<Void, Void, Boolean>() {
+                new AsyncTask<Boolean>() {
                     @Override
-                    protected Boolean doInBackground(Void... params) {
+                    protected Boolean doInBackground() {
                         return new File(mFilePath).exists();
                     }
 
                     @Override
                     protected void onPostExecute(Boolean fileExists) {
                         if (fileExists) {
-                            DownloadUtils.openFile(file, mimeType, null, mIsIncognito, null, null);
+                            DownloadUtils.openFile(file, mimeType, null, mIsIncognito, null, null,
+                                    DownloadMetrics.DownloadOpenSource.INFO_BAR);
                         } else {
                             DownloadManagerService.openDownloadsPage(
                                     ContextUtils.getApplicationContext());
                         }
                     }
-                }.execute();
+                }
+                        .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         });
     }
@@ -126,13 +129,13 @@ public class DuplicateDownloadInfoBar extends ConfirmInfoBar {
      * @param clickableSpan Action to perform when clicking on the file name.
      * @return message to be displayed on the infobar.
      */
-    private CharSequence getMessageText(final String template, final String fileName,
-            final ClickableSpan clickableSpan) {
+    private CharSequence getMessageText(
+            final String template, final String fileName, final ClickableSpan clickableSpan) {
         final SpannableString formattedFilePath = new SpannableString(fileName);
         formattedFilePath.setSpan(new StyleSpan(Typeface.BOLD), 0, fileName.length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        formattedFilePath.setSpan(clickableSpan, 0, fileName.length(),
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        formattedFilePath.setSpan(
+                clickableSpan, 0, fileName.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         return TextUtils.expandTemplate(template, formattedFilePath);
     }
 

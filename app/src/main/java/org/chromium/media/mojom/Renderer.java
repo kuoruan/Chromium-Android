@@ -41,7 +41,7 @@ FlushResponse callback);
 
 
     void startPlayingFrom(
-org.chromium.mojo.common.mojom.TimeDelta time);
+org.chromium.mojo_base.mojom.TimeDelta time);
 
 
 
@@ -67,7 +67,7 @@ SetCdmResponse callback);
 
 InitiateScopedSurfaceRequestResponse callback);
 
-    interface InitiateScopedSurfaceRequestResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<org.chromium.mojo.common.mojom.UnguessableToken> { }
+    interface InitiateScopedSurfaceRequestResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<org.chromium.mojo_base.mojom.UnguessableToken> { }
 
 
 }

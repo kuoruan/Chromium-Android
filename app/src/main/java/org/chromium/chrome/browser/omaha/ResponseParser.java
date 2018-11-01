@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.omaha;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.chromium.chrome.browser.omaha.OmahaBase.VersionConfig;
 import org.chromium.chrome.browser.omaha.XMLParser.Node;
 
 /**
@@ -81,10 +82,11 @@ public class ResponseParser {
         mExpectUpdatecheck = expectUpdatecheck;
     }
 
-    public void parseResponse(String xml) throws RequestFailureException {
+    public VersionConfig parseResponse(String xml) throws RequestFailureException {
         XMLParser parser = new XMLParser(xml);
         Node rootNode = parser.getRootNode();
         parseRootNode(rootNode);
+        return new VersionConfig(getNewVersion(), getURL());
     }
 
     public int getDaystartSeconds() {

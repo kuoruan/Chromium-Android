@@ -18,7 +18,6 @@ import android.widget.PopupMenu;
 
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeActivity;
 
 import java.util.ArrayList;
 
@@ -96,13 +95,14 @@ public class AppMenuHandler {
      *                      dragging down on the menu button, this should be true. Note that if
      *                      anchorView is null, this must be false since we no longer support
      *                      hardware menu button dragging.
+     * @param showFromBottom Whether the menu should be shown from the bottom up.
      * @return              True, if the menu is shown, false, if menu is not shown, example
      *                      reasons: the menu is not yet available to be shown, or the menu is
      *                      already showing.
      */
     // TODO(crbug.com/635567): Fix this properly.
     @SuppressLint("ResourceType")
-    public boolean showAppMenu(View anchorView, boolean startDragging) {
+    public boolean showAppMenu(View anchorView, boolean startDragging, boolean showFromBottom) {
         if (!mDelegate.shouldShowAppMenu() || isAppMenuShowing()) return false;
         boolean isByPermanentButton = false;
 
@@ -140,10 +140,8 @@ public class AppMenuHandler {
             Drawable itemDivider = a.getDrawable(1);
             int itemDividerHeight = itemDivider != null ? itemDivider.getIntrinsicHeight() : 0;
             a.recycle();
-            boolean translateMenuItemsOnShow = !(mActivity instanceof ChromeActivity)
-                    || ((ChromeActivity) mActivity).getBottomSheet() == null;
-            mAppMenu = new AppMenu(mMenu, itemRowHeight, itemDividerHeight, this,
-                    mActivity.getResources(), translateMenuItemsOnShow);
+            mAppMenu = new AppMenu(
+                    mMenu, itemRowHeight, itemDividerHeight, this, mActivity.getResources());
             mAppMenuDragHelper = new AppMenuDragHelper(mActivity, mAppMenu, itemRowHeight);
         }
 
@@ -165,12 +163,12 @@ public class AppMenuHandler {
         if (mDelegate.shouldShowFooter(appRect.height())) {
             footerResourceId = mDelegate.getFooterResourceId();
         }
-        View headerView = null;
+        int headerResourceId = 0;
         if (mDelegate.shouldShowHeader(appRect.height())) {
-            headerView = mDelegate.getHeaderView();
+            headerResourceId = mDelegate.getHeaderResourceId();
         }
         mAppMenu.show(wrapper, anchorView, isByPermanentButton, rotation, appRect, pt.y,
-                footerResourceId, headerView, mHighlightMenuId);
+                footerResourceId, headerResourceId, mHighlightMenuId, showFromBottom);
         mAppMenuDragHelper.onShow(startDragging);
         setMenuHighlight(null);
         RecordUserAction.record("MobileMenuShow");
@@ -234,5 +232,21 @@ public class AppMenuHandler {
         for (int i = 0; i < mObservers.size(); ++i) {
             mObservers.get(i).onMenuVisibilityChanged(isVisible);
         }
+    }
+
+    /**
+     * A notification that the header view has been inflated.
+     * @param view The inflated view.
+     */
+    void onHeaderViewInflated(View view) {
+        if (mDelegate != null) mDelegate.onHeaderViewInflated(mAppMenu, view);
+    }
+
+    /**
+     * A notification that the footer view has been inflated.
+     * @param view The inflated view.
+     */
+    void onFooterViewInflated(View view) {
+        if (mDelegate != null) mDelegate.onFooterViewInflated(mAppMenu, view);
     }
 }

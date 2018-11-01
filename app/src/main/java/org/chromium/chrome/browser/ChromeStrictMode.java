@@ -106,7 +106,7 @@ public class ChromeStrictMode {
         // Delay handling StrictMode violations during initialization until the main loop is idle.
         Looper.myQueue().addIdleHandler(() -> {
             // Will retry if the native library has not been initialized.
-            if (!LibraryLoader.isInitialized()) return true;
+            if (!LibraryLoader.getInstance().isInitialized()) return true;
             // Check again next time if no more cached stack traces to upload, and we have not
             // reached the max number of uploads for this session.
             if (sCachedStackTraces.isEmpty()) {

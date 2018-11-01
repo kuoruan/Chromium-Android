@@ -7,7 +7,6 @@ package org.chromium.chrome.browser.media.router;
 /**
  * Generic interface used to control the playback of media content.
  * Changes to the media content status will be propagated via the MediaStatusObserver interface.
- * TODO(tguilbert): Add MediaStatusObserver class to allow client to listen for changes.
  */
 public interface MediaController {
     /**

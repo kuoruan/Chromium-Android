@@ -62,7 +62,7 @@ public class SwipeRefreshHandler implements OverscrollRefreshHandler {
      */
     public SwipeRefreshHandler(final Context context, Tab tab) {
         mTab = tab;
-        mContainerView = mTab.getContentViewCore().getContainerView();
+        mContainerView = mTab.getContentView();
 
         mSwipeRefreshLayout = new SwipeRefreshLayout(context);
         mSwipeRefreshLayout.setLayoutParams(
@@ -122,7 +122,6 @@ public class SwipeRefreshHandler implements OverscrollRefreshHandler {
         if (mTab.getActivity() != null && mTab.getActivity().getBottomSheet() != null) {
             Tracker tracker = TrackerFactory.getTrackerForProfile(Profile.getLastUsedProfile());
             tracker.notifyEvent(EventConstants.PULL_TO_REFRESH);
-            mTab.getActivity().getBottomSheet().maybeShowHelpBubble(false, true);
         }
 
         attachSwipeRefreshLayoutIfNecessary();

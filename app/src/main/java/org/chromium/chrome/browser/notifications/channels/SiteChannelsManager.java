@@ -14,6 +14,7 @@ import android.support.annotation.Nullable;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.notifications.NotificationChannelStatus;
 import org.chromium.chrome.browser.notifications.NotificationManagerProxy;
 import org.chromium.chrome.browser.notifications.NotificationManagerProxyImpl;
@@ -64,7 +65,7 @@ public class SiteChannelsManager {
         }
         // Channel group must be created before the channel.
         NotificationChannelGroup channelGroup =
-                ChannelDefinitions.getChannelGroup(ChannelDefinitions.CHANNEL_GROUP_ID_SITES)
+                ChannelDefinitions.getChannelGroup(ChannelDefinitions.ChannelGroupId.SITES)
                         .toNotificationChannelGroup(
                                 ContextUtils.getApplicationContext().getResources());
         mNotificationManager.createNotificationChannelGroup(channelGroup);
@@ -180,6 +181,11 @@ public class SiteChannelsManager {
     public String getChannelIdForOrigin(String origin) {
         SiteChannel channel = getSiteChannelForOrigin(origin);
         // Fall back to generic Sites channel if a channel for this origin doesn't exist.
-        return channel == null ? ChannelDefinitions.CHANNEL_ID_SITES : channel.getId();
+        // TODO(crbug.com/802380) Stop using this channel as a fallback and fully deprecate it.
+        boolean fallbackToSitesChannel = channel == null;
+        if (fallbackToSitesChannel) {
+            RecordHistogram.recordBooleanHistogram("Notifications.Android.SitesChannel", true);
+        }
+        return fallbackToSitesChannel ? ChannelDefinitions.ChannelId.SITES : channel.getId();
     }
 }

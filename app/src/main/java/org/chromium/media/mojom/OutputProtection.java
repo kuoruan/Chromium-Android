@@ -19,15 +19,15 @@ public interface OutputProtection extends org.chromium.mojo.bindings.Interface {
 
 
     public static final class ProtectionType {
-    
-    
+
+
         public static final int NONE = (int) (0L);
-    
+
         public static final int HDCP = (int) (1L);
-    
-    
+
+
         private static final boolean IS_EXTENSIBLE = false;
-    
+
         public static boolean isKnownValue(int value) {
             switch (value) {
                 case 0:
@@ -36,41 +36,41 @@ public interface OutputProtection extends org.chromium.mojo.bindings.Interface {
             }
             return false;
         }
-    
+
         public static void validate(int value) {
             if (IS_EXTENSIBLE || isKnownValue(value))
                 return;
-    
+
             throw new DeserializationException("Invalid enum value.");
         }
-    
+
         private ProtectionType() {}
-    
+
     }
 
 
     public static final class LinkType {
-    
-    
+
+
         public static final int NONE = (int) (0L);
-    
+
         public static final int UNKNOWN = (int) (1L);
-    
+
         public static final int INTERNAL = (int) (2L);
-    
+
         public static final int VGA = (int) (4L);
-    
+
         public static final int HDMI = (int) (8L);
-    
+
         public static final int DVI = (int) (16L);
-    
+
         public static final int DISPLAYPORT = (int) (32L);
-    
+
         public static final int NETWORK = (int) (64L);
-    
-    
+
+
         private static final boolean IS_EXTENSIBLE = false;
-    
+
         public static boolean isKnownValue(int value) {
             switch (value) {
                 case 0:
@@ -85,16 +85,16 @@ public interface OutputProtection extends org.chromium.mojo.bindings.Interface {
             }
             return false;
         }
-    
+
         public static void validate(int value) {
             if (IS_EXTENSIBLE || isKnownValue(value))
                 return;
-    
+
             throw new DeserializationException("Invalid enum value.");
         }
-    
+
         private LinkType() {}
-    
+
     }
 
 

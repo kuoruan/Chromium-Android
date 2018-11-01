@@ -39,9 +39,6 @@ public final class BigString16 extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static BigString16 deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -55,11 +52,13 @@ public final class BigString16 extends org.chromium.mojo.bindings.Struct {
         BigString16 result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new BigString16(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new BigString16(elementsOrVersion);
+                {
+                    
                 result.data = BigBuffer.decode(decoder0, 8);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -72,33 +71,5 @@ public final class BigString16 extends org.chromium.mojo.bindings.Struct {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
         encoder0.encode(this.data, 8, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        BigString16 other = (BigString16) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.data, other.data))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.data);
-        return result;
     }
 }

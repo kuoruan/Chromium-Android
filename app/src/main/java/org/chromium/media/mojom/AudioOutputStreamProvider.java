@@ -25,10 +25,7 @@ public interface AudioOutputStreamProvider extends org.chromium.mojo.bindings.In
 
 
     void acquire(
-org.chromium.mojo.bindings.InterfaceRequest<AudioOutputStream> outputStream, AudioOutputStreamClient client, AudioParameters params, 
-AcquireResponse callback);
-
-    interface AcquireResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<AudioDataPipe> { }
+AudioParameters params, AudioOutputStreamProviderClient client, org.chromium.mojo_base.mojom.UnguessableToken processingId);
 
 
 }

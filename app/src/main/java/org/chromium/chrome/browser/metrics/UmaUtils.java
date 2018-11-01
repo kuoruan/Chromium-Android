@@ -8,16 +8,13 @@ import android.os.SystemClock;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.base.metrics.RecordHistogram;
-
-import java.util.concurrent.TimeUnit;
+import org.chromium.base.annotations.MainDex;
 
 /**
  * Utilities to support startup metrics - Android version.
  */
 @JNINamespace("chrome::android")
 public class UmaUtils {
-    private static long sApplicationStartWallClockMs;
     private static boolean sRunningApplicationStart;
 
     // All these values originate from SystemClock.uptimeMillis().
@@ -25,19 +22,16 @@ public class UmaUtils {
     private static long sForegroundStartTimeMs;
     private static long sBackgroundTimeMs;
 
-    // Event duration recorded from the |sApplicationStartTimeMs|.
-    private static long sFirstCommitTimeMs;
-
     /**
      * Record the time in the application lifecycle at which Chrome code first runs
      * (Application.attachBaseContext()).
      */
+    @MainDex
     public static void recordMainEntryPointTime() {
         // We can't simply pass this down through a JNI call, since the JNI for chrome
         // isn't initialized until we start the native content browser component, and we
         // then need the start time in the C++ side before we return to Java. As such we
         // save it in a static that the C++ can fetch once it has initialized the JNI.
-        sApplicationStartWallClockMs = System.currentTimeMillis();
         sApplicationStartTimeMs = SystemClock.uptimeMillis();
     }
 
@@ -61,39 +55,6 @@ public class UmaUtils {
     }
 
     /**
-     * Registers the fact that a navigation has finished. Based on this fact, may discard recording
-     * histograms later.
-     */
-    public static void registerFinishNavigation(boolean isTrackedPage) {
-        if (!isRunningApplicationStart()) return;
-
-        if (isTrackedPage && hasComeToForeground() && !hasComeToBackground()) {
-            sFirstCommitTimeMs = SystemClock.uptimeMillis() - sApplicationStartTimeMs;
-            RecordHistogram.recordLongTimesHistogram100(
-                    "Startup.Android.Experimental.Cold.TimeToFirstNavigationCommit",
-                    sFirstCommitTimeMs, TimeUnit.MILLISECONDS);
-        }
-        setRunningApplicationStart(false);
-    }
-
-    /**
-     * Record the First Contentful Paint time.
-     *
-     * @param firstContentfulPaintMs timestamp in uptime millis.
-     */
-    public static void recordFirstContentfulPaint(long firstContentfulPaintMs) {
-        // First commit time histogram should be recorded before this one. We should discard a
-        // record if the first commit time wasn't recorded.
-        if (sFirstCommitTimeMs == 0) return;
-
-        if (hasComeToForeground() && !hasComeToBackground()) {
-            RecordHistogram.recordLongTimesHistogram100(
-                    "Startup.Android.Experimental.Cold.TimeToFirstContentfulPaint",
-                    firstContentfulPaintMs - sApplicationStartTimeMs, TimeUnit.MILLISECONDS);
-        }
-    }
-
-    /**
      * Determines if Chrome was brought to foreground.
      */
     public static boolean hasComeToForeground() {
@@ -105,23 +66,6 @@ public class UmaUtils {
      */
     public static boolean hasComeToBackground() {
         return sBackgroundTimeMs != 0;
-    }
-
-    /**
-     * Whether the application is in the early stage since the browser process start. Currently, the
-     * very first finished navigation in the lifetime of the process ends the "application start".
-     * Must only be called on the UI thread.
-     */
-    public static boolean isRunningApplicationStart() {
-        return sRunningApplicationStart;
-    }
-
-    /**
-     * Marks/unmarks the "application start" stage of the browser process lifetime.
-     * Must only be called on the UI thread.
-     */
-    public static void setRunningApplicationStart(boolean isAppStart) {
-        sRunningApplicationStart = isAppStart;
     }
 
     /**
@@ -142,11 +86,6 @@ public class UmaUtils {
     }
 
     @CalledByNative
-    public static long getMainEntryPointWallTime() {
-        return sApplicationStartWallClockMs;
-    }
-
-    @CalledByNative
     public static long getMainEntryPointTicks() {
         return sApplicationStartTimeMs;
     }
@@ -154,6 +93,11 @@ public class UmaUtils {
     public static long getForegroundStartTicks() {
         assert sForegroundStartTimeMs != 0;
         return sForegroundStartTimeMs;
+    }
+
+    @CalledByNative
+    private static void setUsageAndCrashReportingFromNative(boolean enabled) {
+        UmaSessionStats.changeMetricsReportingConsent(enabled);
     }
 
     private static native boolean nativeIsClientInMetricsReportingSample();

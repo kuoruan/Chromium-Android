@@ -517,13 +517,22 @@ public class SpannableAutocompleteEditTextModel implements AutocompleteEditTextM
         public void commitAutocomplete() {
             if (DEBUG) Log.i(TAG, "commitAutocomplete");
             if (!hasAutocomplete()) return;
+
+            String autocompleteText = mCurrentState.getAutocompleteText();
+
             mCurrentState.commitAutocompleteText();
             // Invalidate mPreviouslySetState.
             mPreviouslySetState.copyFrom(mCurrentState);
             mLastEditWasTyping = false;
-            incrementBatchEditCount(); // avoids additional notifyAutocompleteTextStateChanged()
-            mSpanCursorController.commitSpan();
-            decrementBatchEditCount();
+
+            if (mBatchEditNestCount == 0) {
+                incrementBatchEditCount(); // avoids additional notifyAutocompleteTextStateChanged()
+                mSpanCursorController.commitSpan();
+                decrementBatchEditCount();
+            } else {
+                // We have already removed span in the onBeginImeCommand(), just append the text.
+                mDelegate.append(autocompleteText);
+            }
         }
 
         @Override

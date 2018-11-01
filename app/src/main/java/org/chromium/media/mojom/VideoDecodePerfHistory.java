@@ -25,7 +25,7 @@ public interface VideoDecodePerfHistory extends org.chromium.mojo.bindings.Inter
 
 
     void getPerfInfo(
-int profile, org.chromium.gfx.mojom.Size videoSize, int framesPerSec, 
+PredictionFeatures features, 
 GetPerfInfoResponse callback);
 
     interface GetPerfInfoResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Boolean, Boolean> { }

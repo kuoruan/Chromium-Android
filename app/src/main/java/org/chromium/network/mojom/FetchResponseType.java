@@ -28,8 +28,6 @@ public final class FetchResponseType {
 
     public static final int OPAQUE_REDIRECT = OPAQUE + 1;
 
-    public static final int LAST = (int) (FetchResponseType.OPAQUE_REDIRECT);
-
 
     private static final boolean IS_EXTENSIBLE = false;
 

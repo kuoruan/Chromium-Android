@@ -5,7 +5,7 @@
 
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingTop="11dp"
@@ -34,9 +34,9 @@
             android:layout_height="2dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
-            chrome:colorBackground="@color/google_grey_300"
-            chrome:colorProgress="@color/google_blue_500_alpha_38_opaque"
-            chrome:colorSecondaryProgress="@color/google_blue_500" />
+            app:colorBackground="@color/modern_grey_300"
+            app:colorProgress="@color/modern_blue_600_alpha_38_opaque"
+            app:colorSecondaryProgress="@color/modern_blue_600" />
 
         <TextView
             android:id="@+id/size_free_and_other_apps"
@@ -48,7 +48,7 @@
     </LinearLayout>
 
     <View
-        style="@style/Divider"
+        style="@style/HorizontalDivider"
         android:layout_marginTop="@dimen/list_item_default_margin" />
 
 </LinearLayout>

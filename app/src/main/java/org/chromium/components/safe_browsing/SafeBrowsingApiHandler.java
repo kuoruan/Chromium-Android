@@ -4,7 +4,6 @@
 
 package org.chromium.components.safe_browsing;
 
-import android.content.Context;
 import android.support.annotation.IntDef;
 
 import java.lang.annotation.Retention;
@@ -40,7 +39,7 @@ public interface SafeBrowsingApiHandler {
      *
      * @return the handler if it's usable, or null if the API is not supported.
      */
-    public boolean init(Context context, Observer result);
+    public boolean init(Observer result);
 
     /**
      * Start a URI-lookup to determine if it matches one of the specified threats.

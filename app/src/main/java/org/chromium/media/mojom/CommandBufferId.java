@@ -19,7 +19,7 @@ public final class CommandBufferId extends org.chromium.mojo.bindings.Struct {
     private static final int STRUCT_SIZE = 24;
     private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    public org.chromium.mojo.common.mojom.UnguessableToken channelToken;
+    public org.chromium.mojo_base.mojom.UnguessableToken channelToken;
     public int routeId;
 
     private CommandBufferId(int version) {
@@ -40,9 +40,6 @@ public final class CommandBufferId extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static CommandBufferId deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,16 +53,18 @@ public final class CommandBufferId extends org.chromium.mojo.bindings.Struct {
         CommandBufferId result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new CommandBufferId(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new CommandBufferId(elementsOrVersion);
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                result.channelToken = org.chromium.mojo.common.mojom.UnguessableToken.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                result.channelToken = org.chromium.mojo_base.mojom.UnguessableToken.decode(decoder1);
+                }
+                {
+                    
                 result.routeId = decoder0.readInt(16);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -80,36 +79,5 @@ public final class CommandBufferId extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.channelToken, 8, false);
         
         encoder0.encode(this.routeId, 16);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        CommandBufferId other = (CommandBufferId) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.channelToken, other.channelToken))
-            return false;
-        if (this.routeId!= other.routeId)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.channelToken);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.routeId);
-        return result;
     }
 }

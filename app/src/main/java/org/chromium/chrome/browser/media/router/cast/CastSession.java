@@ -7,7 +7,7 @@ package org.chromium.chrome.browser.media.router.cast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import org.chromium.chrome.browser.media.router.MediaController;
+import org.chromium.chrome.browser.media.router.FlingingController;
 
 import java.util.Set;
 
@@ -133,5 +133,5 @@ public interface CastSession {
      * Returns a controller for the media content.
      */
     @Nullable
-    MediaController getMediaController();
+    FlingingController getFlingingController();
 }

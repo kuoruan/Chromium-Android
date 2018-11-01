@@ -47,9 +47,6 @@ public final class SharedBufferVideoFrameData extends org.chromium.mojo.bindings
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static SharedBufferVideoFrameData deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -63,39 +60,41 @@ public final class SharedBufferVideoFrameData extends org.chromium.mojo.bindings
         SharedBufferVideoFrameData result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new SharedBufferVideoFrameData(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new SharedBufferVideoFrameData(elementsOrVersion);
+                {
+                    
                 result.frameData = decoder0.readSharedBufferHandle(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.yStride = decoder0.readInt(12);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.frameDataSize = decoder0.readLong(16);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.uStride = decoder0.readInt(24);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.vStride = decoder0.readInt(28);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.yOffset = decoder0.readLong(32);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.uOffset = decoder0.readLong(40);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.vOffset = decoder0.readLong(48);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -122,54 +121,5 @@ public final class SharedBufferVideoFrameData extends org.chromium.mojo.bindings
         encoder0.encode(this.uOffset, 40);
         
         encoder0.encode(this.vOffset, 48);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        SharedBufferVideoFrameData other = (SharedBufferVideoFrameData) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.frameData, other.frameData))
-            return false;
-        if (this.frameDataSize!= other.frameDataSize)
-            return false;
-        if (this.yStride!= other.yStride)
-            return false;
-        if (this.uStride!= other.uStride)
-            return false;
-        if (this.vStride!= other.vStride)
-            return false;
-        if (this.yOffset!= other.yOffset)
-            return false;
-        if (this.uOffset!= other.uOffset)
-            return false;
-        if (this.vOffset!= other.vOffset)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.frameData);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.frameDataSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.yStride);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.uStride);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.vStride);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.yOffset);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.uOffset);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.vOffset);
-        return result;
     }
 }

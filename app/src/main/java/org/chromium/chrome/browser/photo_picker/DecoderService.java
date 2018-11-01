@@ -13,9 +13,11 @@ import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.os.SystemClock;
 
+import org.chromium.base.CommandLine;
 import org.chromium.base.Log;
 import org.chromium.base.PathUtils;
 import org.chromium.base.ThreadUtils;
+import org.chromium.base.annotations.MainDex;
 import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.library_loader.ProcessInitException;
@@ -27,6 +29,7 @@ import java.io.IOException;
 /**
  * A service to accept requests to take image file contents and decode them.
  */
+@MainDex
 public class DecoderService extends Service {
     // The keys for the bundle when passing data to and from this service.
     static final String KEY_FILE_DESCRIPTOR = "file_descriptor";
@@ -44,6 +47,12 @@ public class DecoderService extends Service {
 
     @Override
     public void onCreate() {
+        // DecoderService does not require flags, but LibraryLoader.ensureInitialized() checks for
+        // --enable-low-end-device-mode. Rather than forwarding the flags from the browser process,
+        // just assume no flags.
+        if (!CommandLine.isInitialized()) {
+            CommandLine.init(null);
+        }
         try {
             // The decoder service relies on PathUtils.
             ThreadUtils.runOnUiThreadBlocking(() -> {
@@ -51,7 +60,7 @@ public class DecoderService extends Service {
                         ChromeBrowserInitializer.PRIVATE_DATA_DIRECTORY_SUFFIX);
             });
 
-            LibraryLoader.get(LibraryProcessType.PROCESS_CHILD).ensureInitialized();
+            LibraryLoader.getInstance().ensureInitialized(LibraryProcessType.PROCESS_CHILD);
             nativeInitializePhotoPickerSandbox();
 
             mNativeLibraryAndSandboxInitialized = true;

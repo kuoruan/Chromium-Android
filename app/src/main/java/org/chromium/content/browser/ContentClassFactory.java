@@ -4,10 +4,15 @@
 
 package org.chromium.content.browser;
 
-import android.view.View;
+import android.os.Build;
 
 import org.chromium.base.ThreadUtils;
+import org.chromium.content.browser.selection.AdditionalMenuItemProvider;
+import org.chromium.content.browser.selection.AdditionalMenuItemProviderImpl;
+import org.chromium.content.browser.selection.MagnifierAnimator;
+import org.chromium.content.browser.selection.MagnifierWrapperImpl;
 import org.chromium.content.browser.selection.SelectionInsertionHandleObserver;
+import org.chromium.content.browser.selection.SelectionPopupControllerImpl;
 
 /**
  * A class factory for downstream injecting code to content layer.
@@ -42,8 +47,20 @@ public class ContentClassFactory {
     /**
      * Creates HandleObserver object.
      */
-    public SelectionInsertionHandleObserver createHandleObserver(View view) {
-        // Implemented by a subclass.
-        return null;
+    public SelectionInsertionHandleObserver createHandleObserver(
+            SelectionPopupControllerImpl.ReadbackViewCallback callback) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P
+                || !ContentFeatureList.isEnabled(
+                           ContentFeatureList.ENHANCED_SELECTION_INSERTION_HANDLE))
+            return null;
+        return new MagnifierAnimator(new MagnifierWrapperImpl(callback));
+    }
+
+    /**
+     * Creates AddtionalMenuItems object.
+     */
+    public AdditionalMenuItemProvider createAddtionalMenuItemProvider() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return null;
+        return new AdditionalMenuItemProviderImpl();
     }
 }

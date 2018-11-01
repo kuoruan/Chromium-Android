@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.widget.findinpage;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.support.v7.content.res.AppCompatResources;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -29,16 +30,16 @@ public class FindToolbarPhone extends FindToolbar {
     }
 
     @Override
-    public void activate() {
-        if (!isViewAvailable()) return;
+    protected void handleActivate() {
+        assert isWebContentAvailable();
         setVisibility(View.VISIBLE);
-        super.activate();
+        super.handleActivate();
     }
 
     @Override
-    public void deactivate(boolean clearSelection) {
-        super.deactivate(clearSelection);
+    protected void handleDeactivation(boolean clearSelection) {
         setVisibility(View.GONE);
+        super.handleDeactivation(clearSelection);
     }
 
     @Override
@@ -47,20 +48,20 @@ public class FindToolbarPhone extends FindToolbar {
         if (isIncognito) {
             setBackgroundColor(ColorUtils.getDefaultThemeColor(
                     getResources(), FeatureUtilities.isChromeModernDesignEnabled(), true));
-            ColorStateList white = ApiCompatibilityUtils.getColorStateList(getResources(),
-                    R.color.light_mode_tint);
+            ColorStateList white =
+                    AppCompatResources.getColorStateList(getContext(), R.color.light_mode_tint);
             mFindNextButton.setTint(white);
             mFindPrevButton.setTint(white);
             mCloseFindButton.setTint(white);
             queryTextColorId = R.color.find_in_page_query_white_color;
         } else {
             setBackgroundColor(Color.WHITE);
-            ColorStateList dark = ApiCompatibilityUtils.getColorStateList(getResources(),
-                    R.color.dark_mode_tint);
+            ColorStateList dark =
+                    AppCompatResources.getColorStateList(getContext(), R.color.dark_mode_tint);
             mFindNextButton.setTint(dark);
             mFindPrevButton.setTint(dark);
             mCloseFindButton.setTint(dark);
-            queryTextColorId = R.color.black_alpha_87;
+            queryTextColorId = R.color.default_text_color;
         }
         mFindQuery.setTextColor(
                 ApiCompatibilityUtils.getColor(getContext().getResources(), queryTextColorId));

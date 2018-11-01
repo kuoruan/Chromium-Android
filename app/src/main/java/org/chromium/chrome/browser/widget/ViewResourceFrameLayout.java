@@ -10,15 +10,15 @@ import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewParent;
-import android.widget.FrameLayout;
 
 import org.chromium.ui.resources.dynamics.ViewResourceAdapter;
+import org.chromium.ui.widget.OptimizedFrameLayout;
 
 /**
  * Extension to FrameLayout that handles tracking the necessary invalidates to generate
  * a corresponding {@link org.chromium.ui.resources.Resource} for use in the browser compositor.
  */
-public class ViewResourceFrameLayout extends FrameLayout {
+public class ViewResourceFrameLayout extends OptimizedFrameLayout {
     private ViewResourceAdapter mResourceAdapter;
     private Rect mTempRect;
 

@@ -40,7 +40,7 @@ public class BrowserActionsTabCreatorManager implements TabCreatorManager {
         }
 
         @Override
-        public Tab createNewTab(LoadUrlParams loadUrlParams, TabLaunchType type, Tab parent) {
+        public Tab createNewTab(LoadUrlParams loadUrlParams, @TabLaunchType int type, Tab parent) {
             assert type == TabLaunchType.FROM_BROWSER_ACTIONS
                     || type
                             == TabLaunchType.FROM_RESTORE
@@ -66,13 +66,13 @@ public class BrowserActionsTabCreatorManager implements TabCreatorManager {
         }
 
         @Override
-        public Tab launchUrl(String url, TabLaunchType type) {
+        public Tab launchUrl(String url, @TabLaunchType int type) {
             throw new UnsupportedOperationException("Browser Actions does not support launchUrl");
         }
 
         @Override
-        public boolean createTabWithWebContents(
-                Tab parent, WebContents webContents, int parentId, TabLaunchType type, String url) {
+        public boolean createTabWithWebContents(Tab parent, WebContents webContents, int parentId,
+                @TabLaunchType int type, String url) {
             throw new UnsupportedOperationException(
                     "Browser Actions does not support createTabWithWebContents");
         }

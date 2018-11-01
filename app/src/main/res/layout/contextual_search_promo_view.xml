@@ -5,7 +5,7 @@
 
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/contextual_search_promo"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -44,7 +44,7 @@
         android:textAllCaps="true"
         android:textColor="#FFF"
         android:textSize="14sp"
-        chrome:buttonColor="@color/light_active_color" />
+        app:buttonColor="@color/light_active_color" />
 
     <Button
         android:id="@+id/contextual_search_no_thanks_button"
@@ -57,11 +57,7 @@
         android:layout_marginEnd="16dp"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
-        android:text="@string/contextual_search_no_thanks_button"
-        android:textAllCaps="true"
-        android:textColor="@color/light_active_color"
-        android:textSize="14sp"
-        style="@style/ButtonCompatBorderless" />
+        android:text="@string/contextual_search_no_thanks_button" />
 
     <View
         android:layout_below="@id/contextual_search_allow_button"

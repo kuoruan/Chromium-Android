@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.text.TextUtils;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.autofill.CardType;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
@@ -47,7 +48,9 @@ public class AutofillPaymentApp implements PaymentApp {
             String unusedIFRameOrigin, byte[][] unusedCertificateChain,
             Map<String, PaymentDetailsModifier> modifiers, final InstrumentsCallback callback) {
         PersonalDataManager pdm = PersonalDataManager.getInstance();
-        List<CreditCard> cards = pdm.getCreditCardsToSuggest();
+        List<CreditCard> cards =
+                pdm.getCreditCardsToSuggest(/*includeServerCards=*/ChromeFeatureList.isEnabled(
+                        ChromeFeatureList.WEB_PAYMENTS_RETURN_GOOGLE_PAY_IN_BASIC_CARD));
         final List<PaymentInstrument> instruments = new ArrayList<>(cards.size());
 
         if (methodDataMap.containsKey(BasicCardUtils.BASIC_CARD_METHOD_NAME)) {
@@ -86,8 +89,8 @@ public class AutofillPaymentApp implements PaymentApp {
 
         if (billingAddress != null
                 && AutofillAddress.checkAddressCompletionStatus(
-                           billingAddress, AutofillAddress.IGNORE_PHONE_COMPLETENESS_CHECK)
-                        != AutofillAddress.COMPLETE) {
+                           billingAddress, AutofillAddress.CompletenessCheckType.IGNORE_PHONE)
+                        != AutofillAddress.CompletionStatus.COMPLETE) {
             billingAddress = null;
         }
 

@@ -167,8 +167,8 @@ public abstract class ChromeSwitches {
      */
     public static final String CHROME_HOME_SWIPE_LOGIC_VELOCITY = "velocity";
 
-    /** Switch for enabling the Chrome Home Survey. */
-    public static final String CHROME_HOME_FORCE_ENABLE_SURVEY = "force-enable-chrome-home-survey";
+    /** Switch for enabling the Chrome Survey. */
+    public static final String CHROME_FORCE_ENABLE_SURVEY = "force-enable-chrome-survey";
 
     /** Switch to enable incognito tabs to be seen in Android Recents. */
     public static final String ENABLE_INCOGNITO_SNAPSHOTS_IN_ANDROID_RECENTS =
@@ -182,6 +182,29 @@ public abstract class ChromeSwitches {
      * See ChromeTabbedActivity.maybeDispatchExplicitMainViewIntent() for more info.
      */
     public static final String DONT_CRASH_ON_VIEW_MAIN_INTENTS = "dont-crash-on-view-main-intents";
+
+    /**
+     * Disables digital asset link verification for the given website.
+     */
+    public static final String DISABLE_DIGITAL_ASSET_LINK_VERIFICATION =
+            "disable-digital-asset-link-verification-for-url";
+
+    /**
+     * Forces Trusted Web Activities to show the the Disclosure Toast every time.
+     */
+    public static final String FORCE_TRUSTED_WEB_ACTIVITY_DISCLOSURE =
+            "force-trusted-web-activity-disclosure";
+
+    /**
+     * Allows first-party apps to launch incognito custom tabs.
+     */
+    public static final String ENABLE_INCOGNITO_CUSTOM_TABS = "enable-incognito-custom-tabs";
+
+    /**
+     * Allows third-party apps to launch incognito custom tabs.
+     */
+    public static final String ALLOW_INCOGNITO_CUSTOM_TABS_FROM_THIRD_PARTY =
+            "allow-incognito-custom-tabs-from-third-party";
 
     // Prevent instantiation.
     private ChromeSwitches() {}

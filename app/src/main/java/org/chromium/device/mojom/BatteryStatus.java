@@ -46,9 +46,6 @@ public final class BatteryStatus extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static BatteryStatus deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -62,23 +59,25 @@ public final class BatteryStatus extends org.chromium.mojo.bindings.Struct {
         BatteryStatus result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new BatteryStatus(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new BatteryStatus(elementsOrVersion);
+                {
+                    
                 result.charging = decoder0.readBoolean(8, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.chargingTime = decoder0.readDouble(16);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.dischargingTime = decoder0.readDouble(24);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.level = decoder0.readDouble(32);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -97,42 +96,5 @@ public final class BatteryStatus extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.dischargingTime, 24);
         
         encoder0.encode(this.level, 32);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        BatteryStatus other = (BatteryStatus) object;
-        if (this.charging!= other.charging)
-            return false;
-        if (this.chargingTime!= other.chargingTime)
-            return false;
-        if (this.dischargingTime!= other.dischargingTime)
-            return false;
-        if (this.level!= other.level)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.charging);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.chargingTime);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.dischargingTime);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.level);
-        return result;
     }
 }

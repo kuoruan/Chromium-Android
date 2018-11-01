@@ -295,6 +295,7 @@ public class MediaNotificationInfo {
     }
 
     @Override
+    @SuppressWarnings("ReferenceEquality")
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (!(obj instanceof MediaNotificationInfo)) return false;

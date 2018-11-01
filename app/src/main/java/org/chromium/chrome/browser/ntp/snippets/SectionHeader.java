@@ -8,7 +8,6 @@ import android.support.annotation.NonNull;
 
 import org.chromium.chrome.browser.ntp.cards.ItemViewType;
 import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder;
-import org.chromium.chrome.browser.ntp.cards.NodeVisitor;
 import org.chromium.chrome.browser.ntp.cards.OptionalLeaf;
 
 /**
@@ -71,7 +70,7 @@ public class SectionHeader extends OptionalLeaf {
      */
     public void toggleHeader() {
         mIsExpanded = !mIsExpanded;
-        notifyItemChanged(0, SectionHeaderViewHolder::updateIconDrawable);
+        notifyItemChanged(0, SectionHeaderViewHolder::updateVisuals);
         mToggleCallback.run();
     }
 
@@ -81,8 +80,8 @@ public class SectionHeader extends OptionalLeaf {
     }
 
     @Override
-    public void visitOptionalItem(NodeVisitor visitor) {
-        visitor.visitHeader();
+    public String describeForTesting() {
+        return "HEADER";
     }
 
     public void setVisible(boolean visible) {

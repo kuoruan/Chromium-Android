@@ -18,28 +18,28 @@ class HostResolverRequestClient_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<HostResolverRequestClient, HostResolverRequestClient.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<HostResolverRequestClient, HostResolverRequestClient.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "net::interfaces::HostResolverRequestClient";
+            return "net.interfaces.HostResolverRequestClient";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, HostResolverRequestClient impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public HostResolverRequestClient[] buildArray(int size) {
           return new HostResolverRequestClient[size];
@@ -95,25 +95,25 @@ int error, AddressList result) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 HostResolverRequestClient_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case REPORT_RESULT_ORDINAL: {
-            
+
                         HostResolverRequestClientReportResultParams data =
                                 HostResolverRequestClientReportResultParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().reportResult(data.error, data.result);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -133,14 +133,14 @@ int error, AddressList result) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), HostResolverRequestClient_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -154,38 +154,35 @@ int error, AddressList result) {
 
     
     static final class HostResolverRequestClientReportResultParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int error;
         public AddressList result;
-    
+
         private HostResolverRequestClientReportResultParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public HostResolverRequestClientReportResultParams() {
             this(0);
         }
-    
+
         public static HostResolverRequestClientReportResultParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static HostResolverRequestClientReportResultParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static HostResolverRequestClientReportResultParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -195,22 +192,24 @@ int error, AddressList result) {
             HostResolverRequestClientReportResultParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new HostResolverRequestClientReportResultParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new HostResolverRequestClientReportResultParams(elementsOrVersion);
+                    {
+                        
                     result.error = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.result = AddressList.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -219,37 +218,6 @@ int error, AddressList result) {
             encoder0.encode(this.error, 8);
             
             encoder0.encode(this.result, 16, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            HostResolverRequestClientReportResultParams other = (HostResolverRequestClientReportResultParams) object;
-            if (this.error!= other.error)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.result, other.result))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.error);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.result);
-            return result;
         }
     }
 

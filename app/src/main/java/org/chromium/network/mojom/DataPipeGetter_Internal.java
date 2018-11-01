@@ -18,28 +18,28 @@ class DataPipeGetter_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<DataPipeGetter, DataPipeGetter.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<DataPipeGetter, DataPipeGetter.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "network::mojom::DataPipeGetter";
+            return "network.mojom.DataPipeGetter";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, DataPipeGetter impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public DataPipeGetter[] buildArray(int size) {
           return new DataPipeGetter[size];
@@ -117,27 +117,27 @@ org.chromium.mojo.bindings.InterfaceRequest<DataPipeGetter> request) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 DataPipeGetter_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case CLONE_ORDINAL: {
-            
+
                         DataPipeGetterCloneParams data =
                                 DataPipeGetterCloneParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().clone(data.request);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -157,29 +157,29 @@ org.chromium.mojo.bindings.InterfaceRequest<DataPipeGetter> request) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), DataPipeGetter_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case READ_ORDINAL: {
-            
+
                         DataPipeGetterReadParams data =
                                 DataPipeGetterReadParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().read(data.pipe, new DataPipeGetterReadResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -193,38 +193,35 @@ org.chromium.mojo.bindings.InterfaceRequest<DataPipeGetter> request) {
 
     
     static final class DataPipeGetterReadParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.system.DataPipe.ProducerHandle pipe;
-    
+
         private DataPipeGetterReadParams(int version) {
             super(STRUCT_SIZE, version);
             this.pipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
-    
+
         public DataPipeGetterReadParams() {
             this(0);
         }
-    
+
         public static DataPipeGetterReadParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static DataPipeGetterReadParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static DataPipeGetterReadParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -234,17 +231,19 @@ org.chromium.mojo.bindings.InterfaceRequest<DataPipeGetter> request) {
             DataPipeGetterReadParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new DataPipeGetterReadParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new DataPipeGetterReadParams(elementsOrVersion);
+                    {
+                        
                     result.pipe = decoder0.readProducerHandle(8, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -252,72 +251,41 @@ org.chromium.mojo.bindings.InterfaceRequest<DataPipeGetter> request) {
             
             encoder0.encode(this.pipe, 8, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            DataPipeGetterReadParams other = (DataPipeGetterReadParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.pipe, other.pipe))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pipe);
-            return result;
-        }
     }
 
 
 
     
     static final class DataPipeGetterReadResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int status;
         public long size;
-    
+
         private DataPipeGetterReadResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public DataPipeGetterReadResponseParams() {
             this(0);
         }
-    
+
         public static DataPipeGetterReadResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static DataPipeGetterReadResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static DataPipeGetterReadResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -327,21 +295,23 @@ org.chromium.mojo.bindings.InterfaceRequest<DataPipeGetter> request) {
             DataPipeGetterReadResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new DataPipeGetterReadResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new DataPipeGetterReadResponseParams(elementsOrVersion);
+                    {
+                        
                     result.status = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.size = decoder0.readLong(16);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -350,37 +320,6 @@ org.chromium.mojo.bindings.InterfaceRequest<DataPipeGetter> request) {
             encoder0.encode(this.status, 8);
             
             encoder0.encode(this.size, 16);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            DataPipeGetterReadResponseParams other = (DataPipeGetterReadResponseParams) object;
-            if (this.status!= other.status)
-                return false;
-            if (this.size!= other.size)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.size);
-            return result;
         }
     }
 
@@ -451,37 +390,34 @@ org.chromium.mojo.bindings.InterfaceRequest<DataPipeGetter> request) {
 
     
     static final class DataPipeGetterCloneParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.InterfaceRequest<DataPipeGetter> request;
-    
+
         private DataPipeGetterCloneParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public DataPipeGetterCloneParams() {
             this(0);
         }
-    
+
         public static DataPipeGetterCloneParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static DataPipeGetterCloneParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static DataPipeGetterCloneParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -491,51 +427,25 @@ org.chromium.mojo.bindings.InterfaceRequest<DataPipeGetter> request) {
             DataPipeGetterCloneParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new DataPipeGetterCloneParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new DataPipeGetterCloneParams(elementsOrVersion);
+                    {
+                        
                     result.request = decoder0.readInterfaceRequest(8, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.request, 8, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            DataPipeGetterCloneParams other = (DataPipeGetterCloneParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.request, other.request))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.request);
-            return result;
         }
     }
 

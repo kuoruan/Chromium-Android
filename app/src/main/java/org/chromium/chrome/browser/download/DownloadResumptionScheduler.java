@@ -5,9 +5,9 @@
 package org.chromium.chrome.browser.download;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.components.background_task_scheduler.BackgroundTaskSchedulerFactory;
 import org.chromium.components.background_task_scheduler.TaskIds;
@@ -21,21 +21,17 @@ import java.util.concurrent.TimeUnit;
  * Class for scheduing download resumption tasks.
  */
 public class DownloadResumptionScheduler {
-    private final Context mContext;
     @SuppressLint("StaticFieldLeak")
     private static DownloadResumptionScheduler sDownloadResumptionScheduler;
 
-    public static DownloadResumptionScheduler getDownloadResumptionScheduler(Context context) {
-        assert context == context.getApplicationContext();
+    public static DownloadResumptionScheduler getDownloadResumptionScheduler() {
         if (sDownloadResumptionScheduler == null) {
-            sDownloadResumptionScheduler = new DownloadResumptionScheduler(context);
+            sDownloadResumptionScheduler = new DownloadResumptionScheduler();
         }
         return sDownloadResumptionScheduler;
     }
 
-    protected DownloadResumptionScheduler(Context context) {
-        mContext = context;
-    }
+    protected DownloadResumptionScheduler() {}
 
     /**
      * Checks the persistence layer and schedules a task to restart the app and resume any downloads
@@ -72,7 +68,8 @@ public class DownloadResumptionScheduler {
                                     .setIsPersisted(true)
                                     .build();
 
-            BackgroundTaskSchedulerFactory.getScheduler().schedule(mContext, task);
+            BackgroundTaskSchedulerFactory.getScheduler().schedule(
+                    ContextUtils.getApplicationContext(), task);
         } else {
             cancel();
         }
@@ -83,7 +80,7 @@ public class DownloadResumptionScheduler {
      */
     public void cancel() {
         BackgroundTaskSchedulerFactory.getScheduler().cancel(
-                mContext, TaskIds.DOWNLOAD_RESUMPTION_JOB_ID);
+                ContextUtils.getApplicationContext(), TaskIds.DOWNLOAD_RESUMPTION_JOB_ID);
     }
 
     /**
@@ -100,7 +97,8 @@ public class DownloadResumptionScheduler {
             // Start the DownloadNotificationService and allow that to manage the download life
             // cycle. Shut down the task right away after starting the service
             DownloadNotificationService.startDownloadNotificationService(
-                    mContext, new Intent(DownloadNotificationService.ACTION_DOWNLOAD_RESUME_ALL));
+                    ContextUtils.getApplicationContext(),
+                    new Intent(DownloadNotificationService.ACTION_DOWNLOAD_RESUME_ALL));
         }
     }
 }

@@ -8,6 +8,7 @@ import android.view.Window;
 import android.view.WindowManager;
 
 import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.compositor.layouts.LayoutManagerChrome;
 import org.chromium.chrome.browser.compositor.layouts.OverviewModeBehavior.OverviewModeObserver;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModelSelectorObserver;
@@ -91,8 +92,13 @@ public class IncognitoTabSnapshotController
     @VisibleForTesting
     boolean isShowingIncognito() {
         boolean isInIncognitoModel = mTabModelSelector.getCurrentModel().isIncognito();
-        // Chrome Home is in overview mode when creating new tabs.
-        return isInIncognitoModel || (mInOverviewMode && getIncognitoTabCount() > 0);
+
+        // If we're using the overlapping tab switcher, we show the edge of the open incognito tabs
+        // even if the tab switcher is showing the normal stack. But if the horizontal tab switcher
+        // is enabled, incognito tabs are not visible while we're showing the normal tabs.
+        return isInIncognitoModel
+                || (!ChromeFeatureList.isEnabled(ChromeFeatureList.HORIZONTAL_TAB_SWITCHER_ANDROID)
+                           && mInOverviewMode && getIncognitoTabCount() > 0);
     }
 
     // Set in overview mode for testing.

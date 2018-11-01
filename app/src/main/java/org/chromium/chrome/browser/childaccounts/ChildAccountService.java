@@ -11,16 +11,15 @@ import org.chromium.base.Callback;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.components.signin.AccountManagerFacade;
+import org.chromium.components.signin.ChildAccountStatus;
 import org.chromium.ui.base.WindowAndroid;
 
 /**
- * This class serves as a simple interface for querying the child account information. It has two
- * methods for querying the child account information; checkHasChildAccount(...) which is
- * asynchronous and queries the system directly for the information and the synchronous
- * isChildAccount() which asks the native side assuming it has been set correctly already.
+ * This class serves as a simple interface for querying the child account information. It has a
+ * method for querying the child account information asynchronously from the system.
  *
- * The former method is used by ForcedSigninProcessor and FirstRunFlowSequencer to detect child
- * accounts since the native side is only activated on signing in. Once signed in by the
+ * This method is used by ForcedSigninProcessor and FirstRunFlowSequencer to detect child accounts
+ * since the native side is only activated on signing in. Once signed in by the
  * ForcedSigninProcessor, the ChildAccountInfoFetcher will notify the native side and also takes
  * responsibility for monitoring changes and taking a suitable action.
  *
@@ -36,16 +35,17 @@ public class ChildAccountService {
     /**
      * Checks for the presence of child accounts on the device.
      *
-     * @param callback A callback which will be called with the result.
+     * @param callback A callback which will be called with a @ChildAccountStatus.Status value.
      */
-    public static void checkHasChildAccount(final Callback<Boolean> callback) {
+    public static void checkChildAccountStatus(final Callback<Integer> callback) {
         ThreadUtils.assertOnUiThread();
         final AccountManagerFacade accountManager = AccountManagerFacade.get();
         accountManager.tryGetGoogleAccounts(accounts -> {
             if (accounts.length != 1) {
-                callback.onResult(false);
+                // Child accounts can't share a device.
+                callback.onResult(ChildAccountStatus.NOT_CHILD);
             } else {
-                accountManager.checkChildAccount(accounts[0], callback);
+                accountManager.checkChildAccountStatus(accounts[0], callback);
             }
         });
     }

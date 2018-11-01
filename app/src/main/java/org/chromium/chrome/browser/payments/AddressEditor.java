@@ -15,12 +15,13 @@ import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.GetSubKeysRequestDelegate;
 import org.chromium.chrome.browser.autofill.PhoneNumberUtil;
-import org.chromium.chrome.browser.payments.ui.EditorFieldModel;
-import org.chromium.chrome.browser.payments.ui.EditorFieldModel.EditorFieldValidator;
-import org.chromium.chrome.browser.payments.ui.EditorModel;
 import org.chromium.chrome.browser.preferences.autofill.AutofillProfileBridge;
 import org.chromium.chrome.browser.preferences.autofill.AutofillProfileBridge.AddressField;
 import org.chromium.chrome.browser.preferences.autofill.AutofillProfileBridge.AddressUiComponent;
+import org.chromium.chrome.browser.widget.prefeditor.EditorBase;
+import org.chromium.chrome.browser.widget.prefeditor.EditorFieldModel;
+import org.chromium.chrome.browser.widget.prefeditor.EditorFieldModel.EditorFieldValidator;
+import org.chromium.chrome.browser.widget.prefeditor.EditorModel;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -192,7 +193,7 @@ public class AddressEditor
             mPhoneField = EditorFieldModel.createTextInput(EditorFieldModel.INPUT_TYPE_HINT_PHONE,
                     mContext.getString(R.string.autofill_profile_editor_phone_number),
                     mPhoneNumbers, mPhoneFormatter, mPhoneValidator, null,
-                    mContext.getString(R.string.payments_field_required_validation_message),
+                    mContext.getString(R.string.pref_edit_dialog_field_required_validation_message),
                     mContext.getString(R.string.payments_phone_invalid_validation_message), null);
         }
 
@@ -443,7 +444,7 @@ public class AddressEditor
             // PaymentRequest does.
             if (component.isRequired || component.id == AddressField.RECIPIENT) {
                 field.setRequiredErrorMessage(mContext.getString(
-                        R.string.payments_field_required_validation_message));
+                        R.string.pref_edit_dialog_field_required_validation_message));
             } else {
                 field.setRequiredErrorMessage(null);
             }

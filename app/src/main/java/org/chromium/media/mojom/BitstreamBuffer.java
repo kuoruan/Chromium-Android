@@ -23,7 +23,7 @@ public final class BitstreamBuffer extends org.chromium.mojo.bindings.Struct {
     public org.chromium.mojo.system.SharedBufferHandle memoryHandle;
     public int size;
     public long offset;
-    public org.chromium.mojo.common.mojom.TimeDelta timestamp;
+    public org.chromium.mojo_base.mojom.TimeDelta timestamp;
     public String keyId;
     public String iv;
     public SubsampleEntry[] subsamples;
@@ -47,9 +47,6 @@ public final class BitstreamBuffer extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static BitstreamBuffer deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -63,38 +60,39 @@ public final class BitstreamBuffer extends org.chromium.mojo.bindings.Struct {
         BitstreamBuffer result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new BitstreamBuffer(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new BitstreamBuffer(elementsOrVersion);
+                {
+                    
                 result.id = decoder0.readInt(8);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.memoryHandle = decoder0.readSharedBufferHandle(12, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.size = decoder0.readInt(16);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.offset = decoder0.readLong(24);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
-                result.timestamp = org.chromium.mojo.common.mojom.TimeDelta.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                result.timestamp = org.chromium.mojo_base.mojom.TimeDelta.decode(decoder1);
+                }
+                {
+                    
                 result.keyId = decoder0.readString(40, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.iv = decoder0.readString(48, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(56, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -105,7 +103,8 @@ public final class BitstreamBuffer extends org.chromium.mojo.bindings.Struct {
                         result.subsamples[i1] = SubsampleEntry.decode(decoder2);
                     }
                 }
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -140,54 +139,5 @@ public final class BitstreamBuffer extends org.chromium.mojo.bindings.Struct {
                 encoder1.encode(this.subsamples[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        BitstreamBuffer other = (BitstreamBuffer) object;
-        if (this.id!= other.id)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.memoryHandle, other.memoryHandle))
-            return false;
-        if (this.size!= other.size)
-            return false;
-        if (this.offset!= other.offset)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.timestamp, other.timestamp))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.keyId, other.keyId))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.iv, other.iv))
-            return false;
-        if (!java.util.Arrays.deepEquals(this.subsamples, other.subsamples))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.id);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.memoryHandle);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.size);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.offset);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.timestamp);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.keyId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.iv);
-        result = prime * result + java.util.Arrays.deepHashCode(this.subsamples);
-        return result;
     }
 }

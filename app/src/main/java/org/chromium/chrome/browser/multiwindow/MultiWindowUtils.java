@@ -11,9 +11,12 @@ import android.app.ActivityManager.AppTask;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.display.DisplayManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.provider.Browser;
 import android.text.TextUtils;
+import android.view.Display;
 
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApiCompatibilityUtils;
@@ -25,6 +28,7 @@ import org.chromium.chrome.browser.ChromeTabbedActivity;
 import org.chromium.chrome.browser.ChromeTabbedActivity2;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.util.IntentUtils;
+import org.chromium.ui.display.DisplayAndroidManager;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -42,6 +46,8 @@ import javax.annotation.Nullable;
 public class MultiWindowUtils implements ActivityStateListener {
     // getInstance() is called early in start-up, so there is not point in lazily initializing it.
     private static final MultiWindowUtils sInstance = AppHooks.get().createMultiWindowUtils();
+
+    private static final boolean SUPPORTS_MULTI_DISPLAY = false;
 
     // Used to keep track of whether ChromeTabbedActivity2 is running. A tri-state Boolean is
     // used in case both activities die in the background and MultiWindowUtils is recreated.
@@ -67,6 +73,23 @@ public class MultiWindowUtils implements ActivityStateListener {
         return ApiCompatibilityUtils.isInMultiWindowMode(activity);
     }
 
+    /**
+     * @param activity The {@link Activity} to check.
+     * @return Whether the system currently supports multiple displays.
+     */
+    public boolean isInMultiDisplayMode(Activity activity) {
+        if (!SUPPORTS_MULTI_DISPLAY) return false;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return false;
+        }
+        DisplayManager displayManager =
+                (DisplayManager) activity.getSystemService(Context.DISPLAY_SERVICE);
+        Display[] displays = displayManager.getDisplays();
+        if (displays == null || displays.length != 2) return false;
+        return displays[0].getState() == Display.STATE_ON
+                && displays[1].getState() == Display.STATE_ON;
+    }
+
     @VisibleForTesting
     public void setIsInMultiWindowModeForTesting(boolean isInMultiWindowMode) {
         mIsInMultiWindowModeForTesting = isInMultiWindowMode;
@@ -77,8 +100,9 @@ public class MultiWindowUtils implements ActivityStateListener {
      * other window.
      */
     public boolean isOpenInOtherWindowSupported(Activity activity) {
+        if (!isInMultiWindowMode(activity) && !isInMultiDisplayMode(activity)) return false;
         // Supported only in multi-window mode and if activity supports side-by-side instances.
-        return isInMultiWindowMode(activity) && getOpenInOtherWindowActivity(activity) != null;
+        return getOpenInOtherWindowActivity(activity) != null;
     }
 
     /**
@@ -86,7 +110,6 @@ public class MultiWindowUtils implements ActivityStateListener {
      * Returns null if the current activity doesn't support opening/moving tabs to another activity.
      */
     public Class<? extends Activity> getOpenInOtherWindowActivity(Activity current) {
-
         if (current instanceof ChromeTabbedActivity2) {
             // If a second ChromeTabbedActivity is created, MultiWindowUtils needs to listen for
             // activity state changes to facilitate determining which ChromeTabbedActivity should
@@ -129,6 +152,37 @@ public class MultiWindowUtils implements ActivityStateListener {
         // the user presses 'back' button.
         intent.putExtra(Browser.EXTRA_APPLICATION_ID, activity.getPackageName());
         intent.putExtra(Browser.EXTRA_CREATE_NEW_TAB, true);
+    }
+
+    /**
+     * Generate the activity options used when handling "open in other window" or "move to other
+     * window" on a multi-display capable device.
+     *
+     * This should be used in combination with
+     * {@link #setOpenInOtherWindowIntentExtras(Intent, Activity, Class)}.
+     *
+     * @param activity The activity firing the intent.
+     * @return The ActivityOptions needed to open the content in another display.
+     * @see Context#startActivity(Intent, Bundle)
+     */
+    public static Bundle getOpenInOtherWindowActivityOptions(Activity activity) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) return null;
+        if (!getInstance().isInMultiDisplayMode(activity)) return null;
+        Display defaultDisplay = DisplayAndroidManager.getDefaultDisplayForContext(activity);
+        DisplayManager displayManager =
+                (DisplayManager) activity.getSystemService(Context.DISPLAY_SERVICE);
+        Display launchDisplay = null;
+        for (Display display : displayManager.getDisplays()) {
+            if (display.getDisplayId() == defaultDisplay.getDisplayId()) continue;
+            launchDisplay = display;
+            break;
+        }
+        if (launchDisplay == null) {
+            throw new IllegalStateException(
+                    "Attempting to open window in other display, but one is not found");
+        }
+        return ApiCompatibilityUtils.createLaunchDisplayIdActivityOptions(
+                launchDisplay.getDisplayId());
     }
 
     @Override

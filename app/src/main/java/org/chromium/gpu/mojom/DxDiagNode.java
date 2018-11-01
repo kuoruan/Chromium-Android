@@ -40,9 +40,6 @@ public final class DxDiagNode extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static DxDiagNode deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,9 +53,10 @@ public final class DxDiagNode extends org.chromium.mojo.bindings.Struct {
         DxDiagNode result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new DxDiagNode(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new DxDiagNode(elementsOrVersion);
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                 {
                     decoder1.readDataHeaderForMap();
@@ -93,9 +91,9 @@ public final class DxDiagNode extends org.chromium.mojo.bindings.Struct {
                         result.values.put(keys0[index0],  values0[index0]);
                     }
                 }
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 {
                     decoder1.readDataHeaderForMap();
@@ -131,7 +129,8 @@ public final class DxDiagNode extends org.chromium.mojo.bindings.Struct {
                         result.children.put(keys0[index0],  values0[index0]);
                     }
                 }
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -204,36 +203,5 @@ public final class DxDiagNode extends org.chromium.mojo.bindings.Struct {
                 }
             }
         }
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        DxDiagNode other = (DxDiagNode) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.values, other.values))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.children, other.children))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.values);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.children);
-        return result;
     }
 }

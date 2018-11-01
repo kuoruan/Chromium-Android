@@ -63,11 +63,6 @@ public class AddToHomescreenManager implements AddToHomescreenDialog.Delegate {
     }
 
     @Override
-    public void onDialogCancelled() {
-        // Do nothing.
-    }
-
-    @Override
     public void onNativeAppDetailsRequested() {
         // This should never be called.
         assert false;

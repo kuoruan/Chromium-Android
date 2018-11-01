@@ -15,10 +15,8 @@ import android.content.Intent;
  *       reference this class specifically.
  */
 public class OmahaClient extends IntentService {
-    private static final String TAG = "omaha";
-
     public OmahaClient() {
-        super(TAG);
+        super(OmahaBase.TAG);
         setIntentRedelivery(true);
     }
 

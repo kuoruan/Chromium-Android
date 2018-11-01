@@ -32,7 +32,11 @@ public interface ChildProcessServiceDelegate {
      */
     void onConnectionSetup(Bundle connectionBundle, List<IBinder> clientInterfaces);
 
-    /** Called when the service gets destroyed. */
+    /**
+     * Called when the service gets destroyed.
+     * Note that the system might kill the process hosting the service without this method being
+     * called.
+     */
     void onDestroy();
 
     /**

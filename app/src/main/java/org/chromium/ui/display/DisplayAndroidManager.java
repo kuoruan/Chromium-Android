@@ -19,11 +19,13 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.base.annotations.MainDex;
 
 /**
  * DisplayAndroidManager is a class that informs its observers Display changes.
  */
 @JNINamespace("ui")
+@MainDex
 public class DisplayAndroidManager {
     /**
      * DisplayListenerBackend is an interface that abstract the mechanism used for the actual
@@ -188,14 +190,15 @@ public class DisplayAndroidManager {
 
     private long mNativePointer;
     private int mMainSdkDisplayId;
-    private SparseArray<DisplayAndroid> mIdMap;
+    private final SparseArray<DisplayAndroid> mIdMap = new SparseArray<>();
     private DisplayListenerBackend mBackend;
     private int mNextVirtualDisplayId = VIRTUAL_DISPLAY_ID_BEGIN;
 
     /* package */ static DisplayAndroidManager getInstance() {
+        ThreadUtils.assertOnUiThread();
         if (sDisplayAndroidManager == null) {
-            // Split between creation and initialization to allow for calls
-            // from DisplayAndroid to DisplayAndroidManager during initialize().
+            // Split between creation and initialization to allow for calls from DisplayAndroid to
+            // reference sDisplayAndroidManager during initialize().
             sDisplayAndroidManager = new DisplayAndroidManager();
             sDisplayAndroidManager.initialize();
         }
@@ -229,7 +232,6 @@ public class DisplayAndroidManager {
     private DisplayAndroidManager() {}
 
     private void initialize() {
-        mIdMap = new SparseArray<>();
         Display display;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             mBackend = new DisplayListenerBackendImpl();

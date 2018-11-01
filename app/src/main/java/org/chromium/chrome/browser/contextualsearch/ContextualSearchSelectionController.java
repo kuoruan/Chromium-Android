@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.contextualsearch;
 
+import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
@@ -12,12 +13,13 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel;
 import org.chromium.chrome.browser.tab.Tab;
-import org.chromium.content_public.browser.ContentViewCore;
 import org.chromium.content_public.browser.GestureStateListener;
 import org.chromium.content_public.browser.SelectionPopupController;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.touch_selection.SelectionEventType;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,14 +27,15 @@ import java.util.regex.Pattern;
  * Controls selection gesture interaction for Contextual Search.
  */
 public class ContextualSearchSelectionController {
-
     /**
      * The type of selection made by the user.
      */
-    public enum SelectionType {
-        UNDETERMINED,
-        TAP,
-        LONG_PRESS
+    @IntDef({SelectionType.UNDETERMINED, SelectionType.TAP, SelectionType.LONG_PRESS})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface SelectionType {
+        int UNDETERMINED = 0;
+        int TAP = 1;
+        int LONG_PRESS = 2;
     }
 
     private static final String TAG = "ContextualSearch";
@@ -59,7 +62,7 @@ public class ContextualSearchSelectionController {
     private final Pattern mContainsWordPattern;
 
     private String mSelectedText;
-    private SelectionType mSelectionType;
+    private @SelectionType int mSelectionType;
     private boolean mWasTapGestureDetected;
     // Reflects whether the last tap was valid and whether we still have a tap-based selection.
     private ContextualSearchTapState mLastTapState;
@@ -70,6 +73,10 @@ public class ContextualSearchSelectionController {
     // Position of the selection.
     private float mX;
     private float mY;
+
+    // Additional tap info from Mojo.
+    int mFontSizeDips;
+    int mTextRunLength;
 
     // The time of the most last scroll activity, or 0 if none.
     private long mLastScrollTimeNs;
@@ -144,7 +151,7 @@ public class ContextualSearchSelectionController {
      * Notifies that the Contextual Search has ended.
      * @param reason The reason for ending the Contextual Search.
      */
-    void onSearchEnded(OverlayPanel.StateChangeReason reason) {
+    void onSearchEnded(@OverlayPanel.StateChangeReason int reason) {
         // If the user explicitly closes the panel after establishing a selection with long press,
         // it should not reappear until a new selection is made. This prevents the panel from
         // reappearing when a long press selection is modified after the user has taken action to
@@ -154,9 +161,7 @@ public class ContextualSearchSelectionController {
         }
 
         // Long press selections should remain visible after ending a Contextual Search.
-        if (mSelectionType == SelectionType.TAP) {
-            clearSelection();
-        }
+        if (mSelectionType == SelectionType.TAP) clearSelection();
     }
 
     /**
@@ -179,7 +184,8 @@ public class ContextualSearchSelectionController {
     /**
      * @return the type of the selection.
      */
-    SelectionType getSelectionType() {
+    @SelectionType
+    int getSelectionType() {
         return mSelectionType;
     }
 
@@ -232,7 +238,8 @@ public class ContextualSearchSelectionController {
             return;
         }
 
-        if (selection == null || selection.isEmpty()) {
+        if (TextUtils.isEmpty(selection) && !TextUtils.isEmpty(mSelectedText)) {
+            mSelectedText = selection;
             mHandler.handleSelectionCleared();
             // When the user taps on the page it will place the caret in that position, which
             // will trigger a onSelectionChanged event with an empty string.
@@ -296,7 +303,7 @@ public class ContextualSearchSelectionController {
      * @param selection The text that was selected.
      * @param type The type of selection made by the user.
      */
-    private void handleSelection(String selection, SelectionType type) {
+    private void handleSelection(String selection, @SelectionType int type) {
         mShouldHandleSelectionModification = true;
         boolean isValidSelection = validateSelectionSuppression(selection);
         mHandler.handleSelection(selection, isValidSelection, type, mX, mY);
@@ -312,6 +319,8 @@ public class ContextualSearchSelectionController {
         mTapTimeNanoseconds = 0;
         mTapDurationMs = INVALID_DURATION;
         mDidExpandSelection = false;
+        mFontSizeDips = 0;
+        mTextRunLength = 0;
     }
 
     /**
@@ -336,8 +345,10 @@ public class ContextualSearchSelectionController {
      * Handles an unhandled tap gesture.
      * @param x The x coordinate in px.
      * @param y The y coordinate in px.
+     * @param fontSizeDips The font size in DPs.
+     * @param textRunLength The run-length of the text of the tapped element.
      */
-    void handleShowUnhandledTapUIIfNeeded(int x, int y) {
+    void handleShowUnhandledTapUIIfNeeded(int x, int y, int fontSizeDips, int textRunLength) {
         mWasTapGestureDetected = false;
         // TODO(donnd): refactor to avoid needing a new handler API method as suggested by Pedro.
         if (mSelectionType != SelectionType.LONG_PRESS) {
@@ -349,6 +360,8 @@ public class ContextualSearchSelectionController {
             mSelectionType = SelectionType.TAP;
             mX = x;
             mY = y;
+            mFontSizeDips = fontSizeDips;
+            mTextRunLength = textRunLength;
             mHandler.handleValidTap();
         } else {
             // Long press; reset last tap state.
@@ -363,18 +376,19 @@ public class ContextualSearchSelectionController {
      * This should be called when the context is fully built (by gathering surrounding text
      * if needed, etc) but before showing any UX.
      * @param contextualSearchContext The {@link ContextualSearchContext} for the Tap gesture.
-     * @param rankerLogger The {@link ContextualSearchRankerLogger} currently being used to measure
-     *        or suppress the UI by Ranker.
+     * @param interactionRecorder The {@link ContextualSearchInteractionRecorder} currently being
+     * used to measure or suppress the UI by Ranker.
      */
     void handleShouldSuppressTap(ContextualSearchContext contextualSearchContext,
-            ContextualSearchRankerLogger rankerLogger) {
+            ContextualSearchInteractionRecorder interactionRecorder) {
         int x = (int) mX;
         int y = (int) mY;
 
         // TODO(donnd): Remove tap counters.
         if (mTapDurationMs == INVALID_DURATION) mTapDurationMs = DEFAULT_DURATION;
-        TapSuppressionHeuristics tapHeuristics = new TapSuppressionHeuristics(this, mLastTapState,
-                x, y, contextualSearchContext, mTapDurationMs, mWasSelectionEmptyBeforeTap);
+        TapSuppressionHeuristics tapHeuristics =
+                new TapSuppressionHeuristics(this, mLastTapState, x, y, contextualSearchContext,
+                        mTapDurationMs, mWasSelectionEmptyBeforeTap, mFontSizeDips, mTextRunLength);
         // TODO(donnd): Move to be called when the panel closes to work with states that change.
         tapHeuristics.logConditionState();
 
@@ -387,16 +401,16 @@ public class ContextualSearchSelectionController {
 
         // Make sure Tap Suppression features are consistent.
         assert !ContextualSearchFieldTrial.isContextualSearchMlTapSuppressionEnabled()
-                || rankerLogger.isQueryEnabled()
+                || interactionRecorder.isQueryEnabled()
             : "Tap Suppression requires the Ranker Query feature to be enabled!";
 
         // If we're suppressing based on heuristics then Ranker doesn't need to know about it.
         @AssistRankerPrediction
         int tapPrediction = AssistRankerPrediction.UNDETERMINED;
         if (!shouldSuppressTapBasedOnHeuristics) {
-            tapHeuristics.logRankerTapSuppression(rankerLogger);
-            mHandler.logNonHeuristicFeatures(rankerLogger);
-            tapPrediction = rankerLogger.runPredictionForTapSuppression();
+            tapHeuristics.logRankerTapSuppression(interactionRecorder);
+            mHandler.logNonHeuristicFeatures(interactionRecorder);
+            tapPrediction = interactionRecorder.runPredictionForTapSuppression();
             ContextualSearchUma.logRankerPrediction(tapPrediction);
         }
 
@@ -422,8 +436,7 @@ public class ContextualSearchSelectionController {
     }
 
     /**
-     * @return The Base Page's {@link WebContents}, or {@code null} if there is no current tab or
-     *         the current tab has no {@link ContentViewCore}.
+     * @return The Base Page's {@link WebContents}, or {@code null} if there is no current tab.
      */
     @Nullable
     WebContents getBaseWebContents() {
@@ -463,7 +476,7 @@ public class ContextualSearchSelectionController {
      * @return Whether the selection modification should be handled.
      */
     private boolean shouldPreventHandlingCurrentSelectionModification(
-            OverlayPanel.StateChangeReason reason) {
+            @OverlayPanel.StateChangeReason int reason) {
         return getSelectionType() == SelectionType.LONG_PRESS
                 && (reason == OverlayPanel.StateChangeReason.BACK_PRESS
                 || reason == OverlayPanel.StateChangeReason.BASE_PAGE_SCROLL
@@ -526,18 +539,9 @@ public class ContextualSearchSelectionController {
 
     @VisibleForTesting
     boolean isValidSelection(String selection, SelectionPopupController controller) {
-        if (selection.length() > MAX_SELECTION_LENGTH) {
-            return false;
-        }
-
-        if (!doesContainAWord(selection)) {
-            return false;
-        }
-
-        if (controller != null && controller.isFocusedNodeEditable()) {
-            return false;
-        }
-
+        if (selection.length() > MAX_SELECTION_LENGTH) return false;
+        if (!doesContainAWord(selection)) return false;
+        if (controller != null && controller.isFocusedNodeEditable()) return false;
         return true;
     }
 

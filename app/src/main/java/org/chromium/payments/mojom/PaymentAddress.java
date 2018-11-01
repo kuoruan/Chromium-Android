@@ -50,9 +50,6 @@ public final class PaymentAddress extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static PaymentAddress deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -66,13 +63,14 @@ public final class PaymentAddress extends org.chromium.mojo.bindings.Struct {
         PaymentAddress result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new PaymentAddress(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new PaymentAddress(elementsOrVersion);
+                {
+                    
                 result.country = decoder0.readString(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -82,47 +80,48 @@ public final class PaymentAddress extends org.chromium.mojo.bindings.Struct {
                         result.addressLine[i1] = decoder1.readString(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
                     }
                 }
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.region = decoder0.readString(24, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.city = decoder0.readString(32, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.dependentLocality = decoder0.readString(40, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.postalCode = decoder0.readString(48, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.sortingCode = decoder0.readString(56, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.languageCode = decoder0.readString(64, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.scriptCode = decoder0.readString(72, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.organization = decoder0.readString(80, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.recipient = decoder0.readString(88, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.phone = decoder0.readString(96, false);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -165,66 +164,5 @@ public final class PaymentAddress extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.recipient, 88, false);
         
         encoder0.encode(this.phone, 96, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        PaymentAddress other = (PaymentAddress) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.country, other.country))
-            return false;
-        if (!java.util.Arrays.deepEquals(this.addressLine, other.addressLine))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.region, other.region))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.city, other.city))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.dependentLocality, other.dependentLocality))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.postalCode, other.postalCode))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sortingCode, other.sortingCode))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.languageCode, other.languageCode))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.scriptCode, other.scriptCode))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.organization, other.organization))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.recipient, other.recipient))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.phone, other.phone))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.country);
-        result = prime * result + java.util.Arrays.deepHashCode(this.addressLine);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.region);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.city);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.dependentLocality);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.postalCode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sortingCode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.languageCode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.scriptCode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.organization);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.recipient);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.phone);
-        return result;
     }
 }

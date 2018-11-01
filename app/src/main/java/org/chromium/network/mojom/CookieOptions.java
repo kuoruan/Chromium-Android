@@ -22,7 +22,7 @@ public final class CookieOptions extends org.chromium.mojo.bindings.Struct {
     public boolean excludeHttponly;
     public int cookieSameSiteFilter;
     public boolean updateAccessTime;
-    public org.chromium.mojo.common.mojom.Time serverTime;
+    public org.chromium.mojo_base.mojom.Time serverTime;
 
     private CookieOptions(int version) {
         super(STRUCT_SIZE, version);
@@ -45,9 +45,6 @@ public final class CookieOptions extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static CookieOptions deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -61,25 +58,27 @@ public final class CookieOptions extends org.chromium.mojo.bindings.Struct {
         CookieOptions result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new CookieOptions(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new CookieOptions(elementsOrVersion);
+                {
+                    
                 result.excludeHttponly = decoder0.readBoolean(8, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.updateAccessTime = decoder0.readBoolean(8, 1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.cookieSameSiteFilter = decoder0.readInt(12);
                     CookieSameSiteFilter.validate(result.cookieSameSiteFilter);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, true);
-                result.serverTime = org.chromium.mojo.common.mojom.Time.decode(decoder1);
-            }
+                result.serverTime = org.chromium.mojo_base.mojom.Time.decode(decoder1);
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -98,42 +97,5 @@ public final class CookieOptions extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.cookieSameSiteFilter, 12);
         
         encoder0.encode(this.serverTime, 16, true);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        CookieOptions other = (CookieOptions) object;
-        if (this.excludeHttponly!= other.excludeHttponly)
-            return false;
-        if (this.cookieSameSiteFilter!= other.cookieSameSiteFilter)
-            return false;
-        if (this.updateAccessTime!= other.updateAccessTime)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.serverTime, other.serverTime))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.excludeHttponly);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cookieSameSiteFilter);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.updateAccessTime);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.serverTime);
-        return result;
     }
 }

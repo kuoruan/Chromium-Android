@@ -6,11 +6,10 @@
 <!-- Layout used by ButtonPreference for the button widget style. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
     style="@style/PreferenceLayout"
     android:id="@android:id/widget_frame"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:clipToPadding="false"
     android:gravity="center_vertical"
-    android:orientation="vertical" />
+    android:orientation="vertical"/>

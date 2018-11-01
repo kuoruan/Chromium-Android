@@ -12,6 +12,10 @@ import org.chromium.components.offline_items_collection.OfflineContentProvider;
  * natively to {@link Profile}.
  */
 public class OfflineContentAggregatorFactory {
+    // TODO(crbug.com/857543): Remove this after downloads have implemented it.
+    // We need only one provider, since OfflineContentAggregator lives in the original profile.
+    private static DownloadBlockedOfflineContentProvider sBlockedProvider;
+
     private OfflineContentAggregatorFactory() {}
 
     /**
@@ -21,7 +25,11 @@ public class OfflineContentAggregatorFactory {
      * @return An {@link OfflineContentProvider} instance.
      */
     public static OfflineContentProvider forProfile(Profile profile) {
-        return nativeGetOfflineContentAggregatorForProfile(profile);
+        if (sBlockedProvider == null) {
+            sBlockedProvider = new DownloadBlockedOfflineContentProvider(
+                    nativeGetOfflineContentAggregatorForProfile(profile));
+        }
+        return sBlockedProvider;
     }
 
     private static native OfflineContentProvider nativeGetOfflineContentAggregatorForProfile(

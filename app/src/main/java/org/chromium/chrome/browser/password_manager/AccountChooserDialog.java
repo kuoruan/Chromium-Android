@@ -156,10 +156,7 @@ public class AccountChooserDialog
                     pslInfoButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            showTooltip(
-                                    view,
-                                    UrlFormatter.formatUrlForSecurityDisplay(
-                                        originUrl, true /* showScheme */),
+                            showTooltip(view, UrlFormatter.formatUrlForSecurityDisplay(originUrl),
                                     R.layout.material_tooltip);
                         }
                     });

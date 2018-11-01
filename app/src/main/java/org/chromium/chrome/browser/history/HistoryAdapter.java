@@ -309,12 +309,9 @@ public class HistoryAdapter extends DateDividedAdapter implements BrowsingHistor
      */
     private SpannableString getPrivacyDisclaimerText() {
         final Resources resources = ContextUtils.getApplicationContext().getResources();
-        NoUnderlineClickableSpan link = new NoUnderlineClickableSpan() {
-            @Override
-            public void onClick(View view) {
-                mHistoryManager.openUrl(UrlConstants.MY_ACTIVITY_URL_IN_HISTORY, null, true);
-            }
-        };
+        NoUnderlineClickableSpan link = new NoUnderlineClickableSpan((view) -> {
+            mHistoryManager.openUrl(UrlConstants.MY_ACTIVITY_URL_IN_HISTORY, null, true);
+        });
         return SpanApplier.applySpans(
                 resources.getString(R.string.android_history_other_forms_of_history),
                 new SpanApplier.SpanInfo("<link>", "</link>", link));

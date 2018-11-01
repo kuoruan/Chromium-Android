@@ -346,6 +346,11 @@ class CompositorSurfaceManagerImpl implements SurfaceHolder.Callback2, Composito
         mOpaque.surfaceView.setVisibility(visibility);
     }
 
+    @Override
+    public View getActiveSurfaceView() {
+        return mOwnedByClient == null ? null : mOwnedByClient.surfaceView;
+    }
+
     /**
      * Return the SurfaceState for |holder|, or null if it isn't either.
      */

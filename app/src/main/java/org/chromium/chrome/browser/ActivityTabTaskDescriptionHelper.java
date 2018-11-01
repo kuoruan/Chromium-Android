@@ -134,7 +134,7 @@ public class ActivityTabTaskDescriptionHelper {
 
         mTabModelObserver = new TabModelSelectorTabModelObserver(mTabModelSelector) {
             @Override
-            public void didSelectTab(Tab tab, TabSelectionType type, int lastId) {
+            public void didSelectTab(Tab tab, @TabSelectionType int type, int lastId) {
                 refreshSelectedTab();
             }
 

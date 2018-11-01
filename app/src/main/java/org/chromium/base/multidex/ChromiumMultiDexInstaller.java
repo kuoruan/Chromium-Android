@@ -13,12 +13,13 @@ import android.support.multidex.MultiDex;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.base.annotations.MainDex;
 
 /**
  *  Performs multidex installation for non-isolated processes.
  */
+@MainDex
 public class ChromiumMultiDexInstaller {
-
     private static final String TAG = "base_multidex";
 
     /**

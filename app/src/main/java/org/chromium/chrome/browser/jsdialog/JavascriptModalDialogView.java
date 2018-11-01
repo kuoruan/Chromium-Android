@@ -7,10 +7,8 @@ package org.chromium.chrome.browser.jsdialog;
 import android.support.annotation.StringRes;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.modaldialog.ModalDialogView;
@@ -19,10 +17,8 @@ import org.chromium.chrome.browser.modaldialog.ModalDialogView;
  * The JavaScript dialog that is either app modal or tab modal.
  */
 public class JavascriptModalDialogView extends ModalDialogView {
-    private final TextView mMessageView;
     private final EditText mPromptEditText;
     private final CheckBox mSuppressCheckBox;
-    private final View mScrollView;
 
     /**
      * Create a {@link JavascriptModalDialogView} with the specified properties.
@@ -41,10 +37,12 @@ public class JavascriptModalDialogView extends ModalDialogView {
             @StringRes int positiveButtonTextId, @StringRes int negativeButtonTextId) {
         Params params = new Params();
         params.title = title;
+        params.message = message;
         params.positiveButtonTextId = positiveButtonTextId;
         params.negativeButtonTextId = negativeButtonTextId;
         LayoutInflater inflater = LayoutInflater.from(ModalDialogView.getContext());
         params.customView = inflater.inflate(R.layout.js_modal_dialog, null);
+        params.titleScrollable = true;
 
         return new JavascriptModalDialogView(
                 controller, params, message, promptText, shouldShowSuppressCheckBox);
@@ -54,34 +52,21 @@ public class JavascriptModalDialogView extends ModalDialogView {
             String promptText, boolean shouldShowSuppressCheckBox) {
         super(controller, params);
 
-        mScrollView = params.customView.findViewById(R.id.js_modal_dialog_scroll_view);
-        mMessageView = params.customView.findViewById(R.id.js_modal_dialog_message);
         mPromptEditText = params.customView.findViewById(R.id.js_modal_dialog_prompt);
         mSuppressCheckBox = params.customView.findViewById(R.id.suppress_js_modal_dialogs);
 
-        mMessageView.setText(message);
+        // TODO(huayinz): Remove this scroll view once JavaScript dialogs are fully switched to use
+        // ModalDialogView.
+        params.customView.findViewById(R.id.js_modal_dialog_scroll_view).setVisibility(View.GONE);
         setPromptText(promptText);
         setSuppressCheckBoxVisibility(shouldShowSuppressCheckBox);
-    }
 
-    @Override
-    protected void prepareBeforeShow() {
-        super.prepareBeforeShow();
-        // If the message is null or empty do not display the message text view.
-        // Hide parent scroll view instead of text view in order to prevent ui discrepancies.
-        if (mMessageView.getText().length() == 0) {
-            mScrollView.setVisibility(View.GONE);
-        } else {
-            // TODO(huayinz): See if View#canScrollVertictically() can be used for checking if
-            // scrollView is scrollable.
-            mScrollView.addOnLayoutChangeListener(
-                    (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-                        boolean isScrollable =
-                                v.getMeasuredHeight() - v.getPaddingTop() - v.getPaddingBottom()
-                                < ((ViewGroup) v).getChildAt(0).getMeasuredHeight();
-                        v.setFocusable(isScrollable);
-                    });
-        }
+        View scrollView = getView().findViewById(R.id.modal_dialog_scroll_view);
+        scrollView.addOnLayoutChangeListener(
+                (v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                    boolean isScrollable = v.canScrollVertically(-1) || v.canScrollVertically(1);
+                    v.setFocusable(isScrollable);
+                });
     }
 
     /**

@@ -4,9 +4,9 @@
      found in the LICENSE file. -->
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/search"
           android:title="@string/search"
-          chrome:showAsAction="always"
-          chrome:actionViewClass="android.support.v7.widget.SearchView" />
+          app:showAsAction="always"
+          app:actionViewClass="android.support.v7.widget.SearchView" />
 </menu>

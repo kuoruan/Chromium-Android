@@ -8,7 +8,7 @@ import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.NormalizedAddressRequestDelegate;
 import org.chromium.chrome.browser.autofill.PhoneNumberUtil;
-import org.chromium.chrome.browser.payments.ui.PaymentOption;
+import org.chromium.chrome.browser.widget.prefeditor.EditableOption;
 import org.chromium.payments.mojom.PaymentResponse;
 
 /**
@@ -41,8 +41,8 @@ public class PaymentResponseHelper implements NormalizedAddressRequestDelegate {
      * @param selectedContact         The contact info picked by the user.
      * @param delegate                The object that will recieve the completed PaymentResponse.
      */
-    public PaymentResponseHelper(PaymentOption selectedShippingAddress,
-            PaymentOption selectedShippingOption, PaymentOption selectedContact,
+    public PaymentResponseHelper(EditableOption selectedShippingAddress,
+            EditableOption selectedShippingOption, EditableOption selectedContact,
             PaymentResponseRequesterDelegate delegate) {
         mPaymentResponse = new PaymentResponse();
 

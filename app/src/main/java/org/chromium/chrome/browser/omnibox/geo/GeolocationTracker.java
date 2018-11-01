@@ -44,17 +44,27 @@ class GeolocationTracker {
         private final Handler mHandler;
         private final Runnable mCancelRunnable;
 
+        private boolean mRegistrationFailed;
+
         private SelfCancelingListener(LocationManager manager) {
             mLocationManager = manager;
             mHandler = new Handler();
             mCancelRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    mLocationManager.removeUpdates(SelfCancelingListener.this);
+                    try {
+                        mLocationManager.removeUpdates(SelfCancelingListener.this);
+                    } catch (Exception e) {
+                        if (!mRegistrationFailed) throw e;
+                    }
                     sListener = null;
                 }
             };
             mHandler.postDelayed(mCancelRunnable, REQUEST_TIMEOUT_MS);
+        }
+
+        private void markRegistrationFailed() {
+            mRegistrationFailed = true;
         }
 
         @Override
@@ -131,7 +141,13 @@ class GeolocationTracker {
             String provider = LocationManager.NETWORK_PROVIDER;
             if (locationManager.isProviderEnabled(provider)) {
                 sListener = new SelfCancelingListener(locationManager);
-                locationManager.requestSingleUpdate(provider, sListener, null);
+                try {
+                    locationManager.requestSingleUpdate(provider, sListener, null);
+                } catch (NullPointerException ex) {
+                    // https://crbug.com/819730: This can trigger an NPE due to a underlying
+                    // OS/framework bug.  By ignoring this, we will not get a newer location age.
+                    sListener.markRegistrationFailed();
+                }
             }
         }
     }

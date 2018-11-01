@@ -160,8 +160,13 @@ public class IncognitoTabModel implements TabModel {
     }
 
     @Override
-    public void setIndex(int i, TabSelectionType type) {
+    public void setIndex(int i, @TabSelectionType int type) {
         mDelegateModel.setIndex(i, type);
+    }
+
+    @Override
+    public boolean isCurrentModel() {
+        return mDelegateModel.isCurrentModel();
     }
 
     @Override
@@ -210,7 +215,7 @@ public class IncognitoTabModel implements TabModel {
     }
 
     @Override
-    public void addTab(Tab tab, int index, TabLaunchType type) {
+    public void addTab(Tab tab, int index, @TabLaunchType int type) {
         mIsAddingTab = true;
         ensureTabModelImpl();
         mDelegateModel.addTab(tab, index, type);

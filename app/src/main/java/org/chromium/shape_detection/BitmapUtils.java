@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 
 import com.google.android.gms.vision.Frame;
 
+import org.chromium.mojo_base.BigBufferUtil;
 import org.chromium.skia.mojom.ColorType;
 
 import java.nio.ByteBuffer;
@@ -17,8 +18,9 @@ import java.nio.ByteBuffer;
  */
 public class BitmapUtils {
     public static Bitmap convertToBitmap(org.chromium.skia.mojom.Bitmap bitmapData) {
-        int width = bitmapData.width;
-        int height = bitmapData.height;
+        if (bitmapData.imageInfo == null) return null;
+        int width = bitmapData.imageInfo.width;
+        int height = bitmapData.imageInfo.height;
         final long numPixels = (long) width * height;
         // TODO(mcasas): https://crbug.com/670028 homogeneize overflow checking.
         if (bitmapData.pixelData == null || width <= 0 || height <= 0
@@ -26,12 +28,13 @@ public class BitmapUtils {
             return null;
         }
 
-        if (bitmapData.colorType != ColorType.RGBA_8888
-                && bitmapData.colorType != ColorType.BGRA_8888) {
+        if (bitmapData.imageInfo.colorType != ColorType.RGBA_8888
+                && bitmapData.imageInfo.colorType != ColorType.BGRA_8888) {
             return null;
         }
 
-        ByteBuffer imageBuffer = ByteBuffer.wrap(bitmapData.pixelData);
+        ByteBuffer imageBuffer =
+                ByteBuffer.wrap(BigBufferUtil.getBytesFromBigBuffer(bitmapData.pixelData));
         if (imageBuffer.capacity() <= 0) {
             return null;
         }

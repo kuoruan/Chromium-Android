@@ -46,8 +46,8 @@ class SecondTapMlOverride extends ContextualSearchHeuristic {
     }
 
     @Override
-    protected void logRankerTapSuppression(ContextualSearchRankerLogger logger) {
-        logger.logFeature(ContextualSearchRankerLogger.Feature.IS_SECOND_TAP_OVERRIDE,
+    protected void logRankerTapSuppression(ContextualSearchInteractionRecorder logger) {
+        logger.logFeature(ContextualSearchInteractionRecorder.Feature.IS_SECOND_TAP_OVERRIDE,
                 shouldOverrideMlTapSuppression());
     }
 

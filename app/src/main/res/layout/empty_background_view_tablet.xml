@@ -5,7 +5,7 @@
 
 <org.chromium.chrome.browser.widget.emptybackground.EmptyBackgroundViewTablet
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/empty_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -52,7 +52,7 @@
             android:scaleType="center"
             android:contentDescription="@string/accessibility_toolbar_btn_menu"
             android:paddingStart="2dp"
-            chrome:chrometint="@color/light_mode_tint"
+            app:chrometint="@color/light_mode_tint"
             />
     </LinearLayout>
 </org.chromium.chrome.browser.widget.emptybackground.EmptyBackgroundViewTablet>

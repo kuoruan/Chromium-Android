@@ -126,8 +126,8 @@ public class MathUtils {
         float scale = Math.max(
                 (float) targetWidth / dimensions[0],
                 (float) targetHeight / dimensions[1]);
-        dimensions[0] *= scale;
-        dimensions[1] *= scale;
+        dimensions[0] = (int) (dimensions[0] * scale);
+        dimensions[1] = (int) (dimensions[1] * scale);
         return scale;
     }
 

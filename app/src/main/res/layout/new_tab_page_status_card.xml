@@ -5,7 +5,7 @@
 
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/status_card_view"
     android:layout_width="match_parent"
@@ -20,7 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAppearance="@style/BlackTitle1"
-        chrome:leading="24dp"
+        app:leading="24dp"
         tools:text="Status card title"/>
 
     <org.chromium.ui.widget.TextViewWithLeading
@@ -28,9 +28,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:textSize="14sp"
-        android:textColor="@color/snippets_text_color"
-        chrome:leading="20dp"
+        android:textAppearance="@style/BlackBody"
+        app:leading="20dp"
         tools:text="Status card body can be over multiple lines and quite wide" />
 
     <Button

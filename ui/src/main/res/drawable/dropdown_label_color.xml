@@ -6,6 +6,6 @@
 -->
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_enabled="true" android:color="@color/black_alpha_87" />
+    <item android:state_enabled="true" android:color="@color/modern_grey_900" />
     <item android:state_enabled="false" android:color="@color/black_alpha_38" />
 </selector>

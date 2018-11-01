@@ -14,18 +14,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="0"
-        android:textSize="@dimen/infobar_descriptive_text_size"
-        android:textColor="@color/google_blue_700"
+        android:textAppearance="@style/BlueLink2"
         android:clickable="false"
         tools:text="https://" />
 
-    <TextView
+    <org.chromium.chrome.browser.infobar.TextViewEllipsizerSafe
         android:id="@+id/url_minus_scheme"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="@dimen/infobar_descriptive_text_size"
-        android:textColor="@color/google_blue_700"
+        android:textAppearance="@style/BlueLink2"
         android:clickable="false"
         android:ellipsize="start"
         android:singleLine="true"

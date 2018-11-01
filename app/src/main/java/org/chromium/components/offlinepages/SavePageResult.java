@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
     SavePageResult.SECURITY_CERTIFICATE_ERROR, SavePageResult.ERROR_PAGE,
     SavePageResult.INTERSTITIAL_PAGE, SavePageResult.DIGEST_CALCULATION_FAILED,
     SavePageResult.FILE_MOVE_FAILED, SavePageResult.ADD_TO_DOWNLOAD_MANAGER_FAILED,
-    SavePageResult.RESULT_COUNT
+    SavePageResult.PERMISSION_DENIED, SavePageResult.RESULT_COUNT
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface SavePageResult {
@@ -60,8 +60,12 @@ public @interface SavePageResult {
    */
   int ADD_TO_DOWNLOAD_MANAGER_FAILED = 13;
   /**
+   * Unable to get write permission on public directory.
+   */
+  int PERMISSION_DENIED = 14;
+  /**
    * NOTE: always keep this entry at the end. Add new result types only immediately above this line.
    * Make sure to update the corresponding histogram enum accordingly.
    */
-  int RESULT_COUNT = 14;
+  int RESULT_COUNT = 15;
 }

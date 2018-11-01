@@ -12,19 +12,19 @@ import android.provider.Settings;
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ApplicationStatus.ActivityStateListener;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.metrics.WebApkUma;
 import org.chromium.chrome.browser.webapps.WebApkActivity;
-import org.chromium.content_public.browser.ContentViewCore;
 import org.chromium.content_public.browser.WebContents;
+import org.chromium.ui.base.PermissionCallback;
 import org.chromium.ui.base.WindowAndroid;
 
 /**
  * Handles requesting the android runtime permissions for the permission update infobar.
  */
-class PermissionUpdateInfoBarDelegate implements WindowAndroid.PermissionCallback {
-
-    private final ContentViewCore mContentViewCore;
+class PermissionUpdateInfoBarDelegate implements PermissionCallback {
+    private final WebContents mWebContents;
     private final String[] mAndroidPermisisons;
     private long mNativePtr;
     private ActivityStateListener mActivityStateListener;
@@ -39,7 +39,7 @@ class PermissionUpdateInfoBarDelegate implements WindowAndroid.PermissionCallbac
             long nativePtr, WebContents webContents, String[] permissions) {
         mNativePtr = nativePtr;
         mAndroidPermisisons = permissions;
-        mContentViewCore = ContentViewCore.fromWebContents(webContents);
+        mWebContents = webContents;
     }
 
     @CalledByNative
@@ -53,7 +53,7 @@ class PermissionUpdateInfoBarDelegate implements WindowAndroid.PermissionCallbac
 
     @CalledByNative
     private void requestPermissions() {
-        WindowAndroid windowAndroid = mContentViewCore.getWindowAndroid();
+        WindowAndroid windowAndroid = mWebContents.getTopLevelNativeWindow();
         if (windowAndroid == null) {
             nativeOnPermissionResult(mNativePtr, false);
             return;
@@ -97,8 +97,8 @@ class PermissionUpdateInfoBarDelegate implements WindowAndroid.PermissionCallbac
             ApplicationStatus.registerStateListenerForActivity(mActivityStateListener, activity);
 
             Intent settingsIntent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            settingsIntent.setData(Uri.parse(
-                    "package:" + windowAndroid.getApplicationContext().getPackageName()));
+            settingsIntent.setData(
+                    Uri.parse("package:" + ContextUtils.getApplicationContext().getPackageName()));
             settingsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             activity.startActivity(settingsIntent);
         }
@@ -111,7 +111,7 @@ class PermissionUpdateInfoBarDelegate implements WindowAndroid.PermissionCallbac
 
     private void notifyPermissionResult() {
         boolean hasAllPermissions = true;
-        WindowAndroid windowAndroid = mContentViewCore.getWindowAndroid();
+        WindowAndroid windowAndroid = mWebContents.getTopLevelNativeWindow();
         if (windowAndroid == null) {
             hasAllPermissions = false;
         } else {

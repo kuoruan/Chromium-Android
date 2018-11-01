@@ -12,12 +12,14 @@ import android.text.TextUtils;
  */
 public class LegacyHelpers {
     // These are legacy namespaces for the purpose of ID generation that will only affect the UI.
-    public static final String LEGACY_DOWNLOAD_NAMESPACE = "LEGACY_DOWNLOAD";
     public static final String LEGACY_OFFLINE_PAGE_NAMESPACE = "LEGACY_OFFLINE_PAGE";
+    public static final String LEGACY_DOWNLOAD_NAMESPACE = "LEGACY_DOWNLOAD";
+    private static final String LEGACY_DOWNLOAD_INCOGNITO_NAMESPACE = "LEGACY_DOWNLOAD_INCOGNITO";
 
     /**
      * Helper to build a {@link ContentId} based on a single GUID for old offline content sources
      * (downloads and offline pages).
+     * TODO(shaktisahu): Make this function aware of incognito downloads.
      * @param isOfflinePage Whether or not {@code guid} is for an offline page or a download.
      * @param guid          The {@code guid} of the download.
      * @return              A new {@link ContentId} instance.
@@ -36,7 +38,9 @@ public class LegacyHelpers {
      * @return   Whether or not {@code id} was built for a traditional download.
      */
     public static boolean isLegacyDownload(@Nullable ContentId id) {
-        return id != null && TextUtils.equals(LEGACY_DOWNLOAD_NAMESPACE, id.namespace);
+        return id != null
+                && (TextUtils.equals(LEGACY_DOWNLOAD_NAMESPACE, id.namespace)
+                           || TextUtils.equals(LEGACY_DOWNLOAD_INCOGNITO_NAMESPACE, id.namespace));
     }
 
     /**

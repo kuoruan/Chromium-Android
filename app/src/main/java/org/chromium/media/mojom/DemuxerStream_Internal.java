@@ -18,28 +18,28 @@ class DemuxerStream_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<DemuxerStream, DemuxerStream.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<DemuxerStream, DemuxerStream.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::DemuxerStream";
+            return "media.mojom.DemuxerStream";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, DemuxerStream impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public DemuxerStream[] buildArray(int size) {
           return new DemuxerStream[size];
@@ -135,28 +135,28 @@ ReadResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 DemuxerStream_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
                     case ENABLE_BITSTREAM_CONVERTER_ORDINAL: {
-            
+
                         DemuxerStreamEnableBitstreamConverterParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().enableBitstreamConverter();
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -176,42 +176,42 @@ ReadResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), DemuxerStream_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case INITIALIZE_ORDINAL: {
-            
+
                         DemuxerStreamInitializeParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().initialize(new DemuxerStreamInitializeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case READ_ORDINAL: {
-            
+
                         DemuxerStreamReadParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().read(new DemuxerStreamReadResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -225,36 +225,33 @@ ReadResponse callback) {
 
     
     static final class DemuxerStreamInitializeParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private DemuxerStreamInitializeParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public DemuxerStreamInitializeParams() {
             this(0);
         }
-    
+
         public static DemuxerStreamInitializeParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static DemuxerStreamInitializeParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static DemuxerStreamInitializeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -264,41 +261,19 @@ ReadResponse callback) {
             DemuxerStreamInitializeParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new DemuxerStreamInitializeParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new DemuxerStreamInitializeParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -306,7 +281,7 @@ ReadResponse callback) {
 
     
     static final class DemuxerStreamInitializeResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
@@ -314,33 +289,30 @@ ReadResponse callback) {
         public org.chromium.mojo.system.DataPipe.ConsumerHandle pipe;
         public AudioDecoderConfig audioConfig;
         public VideoDecoderConfig videoConfig;
-    
+
         private DemuxerStreamInitializeResponseParams(int version) {
             super(STRUCT_SIZE, version);
             this.pipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
-    
+
         public DemuxerStreamInitializeResponseParams() {
             this(0);
         }
-    
+
         public static DemuxerStreamInitializeResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static DemuxerStreamInitializeResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static DemuxerStreamInitializeResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -350,32 +322,34 @@ ReadResponse callback) {
             DemuxerStreamInitializeResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new DemuxerStreamInitializeResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new DemuxerStreamInitializeResponseParams(elementsOrVersion);
+                    {
+                        
                     result.type = decoder0.readInt(8);
                         DemuxerStream.Type.validate(result.type);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.pipe = decoder0.readConsumerHandle(12, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, true);
                     result.audioConfig = AudioDecoderConfig.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, true);
                     result.videoConfig = VideoDecoderConfig.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -388,43 +362,6 @@ ReadResponse callback) {
             encoder0.encode(this.audioConfig, 16, true);
             
             encoder0.encode(this.videoConfig, 24, true);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            DemuxerStreamInitializeResponseParams other = (DemuxerStreamInitializeResponseParams) object;
-            if (this.type!= other.type)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.pipe, other.pipe))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.audioConfig, other.audioConfig))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.videoConfig, other.videoConfig))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pipe);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.audioConfig);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoConfig);
-            return result;
         }
     }
 
@@ -499,36 +436,33 @@ ReadResponse callback) {
 
     
     static final class DemuxerStreamReadParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private DemuxerStreamReadParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public DemuxerStreamReadParams() {
             this(0);
         }
-    
+
         public static DemuxerStreamReadParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static DemuxerStreamReadParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static DemuxerStreamReadParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -538,41 +472,19 @@ ReadResponse callback) {
             DemuxerStreamReadParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new DemuxerStreamReadParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new DemuxerStreamReadParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -580,7 +492,7 @@ ReadResponse callback) {
 
     
     static final class DemuxerStreamReadResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 40;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
@@ -588,32 +500,29 @@ ReadResponse callback) {
         public DecoderBuffer buffer;
         public AudioDecoderConfig audioConfig;
         public VideoDecoderConfig videoConfig;
-    
+
         private DemuxerStreamReadResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public DemuxerStreamReadResponseParams() {
             this(0);
         }
-    
+
         public static DemuxerStreamReadResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static DemuxerStreamReadResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static DemuxerStreamReadResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -623,33 +532,35 @@ ReadResponse callback) {
             DemuxerStreamReadResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new DemuxerStreamReadResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new DemuxerStreamReadResponseParams(elementsOrVersion);
+                    {
+                        
                     result.status = decoder0.readInt(8);
                         DemuxerStream.Status.validate(result.status);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, true);
                     result.buffer = DecoderBuffer.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, true);
                     result.audioConfig = AudioDecoderConfig.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, true);
                     result.videoConfig = VideoDecoderConfig.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -662,43 +573,6 @@ ReadResponse callback) {
             encoder0.encode(this.audioConfig, 24, true);
             
             encoder0.encode(this.videoConfig, 32, true);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            DemuxerStreamReadResponseParams other = (DemuxerStreamReadResponseParams) object;
-            if (this.status!= other.status)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.buffer, other.buffer))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.audioConfig, other.audioConfig))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.videoConfig, other.videoConfig))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.buffer);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.audioConfig);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoConfig);
-            return result;
         }
     }
 
@@ -773,36 +647,33 @@ ReadResponse callback) {
 
     
     static final class DemuxerStreamEnableBitstreamConverterParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private DemuxerStreamEnableBitstreamConverterParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public DemuxerStreamEnableBitstreamConverterParams() {
             this(0);
         }
-    
+
         public static DemuxerStreamEnableBitstreamConverterParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static DemuxerStreamEnableBitstreamConverterParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static DemuxerStreamEnableBitstreamConverterParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -812,41 +683,19 @@ ReadResponse callback) {
             DemuxerStreamEnableBitstreamConverterParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new DemuxerStreamEnableBitstreamConverterParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new DemuxerStreamEnableBitstreamConverterParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 

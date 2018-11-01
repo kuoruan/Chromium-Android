@@ -5,10 +5,14 @@
 package org.chromium.chrome.browser;
 
 import android.content.pm.PackageManager;
+import android.support.annotation.IntDef;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * Controller for Remote Web Debugging (Developer Tools).
@@ -19,13 +23,14 @@ public class DevToolsServer {
     private long mNativeDevToolsServer;
 
     // Defines what processes may access to the socket.
-    public enum Security {
+    @IntDef({Security.DEFAULT, Security.ALLOW_DEBUG_PERMISSION})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Security {
         // Use content::CanUserConnectToDevTools to authorize access to the socket.
-        DEFAULT,
-
+        int DEFAULT = 0;
         // In addition to default authorization allows access to an app with android permission
         // named chromeAppPackageName + DEBUG_PERMISSION_SIFFIX.
-        ALLOW_DEBUG_PERMISSION,
+        int ALLOW_DEBUG_PERMISSION = 1;
     }
 
     public DevToolsServer(String socketNamePrefix) {
@@ -41,7 +46,7 @@ public class DevToolsServer {
         return nativeIsRemoteDebuggingEnabled(mNativeDevToolsServer);
     }
 
-    public void setRemoteDebuggingEnabled(boolean enabled, Security security) {
+    public void setRemoteDebuggingEnabled(boolean enabled, @Security int security) {
         boolean allowDebugPermission = security == Security.ALLOW_DEBUG_PERMISSION;
         nativeSetRemoteDebuggingEnabled(mNativeDevToolsServer, enabled, allowDebugPermission);
     }

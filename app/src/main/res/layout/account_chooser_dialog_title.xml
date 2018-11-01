@@ -15,17 +15,13 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:lineSpacingExtra="4dp"
-        android:fontFamily="sans-serif"
-        android:textSize="@dimen/account_chooser_dialog_title_main_text_size"
-        android:textColor="@color/default_text_color"/>
+        android:textAppearance="@style/BlackTitle1" />
     <TextView
         android:id="@+id/origin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:paddingTop="8dp"
-        android:fontFamily="sans-serif"
-        android:textSize="@dimen/account_chooser_dialog_title_descriptive_text_size"
-        android:textColor="@color/descriptive_text_color"/>
+        android:textAppearance="@style/BlackBody" />
 
 </LinearLayout>

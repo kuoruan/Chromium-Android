@@ -68,13 +68,9 @@ public class ChromeHttpAuthHandler {
 
     @CalledByNative
     private void showDialog(WindowAndroid windowAndroid) {
-        if (windowAndroid == null) {
-            cancel();
-        }
+        if (windowAndroid == null) cancel();
         Activity activity = windowAndroid.getActivity().get();
-        if (activity == null) {
-            cancel();
-        }
+        if (activity == null) cancel();
         LoginPrompt authDialog = new LoginPrompt(activity, this);
         setAutofillObserver(authDialog);
         authDialog.show();

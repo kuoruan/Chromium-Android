@@ -11,6 +11,7 @@
         android:id="@+id/radio_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
         android:paddingEnd="16dp" />
 
     <TextView
@@ -18,15 +19,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toEndOf="@id/radio_button"
-        android:textColor="#de000000"
-        android:textSize="16sp" />
+        android:textAppearance="@style/BlackTitle1" />
 
+    <!-- This TextView is hidden if it has no text, so the initial visibility should be "gone". -->
     <TextView
         android:id="@+id/description"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignStart="@id/title"
         android:layout_below="@id/title"
-        android:textColor="#8a000000"
-        android:textSize="14sp" />
+        android:textAppearance="@style/BlackHint2"
+        android:visibility="gone"/>
 </merge>

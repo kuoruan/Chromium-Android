@@ -16,7 +16,7 @@ import android.widget.EditText;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.partnercustomizations.HomepageManager;
-import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomizations;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.components.url_formatter.UrlFormatter;
 
 /**
@@ -33,13 +33,17 @@ public class HomepageEditor extends Fragment implements TextWatcher {
             Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mHomepageManager = HomepageManager.getInstance();
-        getActivity().setTitle(R.string.options_homepage_edit_title);
+        if (FeatureUtilities.isNewTabPageButtonEnabled()) {
+            getActivity().setTitle(R.string.options_startup_page_edit_title);
+        } else {
+            getActivity().setTitle(R.string.options_homepage_edit_title);
+        }
         View v = inflater.inflate(R.layout.homepage_editor, container, false);
-
+        View scrollView = v.findViewById(R.id.scroll_view);
+        scrollView.getViewTreeObserver().addOnScrollChangedListener(
+                PreferenceUtils.getShowShadowOnScrollListener(v, v.findViewById(R.id.shadow)));
         mHomepageUrlEdit = (EditText) v.findViewById(R.id.homepage_url_edit);
-        mHomepageUrlEdit.setText((mHomepageManager.getPrefHomepageUseDefaultUri()
-                ? PartnerBrowserCustomizations.getHomePageUrl()
-                : mHomepageManager.getPrefHomepageCustomUri()));
+        mHomepageUrlEdit.setText(HomepageManager.getHomepageUri());
         mHomepageUrlEdit.addTextChangedListener(this);
         mHomepageUrlEdit.requestFocus();
 

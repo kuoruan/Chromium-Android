@@ -13,7 +13,6 @@ import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
  * tab_strip_model.cc
  */
 public class TabModelOrderController {
-
     private static final int NO_TAB = -1;
     private final TabModelSelector mTabModelSelector;
 
@@ -29,7 +28,7 @@ public class TabModelOrderController {
      * @param position The provided position.
      * @return Where to insert the tab.
      */
-    public int determineInsertionIndex(TabLaunchType type, int position, Tab newTab) {
+    public int determineInsertionIndex(@TabLaunchType int type, int position, Tab newTab) {
         if (type == TabLaunchType.FROM_BROWSER_ACTIONS) return -1;
         if (linkClicked(type)) {
             position = determineInsertionIndex(type, newTab);
@@ -50,7 +49,7 @@ public class TabModelOrderController {
      * @param type The launch type of the new tab.
      * @return Where to insert the tab.
      */
-    public int determineInsertionIndex(TabLaunchType type, Tab newTab) {
+    public int determineInsertionIndex(@TabLaunchType int type, Tab newTab) {
         TabModel currentModel = mTabModelSelector.getCurrentModel();
 
         if (sameModelType(currentModel, newTab)) {
@@ -118,7 +117,7 @@ public class TabModelOrderController {
     /**
      * Determine if a launch type is the result of linked being clicked.
      */
-    static boolean linkClicked(TabLaunchType type) {
+    static boolean linkClicked(@TabLaunchType int type) {
         return type == TabLaunchType.FROM_LINK
                 || type == TabLaunchType.FROM_LONGPRESS_FOREGROUND
                 || type == TabLaunchType.FROM_LONGPRESS_BACKGROUND;
@@ -131,7 +130,7 @@ public class TabModelOrderController {
      * @param isNewTabIncognito  True if the new opened tab is incognito.
      * @return                   True if the tab will be in the foreground
      */
-    public boolean willOpenInForeground(TabLaunchType type, boolean isNewTabIncognito) {
+    public boolean willOpenInForeground(@TabLaunchType int type, boolean isNewTabIncognito) {
         // Restore is handling the active index by itself.
         if (type == TabLaunchType.FROM_RESTORE || type == TabLaunchType.FROM_BROWSER_ACTIONS) {
             return false;
@@ -146,5 +145,4 @@ public class TabModelOrderController {
     static boolean sameModelType(TabModel model, Tab tab) {
         return model.isIncognito() == tab.isIncognito();
     }
-
 }

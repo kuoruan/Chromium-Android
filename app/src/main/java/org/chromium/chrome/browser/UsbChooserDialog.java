@@ -7,7 +7,6 @@ package org.chromium.chrome.browser;
 import android.app.Activity;
 import android.text.SpannableString;
 import android.text.TextUtils;
-import android.view.View;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
@@ -67,22 +66,16 @@ public class UsbChooserDialog implements ItemChooserDialog.ItemSelectedCallback 
 
         String searching = "";
         String noneFound = activity.getString(R.string.usb_chooser_dialog_no_devices_found_prompt);
-        SpannableString statusActive =
-                SpanApplier.applySpans(
-                        activity.getString(R.string.usb_chooser_dialog_footnote_text),
-                        new SpanInfo("<link>", "</link>", new NoUnderlineClickableSpan() {
-                            @Override
-                            public void onClick(View view) {
-                                if (mNativeUsbChooserDialogPtr == 0) {
-                                    return;
-                                }
+        SpannableString statusActive = SpanApplier.applySpans(
+                activity.getString(R.string.usb_chooser_dialog_footnote_text),
+                new SpanInfo("<link>", "</link>", new NoUnderlineClickableSpan((view) -> {
+                    if (mNativeUsbChooserDialogPtr == 0) return;
 
-                                nativeLoadUsbHelpPage(mNativeUsbChooserDialogPtr);
+                    nativeLoadUsbHelpPage(mNativeUsbChooserDialogPtr);
 
-                                // Get rid of the highlight background on selection.
-                                view.invalidate();
-                            }
-                        }));
+                    // Get rid of the highlight background on selection.
+                    view.invalidate();
+                })));
         SpannableString statusIdleNoneFound = statusActive;
         SpannableString statusIdleSomeFound = statusActive;
         String positiveButton = activity.getString(R.string.usb_chooser_dialog_connect_button_text);
@@ -108,9 +101,7 @@ public class UsbChooserDialog implements ItemChooserDialog.ItemSelectedCallback 
     private static UsbChooserDialog create(WindowAndroid windowAndroid, String origin,
             int securityLevel, long nativeUsbChooserDialogPtr) {
         Activity activity = windowAndroid.getActivity().get();
-        if (activity == null) {
-            return null;
-        }
+        if (activity == null) return null;
 
         UsbChooserDialog dialog = new UsbChooserDialog(nativeUsbChooserDialogPtr);
         dialog.show(activity, origin, securityLevel);

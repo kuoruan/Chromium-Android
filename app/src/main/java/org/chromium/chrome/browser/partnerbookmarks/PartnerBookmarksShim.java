@@ -5,15 +5,9 @@
 package org.chromium.chrome.browser.partnerbookmarks;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 
-import org.chromium.base.ContextUtils;
-import org.chromium.base.Log;
-import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.ChromeVersionInfo;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * The Java counterpart for the C++ partner bookmarks shim.
@@ -27,7 +21,6 @@ public class PartnerBookmarksShim {
     private static final String TAG = "PartnerBookmarksShim";
 
     private static boolean sIsReadingAttempted;
-    private static final long BAN_DURATION_MS = TimeUnit.DAYS.toMillis(7);
 
     /**
      * Checks if we need to fetch the Partner bookmarks and kicks the reading off. If reading was
@@ -47,28 +40,7 @@ public class PartnerBookmarksShim {
             return;
         }
 
-        boolean skip = shouldSkipReading();
-        RecordHistogram.recordBooleanHistogram("PartnerBookmark.Skipped", skip);
-        if (skip) {
-            Log.i(TAG, "Skip reading partner bookmarks since recent result was empty.");
-            reader.recordPartnerBookmarkCount(0);
-            reader.onBookmarksRead();
-            return;
-        }
         reader.readBookmarks();
     }
 
-    private static boolean shouldSkipReading() {
-        SharedPreferences pref = ContextUtils.getAppSharedPreferences();
-        long last = pref.getLong(PartnerBookmarksReader.LAST_EMPTY_READ_PREFS_NAME, 0);
-        int elapsed = (int) TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - last);
-
-        if (last > 0) {
-            RecordHistogram.recordCustomCountHistogram("PartnerBookmark.TimeSinceLastEmptyRead2",
-                    elapsed, 1, (int) TimeUnit.DAYS.toSeconds(365), 50);
-        }
-        // Without checking elapsed >= 0, we might get stuck at an "always skip mode" if
-        // |LAST_EMPTY_READ_PREFS_NAME| is a bogus future time.
-        return 0 <= elapsed && elapsed < BAN_DURATION_MS;
-    }
 }

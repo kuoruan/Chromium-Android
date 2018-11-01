@@ -19,15 +19,15 @@ public final class DecoderBuffer extends org.chromium.mojo.bindings.Struct {
     private static final int STRUCT_SIZE = 64;
     private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(64, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    public org.chromium.mojo.common.mojom.TimeDelta timestamp;
-    public org.chromium.mojo.common.mojom.TimeDelta duration;
+    public org.chromium.mojo_base.mojom.TimeDelta timestamp;
+    public org.chromium.mojo_base.mojom.TimeDelta duration;
     public boolean isEndOfStream;
     public int dataSize;
     public boolean isKeyFrame;
     public byte[] sideData;
     public DecryptConfig decryptConfig;
-    public org.chromium.mojo.common.mojom.TimeDelta frontDiscard;
-    public org.chromium.mojo.common.mojom.TimeDelta backDiscard;
+    public org.chromium.mojo_base.mojom.TimeDelta frontDiscard;
+    public org.chromium.mojo_base.mojom.TimeDelta backDiscard;
 
     private DecoderBuffer(int version) {
         super(STRUCT_SIZE, version);
@@ -47,9 +47,6 @@ public final class DecoderBuffer extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static DecoderBuffer deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -63,48 +60,50 @@ public final class DecoderBuffer extends org.chromium.mojo.bindings.Struct {
         DecoderBuffer result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new DecoderBuffer(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new DecoderBuffer(elementsOrVersion);
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                result.timestamp = org.chromium.mojo.common.mojom.TimeDelta.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                result.timestamp = org.chromium.mojo_base.mojom.TimeDelta.decode(decoder1);
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                result.duration = org.chromium.mojo.common.mojom.TimeDelta.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                result.duration = org.chromium.mojo_base.mojom.TimeDelta.decode(decoder1);
+                }
+                {
+                    
                 result.isEndOfStream = decoder0.readBoolean(24, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.isKeyFrame = decoder0.readBoolean(24, 1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.dataSize = decoder0.readInt(28);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.sideData = decoder0.readBytes(32, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(40, true);
                 result.decryptConfig = DecryptConfig.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(48, false);
-                result.frontDiscard = org.chromium.mojo.common.mojom.TimeDelta.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                result.frontDiscard = org.chromium.mojo_base.mojom.TimeDelta.decode(decoder1);
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(56, false);
-                result.backDiscard = org.chromium.mojo.common.mojom.TimeDelta.decode(decoder1);
-            }
+                result.backDiscard = org.chromium.mojo_base.mojom.TimeDelta.decode(decoder1);
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -133,57 +132,5 @@ public final class DecoderBuffer extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.frontDiscard, 48, false);
         
         encoder0.encode(this.backDiscard, 56, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        DecoderBuffer other = (DecoderBuffer) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.timestamp, other.timestamp))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.duration, other.duration))
-            return false;
-        if (this.isEndOfStream!= other.isEndOfStream)
-            return false;
-        if (this.dataSize!= other.dataSize)
-            return false;
-        if (this.isKeyFrame!= other.isKeyFrame)
-            return false;
-        if (!java.util.Arrays.equals(this.sideData, other.sideData))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.decryptConfig, other.decryptConfig))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.frontDiscard, other.frontDiscard))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.backDiscard, other.backDiscard))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.timestamp);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.duration);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isEndOfStream);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.dataSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isKeyFrame);
-        result = prime * result + java.util.Arrays.hashCode(this.sideData);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.decryptConfig);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.frontDiscard);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.backDiscard);
-        return result;
     }
 }

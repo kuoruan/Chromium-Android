@@ -13,6 +13,7 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.CollectionUtil;
 import org.chromium.base.LocaleUtils;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.chrome.browser.util.ConversionUtils;
 
 import java.io.File;
 import java.util.Map;
@@ -43,9 +44,10 @@ public class SystemInfoFeedbackSource extends AsyncFeedbackSourceAdapter<StatFs>
         StatFs statFs = getResult();
         if (statFs != null) {
             long blockSize = ApiCompatibilityUtils.getBlockSize(statFs);
-            long availSpace =
-                    ApiCompatibilityUtils.getAvailableBlocks(statFs) * blockSize / 1024 / 1024;
-            long totalSpace = ApiCompatibilityUtils.getBlockCount(statFs) * blockSize / 1024 / 1024;
+            long availSpace = ConversionUtils.bytesToMegabytes(
+                    ApiCompatibilityUtils.getAvailableBlocks(statFs) * blockSize);
+            long totalSpace = ConversionUtils.bytesToMegabytes(
+                    ApiCompatibilityUtils.getBlockCount(statFs) * blockSize);
 
             feedback.put("Available Storage (MB)", Long.toString(availSpace));
             feedback.put("Total Storage (MB)", Long.toString(totalSpace));

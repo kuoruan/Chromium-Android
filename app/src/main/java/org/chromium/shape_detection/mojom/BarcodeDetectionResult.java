@@ -41,9 +41,6 @@ public final class BarcodeDetectionResult extends org.chromium.mojo.bindings.Str
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static BarcodeDetectionResult deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -57,18 +54,19 @@ public final class BarcodeDetectionResult extends org.chromium.mojo.bindings.Str
         BarcodeDetectionResult result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new BarcodeDetectionResult(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new BarcodeDetectionResult(elementsOrVersion);
+                {
+                    
                 result.rawValue = decoder0.readString(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 result.boundingBox = org.chromium.gfx.mojom.RectF.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -79,7 +77,8 @@ public final class BarcodeDetectionResult extends org.chromium.mojo.bindings.Str
                         result.cornerPoints[i1] = org.chromium.gfx.mojom.PointF.decode(decoder2);
                     }
                 }
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -104,39 +103,5 @@ public final class BarcodeDetectionResult extends org.chromium.mojo.bindings.Str
                 encoder1.encode(this.cornerPoints[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        BarcodeDetectionResult other = (BarcodeDetectionResult) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.rawValue, other.rawValue))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.boundingBox, other.boundingBox))
-            return false;
-        if (!java.util.Arrays.deepEquals(this.cornerPoints, other.cornerPoints))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.rawValue);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.boundingBox);
-        result = prime * result + java.util.Arrays.deepHashCode(this.cornerPoints);
-        return result;
     }
 }

@@ -18,11 +18,17 @@
 <string name="autofill_card_unmask_prompt_error_try_again_expiration_year">"请检查您的信用卡到期年份，然后重试"</string>
 <string name="autofill_card_unmask_prompt_storage_checkbox">"在此设备上保存此信用卡的副本"</string>
 <string name="autofill_card_unmask_prompt_storage_tooltip">"选中后，Chromium 会将您的信用卡副本存储在此设备上，以加快表单填写速度。"</string>
-<string name="autofill_card_unmask_verification_in_progress">"确认信用卡"</string>
+<string name="autofill_card_unmask_verification_in_progress">"正在确认信用卡…"</string>
 <string name="autofill_card_unmask_verification_success">"已确认您的信用卡"</string>
 <string name="autofill_card_unmask_expiration_date_separator">"/"</string>
-<string name="autofill_card_unmask_new_card_link">"要使用新信用卡吗？"</string>
-<string name="autofill_wallet_management_link_text">"修改"</string>
+<string name="autofill_card_unmask_new_card_link">"更新信用卡"</string>
+<string name="autofill_enable_profiles_toggle_sublabel">"包括电话号码、电子邮件地址和送货地址等信息"</string>
+<string name="autofill_enable_credit_cards_toggle_sublabel">"加快在线支付速度"</string>
+<string name="autofill_addresses_settings_title">"地址和其他信息"</string>
+<string name="autofill_payment_methods">"付款方式"</string>
+<string name="autofill_enable_profiles_toggle_label">"保存并填写地址"</string>
+<string name="autofill_enable_credit_cards_toggle_label">"保存并填写付款方式"</string>
+<string name="autofill_wallet_management_link_text">"编辑"</string>
 <string name="autofill_from_google_account_long">"来自 Google Pay"</string>
 <string name="http_post_warning">"您所查找的网页要使用已输入的信息。返回此页可能需要重复已进行的所有操作。是否要继续操作？"</string>
 <string name="http_post_warning_resend">"继续"</string>
@@ -37,10 +43,12 @@
 <string name="sad_tab_reload_title">"无法打开此网页"</string>
 <string name="sad_tab_reload_try">"请尝试按以下提示操作："</string>
 <string name="sad_tab_reload_incognito">"在新的无痕式标签页中打开网页"</string>
+<string name="sad_tab_reload_private">"在新的无痕标签页中打开网页"</string>
 <string name="sad_tab_reload_restart_browser">"重新启动 Chromium"</string>
 <string name="sad_tab_reload_restart_device">"重启您的设备"</string>
 <string name="sad_tab_reload_learn_more">"了解详情"</string>
 <string name="new_tab_otr_title">"您已进入无痕模式"</string>
+<string name="new_tab_private_title">"您已启用无痕模式"</string>
 <string name="new_tab_otr_subtitle">"现在，您便可进行私密浏览了。共用此设备的其他用户将不会看到您的活动，但您下载的内容和添加的书签仍会保存在设备上。"</string>
 <string name="new_tab_otr_not_saved">"Chrome &lt;em&gt;不会保存&lt;/em&gt;以下信息：
         &lt;ul&gt;
@@ -55,6 +63,7 @@
           &lt;li&gt;您的互联网服务提供商
         &lt;/ul&gt;"</string>
 <string name="ntp_title_no_suggestions">"暂无新内容"</string>
+<string name="ntp_article_suggestions_section_header">"为您推荐的文章"</string>
 <string name="page_info_permission_ads_subtitle">"网站常常会展示侵扰性广告"</string>
 <string name="payments_method_of_payment_label">"付款方式"</string>
 <string name="payments_contact_details_label">"联系信息"</string>
@@ -81,7 +90,7 @@
 <string name="payments_pickup_summary_label">"取货"</string>
 <string name="payments_pickup_address_label">"取货地址"</string>
 <string name="payments_pickup_option_label">"取货方式"</string>
-<string name="payments_edit_button">"修改"</string>
+<string name="payments_edit_button">"编辑"</string>
 <string name="payments_pay_button">"付款"</string>
 <string name="payments_add_contact">"添加联系信息"</string>
 <string name="payments_add_card">"添加新卡"</string>
@@ -110,6 +119,7 @@
 <string name="payments_card_and_address_settings">"您可以在BEGIN_LINK设置END_LINK中管理信用卡和地址信息。"</string>
 <string name="payments_card_and_address_settings_signed_in">"信用卡选项和地址选项均来自 Chrome 和您的 Google 帐号 (%1$s)。您可在BEGIN_LINK设置END_LINK中管理这些选项。"</string>
 <string name="payments_card_and_address_settings_signed_out">"信用卡选项和地址选项均来自 Chrome。您可在BEGIN_LINK设置END_LINK中管理这些选项。"</string>
+<string name="settings_can_make_payment_toggle_label">"允许网站检查您是否已保存付款方式"</string>
 <string name="payments_required_field_message">"标有“*”的字段均是必填字段"</string>
 <string name="payments_phone_invalid_validation_message">"请输入有效的电话号码"</string>
 <string name="payments_email_invalid_validation_message">"请输入有效的电子邮件地址"</string>
@@ -123,7 +133,7 @@
 <string name="payments_recipient_required">"需要提供名称"</string>
 <string name="payments_email_required">"需要提供电子邮件地址"</string>
 <string name="payments_name_required">"需要提供名称"</string>
-<string name="payments_field_required_validation_message">"必填字段"</string>
+<string name="pref_edit_dialog_field_required_validation_message">"必填字段"</string>
 <string name="payments_select_shipping_address_for_shipping_methods">"要查看送货方式和要求，请选择相应地址"</string>
 <string name="payments_unsupported_shipping_address">"无法向此地址送货。请另选一个地址。"</string>
 <string name="payments_select_delivery_address_for_delivery_methods">"要查看递送方式和要求，请选择相应地址"</string>
@@ -132,5 +142,6 @@
 <string name="payments_unsupported_pickup_address">"无法从此地址取货。请另选一个地址。"</string>
 <string name="payments_android_app_error">"无法打开付款应用"</string>
 <string name="external_payment_app_leave_incognito_warning">"将要退出隐身模式，以便通过外部应用付款。是否继续？"</string>
+<string name="external_payment_app_leave_private_warning">"即将退出无痕模式，以便通过外部应用付款。要继续吗？"</string>
 <string name="choose">"选择"</string>
 </resources>

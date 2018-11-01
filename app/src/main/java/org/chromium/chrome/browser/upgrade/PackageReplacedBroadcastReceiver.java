@@ -7,9 +7,9 @@ package org.chromium.chrome.browser.upgrade;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Build;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.chrome.browser.notifications.channels.ChannelsUpdater;
 
 /**
@@ -39,9 +39,9 @@ public final class PackageReplacedBroadcastReceiver extends BroadcastReceiver {
         if (!ChannelsUpdater.getInstance().shouldUpdateChannels()) return;
 
         final PendingResult result = goAsync();
-        new AsyncTask<Void, Void, Void>() {
+        new AsyncTask<Void>() {
             @Override
-            protected Void doInBackground(Void... params) {
+            protected Void doInBackground() {
                 ChannelsUpdater.getInstance().updateChannels();
                 result.finish();
                 return null;

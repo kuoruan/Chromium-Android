@@ -19,7 +19,7 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
     private static final int STRUCT_SIZE = 32;
     private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    public org.chromium.mojo.common.mojom.UnguessableToken routingToken;
+    public org.chromium.mojo_base.mojom.UnguessableToken routingToken;
     public org.chromium.gfx.mojom.Rect rect;
     public boolean secure;
     public boolean powerEfficient;
@@ -42,9 +42,6 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static AndroidOverlayConfig deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -58,25 +55,27 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
         AndroidOverlayConfig result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new AndroidOverlayConfig(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new AndroidOverlayConfig(elementsOrVersion);
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                result.routingToken = org.chromium.mojo.common.mojom.UnguessableToken.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                result.routingToken = org.chromium.mojo_base.mojom.UnguessableToken.decode(decoder1);
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 result.rect = org.chromium.gfx.mojom.Rect.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.secure = decoder0.readBoolean(24, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.powerEfficient = decoder0.readBoolean(24, 1);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -95,42 +94,5 @@ public final class AndroidOverlayConfig extends org.chromium.mojo.bindings.Struc
         encoder0.encode(this.secure, 24, 0);
         
         encoder0.encode(this.powerEfficient, 24, 1);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        AndroidOverlayConfig other = (AndroidOverlayConfig) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.routingToken, other.routingToken))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.rect, other.rect))
-            return false;
-        if (this.secure!= other.secure)
-            return false;
-        if (this.powerEfficient!= other.powerEfficient)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.routingToken);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.rect);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.secure);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.powerEfficient);
-        return result;
     }
 }

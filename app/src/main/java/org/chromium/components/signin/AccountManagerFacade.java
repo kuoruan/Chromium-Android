@@ -5,6 +5,7 @@
 package org.chromium.components.signin;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.accounts.AuthenticatorDescription;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -12,7 +13,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -21,6 +21,7 @@ import android.support.annotation.AnyThread;
 import android.support.annotation.MainThread;
 import android.support.annotation.Nullable;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
@@ -60,6 +61,13 @@ public class AccountManagerFacade {
      */
     @VisibleForTesting
     public static final String FEATURE_IS_CHILD_ACCOUNT_KEY = "service_uca";
+
+    /**
+     * An account feature (corresponding to a Gaia service flag) that specifies whether the account
+     * is a USM account.
+     */
+    @VisibleForTesting
+    public static final String FEATURE_IS_USM_ACCOUNT_KEY = "service_usm";
 
     @VisibleForTesting
     public static final String ACCOUNT_RESTRICTION_PATTERNS_KEY = "RestrictAccountsToPatterns";
@@ -303,12 +311,15 @@ public class AccountManagerFacade {
     /**
      * Asynchronous version of {@link #getGoogleAccounts()}.
      */
+    // Incorrectly infers that this is called on a worker thread because of AsyncTask doInBackground
+    // overriding.
+    @SuppressWarnings("WrongThread")
     @MainThread
     public void getGoogleAccounts(final Callback<AccountManagerResult<Account[]>> callback) {
         ThreadUtils.assertOnUiThread();
-        new AsyncTask<Void, Void, AccountManagerResult<Account[]>>() {
+        new AsyncTask<AccountManagerResult<Account[]>>() {
             @Override
-            protected AccountManagerResult<Account[]> doInBackground(Void... params) {
+            protected AccountManagerResult<Account[]> doInBackground() {
                 try {
                     return new AccountManagerResult<>(getGoogleAccounts());
                 } catch (AccountManagerDelegateException ex) {
@@ -320,7 +331,8 @@ public class AccountManagerFacade {
             protected void onPostExecute(AccountManagerResult<Account[]> accounts) {
                 callback.onResult(accounts);
             }
-        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**
@@ -339,12 +351,15 @@ public class AccountManagerFacade {
     /**
      * Asynchronous version of {@link #tryGetGoogleAccounts()}.
      */
+    // Incorrectly infers that this is called on a worker thread because of AsyncTask doInBackground
+    // overriding.
+    @SuppressWarnings("WrongThread")
     @MainThread
     public void tryGetGoogleAccounts(final Callback<Account[]> callback) {
         ThreadUtils.assertOnUiThread();
-        new AsyncTask<Void, Void, Account[]>() {
+        new AsyncTask<Account[]>() {
             @Override
-            protected Account[] doInBackground(Void... params) {
+            protected Account[] doInBackground() {
                 return tryGetGoogleAccounts();
             }
 
@@ -352,7 +367,8 @@ public class AccountManagerFacade {
             protected void onPostExecute(Account[] accounts) {
                 callback.onResult(accounts);
             }
-        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**
@@ -511,29 +527,41 @@ public class AccountManagerFacade {
         });
     }
 
+    // Incorrectly infers that this is called on a worker thread because of AsyncTask doInBackground
+    // overriding.
+    @SuppressWarnings("WrongThread")
     @MainThread
-    public void checkChildAccount(Account account, Callback<Boolean> callback) {
-        hasFeatures(account, new String[] {FEATURE_IS_CHILD_ACCOUNT_KEY}, callback);
-    }
-
-    private boolean hasFeatures(Account account, String[] features) {
-        return mDelegate.hasFeatures(account, features);
-    }
-
-    private void hasFeatures(
-            final Account account, final String[] features, final Callback<Boolean> callback) {
+    public void checkChildAccountStatus(Account account, Callback<Integer> callback) {
         ThreadUtils.assertOnUiThread();
-        new AsyncTask<Void, Void, Boolean>() {
+        new AsyncTask<Integer>() {
             @Override
-            public Boolean doInBackground(Void... params) {
-                return hasFeatures(account, features);
+            public @ChildAccountStatus.Status Integer doInBackground() {
+                if (hasFeature(account, FEATURE_IS_CHILD_ACCOUNT_KEY)) {
+                    return ChildAccountStatus.REGULAR_CHILD;
+                }
+                if (hasFeature(account, FEATURE_IS_USM_ACCOUNT_KEY)) {
+                    return ChildAccountStatus.USM_CHILD;
+                }
+                return ChildAccountStatus.NOT_CHILD;
             }
 
             @Override
-            public void onPostExecute(Boolean value) {
+            public void onPostExecute(@ChildAccountStatus.Status Integer value) {
                 callback.onResult(value);
             }
-        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    /**
+     * Creates an intent that will ask the user to add a new account to the device. See
+     * {@link AccountManager#addAccount} for details.
+     * @param callback The callback to get the created intent. Will be invoked on the main thread.
+     *         If there is an issue while creating the intent, callback will receive null.
+     */
+    @AnyThread
+    public void createAddAccountIntent(Callback<Intent> callback) {
+        mDelegate.createAddAccountIntent(callback);
     }
 
     /**
@@ -579,6 +607,10 @@ public class AccountManagerFacade {
     public boolean isUpdatePending() {
         ThreadUtils.assertOnUiThread();
         return mUpdateTasksCounter > 0;
+    }
+
+    private boolean hasFeature(Account account, String feature) {
+        return mDelegate.hasFeatures(account, new String[] {feature});
     }
 
     private void updateAccounts() {
@@ -682,14 +714,14 @@ public class AccountManagerFacade {
         mCallbacksWaitingForPendingUpdates.clear();
     }
 
-    private class InitializeTask extends AsyncTask<Void, Void, Void> {
+    private class InitializeTask extends AsyncTask<Void> {
         @Override
         protected void onPreExecute() {
             ++mUpdateTasksCounter;
         }
 
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground() {
             mAccountRestrictionPatterns = getAccountRestrictionPatterns();
             mAllAccounts = getAllAccounts();
             mFilteredAccounts.set(getFilteredAccounts());
@@ -706,15 +738,14 @@ public class AccountManagerFacade {
         }
     }
 
-    private class UpdateAccountRestrictionPatternsTask
-            extends AsyncTask<Void, Void, PatternMatcher[]> {
+    private class UpdateAccountRestrictionPatternsTask extends AsyncTask<PatternMatcher[]> {
         @Override
         protected void onPreExecute() {
             ++mUpdateTasksCounter;
         }
 
         @Override
-        protected PatternMatcher[] doInBackground(Void... params) {
+        protected PatternMatcher[] doInBackground() {
             return getAccountRestrictionPatterns();
         }
 
@@ -725,15 +756,14 @@ public class AccountManagerFacade {
         }
     }
 
-    private class UpdateAccountsTask
-            extends AsyncTask<Void, Void, AccountManagerResult<Account[]>> {
+    private class UpdateAccountsTask extends AsyncTask<AccountManagerResult<Account[]>> {
         @Override
         protected void onPreExecute() {
             ++mUpdateTasksCounter;
         }
 
         @Override
-        protected AccountManagerResult<Account[]> doInBackground(Void... params) {
+        protected AccountManagerResult<Account[]> doInBackground() {
             return getAllAccounts();
         }
 
@@ -782,9 +812,9 @@ public class AccountManagerFacade {
             ThreadUtils.assertOnUiThread();
             // Clear any transient error.
             mIsTransientError.set(false);
-            new AsyncTask<Void, Void, T>() {
+            new AsyncTask<T>() {
                 @Override
-                public T doInBackground(Void... params) {
+                public T doInBackground() {
                     try {
                         return mAuthTask.run();
                     } catch (AuthException ex) {
@@ -808,7 +838,8 @@ public class AccountManagerFacade {
                         NetworkChangeNotifier.addConnectionTypeObserver(ConnectionRetry.this);
                     }
                 }
-            }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            }
+                    .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
 
         @Override

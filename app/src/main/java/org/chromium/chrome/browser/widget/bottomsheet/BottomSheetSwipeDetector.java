@@ -9,6 +9,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 
+import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.browser.util.MathUtils;
 
 /**
@@ -71,10 +72,10 @@ public class BottomSheetSwipeDetector extends GestureDetector.SimpleOnGestureLis
         float getMaxOffsetPx();
 
         /**
-         * Gets the height of the container that the sheet exists in.
-         * @return The height of the sheet's container.
+         * @param event The motion event to test.
+         * @return Whether the provided motion event is inside the toolbar.
          */
-        float getContainerHeightPx();
+        boolean isTouchEventInToolbar(MotionEvent event);
 
         /**
          * Check if a particular gesture or touch event should move the bottom sheet when in peeking
@@ -123,7 +124,7 @@ public class BottomSheetSwipeDetector extends GestureDetector.SimpleOnGestureLis
                     mSheetDelegate.getCurrentOffsetPx(), mSheetDelegate.getMaxOffsetPx());
 
             // Allow the bottom sheet's content to be scrolled up without dragging the sheet down.
-            if (!isTouchEventInToolbar(e2) && isSheetInMaxPosition
+            if (!mSheetDelegate.isTouchEventInToolbar(e2) && isSheetInMaxPosition
                     && !mSheetDelegate.isContentScrolledToTop()) {
                 return false;
             }
@@ -151,6 +152,11 @@ public class BottomSheetSwipeDetector extends GestureDetector.SimpleOnGestureLis
         }
 
         @Override
+        public void onLongPress(MotionEvent e) {
+            mIsScrolling = false;
+        }
+
+        @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
             if (e1 == null || !mSheetDelegate.shouldGestureMoveSheet(e1, e2) || !mIsScrolling) {
                 return false;
@@ -175,8 +181,9 @@ public class BottomSheetSwipeDetector extends GestureDetector.SimpleOnGestureLis
      * @param delegate A SwipeableBottomSheet that processes swipes.
      */
     public BottomSheetSwipeDetector(Context context, SwipeableBottomSheet delegate) {
-        mGestureDetector = new GestureDetector(context, new SwipeGestureListener());
-        mGestureDetector.setIsLongpressEnabled(false);
+        mGestureDetector = new GestureDetector(
+                context, new SwipeGestureListener(), ThreadUtils.getUiThreadHandler());
+        mGestureDetector.setIsLongpressEnabled(true);
 
         mSheetDelegate = delegate;
         mVelocityTracker = VelocityTracker.obtain();
@@ -246,17 +253,6 @@ public class BottomSheetSwipeDetector extends GestureDetector.SimpleOnGestureLis
         MotionEvent rawEvent = MotionEvent.obtain(e);
         rawEvent.setLocation(e.getRawX(), e.getRawY());
         return rawEvent;
-    }
-
-    /**
-     * Determines if a touch event is inside the toolbar. This assumes the toolbar is the full
-     * width of the screen and that the toolbar is at the top of the bottom sheet.
-     * @param e The motion event to test.
-     * @return True if the event occurred in the toolbar region.
-     */
-    private boolean isTouchEventInToolbar(MotionEvent e) {
-        return mSheetDelegate.getContainerHeightPx() - e.getRawY()
-                > mSheetDelegate.getCurrentOffsetPx() - mSheetDelegate.getMinOffsetPx();
     }
 
     /**

@@ -25,8 +25,7 @@ import java.util.List;
  *
  * [1] https://developer.android.com/reference/android/location/package-summary.html
  */
-public class LocationProviderAndroid
-        implements LocationListener, LocationProviderFactory.LocationProvider {
+public class LocationProviderAndroid implements LocationListener, LocationProvider {
     private static final String TAG = "cr_LocationProvider";
 
     private LocationManager mLocationManager;

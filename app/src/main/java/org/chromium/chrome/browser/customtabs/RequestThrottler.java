@@ -7,11 +7,11 @@ package org.chromium.chrome.browser.customtabs;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.SparseArray;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.VisibleForTesting;
 
 import java.util.Map;
@@ -202,13 +202,14 @@ class RequestThrottler {
     static void loadInBackground(final Context context) {
         boolean alreadyDone = !sAccessedSharedPreferences.compareAndSet(false, true);
         if (alreadyDone) return;
-        new AsyncTask<Void, Void, Void>() {
+        new AsyncTask<Void>() {
             @Override
-            protected Void doInBackground(Void... params) {
+            protected Void doInBackground() {
                 context.getSharedPreferences(PREFERENCES_NAME, 0).edit();
                 return null;
             }
-        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /** Removes all the UIDs that haven't been seen since at least {@link FORGET_AFTER_MS}. */

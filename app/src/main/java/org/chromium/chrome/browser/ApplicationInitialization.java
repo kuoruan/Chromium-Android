@@ -10,8 +10,7 @@ import android.util.TypedValue;
 
 import org.chromium.base.CommandLine;
 import org.chromium.chrome.R;
-import org.chromium.content.common.ContentSwitches;
-
+import org.chromium.content_public.common.ContentSwitches;
 
 /**
  * Utility class for application level initialization calls.

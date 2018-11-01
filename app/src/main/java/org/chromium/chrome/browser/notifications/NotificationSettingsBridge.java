@@ -18,13 +18,6 @@ import org.chromium.components.url_formatter.UrlFormatter;
  * Interface for native code to interact with Android notification channels.
  */
 public class NotificationSettingsBridge {
-    // TODO(awdf): Remove this and check BuildInfo.sdk_int() from native instead, once SdkVersion
-    // enum includes Android O.
-    @CalledByNative
-    static boolean shouldUseChannelSettings() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
-    }
-
     /**
      * Creates a notification channel for the given origin, unless a channel for this origin
      * already exists.
@@ -99,11 +92,11 @@ public class NotificationSettingsBridge {
 
         public NotificationChannel toChannel() {
             NotificationChannel channel = new NotificationChannel(mId,
-                    UrlFormatter.formatUrlForSecurityDisplay(mOrigin, false /* showScheme */),
+                    UrlFormatter.formatUrlForSecurityDisplayOmitScheme(mOrigin),
                     mStatus == NotificationChannelStatus.BLOCKED
                             ? NotificationManager.IMPORTANCE_NONE
                             : NotificationManager.IMPORTANCE_DEFAULT);
-            channel.setGroup(ChannelDefinitions.CHANNEL_GROUP_ID_SITES);
+            channel.setGroup(ChannelDefinitions.ChannelGroupId.SITES);
             return channel;
         }
     }

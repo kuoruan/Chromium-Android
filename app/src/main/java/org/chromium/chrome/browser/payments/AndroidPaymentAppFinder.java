@@ -158,6 +158,8 @@ public class AndroidPaymentAppFinder implements ManifestVerifyCallback {
         // https://w3c.github.io/webpayments-methods-credit-transfer-direct-debit/
         supportedNonUriPaymentMethods.add("payee-credit-transfer");
         supportedNonUriPaymentMethods.add("payer-credit-transfer");
+        // https://w3c.github.io/webpayments-methods-tokenization/
+        supportedNonUriPaymentMethods.add("tokenized-card");
 
         mNonUriPaymentMethods = new HashSet<>();
         mUriPaymentMethods = new HashSet<>();

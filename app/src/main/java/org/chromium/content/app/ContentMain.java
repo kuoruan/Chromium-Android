@@ -22,10 +22,12 @@ import org.chromium.base.annotations.MainDex;
 public class ContentMain {
     /**
      * Start the ContentMainRunner in native side.
+     *
+     * @param startServiceManagerOnly Whether to start only the ServiceManager.
      **/
-    public static int start() {
-        return nativeStart();
+    public static int start(boolean startServiceManagerOnly) {
+        return nativeStart(startServiceManagerOnly);
     }
 
-    private static native int nativeStart();
+    private static native int nativeStart(boolean startServiceManagerOnly);
 }

@@ -17,7 +17,7 @@
     <TextView
         android:id="@+id/title"
         style="@style/PreferenceTitle"
-        android:textColor="@color/google_grey_600"
+        android:textAppearance="@style/BlackHint1"
         android:textAlignment="viewStart"
         android:layout_height="wrap_content"
         android:layout_width="0dp"

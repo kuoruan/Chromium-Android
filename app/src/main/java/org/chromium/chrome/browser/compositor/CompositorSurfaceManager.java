@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.compositor;
 
 import android.graphics.drawable.Drawable;
 import android.view.Surface;
+import android.view.View;
 
 /**
  * Manages Surface(s), and SurfaceView(s) when necessary, for the compositor.
@@ -63,4 +64,9 @@ public interface CompositorSurfaceManager {
      * Set the visibility of the Managed SurfaceViews.
      */
     void setVisibility(int visibility);
+
+    /**
+     * Gets the active {@link SurfaceView}.
+     */
+    View getActiveSurfaceView();
 }

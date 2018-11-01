@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Helper methods for dealing with Files.
@@ -89,6 +90,30 @@ public class FileUtils {
     }
 
     /**
+     * Atomically copies the data from an input stream into an output file.
+     * @param is Input file stream to read data from.
+     * @param outFile Output file path.
+     * @param buffer Caller-provided buffer. Provided to avoid allocating the same
+     *         buffer on each call when copying several files in sequence.
+     * @throws IOException in case of I/O error.
+     */
+    public static void copyFileStreamAtomicWithBuffer(InputStream is, File outFile, byte[] buffer)
+            throws IOException {
+        File tmpOutputFile = new File(outFile.getPath() + ".tmp");
+        try (OutputStream os = new FileOutputStream(tmpOutputFile)) {
+            Log.i(TAG, "Writing to %s", outFile);
+
+            int count = 0;
+            while ((count = is.read(buffer, 0, buffer.length)) != -1) {
+                os.write(buffer, 0, count);
+            }
+        }
+        if (!tmpOutputFile.renameTo(outFile)) {
+            throw new IOException();
+        }
+    }
+
+    /**
      * Returns a URI that points at the file.
      * @param file File to get a URI for.
      * @return URI that points at that file, either as a content:// URI or a file:// URI.
@@ -109,5 +134,16 @@ public class FileUtils {
         if (uri == null) uri = Uri.fromFile(file);
 
         return uri;
+    }
+
+    /**
+     * Returns the file extension, or an empty string if none.
+     * @param file Name of the file, with or without the full path.
+     * @return empty string if no extension, extension otherwise.
+     */
+    public static String getExtension(String file) {
+        int index = file.lastIndexOf('.');
+        if (index == -1) return "";
+        return file.substring(index + 1).toLowerCase(Locale.US);
     }
 }

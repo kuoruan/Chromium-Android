@@ -3,7 +3,9 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/list_item"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -14,7 +16,7 @@
         android:id="@+id/favicon"
         android:layout_width="@dimen/bookmark_widget_min_width"
         android:layout_height="@dimen/bookmark_widget_min_height"
-        android:contentDescription="@null"
+        tools:ignore="ContentDescription"
         android:scaleType="center" />
 
     <TextView

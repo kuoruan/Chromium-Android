@@ -25,17 +25,12 @@ public interface UrlLoaderClient extends org.chromium.mojo.bindings.Interface {
 
 
     void onReceiveResponse(
-UrlResponseHead head, SslInfo sslInfo, DownloadedTempFile downloadedFile);
+UrlResponseHead head);
 
 
 
     void onReceiveRedirect(
 UrlRequestRedirectInfo redirectInfo, UrlResponseHead head);
-
-
-
-    void onDataDownloaded(
-long dataLength, long encodedLength);
 
 
 

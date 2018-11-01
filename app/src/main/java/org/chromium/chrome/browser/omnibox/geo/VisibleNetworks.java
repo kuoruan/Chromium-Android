@@ -5,8 +5,7 @@
 package org.chromium.chrome.browser.omnibox.geo;
 
 import android.support.annotation.IntDef;
-
-import org.chromium.base.ApiCompatibilityUtils;
+import android.support.v4.util.ObjectsCompat;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -101,10 +100,10 @@ class VisibleNetworks {
             return false;
         }
         VisibleNetworks that = (VisibleNetworks) object;
-        return ApiCompatibilityUtils.objectEquals(mConnectedWifi, that.connectedWifi())
-                && ApiCompatibilityUtils.objectEquals(mConnectedCell, that.connectedCell())
-                && ApiCompatibilityUtils.objectEquals(mAllVisibleWifis, that.allVisibleWifis())
-                && ApiCompatibilityUtils.objectEquals(mAllVisibleCells, that.allVisibleCells());
+        return ObjectsCompat.equals(mConnectedWifi, that.connectedWifi())
+                && ObjectsCompat.equals(mConnectedCell, that.connectedCell())
+                && ObjectsCompat.equals(mAllVisibleWifis, that.allVisibleWifis())
+                && ObjectsCompat.equals(mAllVisibleCells, that.allVisibleCells());
     }
 
     private static int objectsHashCode(Object o) {
@@ -193,8 +192,8 @@ class VisibleNetworks {
             }
 
             VisibleWifi that = (VisibleWifi) object;
-            return ApiCompatibilityUtils.objectEquals(mSsid, that.ssid())
-                    && ApiCompatibilityUtils.objectEquals(mBssid, that.bssid());
+            return ObjectsCompat.equals(mSsid, that.ssid())
+                    && ObjectsCompat.equals(mBssid, that.bssid());
         }
 
         @Override
@@ -207,20 +206,20 @@ class VisibleNetworks {
          * proto.
          */
         PartnerLocationDescriptor.VisibleNetwork toProto(boolean connected) {
-            PartnerLocationDescriptor.VisibleNetwork visibleNetwork =
-                    new PartnerLocationDescriptor.VisibleNetwork();
+            PartnerLocationDescriptor.VisibleNetwork.Builder visibleNetworkBuilder =
+                    PartnerLocationDescriptor.VisibleNetwork.newBuilder();
 
-            PartnerLocationDescriptor.VisibleNetwork.WiFi wifi =
-                    new PartnerLocationDescriptor.VisibleNetwork.WiFi();
+            PartnerLocationDescriptor.VisibleNetwork.WiFi.Builder wifiBuilder =
+                    PartnerLocationDescriptor.VisibleNetwork.WiFi.newBuilder();
 
-            wifi.bssid = bssid();
-            wifi.levelDbm = level();
+            if (bssid() != null) wifiBuilder.setBssid(bssid());
+            if (level() != null) wifiBuilder.setLevelDbm(level());
 
-            visibleNetwork.wifi = wifi;
-            visibleNetwork.timestampMs = timestampMs();
-            visibleNetwork.connected = connected;
+            visibleNetworkBuilder.setWifi(wifiBuilder.build());
+            if (timestampMs() != null) visibleNetworkBuilder.setTimestampMs(timestampMs());
+            visibleNetworkBuilder.setConnected(connected);
 
-            return visibleNetwork;
+            return visibleNetworkBuilder.build();
         }
     }
 
@@ -229,24 +228,26 @@ class VisibleNetworks {
      */
     static class VisibleCell {
         static final VisibleCell UNKNOWN_VISIBLE_CELL =
-                VisibleCell.builder(VisibleCell.UNKNOWN_RADIO_TYPE).build();
+                VisibleCell.builder(VisibleCell.RadioType.UNKNOWN).build();
         static final VisibleCell UNKNOWN_MISSING_LOCATION_PERMISSION_VISIBLE_CELL =
-                VisibleCell.builder(VisibleCell.UNKNOWN_MISSING_LOCATION_PERMISSION_RADIO_TYPE)
+                VisibleCell.builder(VisibleCell.RadioType.UNKNOWN_MISSING_LOCATION_PERMISSION)
                         .build();
 
         /**
          * Represents all possible values of radio type that we track.
          */
+        @IntDef({RadioType.UNKNOWN, RadioType.UNKNOWN_MISSING_LOCATION_PERMISSION, RadioType.CDMA,
+                RadioType.GSM, RadioType.LTE, RadioType.WCDMA})
         @Retention(RetentionPolicy.SOURCE)
-        @IntDef({UNKNOWN_RADIO_TYPE, UNKNOWN_MISSING_LOCATION_PERMISSION_RADIO_TYPE,
-                CDMA_RADIO_TYPE, GSM_RADIO_TYPE, LTE_RADIO_TYPE, WCDMA_RADIO_TYPE})
-        @interface RadioType {}
-        static final int UNKNOWN_RADIO_TYPE = 0;
-        static final int UNKNOWN_MISSING_LOCATION_PERMISSION_RADIO_TYPE = 1;
-        static final int CDMA_RADIO_TYPE = 2;
-        static final int GSM_RADIO_TYPE = 3;
-        static final int LTE_RADIO_TYPE = 4;
-        static final int WCDMA_RADIO_TYPE = 5;
+        @interface RadioType {
+            int UNKNOWN = 0;
+            int UNKNOWN_MISSING_LOCATION_PERMISSION = 1;
+            int CDMA = 2;
+            int GSM = 3;
+            int LTE = 4;
+            int WCDMA = 5;
+            int NUM_ENTRIES = 6;
+        }
 
         static Builder builder(@RadioType int radioType) {
             return new VisibleCell.Builder().setRadioType(radioType);
@@ -367,19 +368,14 @@ class VisibleNetworks {
                 return false;
             }
             VisibleCell that = (VisibleCell) object;
-            return ApiCompatibilityUtils.objectEquals(mRadioType, that.radioType())
-                    && ApiCompatibilityUtils.objectEquals(mCellId, that.cellId())
-                    && ApiCompatibilityUtils.objectEquals(
-                               mLocationAreaCode, that.locationAreaCode())
-                    && ApiCompatibilityUtils.objectEquals(
-                               mMobileCountryCode, that.mobileCountryCode())
-                    && ApiCompatibilityUtils.objectEquals(
-                               mMobileNetworkCode, that.mobileNetworkCode())
-                    && ApiCompatibilityUtils.objectEquals(
-                               mPrimaryScramblingCode, that.primaryScramblingCode())
-                    && ApiCompatibilityUtils.objectEquals(mPhysicalCellId, that.physicalCellId())
-                    && ApiCompatibilityUtils.objectEquals(
-                               mTrackingAreaCode, that.trackingAreaCode());
+            return ObjectsCompat.equals(mRadioType, that.radioType())
+                    && ObjectsCompat.equals(mCellId, that.cellId())
+                    && ObjectsCompat.equals(mLocationAreaCode, that.locationAreaCode())
+                    && ObjectsCompat.equals(mMobileCountryCode, that.mobileCountryCode())
+                    && ObjectsCompat.equals(mMobileNetworkCode, that.mobileNetworkCode())
+                    && ObjectsCompat.equals(mPrimaryScramblingCode, that.primaryScramblingCode())
+                    && ObjectsCompat.equals(mPhysicalCellId, that.physicalCellId())
+                    && ObjectsCompat.equals(mTrackingAreaCode, that.trackingAreaCode());
         }
 
         @Override
@@ -394,44 +390,45 @@ class VisibleNetworks {
          * proto.
          */
         PartnerLocationDescriptor.VisibleNetwork toProto(boolean connected) {
-            PartnerLocationDescriptor.VisibleNetwork visibleNetwork =
-                    new PartnerLocationDescriptor.VisibleNetwork();
+            PartnerLocationDescriptor.VisibleNetwork.Builder visibleNetworkBuilder =
+                    PartnerLocationDescriptor.VisibleNetwork.newBuilder();
 
-            PartnerLocationDescriptor.VisibleNetwork.Cell cell =
-                    new PartnerLocationDescriptor.VisibleNetwork.Cell();
+            PartnerLocationDescriptor.VisibleNetwork.Cell.Builder cellBuilder =
+                    PartnerLocationDescriptor.VisibleNetwork.Cell.newBuilder();
 
             switch (radioType()) {
-                case VisibleCell.CDMA_RADIO_TYPE:
-                    cell.type = PartnerLocationDescriptor.VisibleNetwork.Cell.CDMA;
+                case VisibleCell.RadioType.CDMA:
+                    cellBuilder.setType(PartnerLocationDescriptor.VisibleNetwork.Cell.Type.CDMA);
                     break;
-                case VisibleCell.GSM_RADIO_TYPE:
-                    cell.type = PartnerLocationDescriptor.VisibleNetwork.Cell.GSM;
+                case VisibleCell.RadioType.GSM:
+                    cellBuilder.setType(PartnerLocationDescriptor.VisibleNetwork.Cell.Type.GSM);
                     break;
-                case VisibleCell.LTE_RADIO_TYPE:
-                    cell.type = PartnerLocationDescriptor.VisibleNetwork.Cell.LTE;
+                case VisibleCell.RadioType.LTE:
+                    cellBuilder.setType(PartnerLocationDescriptor.VisibleNetwork.Cell.Type.LTE);
                     break;
-                case VisibleCell.WCDMA_RADIO_TYPE:
-                    cell.type = PartnerLocationDescriptor.VisibleNetwork.Cell.WCDMA;
+                case VisibleCell.RadioType.WCDMA:
+                    cellBuilder.setType(PartnerLocationDescriptor.VisibleNetwork.Cell.Type.WCDMA);
                     break;
-                case VisibleCell.UNKNOWN_RADIO_TYPE:
-                case VisibleCell.UNKNOWN_MISSING_LOCATION_PERMISSION_RADIO_TYPE:
+                case VisibleCell.RadioType.UNKNOWN:
+                case VisibleCell.RadioType.UNKNOWN_MISSING_LOCATION_PERMISSION:
                 default:
-                    cell.type = PartnerLocationDescriptor.VisibleNetwork.Cell.UNKNOWN;
+                    cellBuilder.setType(PartnerLocationDescriptor.VisibleNetwork.Cell.Type.UNKNOWN);
                     break;
             }
-            cell.cellId = cellId();
-            cell.locationAreaCode = locationAreaCode();
-            cell.mobileCountryCode = mobileCountryCode();
-            cell.mobileNetworkCode = mobileNetworkCode();
-            cell.primaryScramblingCode = primaryScramblingCode();
-            cell.physicalCellId = physicalCellId();
-            cell.trackingAreaCode = trackingAreaCode();
+            if (cellId() != null) cellBuilder.setCellId(cellId());
+            if (locationAreaCode() != null) cellBuilder.setLocationAreaCode(locationAreaCode());
+            if (mobileCountryCode() != null) cellBuilder.setMobileCountryCode(mobileCountryCode());
+            if (mobileNetworkCode() != null) cellBuilder.setMobileNetworkCode(mobileNetworkCode());
+            if (primaryScramblingCode() != null)
+                cellBuilder.setPrimaryScramblingCode(primaryScramblingCode());
+            if (physicalCellId() != null) cellBuilder.setPhysicalCellId(physicalCellId());
+            if (trackingAreaCode() != null) cellBuilder.setTrackingAreaCode(trackingAreaCode());
 
-            visibleNetwork.cell = cell;
-            visibleNetwork.timestampMs = timestampMs();
-            visibleNetwork.connected = connected;
+            visibleNetworkBuilder.setCell(cellBuilder.build());
+            if (timestampMs() != null) visibleNetworkBuilder.setTimestampMs(timestampMs());
+            visibleNetworkBuilder.setConnected(connected);
 
-            return visibleNetwork;
+            return visibleNetworkBuilder.build();
         }
 
         /**

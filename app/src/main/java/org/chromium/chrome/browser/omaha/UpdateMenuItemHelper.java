@@ -14,7 +14,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
@@ -24,6 +23,7 @@ import android.view.animation.LinearInterpolator;
 
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.CommandLine;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
@@ -33,6 +33,7 @@ import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.appmenu.AppMenu;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
+import org.chromium.chrome.browser.util.ConversionUtils;
 import org.chromium.components.variations.VariationsAssociatedData;
 import org.chromium.ui.interpolators.BakedBezierInterpolator;
 
@@ -111,9 +112,9 @@ public class UpdateMenuItemHelper {
 
         mAlreadyCheckedForUpdates = true;
 
-        new AsyncTask<Void, Void, Void>() {
+        new AsyncTask<Void>() {
             @Override
-            protected Void doInBackground(Void... params) {
+            protected Void doInBackground() {
                 if (VersionNumberGetter.isNewerVersionAvailable(activity)) {
                     mUpdateUrl = MarketURLGetter.getMarketUrl(activity);
                     mLatestVersion =
@@ -131,7 +132,8 @@ public class UpdateMenuItemHelper {
                 activity.onCheckForUpdate(mUpdateAvailable);
                 recordUpdateHistogram();
             }
-        }.execute();
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**
@@ -434,13 +436,13 @@ public class UpdateMenuItemHelper {
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     private static long getSizeUpdatedApi(StatFs statFs) {
-        return statFs.getAvailableBytes() / (1024 * 1024);
+        return ConversionUtils.bytesToMegabytes(statFs.getAvailableBytes());
     }
 
     @SuppressWarnings("deprecation")
     private static long getSize(StatFs statFs) {
         int blockSize = statFs.getBlockSize();
         int availableBlocks = statFs.getAvailableBlocks();
-        return (blockSize * availableBlocks) / (1024 * 1024);
+        return ConversionUtils.bytesToMegabytes(blockSize * availableBlocks);
     }
 }

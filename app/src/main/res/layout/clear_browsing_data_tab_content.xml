@@ -17,8 +17,6 @@
         android:layout_weight="1"
         android:layout_height="0dp"/>
 
-    <View style="@style/Divider"/>
-
     <Button
         android:id="@+id/clear_button"
         android:layout_gravity="end"

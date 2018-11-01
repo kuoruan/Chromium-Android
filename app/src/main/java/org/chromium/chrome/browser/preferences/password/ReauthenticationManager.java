@@ -26,20 +26,22 @@ import java.lang.annotation.RetentionPolicy;
  */
 public final class ReauthenticationManager {
     // Used for various ways to override checks provided by this class.
+    @IntDef({OverrideState.NOT_OVERRIDDEN, OverrideState.AVAILABLE, OverrideState.UNAVAILABLE})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({OVERRIDE_STATE_NOT_OVERRIDDEN, OVERRIDE_STATE_AVAILABLE, OVERRIDE_STATE_UNAVAILABLE})
-    public @interface OverrideState {}
-    public static final int OVERRIDE_STATE_NOT_OVERRIDDEN = 0;
-    public static final int OVERRIDE_STATE_AVAILABLE = 1;
-    public static final int OVERRIDE_STATE_UNAVAILABLE = 2;
+    public @interface OverrideState {
+        int NOT_OVERRIDDEN = 0;
+        int AVAILABLE = 1;
+        int UNAVAILABLE = 2;
+    }
 
     // Used to specify the scope of the reauthentication -- either to grant bulk access like, e.g.,
     // exporting passwords, or just one-at-a-time, like, e.g., viewing a single password.
+    @IntDef({ReauthScope.ONE_AT_A_TIME, ReauthScope.BULK})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({REAUTH_SCOPE_ONE_AT_A_TIME, REAUTH_SCOPE_BULK})
-    public @interface ReauthScope {}
-    public static final int REAUTH_SCOPE_ONE_AT_A_TIME = 0;
-    public static final int REAUTH_SCOPE_BULK = 1;
+    public @interface ReauthScope {
+        int ONE_AT_A_TIME = 0;
+        int BULK = 1;
+    }
 
     // Useful for retrieving the fragment in tests.
     @VisibleForTesting
@@ -56,17 +58,17 @@ public final class ReauthenticationManager {
 
     // Stores the reauth scope used when |sLastReauthTimeMillis| was reset last time.
     @ReauthScope
-    private static int sLastReauthScope = REAUTH_SCOPE_ONE_AT_A_TIME;
+    private static int sLastReauthScope = ReauthScope.ONE_AT_A_TIME;
 
     // Used in tests to override the result of checking for screen lock set-up. This allows the
     // tests to be independent of a particular device configuration.
     @OverrideState
-    private static int sScreenLockSetUpOverride = OVERRIDE_STATE_NOT_OVERRIDDEN;
+    private static int sScreenLockSetUpOverride = OverrideState.NOT_OVERRIDDEN;
 
     // Used in tests to override the result of checking for availability of the screen-locking API.
     // This allows the tests to be independent of a particular device configuration.
     @OverrideState
-    private static int sApiOverride = OVERRIDE_STATE_NOT_OVERRIDDEN;
+    private static int sApiOverride = OverrideState.NOT_OVERRIDDEN;
 
     // Used in tests to avoid displaying the OS reauth dialog.
     private static boolean sSkipSystemReauth = false;
@@ -77,7 +79,7 @@ public final class ReauthenticationManager {
      */
     public static void resetLastReauth() {
         sLastReauthTimeMillis = null;
-        sLastReauthScope = REAUTH_SCOPE_ONE_AT_A_TIME;
+        sLastReauthScope = ReauthScope.ONE_AT_A_TIME;
     }
 
     /**
@@ -98,7 +100,7 @@ public final class ReauthenticationManager {
     @VisibleForTesting
     public static void setApiOverride(@OverrideState int apiOverride) {
         // Ensure that tests don't accidentally try to launch the OS-provided lock screen.
-        if (apiOverride == OVERRIDE_STATE_AVAILABLE) {
+        if (apiOverride == OverrideState.AVAILABLE) {
             PasswordReauthenticationFragment.preventLockingForTesting();
         }
 
@@ -116,11 +118,11 @@ public final class ReauthenticationManager {
      */
     public static boolean isReauthenticationApiAvailable() {
         switch (sApiOverride) {
-            case OVERRIDE_STATE_NOT_OVERRIDDEN:
+            case OverrideState.NOT_OVERRIDDEN:
                 return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
-            case OVERRIDE_STATE_AVAILABLE:
+            case OverrideState.AVAILABLE:
                 return true;
-            case OVERRIDE_STATE_UNAVAILABLE:
+            case OverrideState.UNAVAILABLE:
                 return false;
         }
         // This branch is not reachable.
@@ -164,7 +166,7 @@ public final class ReauthenticationManager {
      * @param scope The scope the reauth should be valid for. */
     public static boolean authenticationStillValid(@ReauthScope int scope) {
         final boolean scopeIncluded =
-                scope == sLastReauthScope || sLastReauthScope == REAUTH_SCOPE_BULK;
+                scope == sLastReauthScope || sLastReauthScope == ReauthScope.BULK;
         return sLastReauthTimeMillis != null && scopeIncluded
                 && (System.currentTimeMillis() - sLastReauthTimeMillis)
                 < VALID_REAUTHENTICATION_TIME_INTERVAL_MILLIS;
@@ -177,12 +179,12 @@ public final class ReauthenticationManager {
      */
     public static boolean isScreenLockSetUp(Context context) {
         switch (sScreenLockSetUpOverride) {
-            case OVERRIDE_STATE_NOT_OVERRIDDEN:
+            case OverrideState.NOT_OVERRIDDEN:
                 return ((KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE))
                         .isKeyguardSecure();
-            case OVERRIDE_STATE_AVAILABLE:
+            case OverrideState.AVAILABLE:
                 return true;
-            case OVERRIDE_STATE_UNAVAILABLE:
+            case OverrideState.UNAVAILABLE:
                 return false;
         }
         // This branch is not reachable.

@@ -52,7 +52,7 @@ public class TileGridViewHolder extends SiteSectionViewHolder {
     }
 
     @Override
-    protected TileView findTileView(SiteSuggestion data) {
+    public TileView findTileView(SiteSuggestion data) {
         return mSectionView.getTileView(data);
     }
 

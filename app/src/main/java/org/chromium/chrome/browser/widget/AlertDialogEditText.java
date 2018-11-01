@@ -46,9 +46,8 @@ public class AlertDialogEditText extends AppCompatEditText {
                     MenuItem item = menu.getItem(i);
                     Drawable icon = item.getIcon();
                     if (icon == null) break;
-                    icon.setColorFilter(
-                            ApiCompatibilityUtils.getColor(getResources(),
-                                    R.color.light_normal_color),
+                    icon.setColorFilter(ApiCompatibilityUtils.getColor(
+                                                getResources(), R.color.default_icon_color),
                             PorterDuff.Mode.SRC_IN);
                     item.setIcon(icon);
                 }

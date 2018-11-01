@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.suggestions;
 
+import android.text.TextUtils;
+
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNIAdditionalImport;
 import org.chromium.chrome.browser.ntp.NewTabPage;
@@ -38,22 +40,20 @@ public class MostVisitedSitesBridge
      */
     public MostVisitedSitesBridge(Profile profile) {
         mNativeMostVisitedSitesBridge = nativeInit(profile);
-        // The first tile replaces the home page button (only) in Chrome Home. To support that,
-        // provide information about the home page.
-        if (FeatureUtilities.isChromeHomeEnabled()) {
-            nativeSetHomePageClient(mNativeMostVisitedSitesBridge, new HomePageClient() {
+        // The first tile replaces is replaced with homepage tile if NTPButton is enabled. Setting
+        // a homepage client to provide Java side information.
+        if (FeatureUtilities.isNewTabPageButtonEnabled()
+                && FeatureUtilities.isHomepageTileEnabled()) {
+            nativeSetHomepageClient(mNativeMostVisitedSitesBridge, new HomepageClient() {
                 @Override
-                public boolean isHomePageEnabled() {
-                    return HomepageManager.isHomepageEnabled();
+                public boolean isHomepageTileEnabled() {
+                    return HomepageManager.isHomepageEnabled()
+                            && !NewTabPage.isNTPUrl(getHomepageUrl())
+                            && !TextUtils.isEmpty(HomepageManager.getHomepageUri());
                 }
 
                 @Override
-                public boolean isNewTabPageUsedAsHomePage() {
-                    return NewTabPage.isNTPUrl(getHomePageUrl());
-                }
-
-                @Override
-                public String getHomePageUrl() {
+                public String getHomepageUrl() {
                     return HomepageManager.getHomepageUri();
                 }
             });
@@ -113,11 +113,11 @@ public class MostVisitedSitesBridge
     @Override
     public void onHomepageStateUpdated() {
         assert mNativeMostVisitedSitesBridge != 0;
-        // Ensure even a blacklisted home page can be set as tile when (re-)enabling it.
+        // Ensure even a blacklisted homepage can be set as tile when (re-)enabling it.
         if (HomepageManager.isHomepageEnabled()) {
             removeBlacklistedUrl(HomepageManager.getHomepageUri());
         }
-        nativeOnHomePageStateChanged(mNativeMostVisitedSitesBridge);
+        nativeOnHomepageStateChanged(mNativeMostVisitedSitesBridge);
     }
 
     /**
@@ -162,13 +162,6 @@ public class MostVisitedSitesBridge
         mWrappedObserver.onSiteSuggestionsAvailable(suggestions);
     }
 
-    private boolean allSuggestionsArePersonalized(List<SiteSuggestion> suggestions) {
-        for (SiteSuggestion suggestion : suggestions) {
-            if (suggestion.sectionType != TileSectionType.PERSONALIZED) return false;
-        }
-        return true;
-    }
-
     /**
      * This is called when a previously uncached icon has been fetched.
      * Parameters guaranteed to be non-null.
@@ -185,11 +178,11 @@ public class MostVisitedSitesBridge
 
     private native long nativeInit(Profile profile);
     private native void nativeDestroy(long nativeMostVisitedSitesBridge);
-    private native void nativeOnHomePageStateChanged(long nativeMostVisitedSitesBridge);
+    private native void nativeOnHomepageStateChanged(long nativeMostVisitedSitesBridge);
+    private native void nativeSetHomepageClient(
+            long nativeMostVisitedSitesBridge, MostVisitedSites.HomepageClient homePageClient);
     private native void nativeSetObserver(
             long nativeMostVisitedSitesBridge, MostVisitedSitesBridge observer, int numSites);
-    private native void nativeSetHomePageClient(
-            long nativeMostVisitedSitesBridge, MostVisitedSites.HomePageClient homePageClient);
     private native void nativeAddOrRemoveBlacklistedUrl(
             long nativeMostVisitedSitesBridge, String url, boolean addUrl);
     private native void nativeRecordPageImpression(

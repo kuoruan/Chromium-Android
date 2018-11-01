@@ -41,9 +41,6 @@ public final class NfcRecord extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static NfcRecord deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -57,20 +54,22 @@ public final class NfcRecord extends org.chromium.mojo.bindings.Struct {
         NfcRecord result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new NfcRecord(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new NfcRecord(elementsOrVersion);
+                {
+                    
                 result.recordType = decoder0.readInt(8);
                     NfcRecordType.validate(result.recordType);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.mediaType = decoder0.readString(16, true);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.data = decoder0.readBytes(24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -87,39 +86,5 @@ public final class NfcRecord extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.mediaType, 16, true);
         
         encoder0.encode(this.data, 24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        NfcRecord other = (NfcRecord) object;
-        if (this.recordType!= other.recordType)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.mediaType, other.mediaType))
-            return false;
-        if (!java.util.Arrays.equals(this.data, other.data))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.recordType);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mediaType);
-        result = prime * result + java.util.Arrays.hashCode(this.data);
-        return result;
     }
 }

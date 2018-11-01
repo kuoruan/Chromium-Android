@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.widget.prefeditor.EditableOption;
 
 import javax.annotation.Nullable;
 
@@ -70,7 +71,7 @@ public class SectionUiUtils {
         int optionCount = section.getSize();
         assert optionCount != 0;
 
-        PaymentOption option = section.getItem(0);
+        EditableOption option = section.getItem(0);
         String labelSeparator = context.getString(R.string.autofill_address_summary_separator);
         String optionSummary = option.getPreviewString(labelSeparator, -1);
 

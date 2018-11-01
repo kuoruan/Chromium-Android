@@ -16,16 +16,12 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class Bitmap extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 48;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(48, 0)};
+    private static final int STRUCT_SIZE = 40;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    public int colorType;
-    public int alphaType;
-    public int profileType;
-    public int width;
-    public int height;
+    public ImageInfo imageInfo;
     public long rowBytes;
-    public byte[] pixelData;
+    public org.chromium.mojo_base.mojom.BigBuffer pixelData;
 
     private Bitmap(int version) {
         super(STRUCT_SIZE, version);
@@ -45,9 +41,6 @@ public final class Bitmap extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static Bitmap deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -61,38 +54,22 @@ public final class Bitmap extends org.chromium.mojo.bindings.Struct {
         Bitmap result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new Bitmap(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.colorType = decoder0.readInt(8);
-                    ColorType.validate(result.colorType);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.alphaType = decoder0.readInt(12);
-                    AlphaType.validate(result.alphaType);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.profileType = decoder0.readInt(16);
-                    ColorProfileType.validate(result.profileType);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.width = decoder0.readInt(20);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.height = decoder0.readInt(24);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.rowBytes = decoder0.readLong(32);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.pixelData = decoder0.readBytes(40, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            }
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new Bitmap(elementsOrVersion);
+                {
+                    
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                result.imageInfo = ImageInfo.decode(decoder1);
+                }
+                {
+                    
+                result.rowBytes = decoder0.readLong(16);
+                }
+                {
+                    
+                result.pixelData = org.chromium.mojo_base.mojom.BigBuffer.decode(decoder0, 24);
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -104,64 +81,10 @@ public final class Bitmap extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(this.colorType, 8);
+        encoder0.encode(this.imageInfo, 8, false);
         
-        encoder0.encode(this.alphaType, 12);
+        encoder0.encode(this.rowBytes, 16);
         
-        encoder0.encode(this.profileType, 16);
-        
-        encoder0.encode(this.width, 20);
-        
-        encoder0.encode(this.height, 24);
-        
-        encoder0.encode(this.rowBytes, 32);
-        
-        encoder0.encode(this.pixelData, 40, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        Bitmap other = (Bitmap) object;
-        if (this.colorType!= other.colorType)
-            return false;
-        if (this.alphaType!= other.alphaType)
-            return false;
-        if (this.profileType!= other.profileType)
-            return false;
-        if (this.width!= other.width)
-            return false;
-        if (this.height!= other.height)
-            return false;
-        if (this.rowBytes!= other.rowBytes)
-            return false;
-        if (!java.util.Arrays.equals(this.pixelData, other.pixelData))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.colorType);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.alphaType);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.profileType);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.width);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.height);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.rowBytes);
-        result = prime * result + java.util.Arrays.hashCode(this.pixelData);
-        return result;
+        encoder0.encode(this.pixelData, 24, false);
     }
 }

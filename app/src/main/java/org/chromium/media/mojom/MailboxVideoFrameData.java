@@ -39,9 +39,6 @@ public final class MailboxVideoFrameData extends org.chromium.mojo.bindings.Stru
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static MailboxVideoFrameData deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -55,9 +52,10 @@ public final class MailboxVideoFrameData extends org.chromium.mojo.bindings.Stru
         MailboxVideoFrameData result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new MailboxVideoFrameData(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new MailboxVideoFrameData(elementsOrVersion);
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(4);
@@ -68,7 +66,8 @@ public final class MailboxVideoFrameData extends org.chromium.mojo.bindings.Stru
                         result.mailboxHolder[i1] = org.chromium.gpu.mojom.MailboxHolder.decode(decoder2);
                     }
                 }
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -89,33 +88,5 @@ public final class MailboxVideoFrameData extends org.chromium.mojo.bindings.Stru
                 encoder1.encode(this.mailboxHolder[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        MailboxVideoFrameData other = (MailboxVideoFrameData) object;
-        if (!java.util.Arrays.deepEquals(this.mailboxHolder, other.mailboxHolder))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + java.util.Arrays.deepHashCode(this.mailboxHolder);
-        return result;
     }
 }

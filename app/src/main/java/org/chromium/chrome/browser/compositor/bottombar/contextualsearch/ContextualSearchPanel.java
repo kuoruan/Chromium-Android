@@ -26,7 +26,10 @@ import org.chromium.chrome.browser.compositor.scene_layer.ContextualSearchSceneL
 import org.chromium.chrome.browser.compositor.scene_layer.SceneOverlayLayer;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchManagementDelegate;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.MathUtils;
+import org.chromium.chrome.browser.widget.ScrimView;
+import org.chromium.chrome.browser.widget.ScrimView.ScrimParams;
 import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.resources.ResourceManager;
 
@@ -40,40 +43,51 @@ public class ContextualSearchPanel extends OverlayPanel {
      */
     private static final long HIDE_PROGRESS_BAR_DELAY = 1000 / 60 * 4;
 
-    /**
-     * Used for logging state changes.
-     */
+    /** When using the Generic UX we never show the Arrow Icon */
+    private static final float ARROW_ICON_OPACITY_GENERIC_UX = 0.f;
+
+    /** When using the Generic UX we always show the Close Icon */
+    private static final float CLOSE_ICON_OPACITY_GENERIC_UX = 1.f;
+
+    /** Used for logging state changes. */
     private final ContextualSearchPanelMetrics mPanelMetrics;
 
-    /**
-     * The height of the bar shadow, in pixels.
-     */
+    /** The height of the bar shadow, in pixels. */
     private final float mBarShadowHeightPx;
 
-    /**
-     * The distance of the divider from the end of the bar, in dp.
-     */
+    /** The distance of the divider from the end of the bar, in dp. */
     private final float mEndButtonWidthDp;
 
-    /**
-     * Whether the Panel should be promoted to a new tab after being maximized.
-     */
+    /** Whether the Panel should be promoted to a new tab after being maximized. */
     private boolean mShouldPromoteToTabAfterMaximizing;
 
-    /**
-     * The object for handling global Contextual Search management duties
-     */
+    /** The object for handling global Contextual Search management duties */
     private ContextualSearchManagementDelegate mManagementDelegate;
 
-    /**
-     * Whether the content view has been touched.
-     */
+    /** Whether the content view has been touched. */
     private boolean mHasContentBeenTouched;
 
-    /**
-     * The compositor layer used for drawing the panel.
-     */
+    /** The compositor layer used for drawing the panel. */
     private ContextualSearchSceneLayer mSceneLayer;
+
+    /**
+     * Whether to use the Generic Sheet UX.
+     * This activates the closebox in the peeking Bar, and may someday do more,
+     * e.g. swipe-closed behavior.  See crbug.com/831783 for details.
+     */
+    private boolean mUseGenericSheetUx;
+
+    /**
+     * A ScrimView for adjusting the Status Bar's brightness when a scrim is present (when the panel
+     * is open).
+     */
+    private ScrimView mScrimView;
+
+    /**
+     * Params that configure our use of the ScrimView for adjusting the Status Bar's
+     * brightness when a scrim is present (when the panel is open).
+     */
+    private ScrimParams mScrimParams;
 
     // ============================================================================================
     // Constructor
@@ -97,6 +111,12 @@ public class ContextualSearchPanel extends OverlayPanel {
         mEndButtonWidthDp = mPxToDp
                 * mContext.getResources().getDimensionPixelSize(
                           R.dimen.contextual_search_end_button_width);
+    }
+
+    @Override
+    protected void initializeUiState() {
+        mUseGenericSheetUx = mActivity.supportsContextualSuggestionsBottomSheet()
+                && FeatureUtilities.areContextualSuggestionsEnabled(mActivity);
     }
 
     @Override
@@ -191,7 +211,7 @@ public class ContextualSearchPanel extends OverlayPanel {
     // ============================================================================================
 
     @Override
-    public void setPanelState(PanelState toState, StateChangeReason reason) {
+    public void setPanelState(PanelState toState, @StateChangeReason int reason) {
         PanelState fromState = getPanelState();
 
         mPanelMetrics.onPanelStateChanged(
@@ -254,9 +274,9 @@ public class ContextualSearchPanel extends OverlayPanel {
     // ============================================================================================
 
     @Override
-    protected void onClosed(StateChangeReason reason) {
+    protected void onClosed(@StateChangeReason int reason) {
         // Must be called before destroying Content because unseen visits should be removed from
-        // history, and if the Content gets destroyed there won't be a ContentViewCore to do that.
+        // history, and if the Content gets destroyed there won't be a Webcontents to do that.
         mManagementDelegate.onCloseContextualSearch(reason);
 
         setProgressBarCompletion(0);
@@ -266,6 +286,7 @@ public class ContextualSearchPanel extends OverlayPanel {
         super.onClosed(reason);
 
         if (mSceneLayer != null) mSceneLayer.hideTree();
+        if (mScrimView != null) mScrimView.hideScrim(false);
     }
 
     // ============================================================================================
@@ -288,7 +309,9 @@ public class ContextualSearchPanel extends OverlayPanel {
         getSearchBarControl().onSearchBarClick(x);
 
         if (isPeeking()) {
-            if (getSearchBarControl().getQuickActionControl().hasQuickAction()
+            if (useGenericSheetUx() && isCoordinateInsideCloseButton(x)) {
+                closePanel(StateChangeReason.CLOSE_BUTTON, true);
+            } else if (getSearchBarControl().getQuickActionControl().hasQuickAction()
                     && isCoordinateInsideActionTarget(x)) {
                 mPanelMetrics.setWasQuickActionClicked();
                 getSearchBarControl().getQuickActionControl().sendIntent(
@@ -354,7 +377,7 @@ public class ContextualSearchPanel extends OverlayPanel {
     }
 
     @Override
-    public PanelPriority getPriority() {
+    public @PanelPriority int getPriority() {
         return PanelPriority.HIGH;
     }
 
@@ -399,16 +422,6 @@ public class ContextualSearchPanel extends OverlayPanel {
     }
 
     @Override
-    public boolean shouldHideAndroidBrowserControls() {
-        // Account for the Chrome Home bottom sheet when making this decision. If the bottom sheet
-        // is being used, Contextual Search will show in place of the toolbar. This means that the
-        // Android view needs to be hidden immediately when the Contextual Search bar starts
-        // peeking.
-        return (mActivity != null && mActivity.getBottomSheet() != null && isShowing())
-                || super.shouldHideAndroidBrowserControls();
-    }
-
-    @Override
     protected boolean doesMatchFullWidthCriteria(float containerWidth) {
         if (!mOverrideIsFullWidthSizePanelForTesting && mActivity != null
                 && mActivity.getBottomSheet() != null) {
@@ -436,7 +449,7 @@ public class ContextualSearchPanel extends OverlayPanel {
     // ============================================================================================
 
     /**
-     * Notify the panel that the ContentViewCore was seen.
+     * Notify the panel that the content was seen.
      */
     public void setWasSearchContentViewSeen() {
         mPanelMetrics.setWasSearchContentViewSeen();
@@ -489,12 +502,22 @@ public class ContextualSearchPanel extends OverlayPanel {
     }
 
     /**
+     * Maximizes the Contextual Search Panel.
+     * @param reason The {@code StateChangeReason} behind the maximization.
+     */
+    @Override
+    public void maximizePanel(@StateChangeReason int reason) {
+        mShouldPromoteToTabAfterMaximizing = false;
+        super.maximizePanel(reason);
+    }
+
+    /**
      * Maximizes the Contextual Search Panel, then promotes it to a regular Tab.
      * @param reason The {@code StateChangeReason} behind the maximization and promotion to tab.
      */
-    public void maximizePanelThenPromoteToTab(StateChangeReason reason) {
+    public void maximizePanelThenPromoteToTab(@StateChangeReason int reason) {
         mShouldPromoteToTabAfterMaximizing = true;
-        maximizePanel(reason);
+        super.maximizePanel(reason);
     }
 
     /**
@@ -502,13 +525,13 @@ public class ContextualSearchPanel extends OverlayPanel {
      * @param reason The {@code StateChangeReason} behind the maximization and promotion to tab.
      * @param duration The animation duration in milliseconds.
      */
-    public void maximizePanelThenPromoteToTab(StateChangeReason reason, long duration) {
+    public void maximizePanelThenPromoteToTab(@StateChangeReason int reason, long duration) {
         mShouldPromoteToTabAfterMaximizing = true;
         animatePanelToState(PanelState.MAXIMIZED, reason, duration);
     }
 
     @Override
-    public void peekPanel(StateChangeReason reason) {
+    public void peekPanel(@StateChangeReason int reason) {
         super.peekPanel(reason);
 
         if (getPanelState() == PanelState.CLOSED || getPanelState() == PanelState.PEEKED) {
@@ -522,9 +545,14 @@ public class ContextualSearchPanel extends OverlayPanel {
     }
 
     @Override
-    public void closePanel(StateChangeReason reason, boolean animate) {
+    public void closePanel(@StateChangeReason int reason, boolean animate) {
         super.closePanel(reason, animate);
         mHasContentBeenTouched = false;
+    }
+
+    @Override
+    public void expandPanel(@StateChangeReason int reason) {
+        super.expandPanel(reason);
     }
 
     @Override
@@ -534,7 +562,7 @@ public class ContextualSearchPanel extends OverlayPanel {
     }
 
     @Override
-    public void requestPanelShow(StateChangeReason reason) {
+    public void requestPanelShow(@StateChangeReason int reason) {
         // If a re-tap is causing the panel to show when already shown, the superclass may ignore
         // that, but we want to be sure to capture search metrics for each tap.
         if (isShowing() && getPanelState() == PanelState.PEEKED) {
@@ -591,7 +619,7 @@ public class ContextualSearchPanel extends OverlayPanel {
      * @param searchTerm The string that represents the search term.
      * @param thumbnailUrl The URL of the thumbnail to display.
      * @param quickActionUri The URI for the intent associated with the quick action.
-     * @param quickActionCategory The {@link QuickActionCategory} for the quick action.
+     * @param quickActionCategory The {@code QuickActionCategory} for the quick action.
      */
     public void onSearchTermResolved(String searchTerm, String thumbnailUrl, String quickActionUri,
             int quickActionCategory) {
@@ -697,6 +725,61 @@ public class ContextualSearchPanel extends OverlayPanel {
         super.updatePanelForSizeChange();
 
         mManagementDelegate.onPanelResized();
+    }
+
+    @Override
+    protected void updateStatusBar() {
+        float maxBrightness = getMaxBasePageBrightness();
+        float minBrightness = getMinBasePageBrightness();
+        float basePageBrightness = getBasePageBrightness();
+        // Compute Status Bar alpha based on the base-page brightness range applied by the Overlay.
+        // TODO(donnd): Create a full-screen sized view and apply the black_alpha_65 color to get
+        // an exact match between the scrim and the status bar colors instead of adjusting the
+        // status bar alpha to approximate the native overlay brightness filter.
+        // Details in https://crbug.com/848922.
+        float statusBarAlpha =
+                (maxBrightness - basePageBrightness) / (maxBrightness - minBrightness);
+        if (statusBarAlpha == 0.0) {
+            if (mScrimView != null) mScrimView.hideScrim(false);
+            mScrimParams = null;
+            mScrimView = null;
+            return;
+
+        } else {
+            mScrimView = mManagementDelegate.getChromeActivity().getScrim();
+            if (mScrimParams == null) {
+                mScrimParams = new ScrimParams(null, false, true, 0, null);
+                mScrimView.showScrim(mScrimParams);
+            }
+            mScrimView.setViewAlpha(statusBarAlpha);
+        }
+    }
+
+    @Override
+    public float getArrowIconOpacity() {
+        if (useGenericSheetUx()) {
+            return ARROW_ICON_OPACITY_GENERIC_UX;
+        } else {
+            return super.getArrowIconOpacity();
+        }
+    }
+
+    @Override
+    public float getCloseIconOpacity() {
+        if (useGenericSheetUx()) {
+            return CLOSE_ICON_OPACITY_GENERIC_UX;
+        } else {
+            return super.getCloseIconOpacity();
+        }
+    }
+
+    /**
+     * Whether the UX should match the generic sheet UX used by the generic assistive surface.
+     * TODO(crbug.com/831783) remove when the generic sheet UX is the default.
+     * @return Whether to apply the generic UX, rather than the legacy Contextual Search UX.
+     */
+    boolean useGenericSheetUx() {
+        return mUseGenericSheetUx;
     }
 
     // ============================================================================================

@@ -28,7 +28,7 @@ public interface KeySystemSupport extends org.chromium.mojo.bindings.Interface {
 String keySystem, 
 IsKeySystemSupportedResponse callback);
 
-    interface IsKeySystemSupportedResponse extends org.chromium.mojo.bindings.Callbacks.Callback3<Boolean, int[], Boolean> { }
+    interface IsKeySystemSupportedResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Boolean, KeySystemCapability> { }
 
 
 }

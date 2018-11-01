@@ -141,7 +141,7 @@ public abstract class SuggestionsSheetVisibilityChangeObserver
         // even though the BottomSheet itself is not.
         @BottomSheet.SheetState
         int newContentState =
-                newVisibility ? mBottomSheet.getSheetState() : BottomSheet.SHEET_STATE_PEEK;
+                newVisibility ? mBottomSheet.getSheetState() : BottomSheet.SheetState.PEEK;
 
         // Flag overall changes to the visible state of the content, while ignoring transient states
         // like |STATE_SCROLLING|.

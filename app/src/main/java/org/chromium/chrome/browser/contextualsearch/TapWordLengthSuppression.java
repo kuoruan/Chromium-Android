@@ -64,11 +64,11 @@ class TapWordLengthSuppression extends ContextualSearchHeuristic {
     }
 
     @Override
-    protected void logRankerTapSuppression(ContextualSearchRankerLogger logger) {
-        logger.logFeature(
-                ContextualSearchRankerLogger.Feature.IS_SHORT_WORD, mIsShortWordConditionSatisfied);
-        logger.logFeature(
-                ContextualSearchRankerLogger.Feature.IS_LONG_WORD, mIsLongWordConditionSatisfied);
+    protected void logRankerTapSuppression(ContextualSearchInteractionRecorder logger) {
+        logger.logFeature(ContextualSearchInteractionRecorder.Feature.IS_SHORT_WORD,
+                mIsShortWordConditionSatisfied);
+        logger.logFeature(ContextualSearchInteractionRecorder.Feature.IS_LONG_WORD,
+                mIsLongWordConditionSatisfied);
     }
 
     /**

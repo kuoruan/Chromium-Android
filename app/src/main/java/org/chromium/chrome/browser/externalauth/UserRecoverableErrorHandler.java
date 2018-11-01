@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.support.annotation.IntDef;
 
 import com.google.android.gms.common.GoogleApiAvailability;
 
@@ -15,6 +16,8 @@ import org.chromium.base.ThreadUtils;
 import org.chromium.base.metrics.CachedMetrics.ActionEvent;
 import org.chromium.base.metrics.CachedMetrics.EnumeratedHistogramSample;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -44,15 +47,20 @@ public abstract class UserRecoverableErrorHandler {
     private static final String ERROR_HANDLER_ACTION_HISTOGRAM_NAME =
             "GooglePlayServices.ErrorHandlerAction";
     // Never remove or reorder histogram values. It is safe to append new values to the end.
-    private static final int ERROR_HANDLER_ACTION_SILENT = 0;
-    private static final int ERROR_HANDLER_ACTION_SYSTEM_NOTIFICATION = 1;
-    private static final int ERROR_HANDLER_ACTION_MODAL_DIALOG = 2;
-    private static final int ERROR_HANDLER_ACTION_IGNORED_AS_REDUNDANT = 3;
-    private static final int ERROR_HANDLER_ACTION_HISTOGRAM_BOUNDARY = 4;
+    @IntDef({ErrorHandlerAction.SILENT, ErrorHandlerAction.SYSTEM_NOTIFICATION,
+            ErrorHandlerAction.MODAL_DIALOG, ErrorHandlerAction.IGNORED_AS_REDUNDANT})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface ErrorHandlerAction {
+        int SILENT = 0;
+        int SYSTEM_NOTIFICATION = 1;
+        int MODAL_DIALOG = 2;
+        int IGNORED_AS_REDUNDANT = 3;
+        int NUM_ENTRIES = 4;
+    }
 
     private static final EnumeratedHistogramSample sErrorHandlerActionHistogramSample =
-            new EnumeratedHistogramSample(ERROR_HANDLER_ACTION_HISTOGRAM_NAME,
-                    ERROR_HANDLER_ACTION_HISTOGRAM_BOUNDARY);
+            new EnumeratedHistogramSample(
+                    ERROR_HANDLER_ACTION_HISTOGRAM_NAME, ErrorHandlerAction.NUM_ENTRIES);
 
     private static final ActionEvent sModalDialogShownActionEvent =
             new ActionEvent("Signin_Android_GmsUserRecoverableDialogShown");
@@ -87,7 +95,7 @@ public abstract class UserRecoverableErrorHandler {
     public static final class Silent extends UserRecoverableErrorHandler {
         @Override
         protected final void handle(final Context context, final int errorCode) {
-            sErrorHandlerActionHistogramSample.record(ERROR_HANDLER_ACTION_SILENT);
+            sErrorHandlerActionHistogramSample.record(ErrorHandlerAction.SILENT);
         }
     }
 
@@ -109,12 +117,11 @@ public abstract class UserRecoverableErrorHandler {
         @Override
         protected void handle(final Context context, final int errorCode) {
             if (!sNotificationShown.getAndSet(true)) {
-                sErrorHandlerActionHistogramSample
-                        .record(ERROR_HANDLER_ACTION_IGNORED_AS_REDUNDANT);
+                sErrorHandlerActionHistogramSample.record(ErrorHandlerAction.IGNORED_AS_REDUNDANT);
                 return;
             }
             GoogleApiAvailability.getInstance().showErrorNotification(context, errorCode);
-            sErrorHandlerActionHistogramSample.record(ERROR_HANDLER_ACTION_SYSTEM_NOTIFICATION);
+            sErrorHandlerActionHistogramSample.record(ErrorHandlerAction.SYSTEM_NOTIFICATION);
         }
     }
 
@@ -219,7 +226,7 @@ public abstract class UserRecoverableErrorHandler {
                 mDialog.show();
                 sModalDialogShownActionEvent.record();
             }
-            sErrorHandlerActionHistogramSample.record(ERROR_HANDLER_ACTION_MODAL_DIALOG);
+            sErrorHandlerActionHistogramSample.record(ErrorHandlerAction.MODAL_DIALOG);
         }
 
         /**

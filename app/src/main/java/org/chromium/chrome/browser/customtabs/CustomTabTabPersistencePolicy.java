@@ -5,13 +5,13 @@
 package org.chromium.chrome.browser.customtabs;
 
 import android.app.Activity;
-import android.os.AsyncTask;
 import android.os.StrictMode;
 import android.util.Pair;
 import android.util.SparseBooleanArray;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ApplicationStatus;
+import org.chromium.base.AsyncTask;
 import org.chromium.base.Callback;
 import org.chromium.base.Log;
 import org.chromium.base.StreamUtil;
@@ -66,7 +66,7 @@ public class CustomTabTabPersistencePolicy implements TabPersistencePolicy {
     private static final Object CLEAN_UP_TASK_LOCK = new Object();
 
     private static File sStateDirectory;
-    private static AsyncTask<Void, Void, Void> sCleanupTask;
+    private static AsyncTask<Void> sCleanupTask;
 
     /**
      * The folder where the state should be saved to.
@@ -93,7 +93,7 @@ public class CustomTabTabPersistencePolicy implements TabPersistencePolicy {
     private final int mTaskId;
     private final boolean mShouldRestore;
 
-    private AsyncTask<Void, Void, Void> mInitializationTask;
+    private AsyncTask<Void> mInitializationTask;
     private boolean mDestroyed;
 
     /**
@@ -131,9 +131,9 @@ public class CustomTabTabPersistencePolicy implements TabPersistencePolicy {
 
     @Override
     public boolean performInitialization(Executor executor) {
-        mInitializationTask = new AsyncTask<Void, Void, Void>() {
+        mInitializationTask = new AsyncTask<Void>() {
             @Override
-            protected Void doInBackground(Void... params) {
+            protected Void doInBackground() {
                 File stateDir = getOrCreateStateDirectory();
                 File metadataFile = new File(stateDir, getStateFileName());
                 if (metadataFile.exists()) {
@@ -292,7 +292,7 @@ public class CustomTabTabPersistencePolicy implements TabPersistencePolicy {
         }
     }
 
-    private class CleanUpTabStateDataTask extends AsyncTask<Void, Void, Void> {
+    private class CleanUpTabStateDataTask extends AsyncTask<Void> {
         private final Callback<List<String>> mFilesToDeleteCallback;
 
         private Set<Integer> mUnreferencedTabIds;
@@ -304,7 +304,7 @@ public class CustomTabTabPersistencePolicy implements TabPersistencePolicy {
         }
 
         @Override
-        protected Void doInBackground(Void... voids) {
+        protected Void doInBackground() {
             if (mDestroyed) return null;
 
             mTabIdsByMetadataFile = new HashMap<>();
@@ -393,6 +393,10 @@ public class CustomTabTabPersistencePolicy implements TabPersistencePolicy {
             }
 
             mFilesToDeleteCallback.onResult(filesToDelete);
+
+            synchronized (CLEAN_UP_TASK_LOCK) {
+                sCleanupTask = null; // Release static reference to external callback
+            }
         }
 
         private void getTabsFromStateFile(SparseBooleanArray tabIds, File metadataFile) {
@@ -405,6 +409,14 @@ public class CustomTabTabPersistencePolicy implements TabPersistencePolicy {
                 Log.e(TAG, "Unable to read state for " + metadataFile.getName() + ": " + e);
             } finally {
                 StreamUtil.closeQuietly(stream);
+            }
+        }
+
+        @Override
+        protected void onCancelled(Void result) {
+            super.onCancelled(result);
+            synchronized (CLEAN_UP_TASK_LOCK) {
+                sCleanupTask = null;
             }
         }
     }

@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.media.router.cast;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.support.annotation.IntDef;
 
 import com.google.android.gms.cast.Cast;
 import com.google.android.gms.cast.LaunchOptions;
@@ -19,7 +20,12 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.chrome.browser.media.router.ChromeMediaRouter;
 import org.chromium.chrome.browser.media.router.MediaRoute;
+import org.chromium.chrome.browser.media.router.MediaSink;
+import org.chromium.chrome.browser.media.router.MediaSource;
 import org.chromium.chrome.browser.media.router.cast.remoting.RemotingCastSession;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 import javax.annotation.Nullable;
 
@@ -29,18 +35,24 @@ import javax.annotation.Nullable;
  * Since there're numerous asynchronous calls involved in getting the application to launch
  * the class is implemented as a state machine.
  */
+// Migrated to CafMediaRouteProvider. See https://crbug.com/711860.
 public class CreateRouteRequest implements GoogleApiClient.ConnectionCallbacks,
                                            GoogleApiClient.OnConnectionFailedListener,
                                            ResultCallback<Cast.ApplicationConnectionResult>,
                                            ChromeCastSessionManager.CastSessionLaunchRequest {
     private static final String TAG = "MediaRouter";
 
-    private static final int STATE_IDLE = 0;
-    private static final int STATE_CONNECTING_TO_API = 1;
-    private static final int STATE_API_CONNECTION_SUSPENDED = 2;
-    private static final int STATE_LAUNCHING_APPLICATION = 3;
-    private static final int STATE_LAUNCH_SUCCEEDED = 4;
-    private static final int STATE_TERMINATED = 5;
+    @IntDef({State.IDLE, State.CONNECTING_TO_API, State.API_CONNECTION_SUSPENDED,
+            State.LAUNCHING_APPLICATION, State.LAUNCH_SUCCEEDED, State.TERMINATED})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface State {
+        int IDLE = 0;
+        int CONNECTING_TO_API = 1;
+        int API_CONNECTION_SUSPENDED = 2;
+        int LAUNCHING_APPLICATION = 3;
+        int LAUNCH_SUCCEEDED = 4;
+        int TERMINATED = 5;
+    }
 
     private final MediaSource mSource;
     private final MediaSink mSink;
@@ -51,15 +63,20 @@ public class CreateRouteRequest implements GoogleApiClient.ConnectionCallbacks,
     private final int mRequestId;
     private final CastMessageHandler mMessageHandler;
     private final ChromeCastSessionManager.CastSessionManagerListener mSessionListener;
-    private final RequestedCastSessionType mSessionType;
+    private final @RequestedCastSessionType int mSessionType;
 
     private GoogleApiClient mApiClient;
-    private int mState = STATE_IDLE;
+    private @State int mState = State.IDLE;
 
     // Used to identify whether the request should launch a CastSessionImpl or a RemotingCastSession
     // (based off of wheter the route creation was requested by a RemotingMediaRouteProvider or a
     // CastMediaRouteProvider).
-    public enum RequestedCastSessionType { CAST, REMOTE }
+    @IntDef({RequestedCastSessionType.CAST, RequestedCastSessionType.REMOTE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface RequestedCastSessionType {
+        int CAST = 0;
+        int REMOTE = 1;
+    }
 
     /**
      * Initializes the request.
@@ -77,7 +94,8 @@ public class CreateRouteRequest implements GoogleApiClient.ConnectionCallbacks,
     public CreateRouteRequest(MediaSource source, MediaSink sink, String presentationId,
             String origin, int tabId, boolean isIncognito, int requestId,
             ChromeCastSessionManager.CastSessionManagerListener listener,
-            RequestedCastSessionType sessionType, @Nullable CastMessageHandler messageHandler) {
+            @RequestedCastSessionType int sessionType,
+            @Nullable CastMessageHandler messageHandler) {
         assert source != null;
         assert sink != null;
 
@@ -138,11 +156,11 @@ public class CreateRouteRequest implements GoogleApiClient.ConnectionCallbacks,
      */
     @Override
     public void start(Cast.Listener castListener) {
-        if (mState != STATE_IDLE) throwInvalidState();
+        if (mState != State.IDLE) throwInvalidState();
 
         mApiClient = createApiClient(castListener);
         mApiClient.connect();
-        mState = STATE_CONNECTING_TO_API;
+        mState = State.CONNECTING_TO_API;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////
@@ -150,16 +168,16 @@ public class CreateRouteRequest implements GoogleApiClient.ConnectionCallbacks,
 
     @Override
     public void onConnected(Bundle connectionHint) {
-        if (mState != STATE_CONNECTING_TO_API && mState != STATE_API_CONNECTION_SUSPENDED) {
+        if (mState != State.CONNECTING_TO_API && mState != State.API_CONNECTION_SUSPENDED) {
             throwInvalidState();
         }
 
-        if (mState == STATE_API_CONNECTION_SUSPENDED) return;
+        if (mState == State.API_CONNECTION_SUSPENDED) return;
 
         try {
             launchApplication(mApiClient, mSource.getApplicationId(), true)
                     .setResultCallback(this);
-            mState = STATE_LAUNCHING_APPLICATION;
+            mState = State.LAUNCHING_APPLICATION;
         } catch (Exception e) {
             Log.e(TAG, "Launch application failed: %s", mSource.getApplicationId(), e);
             reportError();
@@ -168,12 +186,12 @@ public class CreateRouteRequest implements GoogleApiClient.ConnectionCallbacks,
 
     @Override
     public void onConnectionSuspended(int cause) {
-        mState = STATE_API_CONNECTION_SUSPENDED;
+        mState = State.API_CONNECTION_SUSPENDED;
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult result) {
-        if (mState != STATE_CONNECTING_TO_API) throwInvalidState();
+        if (mState != State.CONNECTING_TO_API) throwInvalidState();
 
         Log.e(TAG, "GoogleApiClient connection failed: %d, %b", result.getErrorCode(),
                 result.hasResolution());
@@ -185,8 +203,7 @@ public class CreateRouteRequest implements GoogleApiClient.ConnectionCallbacks,
      */
     @Override
     public void onResult(Cast.ApplicationConnectionResult result) {
-        if (mState != STATE_LAUNCHING_APPLICATION
-                && mState != STATE_API_CONNECTION_SUSPENDED) {
+        if (mState != State.LAUNCHING_APPLICATION && mState != State.API_CONNECTION_SUSPENDED) {
             throwInvalidState();
         }
 
@@ -198,7 +215,7 @@ public class CreateRouteRequest implements GoogleApiClient.ConnectionCallbacks,
             return;
         }
 
-        mState = STATE_LAUNCH_SUCCEEDED;
+        mState = State.LAUNCH_SUCCEEDED;
         reportSuccess(result);
     }
 
@@ -232,17 +249,17 @@ public class CreateRouteRequest implements GoogleApiClient.ConnectionCallbacks,
     }
 
     private void reportSuccess(Cast.ApplicationConnectionResult result) {
-        if (mState != STATE_LAUNCH_SUCCEEDED) throwInvalidState();
+        if (mState != State.LAUNCH_SUCCEEDED) throwInvalidState();
 
         CastSession session = null;
 
         switch (mSessionType) {
-            case CAST:
+            case RequestedCastSessionType.CAST:
                 session = new CastSessionImpl(mApiClient, result.getSessionId(),
                         result.getApplicationMetadata(), result.getApplicationStatus(),
                         mSink.getDevice(), mOrigin, mTabId, mIsIncognito, mSource, mMessageHandler);
                 break;
-            case REMOTE:
+            case RequestedCastSessionType.REMOTE:
                 session = new RemotingCastSession(mApiClient, result.getSessionId(),
                         result.getApplicationMetadata(), result.getApplicationStatus(),
                         mSink.getDevice(), mOrigin, mTabId, mIsIncognito, mSource);
@@ -255,7 +272,7 @@ public class CreateRouteRequest implements GoogleApiClient.ConnectionCallbacks,
     }
 
     private void reportError() {
-        if (mState == STATE_TERMINATED) throwInvalidState();
+        if (mState == State.TERMINATED) throwInvalidState();
 
         ChromeCastSessionManager.get().onSessionStartFailed();
 
@@ -265,6 +282,6 @@ public class CreateRouteRequest implements GoogleApiClient.ConnectionCallbacks,
     private void terminate() {
         mApiClient.unregisterConnectionCallbacks(this);
         mApiClient.unregisterConnectionFailedListener(this);
-        mState = STATE_TERMINATED;
+        mState = State.TERMINATED;
     }
 }

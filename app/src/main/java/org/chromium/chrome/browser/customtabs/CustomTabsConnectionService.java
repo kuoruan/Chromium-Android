@@ -11,6 +11,8 @@ import android.os.IBinder;
 import android.support.customtabs.CustomTabsService;
 import android.support.customtabs.CustomTabsSessionToken;
 
+import org.chromium.base.ContextUtils;
+import org.chromium.chrome.browser.browserservices.Origin;
 import org.chromium.chrome.browser.firstrun.FirstRunFlowSequencer;
 import org.chromium.chrome.browser.init.ProcessInitializationHandler;
 
@@ -78,7 +80,7 @@ public class CustomTabsConnectionService extends CustomTabsService {
     @Override
     protected boolean requestPostMessageChannel(CustomTabsSessionToken sessionToken,
             Uri postMessageOrigin) {
-        return mConnection.requestPostMessageChannel(sessionToken, postMessageOrigin);
+        return mConnection.requestPostMessageChannel(sessionToken, new Origin(postMessageOrigin));
     }
 
     @Override
@@ -91,7 +93,7 @@ public class CustomTabsConnectionService extends CustomTabsService {
     @Override
     protected boolean validateRelationship(
             CustomTabsSessionToken sessionToken, int relation, Uri origin, Bundle extras) {
-        return mConnection.validateRelationship(sessionToken, relation, origin, extras);
+        return mConnection.validateRelationship(sessionToken, relation, new Origin(origin), extras);
     }
 
     @Override
@@ -103,7 +105,7 @@ public class CustomTabsConnectionService extends CustomTabsService {
     private boolean isFirstRunDone() {
         if (mBindIntent == null) return true;
         boolean firstRunNecessary = FirstRunFlowSequencer.checkIfFirstRunIsNecessary(
-                getApplicationContext(), mBindIntent, false);
+                ContextUtils.getApplicationContext(), mBindIntent, false);
         if (!firstRunNecessary) {
             mBindIntent = null;
             return true;

@@ -6,7 +6,6 @@
 -->
 <!-- Layout for each item in the menu popup -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
     style="@style/AppMenuItem"
     android:layout_width="match_parent"
     android:layout_height="?android:attr/listPreferredItemHeightSmall" >
@@ -28,6 +27,5 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="end"
-        android:gravity="center_vertical"
-        chrome:chrometint="@null" />
+        android:gravity="center_vertical" />
 </LinearLayout>

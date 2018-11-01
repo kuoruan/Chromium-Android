@@ -18,28 +18,28 @@ class CdmService_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<CdmService, CdmService.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<CdmService, CdmService.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::CdmService";
+            return "media.mojom.CdmService";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, CdmService impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public CdmService[] buildArray(int size) {
           return new CdmService[size];
@@ -62,7 +62,7 @@ class CdmService_Internal {
 
         @Override
         public void loadCdm(
-org.chromium.mojo.common.mojom.FilePath cdmPath) {
+org.chromium.mojo_base.mojom.FilePath cdmPath) {
 
             CdmServiceLoadCdmParams _message = new CdmServiceLoadCdmParams();
 
@@ -114,38 +114,38 @@ org.chromium.mojo.bindings.InterfaceRequest<CdmFactory> factory, org.chromium.se
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 CdmService_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case LOAD_CDM_ORDINAL: {
-            
+
                         CdmServiceLoadCdmParams data =
                                 CdmServiceLoadCdmParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().loadCdm(data.cdmPath);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case CREATE_CDM_FACTORY_ORDINAL: {
-            
+
                         CdmServiceCreateCdmFactoryParams data =
                                 CdmServiceCreateCdmFactoryParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().createCdmFactory(data.factory, data.hostInterfaces);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -165,16 +165,16 @@ org.chromium.mojo.bindings.InterfaceRequest<CdmFactory> factory, org.chromium.se
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), CdmService_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -188,37 +188,34 @@ org.chromium.mojo.bindings.InterfaceRequest<CdmFactory> factory, org.chromium.se
 
     
     static final class CdmServiceLoadCdmParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.mojo.common.mojom.FilePath cdmPath;
-    
+        public org.chromium.mojo_base.mojom.FilePath cdmPath;
+
         private CdmServiceLoadCdmParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmServiceLoadCdmParams() {
             this(0);
         }
-    
+
         public static CdmServiceLoadCdmParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmServiceLoadCdmParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmServiceLoadCdmParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -228,18 +225,20 @@ org.chromium.mojo.bindings.InterfaceRequest<CdmFactory> factory, org.chromium.se
             CdmServiceLoadCdmParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmServiceLoadCdmParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmServiceLoadCdmParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.cdmPath = org.chromium.mojo.common.mojom.FilePath.decode(decoder1);
-                }
+                    result.cdmPath = org.chromium.mojo_base.mojom.FilePath.decode(decoder1);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -247,72 +246,41 @@ org.chromium.mojo.bindings.InterfaceRequest<CdmFactory> factory, org.chromium.se
             
             encoder0.encode(this.cdmPath, 8, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CdmServiceLoadCdmParams other = (CdmServiceLoadCdmParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.cdmPath, other.cdmPath))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cdmPath);
-            return result;
-        }
     }
 
 
 
     
     static final class CdmServiceCreateCdmFactoryParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.InterfaceRequest<CdmFactory> factory;
         public org.chromium.service_manager.mojom.InterfaceProvider hostInterfaces;
-    
+
         private CdmServiceCreateCdmFactoryParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmServiceCreateCdmFactoryParams() {
             this(0);
         }
-    
+
         public static CdmServiceCreateCdmFactoryParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmServiceCreateCdmFactoryParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmServiceCreateCdmFactoryParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -322,21 +290,23 @@ org.chromium.mojo.bindings.InterfaceRequest<CdmFactory> factory, org.chromium.se
             CdmServiceCreateCdmFactoryParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmServiceCreateCdmFactoryParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmServiceCreateCdmFactoryParams(elementsOrVersion);
+                    {
+                        
                     result.factory = decoder0.readInterfaceRequest(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.hostInterfaces = decoder0.readServiceInterface(12, true, org.chromium.service_manager.mojom.InterfaceProvider.MANAGER);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -345,37 +315,6 @@ org.chromium.mojo.bindings.InterfaceRequest<CdmFactory> factory, org.chromium.se
             encoder0.encode(this.factory, 8, false);
             
             encoder0.encode(this.hostInterfaces, 12, true, org.chromium.service_manager.mojom.InterfaceProvider.MANAGER);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CdmServiceCreateCdmFactoryParams other = (CdmServiceCreateCdmFactoryParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.factory, other.factory))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.hostInterfaces, other.hostInterfaces))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.factory);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hostInterfaces);
-            return result;
         }
     }
 

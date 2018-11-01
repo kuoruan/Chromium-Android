@@ -8,6 +8,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.net.http.SslCertificate;
+import android.support.v4.view.ViewCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,36 +45,37 @@ class CertificateViewer implements OnItemSelectedListener {
     private static final int SUBJECTALTERNATIVENAME_IPADDRESS_ID = 7;
 
     private final Context mContext;
-    private final ArrayList<LinearLayout> mViews;
-    private final ArrayList<String> mTitles;
     private final int mPadding;
+    private ArrayList<String> mTitles;
+    private ArrayList<LinearLayout> mViews;
     private CertificateFactory mCertificateFactory;
+    private Dialog mDialog;
+
+    public CertificateViewer(Context context) {
+        mContext = context;
+        mPadding =
+                (int) context.getResources().getDimension(R.dimen.connection_info_padding_wide) / 2;
+        mDialog = null;
+    }
 
     /**
      * Show a dialog with the provided certificate information.
+     * Dialog will contain spinner allowing the user to select
+     * which certificate to display.
      *
-     * @param context The context this view should display in.
      * @param derData DER-encoded data representing a X509 certificate chain.
      */
-    public static void showCertificateChain(Context context, byte[][] derData) {
-        CertificateViewer viewer = new CertificateViewer(context);
-        viewer.showCertificateChain(derData);
-    }
+    public void showCertificateChain(byte[][] derData) {
+        if (mDialog != null && mDialog.isShowing()) {
+            return;
+        }
 
-    private CertificateViewer(Context context) {
-        mContext = context;
-        mViews = new ArrayList<LinearLayout>();
         mTitles = new ArrayList<String>();
-        mPadding = (int) context.getResources().getDimension(
-                R.dimen.connection_info_padding_wide) / 2;
-    }
-
-    // Show information about an array of DER-encoded data representing a X509 certificate chain.
-    // A spinner will be displayed allowing the user to select which certificate to display.
-    private void showCertificateChain(byte[][] derData) {
+        mViews = new ArrayList<LinearLayout>();
         for (int i = 0; i < derData.length; i++) {
             addCertificate(derData[i]);
         }
+
         ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(mContext,
                 android.R.layout.simple_spinner_item,
                 mTitles) {
@@ -81,8 +83,7 @@ class CertificateViewer implements OnItemSelectedListener {
             public View getView(int position, View convertView, ViewGroup parent) {
                 TextView view = (TextView) super.getView(position, convertView, parent);
                 // Add extra padding on the end side to avoid overlapping the dropdown arrow.
-                ApiCompatibilityUtils.setPaddingRelative(view, mPadding, mPadding, mPadding * 2,
-                        mPadding);
+                ViewCompat.setPaddingRelative(view, mPadding, mPadding, mPadding * 2, mPadding);
                 return view;
             }
         };
@@ -121,17 +122,12 @@ class CertificateViewer implements OnItemSelectedListener {
         scrollView.addView(certContainer);
         dialogContainer.addView(scrollView);
 
-        showDialogForView(dialogContainer);
-    }
-
-    // Displays a dialog with scrolling for the given view.
-    private void showDialogForView(View view) {
-        Dialog dialog = new Dialog(mContext);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.addContentView(view,
+        mDialog = new Dialog(mContext);
+        mDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        mDialog.addContentView(dialogContainer,
                 new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.MATCH_PARENT));
-        dialog.show();
+        mDialog.show();
     }
 
     private void addCertificate(byte[] derData) {

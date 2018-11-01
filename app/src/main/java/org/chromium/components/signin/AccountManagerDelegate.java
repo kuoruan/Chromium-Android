@@ -5,8 +5,10 @@
 package org.chromium.components.signin;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.accounts.AuthenticatorDescription;
 import android.app.Activity;
+import android.content.Intent;
 import android.support.annotation.AnyThread;
 import android.support.annotation.MainThread;
 import android.support.annotation.Nullable;
@@ -77,6 +79,15 @@ public interface AccountManagerDelegate {
      */
     @WorkerThread
     boolean hasFeatures(Account account, String[] features);
+
+    /**
+     * Creates an intent that will ask the user to add a new account to the device. See
+     * {@link AccountManager#addAccount} for details.
+     * @param callback The callback to get the created intent. Will be invoked on the main thread.
+     *         If there is an issue while creating the intent, callback will receive null.
+     */
+    @AnyThread
+    void createAddAccountIntent(Callback<Intent> callback);
 
     /**
      * Asks the user to enter a new password for an account, updating the saved credentials for the

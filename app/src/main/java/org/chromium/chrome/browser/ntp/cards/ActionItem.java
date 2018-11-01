@@ -26,6 +26,7 @@ import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Locale;
 
 /**
  * Item that allows the user to perform an action on the NTP. Depending on its state, it can also
@@ -69,14 +70,12 @@ public class ActionItem extends OptionalLeaf {
     }
 
     @Override
-    public void visitOptionalItem(NodeVisitor visitor) {
+    public String describeForTesting() {
         switch (mState) {
             case State.BUTTON:
-                visitor.visitActionItem(mCategoryInfo.getAdditionalAction());
-                break;
+                return String.format(Locale.US, "ACTION(%d)", mCategoryInfo.getAdditionalAction());
             case State.LOADING:
-                visitor.visitProgressItem();
-                break;
+                return "PROGRESS";
             case State.HIDDEN:
                 // If state is HIDDEN, itemCount should be 0 and this method should not be called.
             default:
@@ -122,6 +121,12 @@ public class ActionItem extends OptionalLeaf {
 
     public @State int getState() {
         return mState;
+    }
+
+    public void maybeResetForDismiss() {
+        if (isVisible()) {
+            notifyItemChanged(0, NewTabPageRecyclerView::resetForDismissCallback);
+        }
     }
 
     /**

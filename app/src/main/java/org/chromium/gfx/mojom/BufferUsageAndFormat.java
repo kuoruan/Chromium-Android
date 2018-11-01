@@ -40,9 +40,6 @@ public final class BufferUsageAndFormat extends org.chromium.mojo.bindings.Struc
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static BufferUsageAndFormat deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,17 +53,19 @@ public final class BufferUsageAndFormat extends org.chromium.mojo.bindings.Struc
         BufferUsageAndFormat result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new BufferUsageAndFormat(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new BufferUsageAndFormat(elementsOrVersion);
+                {
+                    
                 result.usage = decoder0.readInt(8);
                     BufferUsage.validate(result.usage);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.format = decoder0.readInt(12);
                     BufferFormat.validate(result.format);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -81,36 +80,5 @@ public final class BufferUsageAndFormat extends org.chromium.mojo.bindings.Struc
         encoder0.encode(this.usage, 8);
         
         encoder0.encode(this.format, 12);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        BufferUsageAndFormat other = (BufferUsageAndFormat) object;
-        if (this.usage!= other.usage)
-            return false;
-        if (this.format!= other.format)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.usage);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.format);
-        return result;
     }
 }

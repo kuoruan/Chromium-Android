@@ -4,8 +4,8 @@
 
 package org.chromium.chrome.browser.firstrun;
 
-import android.app.Fragment;
 import android.content.SharedPreferences;
+import android.support.v4.app.Fragment;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.browser.metrics.UmaSessionStats;

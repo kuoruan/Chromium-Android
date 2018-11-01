@@ -180,7 +180,8 @@ public abstract class RequestGenerator {
      * these strings when building their own custom Android ROMs.
      */
     public String getAdditionalParameters() {
-        String applicationLabel = StringSanitizer.sanitize(BuildInfo.getPackageLabel());
+        String applicationLabel =
+                StringSanitizer.sanitize(BuildInfo.getInstance().hostPackageLabel);
         String brand = StringSanitizer.sanitize(Build.BRAND);
         String model = StringSanitizer.sanitize(Build.MODEL);
         return applicationLabel + ";" + brand + ";" + model;

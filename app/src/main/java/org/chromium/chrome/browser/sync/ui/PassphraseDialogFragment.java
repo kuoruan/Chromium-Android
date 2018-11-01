@@ -30,7 +30,7 @@ import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
 import org.chromium.base.ApiCompatibilityUtils;
-import org.chromium.base.BuildInfo;
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
@@ -51,7 +51,7 @@ public class PassphraseDialogFragment extends DialogFragment implements OnClickL
     /**
      * A listener for passphrase events.
      */
-    interface Listener {
+    public interface Listener {
         /**
          * @return whether passphrase was valid.
          */
@@ -202,7 +202,7 @@ public class PassphraseDialogFragment extends DialogFragment implements OnClickL
                         recordPassphraseDialogDismissal(PASSPHRASE_DIALOG_RESET_LINK);
                         Uri syncDashboardUrl = Uri.parse(ChromeStringConstants.SYNC_DASHBOARD_URL);
                         Intent intent = new Intent(Intent.ACTION_VIEW, syncDashboardUrl);
-                        intent.setPackage(BuildInfo.getPackageName());
+                        intent.setPackage(ContextUtils.getApplicationContext().getPackageName());
                         IntentUtils.safePutBinderExtra(
                                 intent, CustomTabsIntent.EXTRA_SESSION, null);
                         context.startActivity(intent);

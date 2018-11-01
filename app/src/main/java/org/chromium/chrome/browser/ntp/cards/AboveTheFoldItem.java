@@ -26,7 +26,7 @@ class AboveTheFoldItem extends Leaf {
     }
 
     @Override
-    public void visitItems(NodeVisitor visitor) {
-        visitor.visitAboveTheFoldItem();
+    public String describeForTesting() {
+        return "ABOVE_THE_FOLD";
     }
 }

@@ -22,8 +22,6 @@ public final class FetchRedirectMode {
 
     public static final int MANUAL = ERROR + 1;
 
-    public static final int LAST = (int) (FetchRedirectMode.MANUAL);
-
 
     private static final boolean IS_EXTENSIBLE = false;
 

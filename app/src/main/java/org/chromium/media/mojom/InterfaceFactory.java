@@ -35,12 +35,17 @@ org.chromium.mojo.bindings.InterfaceRequest<VideoDecoder> videoDecoder);
 
 
     void createRenderer(
-String audioDeviceId, org.chromium.mojo.bindings.InterfaceRequest<Renderer> renderer);
+int type, String typeSpecificId, org.chromium.mojo.bindings.InterfaceRequest<Renderer> renderer);
 
 
 
     void createCdm(
 String keySystem, org.chromium.mojo.bindings.InterfaceRequest<ContentDecryptionModule> cdm);
+
+
+
+    void createDecryptor(
+int cdmId, org.chromium.mojo.bindings.InterfaceRequest<Decryptor> decryptor);
 
 
 

@@ -22,11 +22,17 @@ public final class WebApkMetaDataKeys {
     public static final String ORIENTATION = "org.chromium.webapk.shell_apk.orientation";
     public static final String THEME_COLOR = "org.chromium.webapk.shell_apk.themeColor";
     public static final String BACKGROUND_COLOR = "org.chromium.webapk.shell_apk.backgroundColor";
+    public static final String HAS_LARGE_SPLASH_ICONS =
+            "org.chromium.webapk.shell_apk.hasLargeSplashIcons";
     public static final String ICON_ID = "org.chromium.webapk.shell_apk.iconId";
+    public static final String SPLASH_ID = "org.chromium.webapk.shell_apk.splashId";
 
     public static final String ICON_URLS_AND_ICON_MURMUR2_HASHES =
             "org.chromium.webapk.shell_apk.iconUrlsAndIconMurmur2Hashes";
     public static final String WEB_MANIFEST_URL = "org.chromium.webapk.shell_apk.webManifestUrl";
+    public static final String DISTRIBUTOR = "org.chromium.webapk.shell_apk.distributor";
     public static final String BADGE_ICON_ID = "org.chromium.webapk.shell_apk.badgeIconId";
-    public static final String SHARE_TEMPLATE = "org.chromium.webapk.shell_apk.shareTemplate";
+    public static final String SHARE_ACTION = "org.chromium.webapk.shell_apk.shareAction";
+    public static final String SHARE_PARAM_TITLE = "org.chromium.webapk.shell_apk.shareParamTitle";
+    public static final String SHARE_PARAM_TEXT = "org.chromium.webapk.shell_apk.shareParamText";
 }

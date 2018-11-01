@@ -21,6 +21,7 @@ public class SelectionDelegate<E> {
 
     /**
      * Observer interface to be notified of selection changes.
+     * @param <E> The type of the selectable items this delegate interacts with.
      */
     public interface SelectionObserver<E> {
         /**
@@ -60,6 +61,15 @@ public class SelectionDelegate<E> {
     }
 
     /**
+     * Initializes the selected item list with a new set (clears previous selection).
+     * @param items The items to set as selected.
+     */
+    public void setSelectedItems(Set<E> items) {
+        mSelectedItems = items;
+        notifyObservers();
+    }
+
+    /**
      * True if the item is selected. False otherwise.
      * @param item The item.
      * @return Whether the item is selected.
@@ -84,9 +94,16 @@ public class SelectionDelegate<E> {
     }
 
     /**
+     * @return The set of selected items.
+     */
+    public Set<E> getSelectedItems() {
+        return mSelectedItems;
+    }
+
+    /**
      * @return The list of selected items.
      */
-    public List<E> getSelectedItems() {
+    public List<E> getSelectedItemsAsList() {
         return new ArrayList<E>(mSelectedItems);
     }
 
@@ -107,7 +124,7 @@ public class SelectionDelegate<E> {
     }
 
     private void notifyObservers() {
-        List<E> selectedItems = getSelectedItems();
+        List<E> selectedItems = getSelectedItemsAsList();
         for (SelectionObserver<E> observer : mObservers) {
             observer.onSelectionStateChange(selectedItems);
         }

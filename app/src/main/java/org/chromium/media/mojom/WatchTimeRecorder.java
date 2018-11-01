@@ -25,7 +25,7 @@ public interface WatchTimeRecorder extends org.chromium.mojo.bindings.Interface 
 
 
     void recordWatchTime(
-int key, org.chromium.mojo.common.mojom.TimeDelta watchTime);
+int key, org.chromium.mojo_base.mojom.TimeDelta watchTime);
 
 
 
@@ -39,18 +39,18 @@ int status);
 
 
 
-    void setAudioDecoderName(
-String name);
-
-
-
-    void setVideoDecoderName(
-String name);
+    void updateSecondaryProperties(
+SecondaryPlaybackProperties secondaryProperties);
 
 
 
     void setAutoplayInitiated(
 boolean value);
+
+
+
+    void onDurationChanged(
+org.chromium.mojo_base.mojom.TimeDelta duration);
 
 
 

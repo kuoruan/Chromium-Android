@@ -28,7 +28,7 @@
         android:adjustViewBounds="true"
         android:maxHeight="32dp"
         android:maxWidth="32dp"
-        android:contentDescription="@null"
+        tools:ignore="ContentDescription"
         android:scaleType="centerInside"/>
 
     <Button

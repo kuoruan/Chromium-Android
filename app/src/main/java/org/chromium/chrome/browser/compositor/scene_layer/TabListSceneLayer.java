@@ -6,18 +6,18 @@ package org.chromium.chrome.browser.compositor.scene_layer;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Color;
 import android.graphics.RectF;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.compositor.LayerTitleCache;
 import org.chromium.chrome.browser.compositor.layouts.Layout;
-import org.chromium.chrome.browser.compositor.layouts.Layout.Orientation;
 import org.chromium.chrome.browser.compositor.layouts.components.LayoutTab;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
+import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.util.ColorUtils;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.ui.resources.ResourceManager;
@@ -29,6 +29,11 @@ import org.chromium.ui.resources.ResourceManager;
 @JNINamespace("android")
 public class TabListSceneLayer extends SceneLayer {
     private long mNativePtr;
+    private TabModelSelector mTabModelSelector;
+
+    public void setTabModelSelector(TabModelSelector tabModelSelector) {
+        mTabModelSelector = tabModelSelector;
+    }
 
     /**
      * Pushes all relevant {@link LayoutTab}s from a {@link Layout} to the CC Layer tree.  This will
@@ -61,6 +66,9 @@ public class TabListSceneLayer extends SceneLayer {
                 viewport.top, viewport.width(), viewport.height(), layerTitleCache,
                 tabContentManager, resourceManager);
 
+        boolean isHTSEnabled =
+                ChromeFeatureList.isEnabled(ChromeFeatureList.HORIZONTAL_TAB_SWITCHER_ANDROID);
+
         for (int i = 0; i < tabsCount; i++) {
             LayoutTab t = tabs[i];
             assert t.isVisible() : "LayoutTab in that list should be visible";
@@ -75,16 +83,14 @@ public class TabListSceneLayer extends SceneLayer {
                 shadowAlpha /= 2;
             }
 
+            boolean useLightIcon = t.isIncognito() && !isHTSEnabled;
             int defaultThemeColor =
-                    ColorUtils.getDefaultThemeColor(res, useModernDesign, t.isIncognito());
-
-            int toolbarBackgroundColor = getTabThemeColor(context, t);
+                    ColorUtils.getDefaultThemeColor(res, useModernDesign, useLightIcon);
 
             // In the modern design, the text box is always drawn opaque in the compositor.
             float textBoxAlpha = useModernDesign ? 1.f : t.getTextBoxAlpha();
 
-            int closeButtonColor =
-                    ColorUtils.getThemedAssetColor(toolbarBackgroundColor, t.isIncognito());
+            int closeButtonColor = ColorUtils.getThemedAssetColor(defaultThemeColor, useLightIcon);
 
             int borderColorResource =
                     t.isIncognito() ? R.color.tab_back_incognito : R.color.tab_back;
@@ -96,11 +102,10 @@ public class TabListSceneLayer extends SceneLayer {
                     R.drawable.tabswitcher_border_frame_inner_shadow, t.canUseLiveTexture(),
                     FeatureUtilities.isChromeModernDesignEnabled(), t.getBackgroundColor(),
                     ApiCompatibilityUtils.getColor(res, borderColorResource), t.isIncognito(),
-                    layout.getOrientation() == Orientation.PORTRAIT, t.getRenderX() * dpToPx,
-                    t.getRenderY() * dpToPx, t.getScaledContentWidth() * dpToPx,
-                    t.getScaledContentHeight() * dpToPx, t.getOriginalContentWidth() * dpToPx,
-                    t.getOriginalContentHeight() * dpToPx, contentViewport.height(),
-                    t.getClippedX() * dpToPx, t.getClippedY() * dpToPx,
+                    t.isCloseButtonOnRight(), t.getRenderX() * dpToPx, t.getRenderY() * dpToPx,
+                    t.getScaledContentWidth() * dpToPx, t.getScaledContentHeight() * dpToPx,
+                    t.getOriginalContentWidth() * dpToPx, t.getOriginalContentHeight() * dpToPx,
+                    contentViewport.height(), t.getClippedX() * dpToPx, t.getClippedY() * dpToPx,
                     Math.min(t.getClippedWidth(), t.getScaledContentWidth()) * dpToPx,
                     Math.min(t.getClippedHeight(), t.getScaledContentHeight()) * dpToPx,
                     t.getTiltXPivotOffset() * dpToPx, t.getTiltYPivotOffset() * dpToPx,
@@ -109,7 +114,7 @@ public class TabListSceneLayer extends SceneLayer {
                     t.getBorderCloseButtonAlpha() * decoration,
                     LayoutTab.CLOSE_BUTTON_WIDTH_DP * dpToPx, t.getStaticToViewBlend(),
                     t.getBorderScale(), t.getSaturation(), t.getBrightness(), t.showToolbar(),
-                    defaultThemeColor, toolbarBackgroundColor, closeButtonColor,
+                    defaultThemeColor, t.getToolbarBackgroundColor(), closeButtonColor,
                     t.anonymizeToolbar(), t.isTitleNeeded(), urlBarBackgroundId,
                     t.getTextBoxBackgroundColor(), textBoxAlpha, t.getToolbarAlpha(),
                     t.getToolbarYOffset() * dpToPx, t.getSideBorderScale(),
@@ -128,30 +133,20 @@ public class TabListSceneLayer extends SceneLayer {
     }
 
     /**
-     * @param context An android context for resources.
-     * @param t The layout tab to determine the color of.
-     * @return The theme color for the provided tab. This accounts for features like Chrome Modern.
-     */
-    private int getTabThemeColor(Context context, LayoutTab t) {
-        int themeColor = t.getToolbarBackgroundColor();
-
-        // The only time we need to override the theme color is if modern is enabled and the theme
-        // color is the old default theme color.
-        if (FeatureUtilities.isChromeModernDesignEnabled()
-                && ColorUtils.isUsingDefaultToolbarColor(
-                           context.getResources(), false, false, t.getToolbarBackgroundColor())) {
-            themeColor = Color.WHITE;
-        }
-
-        return themeColor;
-    }
-
-    /**
      * @return The background color of the scene layer.
      */
     protected int getTabListBackgroundColor(Context context) {
         int colorId = R.color.tab_switcher_background;
         if (FeatureUtilities.isChromeModernDesignEnabled()) colorId = R.color.modern_primary_color;
+
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.HORIZONTAL_TAB_SWITCHER_ANDROID)) {
+            if (mTabModelSelector != null && mTabModelSelector.isIncognitoSelected()) {
+                colorId = R.color.incognito_modern_primary_color;
+            } else {
+                colorId = R.color.modern_primary_color;
+            }
+        }
+
         return ApiCompatibilityUtils.getColor(context.getResources(), colorId);
     }
 

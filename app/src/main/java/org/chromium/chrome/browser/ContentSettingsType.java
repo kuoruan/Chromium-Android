@@ -56,6 +56,7 @@ import java.lang.annotation.RetentionPolicy;
     ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_WRITE,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PLUGINS_DATA,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PAYMENT_HANDLER,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_GUARD,
     ContentSettingsType.CONTENT_SETTINGS_NUM_TYPES
 })
 @Retention(RetentionPolicy.SOURCE)
@@ -69,6 +70,11 @@ public @interface ContentSettingsType {
   int CONTENT_SETTINGS_TYPE_IMAGES = 1;
   int CONTENT_SETTINGS_TYPE_JAVASCRIPT = 2;
   int CONTENT_SETTINGS_TYPE_PLUGINS = 3;
+  /**
+   * This setting governs both popups and unwanted redirects like tab-unders and framebusting.
+   * TODO(csharrison): Consider renaming it to POPUPS_AND_REDIRECTS, but it might not be worth the
+   * trouble.
+   */
   int CONTENT_SETTINGS_TYPE_POPUPS = 4;
   int CONTENT_SETTINGS_TYPE_GEOLOCATION = 5;
   int CONTENT_SETTINGS_TYPE_NOTIFICATIONS = 6;
@@ -156,5 +162,11 @@ public @interface ContentSettingsType {
    * Used to store whether to allow a website to install a payment handler.
    */
   int CONTENT_SETTINGS_TYPE_PAYMENT_HANDLER = 38;
-  int CONTENT_SETTINGS_NUM_TYPES = 39;
+  /**
+   * Content setting which stores whether to allow sites to ask for permission to access USB
+   * devices. If this is allowed specific device permissions are stored under
+   * CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA.
+   */
+  int CONTENT_SETTINGS_TYPE_USB_GUARD = 39;
+  int CONTENT_SETTINGS_NUM_TYPES = 40;
 }

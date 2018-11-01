@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.widget;
 
 import android.content.Context;
 import android.support.graphics.drawable.VectorDrawableCompat;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +15,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.widget.PromoDialog.DialogParams;
 
@@ -161,8 +161,7 @@ public final class PromoDialogLayout extends BoundedLinearLayout {
         int startEndPadding = applyHeaderPadding
                 ? getResources().getDimensionPixelSize(R.dimen.promo_dialog_padding)
                 : 0;
-        ApiCompatibilityUtils.setPaddingRelative(
-                mHeaderView, startEndPadding, 0, startEndPadding, 0);
+        ViewCompat.setPaddingRelative(mHeaderView, startEndPadding, 0, startEndPadding, 0);
         return true;
     }
 

@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.infobar;
 
+import android.text.TextUtils;
 import android.widget.Spinner;
 
 import org.chromium.base.annotations.CalledByNative;
@@ -18,20 +19,22 @@ public class UpdatePasswordInfoBar extends ConfirmInfoBar {
     private final String[] mUsernames;
     private final int mTitleLinkRangeStart;
     private final int mTitleLinkRangeEnd;
+    private final String mDetailsMessage;
     private Spinner mUsernamesSpinner;
 
     @CalledByNative
     private static InfoBar show(int enumeratedIconId, String[] usernames, String message,
-            int titleLinkStart, int titleLinkEnd, String primaryButtonText) {
+            int titleLinkStart, int titleLinkEnd, String detailsMessage, String primaryButtonText) {
         return new UpdatePasswordInfoBar(ResourceId.mapToDrawableId(enumeratedIconId), usernames,
-                message, titleLinkStart, titleLinkEnd, primaryButtonText);
+                message, titleLinkStart, titleLinkEnd, detailsMessage, primaryButtonText);
     }
 
     private UpdatePasswordInfoBar(int iconDrawbleId, String[] usernames, String message,
-            int titleLinkStart, int titleLinkEnd, String primaryButtonText) {
+            int titleLinkStart, int titleLinkEnd, String detailsMessage, String primaryButtonText) {
         super(iconDrawbleId, null, message, null, primaryButtonText, null);
         mTitleLinkRangeStart = titleLinkStart;
         mTitleLinkRangeEnd = titleLinkEnd;
+        mDetailsMessage = detailsMessage;
         mUsernames = usernames;
     }
 
@@ -42,14 +45,19 @@ public class UpdatePasswordInfoBar extends ConfirmInfoBar {
             layout.setInlineMessageLink(mTitleLinkRangeStart, mTitleLinkRangeEnd);
         }
 
-        InfoBarControlLayout controlLayout = layout.addControlLayout();
+        InfoBarControlLayout usernamesLayout = layout.addControlLayout();
         if (mUsernames.length > 1) {
             InfoBarArrayAdapter<String> usernamesAdapter =
                     new InfoBarArrayAdapter<String>(getContext(), mUsernames);
-            mUsernamesSpinner = controlLayout.addSpinner(
+            mUsernamesSpinner = usernamesLayout.addSpinner(
                     R.id.password_infobar_accounts_spinner, usernamesAdapter);
         } else {
-            controlLayout.addDescription(mUsernames[0]);
+            usernamesLayout.addDescription(mUsernames[0]);
+        }
+
+        if (!TextUtils.isEmpty(mDetailsMessage)) {
+            InfoBarControlLayout detailsMessageLayout = layout.addControlLayout();
+            detailsMessageLayout.addDescription(mDetailsMessage);
         }
     }
 

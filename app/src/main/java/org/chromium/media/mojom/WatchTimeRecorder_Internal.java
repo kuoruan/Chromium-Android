@@ -18,28 +18,28 @@ class WatchTimeRecorder_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<WatchTimeRecorder, WatchTimeRecorder.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<WatchTimeRecorder, WatchTimeRecorder.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::WatchTimeRecorder";
+            return "media.mojom.WatchTimeRecorder";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, WatchTimeRecorder impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public WatchTimeRecorder[] buildArray(int size) {
           return new WatchTimeRecorder[size];
@@ -53,11 +53,11 @@ class WatchTimeRecorder_Internal {
 
     private static final int ON_ERROR_ORDINAL = 2;
 
-    private static final int SET_AUDIO_DECODER_NAME_ORDINAL = 3;
+    private static final int UPDATE_SECONDARY_PROPERTIES_ORDINAL = 3;
 
-    private static final int SET_VIDEO_DECODER_NAME_ORDINAL = 4;
+    private static final int SET_AUTOPLAY_INITIATED_ORDINAL = 4;
 
-    private static final int SET_AUTOPLAY_INITIATED_ORDINAL = 5;
+    private static final int ON_DURATION_CHANGED_ORDINAL = 5;
 
     private static final int UPDATE_UNDERFLOW_COUNT_ORDINAL = 6;
 
@@ -72,7 +72,7 @@ class WatchTimeRecorder_Internal {
 
         @Override
         public void recordWatchTime(
-int key, org.chromium.mojo.common.mojom.TimeDelta watchTime) {
+int key, org.chromium.mojo_base.mojom.TimeDelta watchTime) {
 
             WatchTimeRecorderRecordWatchTimeParams _message = new WatchTimeRecorderRecordWatchTimeParams();
 
@@ -124,35 +124,18 @@ int status) {
 
 
         @Override
-        public void setAudioDecoderName(
-String name) {
+        public void updateSecondaryProperties(
+SecondaryPlaybackProperties secondaryProperties) {
 
-            WatchTimeRecorderSetAudioDecoderNameParams _message = new WatchTimeRecorderSetAudioDecoderNameParams();
+            WatchTimeRecorderUpdateSecondaryPropertiesParams _message = new WatchTimeRecorderUpdateSecondaryPropertiesParams();
 
-            _message.name = name;
-
-
-            getProxyHandler().getMessageReceiver().accept(
-                    _message.serializeWithHeader(
-                            getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(SET_AUDIO_DECODER_NAME_ORDINAL)));
-
-        }
-
-
-        @Override
-        public void setVideoDecoderName(
-String name) {
-
-            WatchTimeRecorderSetVideoDecoderNameParams _message = new WatchTimeRecorderSetVideoDecoderNameParams();
-
-            _message.name = name;
+            _message.secondaryProperties = secondaryProperties;
 
 
             getProxyHandler().getMessageReceiver().accept(
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(SET_VIDEO_DECODER_NAME_ORDINAL)));
+                            new org.chromium.mojo.bindings.MessageHeader(UPDATE_SECONDARY_PROPERTIES_ORDINAL)));
 
         }
 
@@ -170,6 +153,23 @@ boolean value) {
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(SET_AUTOPLAY_INITIATED_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void onDurationChanged(
+org.chromium.mojo_base.mojom.TimeDelta duration) {
+
+            WatchTimeRecorderOnDurationChangedParams _message = new WatchTimeRecorderOnDurationChangedParams();
+
+            _message.duration = duration;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(ON_DURATION_CHANGED_ORDINAL)));
 
         }
 
@@ -209,103 +209,103 @@ int count) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 WatchTimeRecorder_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case RECORD_WATCH_TIME_ORDINAL: {
-            
+
                         WatchTimeRecorderRecordWatchTimeParams data =
                                 WatchTimeRecorderRecordWatchTimeParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().recordWatchTime(data.key, data.watchTime);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case FINALIZE_WATCH_TIME_ORDINAL: {
-            
+
                         WatchTimeRecorderFinalizeWatchTimeParams data =
                                 WatchTimeRecorderFinalizeWatchTimeParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().finalizeWatchTime(data.watchTimeKeys);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_ERROR_ORDINAL: {
-            
+
                         WatchTimeRecorderOnErrorParams data =
                                 WatchTimeRecorderOnErrorParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onError(data.status);
                         return true;
                     }
-            
-            
-            
-            
-            
-                    case SET_AUDIO_DECODER_NAME_ORDINAL: {
-            
-                        WatchTimeRecorderSetAudioDecoderNameParams data =
-                                WatchTimeRecorderSetAudioDecoderNameParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().setAudioDecoderName(data.name);
+
+
+
+
+
+                    case UPDATE_SECONDARY_PROPERTIES_ORDINAL: {
+
+                        WatchTimeRecorderUpdateSecondaryPropertiesParams data =
+                                WatchTimeRecorderUpdateSecondaryPropertiesParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().updateSecondaryProperties(data.secondaryProperties);
                         return true;
                     }
-            
-            
-            
-            
-            
-                    case SET_VIDEO_DECODER_NAME_ORDINAL: {
-            
-                        WatchTimeRecorderSetVideoDecoderNameParams data =
-                                WatchTimeRecorderSetVideoDecoderNameParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().setVideoDecoderName(data.name);
-                        return true;
-                    }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case SET_AUTOPLAY_INITIATED_ORDINAL: {
-            
+
                         WatchTimeRecorderSetAutoplayInitiatedParams data =
                                 WatchTimeRecorderSetAutoplayInitiatedParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().setAutoplayInitiated(data.value);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
+                    case ON_DURATION_CHANGED_ORDINAL: {
+
+                        WatchTimeRecorderOnDurationChangedParams data =
+                                WatchTimeRecorderOnDurationChangedParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().onDurationChanged(data.duration);
+                        return true;
+                    }
+
+
+
+
+
                     case UPDATE_UNDERFLOW_COUNT_ORDINAL: {
-            
+
                         WatchTimeRecorderUpdateUnderflowCountParams data =
                                 WatchTimeRecorderUpdateUnderflowCountParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().updateUnderflowCount(data.count);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -325,26 +325,26 @@ int count) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), WatchTimeRecorder_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -358,38 +358,35 @@ int count) {
 
     
     static final class WatchTimeRecorderRecordWatchTimeParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int key;
-        public org.chromium.mojo.common.mojom.TimeDelta watchTime;
-    
+        public org.chromium.mojo_base.mojom.TimeDelta watchTime;
+
         private WatchTimeRecorderRecordWatchTimeParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public WatchTimeRecorderRecordWatchTimeParams() {
             this(0);
         }
-    
+
         public static WatchTimeRecorderRecordWatchTimeParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static WatchTimeRecorderRecordWatchTimeParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static WatchTimeRecorderRecordWatchTimeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -399,23 +396,25 @@ int count) {
             WatchTimeRecorderRecordWatchTimeParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new WatchTimeRecorderRecordWatchTimeParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new WatchTimeRecorderRecordWatchTimeParams(elementsOrVersion);
+                    {
+                        
                     result.key = decoder0.readInt(8);
                         WatchTimeKey.validate(result.key);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                    result.watchTime = org.chromium.mojo.common.mojom.TimeDelta.decode(decoder1);
-                }
+                    result.watchTime = org.chromium.mojo_base.mojom.TimeDelta.decode(decoder1);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -425,74 +424,40 @@ int count) {
             
             encoder0.encode(this.watchTime, 16, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            WatchTimeRecorderRecordWatchTimeParams other = (WatchTimeRecorderRecordWatchTimeParams) object;
-            if (this.key!= other.key)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.watchTime, other.watchTime))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.key);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.watchTime);
-            return result;
-        }
     }
 
 
 
     
     static final class WatchTimeRecorderFinalizeWatchTimeParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int[] watchTimeKeys;
-    
+
         private WatchTimeRecorderFinalizeWatchTimeParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public WatchTimeRecorderFinalizeWatchTimeParams() {
             this(0);
         }
-    
+
         public static WatchTimeRecorderFinalizeWatchTimeParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static WatchTimeRecorderFinalizeWatchTimeParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static WatchTimeRecorderFinalizeWatchTimeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -502,22 +467,24 @@ int count) {
             WatchTimeRecorderFinalizeWatchTimeParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new WatchTimeRecorderFinalizeWatchTimeParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new WatchTimeRecorderFinalizeWatchTimeParams(elementsOrVersion);
+                    {
+                        
                     result.watchTimeKeys = decoder0.readInts(8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
                     {
                         for (int i0 = 0; i0 < result.watchTimeKeys.length; ++i0) {
                             WatchTimeKey.validate(result.watchTimeKeys[i0]);
                         }
                     }
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -525,71 +492,40 @@ int count) {
             
             encoder0.encode(this.watchTimeKeys, 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            WatchTimeRecorderFinalizeWatchTimeParams other = (WatchTimeRecorderFinalizeWatchTimeParams) object;
-            if (!java.util.Arrays.equals(this.watchTimeKeys, other.watchTimeKeys))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + java.util.Arrays.hashCode(this.watchTimeKeys);
-            return result;
-        }
     }
 
 
 
     
     static final class WatchTimeRecorderOnErrorParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int status;
-    
+
         private WatchTimeRecorderOnErrorParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public WatchTimeRecorderOnErrorParams() {
             this(0);
         }
-    
+
         public static WatchTimeRecorderOnErrorParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static WatchTimeRecorderOnErrorParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static WatchTimeRecorderOnErrorParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -599,18 +535,20 @@ int count) {
             WatchTimeRecorderOnErrorParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new WatchTimeRecorderOnErrorParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new WatchTimeRecorderOnErrorParams(elementsOrVersion);
+                    {
+                        
                     result.status = decoder0.readInt(8);
                         PipelineStatus.validate(result.status);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -618,217 +556,69 @@ int count) {
             
             encoder0.encode(this.status, 8);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            WatchTimeRecorderOnErrorParams other = (WatchTimeRecorderOnErrorParams) object;
-            if (this.status!= other.status)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
-            return result;
-        }
     }
 
 
 
     
-    static final class WatchTimeRecorderSetAudioDecoderNameParams extends org.chromium.mojo.bindings.Struct {
-    
+    static final class WatchTimeRecorderUpdateSecondaryPropertiesParams extends org.chromium.mojo.bindings.Struct {
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public String name;
-    
-        private WatchTimeRecorderSetAudioDecoderNameParams(int version) {
+        public SecondaryPlaybackProperties secondaryProperties;
+
+        private WatchTimeRecorderUpdateSecondaryPropertiesParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
-        public WatchTimeRecorderSetAudioDecoderNameParams() {
+
+        public WatchTimeRecorderUpdateSecondaryPropertiesParams() {
             this(0);
         }
-    
-        public static WatchTimeRecorderSetAudioDecoderNameParams deserialize(org.chromium.mojo.bindings.Message message) {
+
+        public static WatchTimeRecorderUpdateSecondaryPropertiesParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        public static WatchTimeRecorderSetAudioDecoderNameParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
+        public static WatchTimeRecorderUpdateSecondaryPropertiesParams deserialize(java.nio.ByteBuffer data) {
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
-        public static WatchTimeRecorderSetAudioDecoderNameParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+        public static WatchTimeRecorderUpdateSecondaryPropertiesParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
                 return null;
             }
             decoder0.increaseStackDepth();
-            WatchTimeRecorderSetAudioDecoderNameParams result;
+            WatchTimeRecorderUpdateSecondaryPropertiesParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new WatchTimeRecorderSetAudioDecoderNameParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.name = decoder0.readString(8, false);
-                }
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new WatchTimeRecorderUpdateSecondaryPropertiesParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.secondaryProperties = SecondaryPlaybackProperties.decode(decoder1);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.name, 8, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            WatchTimeRecorderSetAudioDecoderNameParams other = (WatchTimeRecorderSetAudioDecoderNameParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.name, other.name))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.name);
-            return result;
-        }
-    }
-
-
-
-    
-    static final class WatchTimeRecorderSetVideoDecoderNameParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 16;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
-        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public String name;
-    
-        private WatchTimeRecorderSetVideoDecoderNameParams(int version) {
-            super(STRUCT_SIZE, version);
-        }
-    
-        public WatchTimeRecorderSetVideoDecoderNameParams() {
-            this(0);
-        }
-    
-        public static WatchTimeRecorderSetVideoDecoderNameParams deserialize(org.chromium.mojo.bindings.Message message) {
-            return decode(new org.chromium.mojo.bindings.Decoder(message));
-        }
-    
-        /**
-         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
-         *
-         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
-         */
-        public static WatchTimeRecorderSetVideoDecoderNameParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
-            return deserialize(new org.chromium.mojo.bindings.Message(
-                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
-        }
-    
-        @SuppressWarnings("unchecked")
-        public static WatchTimeRecorderSetVideoDecoderNameParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
-            if (decoder0 == null) {
-                return null;
-            }
-            decoder0.increaseStackDepth();
-            WatchTimeRecorderSetVideoDecoderNameParams result;
-            try {
-                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new WatchTimeRecorderSetVideoDecoderNameParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.name = decoder0.readString(8, false);
-                }
-            } finally {
-                decoder0.decreaseStackDepth();
-            }
-            return result;
-        }
-    
-        @SuppressWarnings("unchecked")
-        @Override
-        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
-            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-            
-            encoder0.encode(this.name, 8, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            WatchTimeRecorderSetVideoDecoderNameParams other = (WatchTimeRecorderSetVideoDecoderNameParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.name, other.name))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.name);
-            return result;
+            encoder0.encode(this.secondaryProperties, 8, false);
         }
     }
 
@@ -836,37 +626,34 @@ int count) {
 
     
     static final class WatchTimeRecorderSetAutoplayInitiatedParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean value;
-    
+
         private WatchTimeRecorderSetAutoplayInitiatedParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public WatchTimeRecorderSetAutoplayInitiatedParams() {
             this(0);
         }
-    
+
         public static WatchTimeRecorderSetAutoplayInitiatedParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static WatchTimeRecorderSetAutoplayInitiatedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static WatchTimeRecorderSetAutoplayInitiatedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -876,17 +663,19 @@ int count) {
             WatchTimeRecorderSetAutoplayInitiatedParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new WatchTimeRecorderSetAutoplayInitiatedParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new WatchTimeRecorderSetAutoplayInitiatedParams(elementsOrVersion);
+                    {
+                        
                     result.value = decoder0.readBoolean(8, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -894,33 +683,69 @@ int count) {
             
             encoder0.encode(this.value, 8, 0);
         }
+    }
+
+
+
     
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            WatchTimeRecorderSetAutoplayInitiatedParams other = (WatchTimeRecorderSetAutoplayInitiatedParams) object;
-            if (this.value!= other.value)
-                return false;
-            return true;
+    static final class WatchTimeRecorderOnDurationChangedParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public org.chromium.mojo_base.mojom.TimeDelta duration;
+
+        private WatchTimeRecorderOnDurationChangedParams(int version) {
+            super(STRUCT_SIZE, version);
         }
-    
+
+        public WatchTimeRecorderOnDurationChangedParams() {
+            this(0);
+        }
+
+        public static WatchTimeRecorderOnDurationChangedParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
         /**
-         * @see Object#hashCode()
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.value);
+        public static WatchTimeRecorderOnDurationChangedParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static WatchTimeRecorderOnDurationChangedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            WatchTimeRecorderOnDurationChangedParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new WatchTimeRecorderOnDurationChangedParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.duration = org.chromium.mojo_base.mojom.TimeDelta.decode(decoder1);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
             return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.duration, 8, false);
         }
     }
 
@@ -928,37 +753,34 @@ int count) {
 
     
     static final class WatchTimeRecorderUpdateUnderflowCountParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int count;
-    
+
         private WatchTimeRecorderUpdateUnderflowCountParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public WatchTimeRecorderUpdateUnderflowCountParams() {
             this(0);
         }
-    
+
         public static WatchTimeRecorderUpdateUnderflowCountParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static WatchTimeRecorderUpdateUnderflowCountParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static WatchTimeRecorderUpdateUnderflowCountParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -968,51 +790,25 @@ int count) {
             WatchTimeRecorderUpdateUnderflowCountParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new WatchTimeRecorderUpdateUnderflowCountParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new WatchTimeRecorderUpdateUnderflowCountParams(elementsOrVersion);
+                    {
+                        
                     result.count = decoder0.readInt(8);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.count, 8);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            WatchTimeRecorderUpdateUnderflowCountParams other = (WatchTimeRecorderUpdateUnderflowCountParams) object;
-            if (this.count!= other.count)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.count);
-            return result;
         }
     }
 

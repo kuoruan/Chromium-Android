@@ -5,18 +5,16 @@
 
 <org.chromium.chrome.browser.ntp.IncognitoNewTabPageView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/ntp_content"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingTop="@dimen/tab_strip_height" >
+    android:layout_height="match_parent" >
 
     <org.chromium.chrome.browser.ntp.NewTabPageScrollView
         android:id="@+id/ntp_scrollview"
         android:background="@color/ntp_bg_incognito"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingTop="@dimen/toolbar_height_no_shadow"
         android:fadingEdgeLength="9dp"
         android:fillViewport="false"
         android:focusable="true"
@@ -40,7 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="19dp"
-                android:contentDescription="@null"
+                tools:ignore="ContentDescription"
                 android:src="@drawable/incognito_splash"/>
 
             <TextView
@@ -49,8 +47,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-light"
                 android:text="@string/new_tab_incognito_header"
-                android:textColor="@color/incognito_ntp_header"
-                android:textSize="24sp" />
+                android:textAppearance="@style/WhiteHeadlineIncognito" />
 
             <TextView
                 android:id="@+id/new_tab_incognito_message"
@@ -59,16 +56,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:layout_marginBottom="10dp"
-                android:text="@null"
-                android:textColor="@color/google_grey_400" />
+                android:text="@null" />
 
             <TextView
                 android:id="@+id/learn_more"
                 style="@style/IncognitoNewTabLearnMoreLink"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/learn_more"
-                android:textColor="@color/incognito_ntp_learn_more_link" />
+                android:text="@string/learn_more" />
 
         </LinearLayout>
 

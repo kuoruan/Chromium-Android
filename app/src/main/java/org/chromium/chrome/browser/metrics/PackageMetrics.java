@@ -17,6 +17,7 @@ import android.os.storage.StorageVolume;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.chrome.browser.util.ConversionUtils;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -83,11 +84,11 @@ public class PackageMetrics {
         PackageMetricsData data = getPackageStatsForAndroidO();
         if (data != null) {
             RecordHistogram.recordCustomCountHistogram("Android.PackageStats.DataSize",
-                    Math.round(data.dataSize / 1024 / 1024), 1, 10000, 50);
+                    Math.round(ConversionUtils.bytesToMegabytes(data.dataSize)), 1, 10000, 50);
             RecordHistogram.recordCustomCountHistogram("Android.PackageStats.CacheSize",
-                    Math.round(data.cacheSize / 1024 / 1024), 1, 10000, 50);
-            RecordHistogram.recordSparseSlowlyHistogram(
-                    "Android.PackageStats.CodeSize", Math.round(data.codeSize / 1024 / 1024));
+                    Math.round(ConversionUtils.bytesToMegabytes(data.cacheSize)), 1, 10000, 50);
+            RecordHistogram.recordSparseSlowlyHistogram("Android.PackageStats.CodeSize",
+                    Math.round(ConversionUtils.bytesToMegabytes(data.codeSize)));
         }
     }
 }

@@ -67,10 +67,18 @@ _arg2 = data.createBinderArrayList();
 this.setupConnection(_arg0, _arg1, _arg2);
 return true;
 }
-case TRANSACTION_crashIntentionallyForTesting:
+case TRANSACTION_forceKill:
 {
 data.enforceInterface(DESCRIPTOR);
-this.crashIntentionallyForTesting();
+this.forceKill();
+return true;
+}
+case TRANSACTION_onMemoryPressure:
+{
+data.enforceInterface(DESCRIPTOR);
+int _arg0;
+_arg0 = data.readInt();
+this.onMemoryPressure(_arg0);
 return true;
 }
 }
@@ -134,14 +142,28 @@ finally {
 _data.recycle();
 }
 }
-// Asks the child service to crash so that we can test the termination logic.
+// Forcefully kills the child process.
 
-@Override public void crashIntentionallyForTesting() throws android.os.RemoteException
+@Override public void forceKill() throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 try {
 _data.writeInterfaceToken(DESCRIPTOR);
-mRemote.transact(Stub.TRANSACTION_crashIntentionallyForTesting, _data, null, android.os.IBinder.FLAG_ONEWAY);
+mRemote.transact(Stub.TRANSACTION_forceKill, _data, null, android.os.IBinder.FLAG_ONEWAY);
+}
+finally {
+_data.recycle();
+}
+}
+// Notifies about memory pressure. The argument is MemoryPressureLevel enum.
+
+@Override public void onMemoryPressure(int pressure) throws android.os.RemoteException
+{
+android.os.Parcel _data = android.os.Parcel.obtain();
+try {
+_data.writeInterfaceToken(DESCRIPTOR);
+_data.writeInt(pressure);
+mRemote.transact(Stub.TRANSACTION_onMemoryPressure, _data, null, android.os.IBinder.FLAG_ONEWAY);
 }
 finally {
 _data.recycle();
@@ -150,7 +172,8 @@ _data.recycle();
 }
 static final int TRANSACTION_bindToCaller = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
 static final int TRANSACTION_setupConnection = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
-static final int TRANSACTION_crashIntentionallyForTesting = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
+static final int TRANSACTION_forceKill = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
+static final int TRANSACTION_onMemoryPressure = (android.os.IBinder.FIRST_CALL_TRANSACTION + 3);
 }
 // On the first call to this method, the service will record the calling PID
 // and return true. Subsequent calls will only return true if the calling PID
@@ -160,7 +183,10 @@ public boolean bindToCaller() throws android.os.RemoteException;
 // Sets up the initial IPC channel.
 
 public void setupConnection(android.os.Bundle args, org.chromium.base.process_launcher.ICallbackInt pidCallback, java.util.List<android.os.IBinder> clientInterfaces) throws android.os.RemoteException;
-// Asks the child service to crash so that we can test the termination logic.
+// Forcefully kills the child process.
 
-public void crashIntentionallyForTesting() throws android.os.RemoteException;
+public void forceKill() throws android.os.RemoteException;
+// Notifies about memory pressure. The argument is MemoryPressureLevel enum.
+
+public void onMemoryPressure(int pressure) throws android.os.RemoteException;
 }

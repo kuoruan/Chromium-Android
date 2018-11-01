@@ -11,8 +11,6 @@ import android.support.v7.media.MediaRouteSelector;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.browser.media.router.cast.CastMediaSource;
-import org.chromium.chrome.browser.media.router.cast.MediaSink;
-import org.chromium.chrome.browser.media.router.cast.MediaSource;
 import org.chromium.chrome.browser.media.router.cast.remoting.RemotingMediaSource;
 
 /**

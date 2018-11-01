@@ -26,7 +26,8 @@ import java.lang.annotation.RetentionPolicy;
     SigninAccessPoint.UNKNOWN, SigninAccessPoint.PASSWORD_BUBBLE,
     SigninAccessPoint.AUTOFILL_DROPDOWN, SigninAccessPoint.NTP_CONTENT_SUGGESTIONS,
     SigninAccessPoint.RESIGNIN_INFOBAR, SigninAccessPoint.TAB_SWITCHER,
-    SigninAccessPoint.FORCE_SIGNIN_WARNING, SigninAccessPoint.MAX
+    SigninAccessPoint.FORCE_SIGNIN_WARNING, SigninAccessPoint.SAVE_CARD_BUBBLE,
+    SigninAccessPoint.MANAGE_CARDS_BUBBLE, SigninAccessPoint.MAX
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface SigninAccessPoint {
@@ -54,5 +55,7 @@ public @interface SigninAccessPoint {
   int RESIGNIN_INFOBAR = 21;
   int TAB_SWITCHER = 22;
   int FORCE_SIGNIN_WARNING = 23;
-  int MAX = 24;
+  int SAVE_CARD_BUBBLE = 24;
+  int MANAGE_CARDS_BUBBLE = 25;
+  int MAX = 26;
 }

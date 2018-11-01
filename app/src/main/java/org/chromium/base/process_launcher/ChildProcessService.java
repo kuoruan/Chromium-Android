@@ -14,14 +14,19 @@ import android.os.Looper;
 import android.os.Parcelable;
 import android.os.Process;
 import android.os.RemoteException;
+import android.support.annotation.IntDef;
 import android.util.SparseArray;
 
 import org.chromium.base.BaseSwitches;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
+import org.chromium.base.MemoryPressureLevel;
+import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.MainDex;
+import org.chromium.base.memory.MemoryPressureMonitor;
+import org.chromium.base.metrics.RecordHistogram;
 
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -84,6 +89,29 @@ public abstract class ChildProcessService extends Service {
 
     private final Semaphore mActivitySemaphore = new Semaphore(1);
 
+    // These values are persisted to logs. Entries should not be renumbered and numeric values
+    // should never be reused.
+    @IntDef({SplitApkWorkaroundResult.NOT_RUN, SplitApkWorkaroundResult.NO_ENTRIES,
+            SplitApkWorkaroundResult.ONE_ENTRY, SplitApkWorkaroundResult.MULTIPLE_ENTRIES,
+            SplitApkWorkaroundResult.TOPLEVEL_EXCEPTION, SplitApkWorkaroundResult.LOOP_EXCEPTION})
+    public @interface SplitApkWorkaroundResult {
+        int NOT_RUN = 0;
+        int NO_ENTRIES = 1;
+        int ONE_ENTRY = 2;
+        int MULTIPLE_ENTRIES = 3;
+        int TOPLEVEL_EXCEPTION = 4;
+        int LOOP_EXCEPTION = 5;
+        // Keep this one at the end and increment appropriately when adding new results.
+        int SPLIT_APK_WORKAROUND_RESULT_COUNT = 6;
+    }
+
+    private static @SplitApkWorkaroundResult int sSplitApkWorkaroundResult =
+            SplitApkWorkaroundResult.NOT_RUN;
+
+    public static void setSplitApkWorkaroundResult(@SplitApkWorkaroundResult int result) {
+        sSplitApkWorkaroundResult = result;
+    }
+
     public ChildProcessService(ChildProcessServiceDelegate delegate) {
         mDelegate = delegate;
     }
@@ -125,9 +153,35 @@ public abstract class ChildProcessService extends Service {
         }
 
         @Override
-        public void crashIntentionallyForTesting() {
+        public void forceKill() {
             assert mServiceBound;
             Process.killProcess(Process.myPid());
+        }
+
+        @Override
+        public void onMemoryPressure(@MemoryPressureLevel int pressure) {
+            // This method is called by the host process when the host process reports pressure
+            // to its native side. The key difference between the host process and its services is
+            // that the host process polls memory pressure when it gets CRITICAL, and periodically
+            // invokes pressure listeners until pressure subsides. (See MemoryPressureMonitor for
+            // more info.)
+            //
+            // Services don't poll, so this side-channel is used to notify services about memory
+            // pressure from the host process's POV.
+            //
+            // However, since both host process and services listen to ComponentCallbacks2, we
+            // can't be sure that the host process won't get better signals than their services.
+            // I.e. we need to watch out for a situation where a service gets CRITICAL, but the
+            // host process gets MODERATE - in this case we need to ignore MODERATE.
+            //
+            // So we're ignoring pressure from the host process if it's better than the last
+            // reported pressure. I.e. the host process can drive pressure up, but it'll go
+            // down only when we the service get a signal through ComponentCallbacks2.
+            ThreadUtils.postOnUiThread(() -> {
+                if (pressure >= MemoryPressureMonitor.INSTANCE.getLastReportedPressure()) {
+                    MemoryPressureMonitor.INSTANCE.notifyPressure(pressure);
+                }
+            });
         }
     };
 
@@ -210,6 +264,12 @@ public abstract class ChildProcessService extends Service {
                     nativeRegisterFileDescriptors(keys, fileIds, fds, regionOffsets, regionSizes);
 
                     mDelegate.onBeforeMain();
+                    if (ContextUtils.isIsolatedProcess()) {
+                        RecordHistogram.recordEnumeratedHistogram(
+                                "Android.WebView.SplitApkWorkaroundResult",
+                                sSplitApkWorkaroundResult,
+                                SplitApkWorkaroundResult.SPLIT_APK_WORKAROUND_RESULT_COUNT);
+                    }
                     if (mActivitySemaphore.tryAcquire()) {
                         mDelegate.runMain();
                         nativeExitChildProcess();

@@ -14,14 +14,12 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/infobar_descriptive_text_color"
-        android:textSize="@dimen/infobar_text_size" />
+        android:textAppearance="@style/BlackHint1" />
 
     <!-- Shows the actively selected item. -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/default_text_color"
-        android:textSize="@dimen/infobar_text_size" />
+        android:textAppearance="@style/BlackTitle1" />
 
 </org.chromium.chrome.browser.widget.DualControlLayout>

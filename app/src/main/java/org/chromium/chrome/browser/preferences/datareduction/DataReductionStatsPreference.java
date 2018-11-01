@@ -4,15 +4,18 @@
 
 package org.chromium.chrome.browser.preferences.datareduction;
 
+import static android.text.format.DateUtils.FORMAT_ABBREV_MONTH;
 import static android.text.format.DateUtils.FORMAT_NO_YEAR;
 import static android.text.format.DateUtils.FORMAT_SHOW_DATE;
 
-import static org.chromium.third_party.android.datausagechart.ChartDataUsageView.DAYS_IN_CHART;
+import static org.chromium.third_party.android.datausagechart.ChartDataUsageView.MAXIMUM_DAYS_IN_CHART;
+import static org.chromium.third_party.android.datausagechart.ChartDataUsageView.MINIMUM_DAYS_IN_CHART;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.preference.Preference;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.app.AlertDialog;
 import android.text.format.DateUtils;
 import android.util.AttributeSet;
@@ -21,16 +24,22 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
+import org.chromium.base.Log;
+import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
+import org.chromium.chrome.browser.util.ConversionUtils;
 import org.chromium.chrome.browser.util.FileSizeUtil;
 import org.chromium.third_party.android.datausagechart.ChartDataUsageView;
 import org.chromium.third_party.android.datausagechart.NetworkStats;
 import org.chromium.third_party.android.datausagechart.NetworkStatsHistory;
+import org.chromium.ui.widget.RectProvider;
+import org.chromium.ui.widget.ViewRectProvider;
 
 import java.util.List;
 import java.util.TimeZone;
@@ -39,34 +48,44 @@ import java.util.TimeZone;
  * Preference used to display statistics on data reduction.
  */
 public class DataReductionStatsPreference extends Preference {
+    private static final String TAG = "DataSaverStats";
+
     /**
      * Key used to save the date on which the site breakdown should be shown. If the user has
-     * historical data saver stats, the site breakdown cannot be shown for DAYS_IN_CHART.
+     * historical data saver stats, the site breakdown cannot be shown for MAXIMUM_DAYS_IN_CHART.
      */
     private static final String PREF_DATA_REDUCTION_SITE_BREAKDOWN_ALLOWED_DATE =
             "data_reduction_site_breakdown_allowed_date";
+    /**
+     * The threshold at which to start showing real data usage and savings, in
+     * kilobytes.
+     */
+    private static final long SHOW_REAL_DATA_USED_KB_THRESHOLD = 100;
 
     private NetworkStatsHistory mOriginalNetworkStatsHistory;
     private NetworkStatsHistory mReceivedNetworkStatsHistory;
     private List<DataReductionDataUseItem> mSiteBreakdownItems;
 
-    private TextView mOriginalSizeTextView;
-    private TextView mReceivedSizeTextView;
+    private ViewRectProvider mDataReductionStatsPreferenceViewRectProvider;
+    private LinearLayout mDataReductionStatsContainer;
+    private TextView mInitialDataSavingsTextView;
     private TextView mDataSavingsTextView;
     private TextView mDataUsageTextView;
-    private TextView mPercentReductionTextView;
     private TextView mStartDateTextView;
     private TextView mEndDateTextView;
     private Button mResetStatisticsButton;
     private ChartDataUsageView mChartDataUsageView;
     private DataReductionSiteBreakdownView mDataReductionBreakdownView;
-    private long mLeftPosition;
-    private long mRightPosition;
-    private Long mCurrentTime;
-    private CharSequence mOriginalTotalPhrase;
+    private boolean mShouldShowRealData;
+    private boolean mIsFirstDayChart;
+    /** Number of days that the chart will present. */
+    private int mNumDaysInChart;
+    /** Number of milliseconds from the beginning of the day. */
+    private long mTimeOfDayOffsetMillis;
+    private long mVisibleStartTimeMillis;
+    private long mVisibleEndTimeMillis;
     private CharSequence mSavingsTotalPhrase;
     private CharSequence mReceivedTotalPhrase;
-    private String mPercentReductionPhrase;
     private String mStartDatePhrase;
     private String mEndDatePhrase;
 
@@ -85,9 +104,10 @@ public class DataReductionStatsPreference extends Preference {
                 DataReductionProxySettings.getInstance().getDataReductionLastUpdateTime();
 
         // If the site breakdown is enabled and there are historical stats within the last
-        // DAYS_IN_CHART days, don't show the breakdown for another DAYS_IN_CHART days from the last
-        // update time. Otherwise, the site breakdown can be shown starting now.
-        long timeChartCanBeShown = lastUpdateTimeMillis + DAYS_IN_CHART * DateUtils.DAY_IN_MILLIS;
+        // MAXIMUM_DAYS_IN_CHART days, don't show the breakdown for another MAXIMUM_DAYS_IN_CHART
+        // days from the last update time. Otherwise, the site breakdown can be shown starting now.
+        long timeChartCanBeShown =
+                lastUpdateTimeMillis + MAXIMUM_DAYS_IN_CHART * DateUtils.DAY_IN_MILLIS;
         long now = System.currentTimeMillis();
         ContextUtils.getAppSharedPreferences()
                 .edit()
@@ -109,32 +129,87 @@ public class DataReductionStatsPreference extends Preference {
     /**
      * Updates the preference screen to convey current statistics on data reduction.
      */
-    public void updateReductionStatistics() {
+    public void updateReductionStatistics(long currentTimeMillis) {
         long original[] = DataReductionProxySettings.getInstance().getOriginalNetworkStatsHistory();
         long received[] = DataReductionProxySettings.getInstance().getReceivedNetworkStatsHistory();
 
-        mCurrentTime = DataReductionProxySettings.getInstance().getDataReductionLastUpdateTime();
-        mRightPosition = mCurrentTime + DateUtils.HOUR_IN_MILLIS
-                - TimeZone.getDefault().getOffset(mCurrentTime);
-        mLeftPosition = mCurrentTime - DateUtils.DAY_IN_MILLIS * DAYS_IN_CHART;
-        mOriginalNetworkStatsHistory = getNetworkStatsHistory(original, DAYS_IN_CHART);
-        mReceivedNetworkStatsHistory = getNetworkStatsHistory(received, DAYS_IN_CHART);
+        long dataSaverEnabledDayMillis =
+                (DataReductionProxySettings.getInstance().getDataReductionProxyFirstEnabledTime()
+                        / DateUtils.DAY_IN_MILLIS)
+                * DateUtils.DAY_IN_MILLIS;
+        long dataSaverEnabledTimeMillis =
+                DataReductionProxySettings.getInstance().getDataReductionProxyFirstEnabledTime();
+        long startOfToday = currentTimeMillis - currentTimeMillis % DateUtils.DAY_IN_MILLIS
+                - TimeZone.getDefault().getOffset(currentTimeMillis);
+        long statsLastUpdateTimeMillis =
+                DataReductionProxySettings.getInstance().getDataReductionLastUpdateTime();
+        if (statsLastUpdateTimeMillis == 0) {
+            // Use startOfToday if stats were recently reset.
+            statsLastUpdateTimeMillis = startOfToday;
+        }
+        Long numDaysSinceStatsUpdated = (statsLastUpdateTimeMillis < startOfToday)
+                ? (startOfToday - statsLastUpdateTimeMillis) / DateUtils.DAY_IN_MILLIS
+                : 0;
 
-        if (mDataReductionBreakdownView != null
-                && System.currentTimeMillis()
-                        > ContextUtils.getAppSharedPreferences().getLong(
-                                  PREF_DATA_REDUCTION_SITE_BREAKDOWN_ALLOWED_DATE,
-                                  Long.MAX_VALUE)) {
+        // Capture the offset from the start of today until the current time for determining the
+        // day label to present later (handles timezone adjustment).
+        mTimeOfDayOffsetMillis = currentTimeMillis - startOfToday;
+
+        // Determine the start and end time of the network stats to chart.
+        Long daysEnabled =
+                (currentTimeMillis - dataSaverEnabledDayMillis) / DateUtils.DAY_IN_MILLIS + 1;
+        mIsFirstDayChart = false;
+        mNumDaysInChart = MAXIMUM_DAYS_IN_CHART;
+        if (daysEnabled < MINIMUM_DAYS_IN_CHART) {
+            mIsFirstDayChart = true;
+            mNumDaysInChart = MINIMUM_DAYS_IN_CHART;
+        } else if (daysEnabled < MAXIMUM_DAYS_IN_CHART) {
+            mNumDaysInChart = daysEnabled.intValue();
+        }
+        mOriginalNetworkStatsHistory = getNetworkStatsHistory(original, mNumDaysInChart);
+        mReceivedNetworkStatsHistory = getNetworkStatsHistory(received, mNumDaysInChart);
+
+        mShouldShowRealData =
+                ConversionUtils.bytesToKilobytes(mReceivedNetworkStatsHistory.getTotalBytes())
+                >= SHOW_REAL_DATA_USED_KB_THRESHOLD;
+
+        // Determine the visible start and end points based on the available data and when it was
+        // last updated.
+        mVisibleStartTimeMillis = mOriginalNetworkStatsHistory.getStart()
+                + numDaysSinceStatsUpdated.intValue() * DateUtils.DAY_IN_MILLIS
+                + DateUtils.DAY_IN_MILLIS;
+        mVisibleEndTimeMillis = mOriginalNetworkStatsHistory.getEnd()
+                + numDaysSinceStatsUpdated.intValue() * DateUtils.DAY_IN_MILLIS;
+
+        if (mShouldShowRealData && mDataReductionBreakdownView != null
+                && currentTimeMillis > ContextUtils.getAppSharedPreferences().getLong(
+                                               PREF_DATA_REDUCTION_SITE_BREAKDOWN_ALLOWED_DATE,
+                                               Long.MAX_VALUE)) {
             DataReductionProxySettings.getInstance().queryDataUsage(
-                    DAYS_IN_CHART, new Callback<List<DataReductionDataUseItem>>() {
+                    mNumDaysInChart, new Callback<List<DataReductionDataUseItem>>() {
                         @Override
                         public void onResult(List<DataReductionDataUseItem> result) {
                             mSiteBreakdownItems = result;
+
                             mDataReductionBreakdownView.setAndDisplayDataUseItems(
                                     mSiteBreakdownItems);
                         }
                     });
         }
+    }
+
+    /**
+     * Returns the number of days that the data usage graph should display based on the last
+     * update to the statistics.
+     */
+    @VisibleForTesting
+    int getNumDaysInChart() {
+        return mNumDaysInChart;
+    }
+
+    @VisibleForTesting
+    boolean shouldShowRealData() {
+        return mShouldShowRealData;
     }
 
     private static NetworkStatsHistory getNetworkStatsHistory(long[] history, int days) {
@@ -154,15 +229,30 @@ public class DataReductionStatsPreference extends Preference {
         return networkStatsHistory;
     }
 
-    private void setDetailText() {
-        updateDetailData();
-        mPercentReductionTextView.setText(mPercentReductionPhrase);
-        mStartDateTextView.setText(mStartDatePhrase);
-        mEndDateTextView.setText(mEndDatePhrase);
-        if (mDataUsageTextView != null) mDataUsageTextView.setText(mReceivedTotalPhrase);
-        if (mDataSavingsTextView != null) mDataSavingsTextView.setText(mSavingsTotalPhrase);
-        if (mOriginalSizeTextView != null) mOriginalSizeTextView.setText(mOriginalTotalPhrase);
-        if (mReceivedSizeTextView != null) mReceivedSizeTextView.setText(mReceivedTotalPhrase);
+    private void updateDetailView() {
+        final Context context = getContext();
+
+        // updateDetailData also updates some UMA based on the actual data shown, so only update it
+        // if we are actually showing the chart.
+        if (mShouldShowRealData) updateDetailData();
+
+        mInitialDataSavingsTextView.setVisibility(mShouldShowRealData ? View.GONE : View.VISIBLE);
+        mDataReductionStatsContainer.setVisibility(mShouldShowRealData ? View.VISIBLE : View.GONE);
+
+        mStartDateTextView.setText(mShouldShowRealData ? mStartDatePhrase : "");
+        mStartDateTextView.setContentDescription(mShouldShowRealData
+                        ? context.getString(R.string.data_reduction_start_date_content_description,
+                                  mStartDatePhrase)
+                        : "");
+        mEndDateTextView.setText(mShouldShowRealData ? mEndDatePhrase : "");
+        mEndDateTextView.setContentDescription(mShouldShowRealData
+                        ? context.getString(R.string.data_reduction_end_date_content_description,
+                                  mEndDatePhrase)
+                        : "");
+        if (mDataUsageTextView != null)
+            mDataUsageTextView.setText(mShouldShowRealData ? mReceivedTotalPhrase : "");
+        if (mDataSavingsTextView != null)
+            mDataSavingsTextView.setText(mShouldShowRealData ? mSavingsTotalPhrase : "");
     }
 
     /**
@@ -175,15 +265,49 @@ public class DataReductionStatsPreference extends Preference {
     }
 
     /**
+     * Initializes a view rect observer to listen for when the bounds of the view has changed, so we
+     * can update the minimum height of the view accordingly.
+     *
+     * @param view The view to listen for bounds changes on.
+     */
+    private void initializeViewBounds(final View view) {
+        if (mDataReductionStatsPreferenceViewRectProvider != null) {
+            mDataReductionStatsPreferenceViewRectProvider.stopObserving();
+        }
+        mDataReductionStatsPreferenceViewRectProvider = new ViewRectProvider(view);
+        mDataReductionStatsPreferenceViewRectProvider.startObserving(new RectProvider.Observer() {
+            @Override
+            public void onRectChanged() {
+                int screenHeight = getContext().getResources().getDisplayMetrics().heightPixels;
+                int offset = mDataReductionStatsPreferenceViewRectProvider.getRect().top;
+                view.setMinimumHeight(screenHeight - offset);
+            }
+
+            @Override
+            public void onRectHidden() {}
+        });
+    }
+
+    /**
      * Sets up a data usage chart and text views containing data reduction statistics.
      * @param view The current view.
      */
     @Override
     protected void onBindView(View view) {
         super.onBindView(view);
+
+        initializeViewBounds(view);
+
+        mInitialDataSavingsTextView = (TextView) view.findViewById(R.id.initial_data_savings);
+        mInitialDataSavingsTextView.setCompoundDrawablesWithIntrinsicBounds(null,
+                VectorDrawableCompat.create(getContext().getResources(),
+                        R.drawable.data_reduction_big, getContext().getTheme()),
+                null, null);
+
+        mDataReductionStatsContainer =
+                (LinearLayout) view.findViewById(R.id.data_reduction_stats_container);
         mDataUsageTextView = (TextView) view.findViewById(R.id.data_reduction_usage);
         mDataSavingsTextView = (TextView) view.findViewById(R.id.data_reduction_savings);
-        mPercentReductionTextView = (TextView) view.findViewById(R.id.data_reduction_percent);
         mStartDateTextView = (TextView) view.findViewById(R.id.data_reduction_start_date);
         mEndDateTextView = (TextView) view.findViewById(R.id.data_reduction_end_date);
         mDataReductionBreakdownView =
@@ -192,31 +316,27 @@ public class DataReductionStatsPreference extends Preference {
         if (mOriginalNetworkStatsHistory == null) {
             // This will query data usage. Only set mSiteBreakdownItems if the statistics are not
             // being queried.
-            updateReductionStatistics();
-        } else if (mSiteBreakdownItems != null) {
+            updateReductionStatistics(System.currentTimeMillis());
+        } else if (mSiteBreakdownItems != null && mShouldShowRealData) {
             mDataReductionBreakdownView.setAndDisplayDataUseItems(mSiteBreakdownItems);
         }
-        setDetailText();
 
         mChartDataUsageView = (ChartDataUsageView) view.findViewById(R.id.chart);
-        mChartDataUsageView.bindOriginalNetworkStats(mOriginalNetworkStatsHistory);
-        mChartDataUsageView.bindCompressedNetworkStats(mReceivedNetworkStatsHistory);
-        mChartDataUsageView.setVisibleRange(
-                mCurrentTime - DateUtils.DAY_IN_MILLIS * DAYS_IN_CHART,
-                mCurrentTime + DateUtils.HOUR_IN_MILLIS, mLeftPosition, mRightPosition);
+        mChartDataUsageView.bindNetworkStats(
+                mOriginalNetworkStatsHistory, mReceivedNetworkStatsHistory);
+        mChartDataUsageView.setVisibleRange(mVisibleStartTimeMillis, mVisibleEndTimeMillis);
 
-        View dataReductionProxyUnreachableWarning =
-                view.findViewById(R.id.data_reduction_proxy_unreachable);
         if (DataReductionProxySettings.getInstance().isDataReductionProxyUnreachable()) {
-            dataReductionProxyUnreachableWarning.setVisibility(View.VISIBLE);
-        } else {
-            dataReductionProxyUnreachableWarning.setVisibility(View.GONE);
+            // Leave breadcrumb in log for user feedback report.
+            Log.w(TAG, "Data Saver proxy unreachable when user viewed Data Saver stats");
         }
 
         mResetStatisticsButton = (Button) view.findViewById(R.id.data_reduction_reset_statistics);
         if (mResetStatisticsButton != null) {
             setUpResetStatisticsButton();
         }
+
+        updateDetailView();
     }
 
     private void setUpResetStatisticsButton() {
@@ -241,9 +361,11 @@ public class DataReductionStatsPreference extends Preference {
                                                 now)
                                         .apply();
                             }
-                            DataReductionProxySettings.getInstance().clearDataSavingStatistics();
-                            updateReductionStatistics();
-                            setDetailText();
+                            DataReductionProxySettings.getInstance().clearDataSavingStatistics(
+                                    DataReductionProxySavingsClearedReason
+                                            .USER_ACTION_SETTINGS_MENU);
+                            updateReductionStatistics(now);
+                            updateDetailView();
                             notifyChanged();
                             DataReductionProxyUma.dataReductionProxyUIAction(
                                     DataReductionProxyUma.ACTION_STATS_RESET);
@@ -270,39 +392,61 @@ public class DataReductionStatsPreference extends Preference {
      * Update data reduction statistics whenever the chart's inspection
      * range changes. In particular, this creates strings describing the total
      * original size of all data received over the date range, the total size
-     * of all data received (after compression), the percent data reduction
+     * of all data received (after compression), and the percent data reduction
      * and the range of dates over which these statistics apply.
      */
     // TODO(crbug.com/635567): Fix this properly.
     @SuppressLint("DefaultLocale")
     private void updateDetailData() {
-        final long start = mLeftPosition;
-        // Include up to the last second of the currently selected day.
-        final long end = mRightPosition;
+        // To determine the correct day labels, adjust the network stats time values by their
+        // offset from the client's current time.
+        final long startDay = mVisibleStartTimeMillis + mTimeOfDayOffsetMillis;
+        final long endDay = mVisibleEndTimeMillis + mTimeOfDayOffsetMillis;
         final Context context = getContext();
 
         final long compressedTotalBytes = mReceivedNetworkStatsHistory.getTotalBytes();
         mReceivedTotalPhrase = FileSizeUtil.formatFileSize(context, compressedTotalBytes);
         final long originalTotalBytes = mOriginalNetworkStatsHistory.getTotalBytes();
-        mOriginalTotalPhrase = FileSizeUtil.formatFileSize(context, originalTotalBytes);
         final long savingsTotalBytes = originalTotalBytes - compressedTotalBytes;
         mSavingsTotalPhrase = FileSizeUtil.formatFileSize(context, savingsTotalBytes);
-
-        float percentage = 0.0f;
-        if (originalTotalBytes > 0L && originalTotalBytes > compressedTotalBytes) {
-            percentage = (originalTotalBytes - compressedTotalBytes) / (float) originalTotalBytes;
+        if (mIsFirstDayChart) {
+            // Only show the current date on the left hand side for the single-day-chart.
+            mStartDatePhrase = formatDate(context, endDay);
+            mEndDatePhrase = null;
+        } else {
+            mStartDatePhrase = formatDate(context, startDay);
+            mEndDatePhrase = formatDate(context, endDay);
         }
-        mPercentReductionPhrase = String.format("%.0f%%", 100.0 * percentage);
-
-        mStartDatePhrase = formatDate(context, start);
-        mEndDatePhrase = formatDate(context, end);
 
         DataReductionProxyUma.dataReductionProxyUserViewedSavings(
-                compressedTotalBytes, originalTotalBytes, 100.0 * percentage);
+                compressedTotalBytes, originalTotalBytes);
+
+        // Here to the end of the method checks for a difference in the reported data breakdown. If
+        // mSiteBreakdownItems is null, return early.
+        if (mSiteBreakdownItems == null) return;
+
+        long breakdownSavingsTotal = 0;
+        long breakdownUsageTotal = 0;
+        for (DataReductionDataUseItem item : mSiteBreakdownItems) {
+            breakdownSavingsTotal += item.getDataSaved();
+            breakdownUsageTotal += item.getDataUsed();
+        }
+        final long savingsDiff = Math.abs(breakdownSavingsTotal - savingsTotalBytes);
+        final long usageDiff = Math.abs(breakdownUsageTotal - compressedTotalBytes);
+        final long savingsTotal = breakdownSavingsTotal + savingsTotalBytes;
+        final long usageTotal = breakdownUsageTotal + compressedTotalBytes;
+
+        if (savingsTotal <= 0 || usageTotal <= 0) return;
+
+        final int savingsDiffPercent = (int) (savingsDiff / savingsTotal * 100);
+        final int usageDiffPercent = (int) (usageDiff / usageTotal * 100);
+
+        DataReductionProxyUma.dataReductionProxyUserViewedSavingsDifference(
+                savingsDiffPercent, usageDiffPercent);
     }
 
     private static String formatDate(Context context, long millisSinceEpoch) {
-        final int flags = FORMAT_SHOW_DATE | FORMAT_NO_YEAR;
+        final int flags = FORMAT_SHOW_DATE | FORMAT_ABBREV_MONTH | FORMAT_NO_YEAR;
         return DateUtils.formatDateTime(context, millisSinceEpoch, flags).toString();
     }
 }

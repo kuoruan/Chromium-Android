@@ -6,16 +6,14 @@ package org.chromium.chrome.browser.compositor.bottombar;
 
 import org.chromium.chrome.browser.externalnav.ExternalNavigationHandler;
 import org.chromium.components.navigation_interception.NavigationParams;
-import org.chromium.content_public.browser.ContentViewCore;
 
 /**
  * An base class for tracking events on the overlay panel.
  * TODO(mdjones): Rename to OverlayPanelContentDelegate.
  */
 public class OverlayContentDelegate {
-
     /**
-     * Called when the panel's ContentViewCore navigates in the main frame.
+     * Called when the panel's WebContents navigates in the main frame.
      * @param url The URL being navigated to.
      * @param isExternalUrl Whether the URL is different from the initially loaded URL.
      */
@@ -51,21 +49,8 @@ public class OverlayContentDelegate {
         return true;
     }
 
-    /**
-     * Allows the delegate to intercept the loading of a URL.
-     * If the loading is intercepted, the OverlayPanelContent will not load the URL when
-     * {@link OverlayPanelContent#loadUrl} is called. Instead, it is up to the delegate to load it.
-     * This allows, for example, passing custom HTTP headers when loading a URL.
-     * @param overlayContentViewCore The Overlay.
-     * @param url The URL to load.
-     * @return Whether the load has been intercepted.
-     */
-    public boolean handleInterceptLoadUrl(ContentViewCore overlayContentViewCore, String url) {
-        return false;
-    }
-
     // ============================================================================================
-    // ContentViewCore related events.
+    // WebContents related events.
     // ============================================================================================
 
     /**
@@ -75,17 +60,17 @@ public class OverlayContentDelegate {
     public void onVisibilityChanged(boolean isVisible) {}
 
     /**
-     * Called once the ContentViewCore has been seen.
+     * Called once the WebContents has been seen.
      */
     public void onContentViewSeen() {}
 
     /**
-     * Called once the ContentViewCore has been created and set up completely.
+     * Called once the WebContents has been created and set up completely.
      */
     public void onContentViewCreated() {}
 
     /**
-     * Called once the ContentViewCore has been destroyed.
+     * Called once the WebContents has been destroyed.
      */
     public void onContentViewDestroyed() {}
 }

@@ -23,17 +23,18 @@ public enum PassphraseType implements Parcelable {
     FROZEN_IMPLICIT_PASSPHRASE(2), // Frozen GAIA passphrase.
     CUSTOM_PASSPHRASE(3); // User-provided passphrase.
 
-    public static Parcelable.Creator CREATOR = new Parcelable.Creator<PassphraseType>() {
-        @Override
-        public PassphraseType createFromParcel(Parcel parcel) {
-            return fromInternalValue(parcel.readInt());
-        }
+    public static final Parcelable.Creator<PassphraseType> CREATOR =
+            new Parcelable.Creator<PassphraseType>() {
+                @Override
+                public PassphraseType createFromParcel(Parcel parcel) {
+                    return fromInternalValue(parcel.readInt());
+                }
 
-        @Override
-        public PassphraseType[] newArray(int size) {
-            return new PassphraseType[size];
-        }
-    };
+                @Override
+                public PassphraseType[] newArray(int size) {
+                    return new PassphraseType[size];
+                }
+            };
 
     public static PassphraseType fromInternalValue(int value) {
         for (PassphraseType type : values()) {

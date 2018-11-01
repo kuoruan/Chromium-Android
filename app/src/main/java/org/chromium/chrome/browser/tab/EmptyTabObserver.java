@@ -7,11 +7,16 @@ package org.chromium.chrome.browser.tab;
 import android.graphics.Bitmap;
 import android.view.ContextMenu;
 
+import org.chromium.chrome.browser.fullscreen.FullscreenOptions;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.WebContents;
+import org.chromium.content_public.common.BrowserControlsState;
 
 /**
  * An implementation of the {@link TabObserver} which has empty implementations of all methods.
+ *
+ * Note: Do not replace this with TabObserver with default interface methods as it inadvertently
+ * bloats the number of methods. See https://crbug.com/781359.
  */
 public class EmptyTabObserver implements TabObserver {
 
@@ -79,7 +84,10 @@ public class EmptyTabObserver implements TabObserver {
     public void onUpdateUrl(Tab tab, String url) { }
 
     @Override
-    public void onToggleFullscreenMode(Tab tab, boolean enable) { }
+    public void onEnterFullscreenMode(Tab tab, FullscreenOptions options) {}
+
+    @Override
+    public void onExitFullscreenMode(Tab tab) {}
 
     @Override
     public void onDidFailLoad(
@@ -123,4 +131,8 @@ public class EmptyTabObserver implements TabObserver {
 
     @Override
     public void onNavigationEntriesDeleted(Tab tab) {}
+
+    @Override
+    public void onBrowserControlsConstraintsUpdated(
+            Tab tab, @BrowserControlsState int constraints) {}
 }

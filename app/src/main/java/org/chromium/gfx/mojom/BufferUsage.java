@@ -22,7 +22,9 @@ public final class BufferUsage {
 
     public static final int SCANOUT_CAMERA_READ_WRITE = SCANOUT + 1;
 
-    public static final int SCANOUT_CPU_READ_WRITE = SCANOUT_CAMERA_READ_WRITE + 1;
+    public static final int CAMERA_AND_CPU_READ_WRITE = SCANOUT_CAMERA_READ_WRITE + 1;
+
+    public static final int SCANOUT_CPU_READ_WRITE = CAMERA_AND_CPU_READ_WRITE + 1;
 
     public static final int SCANOUT_VDA_WRITE = SCANOUT_CPU_READ_WRITE + 1;
 
@@ -44,6 +46,7 @@ public final class BufferUsage {
             case 4:
             case 5:
             case 6:
+            case 7:
                 return true;
         }
         return false;

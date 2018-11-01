@@ -5,8 +5,12 @@
 package org.chromium.chrome.browser.policy;
 
 import android.content.Context;
+import android.support.annotation.IntDef;
 
 import org.chromium.content_public.browser.WebContents;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * Base class for policy auditors providing an empty implementation.
@@ -15,21 +19,24 @@ public class PolicyAuditor {
     /**
      * Events that a policy administrator may want to track.
      */
-    public enum AuditEvent {
-        OPEN_URL_SUCCESS,
-        OPEN_URL_FAILURE,
-        OPEN_URL_BLOCKED,
-        OPEN_POPUP_URL_SUCCESS,
-        AUTOFILL_SELECTED
+    @IntDef({AuditEvent.OPEN_URL_SUCCESS, AuditEvent.OPEN_URL_FAILURE, AuditEvent.OPEN_URL_BLOCKED,
+            AuditEvent.OPEN_POPUP_URL_SUCCESS, AuditEvent.AUTOFILL_SELECTED})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface AuditEvent {
+        int OPEN_URL_SUCCESS = 0;
+        int OPEN_URL_FAILURE = 1;
+        int OPEN_URL_BLOCKED = 2;
+        int OPEN_POPUP_URL_SUCCESS = 3;
+        int AUTOFILL_SELECTED = 4;
     }
-
 
     /**
      * Make it non-obvious to accidentally instantiate this outside of ChromeApplication.
      */
     protected PolicyAuditor() {}
 
-    public void notifyAuditEvent(Context context, AuditEvent event, String url, String message) {}
+    public void notifyAuditEvent(
+            Context context, @AuditEvent int event, String url, String message) {}
 
     public void notifyCertificateFailure(int certificateFailure, Context context) {}
 

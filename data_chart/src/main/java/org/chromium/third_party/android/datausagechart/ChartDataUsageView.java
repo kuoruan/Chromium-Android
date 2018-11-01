@@ -37,7 +37,8 @@ import java.util.TimeZone;
  * This is derived from com.android.settings.widget.ChartDataUsageView.
  */
 public class ChartDataUsageView extends ChartView {
-    public static final int DAYS_IN_CHART = 30;
+    public static final int MAXIMUM_DAYS_IN_CHART = 30;
+    public static final int MINIMUM_DAYS_IN_CHART = 2;
 
     private static final long MB_IN_BYTES = 1024 * 1024;
     private static final long GB_IN_BYTES = 1024 * 1024 * 1024;
@@ -88,28 +89,23 @@ public class ChartDataUsageView extends ChartView {
         mCompressedSeries.init(mHoriz, mVert);
     }
 
-    public void bindOriginalNetworkStats(NetworkStatsHistory stats) {
-        mOriginalSeries.bindNetworkStats(stats);
-        // Compensate for time zone adjustments when setting the end time.
-        mHistory = stats;
-        updateVertAxisBounds();
-        updateEstimateVisible();
-        updatePrimaryRange();
-        requestLayout();
-    }
-
-    public void bindCompressedNetworkStats(NetworkStatsHistory stats) {
-        mCompressedSeries.bindNetworkStats(stats);
-        mCompressedSeries.setVisibility(stats != null ? View.VISIBLE : View.GONE);
+    public void bindNetworkStats(
+            NetworkStatsHistory originalStats, NetworkStatsHistory compressedStats) {
+        mOriginalSeries.bindNetworkStats(originalStats);
+        mCompressedSeries.bindNetworkStats(compressedStats);
+        mCompressedSeries.setVisibility(compressedStats != null ? View.VISIBLE : View.GONE);
+        mHistory = originalStats;
         if (mHistory != null) {
-            // Compensate for time zone adjustments when setting the end time.
-            mOriginalSeries.setEndTime(mHistory.getEnd()
-                    - TimeZone.getDefault().getOffset(mHistory.getEnd()));
-            mCompressedSeries.setEndTime(mHistory.getEnd()
-                    - TimeZone.getDefault().getOffset(mHistory.getEnd()));
+            // Update end time to match end of data.
+            mOriginalSeries.setEndTime(mHistory.getEnd());
+            mCompressedSeries.setEndTime(mHistory.getEnd());
         }
+        // Clear any existing max range estimate.
         updateEstimateVisible();
+        // Update the primary ranges of the series.
         updatePrimaryRange();
+        // Determine the vertical max from the updated primary range for this original series.
+        updateVertAxisBounds();
         requestLayout();
     }
 
@@ -119,9 +115,9 @@ public class ChartDataUsageView extends ChartView {
     private void updateVertAxisBounds() {
         long newMax = 0;
 
-        // always show known data and policy lines
-        final long maxSeries = Math.max(mOriginalSeries.getMaxVisible(),
-                mCompressedSeries.getMaxVisible());
+        // Determine the maximum value of the series data (which is scoped to the data to chart).
+        final long maxSeries =
+                Math.max(mOriginalSeries.getMaxStats(), mCompressedSeries.getMaxStats());
         final long maxVisible = Math.max(maxSeries, 0) * 12 / 10;
         final long maxDefault = Math.max(maxVisible, 1 * MB_IN_BYTES);
         newMax = Math.max(maxDefault, newMax);
@@ -153,40 +149,29 @@ public class ChartDataUsageView extends ChartView {
 
     /**
      * Set the exact time range that should be displayed, updating how
-     * {@link ChartNetworkSeriesView} paints. Moves inspection ranges to be the
-     * last "week" of available data, without triggering listener events.
+     * {@link ChartNetworkSeriesView} paints. Moves inspection ranges
+     * without triggering listener events.
      */
-    public void setVisibleRange(long visibleStart, long visibleEnd, long start,
-            long end) {
-        long timeZoneOffset = TimeZone.getDefault().getOffset(end);
+    public void setVisibleRange(long visibleStart, long visibleEnd) {
         final boolean changed = mHoriz.setBounds(visibleStart, visibleEnd);
         mOriginalSeries.setBounds(visibleStart, visibleEnd);
         mCompressedSeries.setBounds(visibleStart, visibleEnd);
+        mLeft = visibleStart;
+        mRight = visibleEnd;
 
-        final long validEnd = visibleEnd;
-
-        long max = validEnd;
-        long min = Math.max(
-                visibleStart, (max - DateUtils.DAY_IN_MILLIS * DAYS_IN_CHART));
-        if (visibleEnd - DateUtils.HOUR_IN_MILLIS
-                - DateUtils.DAY_IN_MILLIS * DAYS_IN_CHART != start
-                || visibleEnd != end + timeZoneOffset) {
-            min = start;
-            max = end;
-        }
-
-        mLeft = min;
-        mRight = max;
-
-        requestLayout();
         if (changed) {
             mOriginalSeries.invalidatePath();
             mCompressedSeries.invalidatePath();
         }
 
-        updateVertAxisBounds();
+        // Clear any existing max range estimate.
         updateEstimateVisible();
+        // Update the primary range for the data series.
         updatePrimaryRange();
+        // Determine the vertical max from the updated primary range.
+        updateVertAxisBounds();
+        // Now request layout.
+        requestLayout();
     }
 
     private void updatePrimaryRange() {
@@ -215,7 +200,7 @@ public class ChartDataUsageView extends ChartView {
 
         public TimeAxis() {
             final long currentTime = System.currentTimeMillis();
-            setBounds(currentTime - DateUtils.DAY_IN_MILLIS * DAYS_IN_CHART, currentTime);
+            setBounds(currentTime - DateUtils.DAY_IN_MILLIS * MAXIMUM_DAYS_IN_CHART, currentTime);
         }
 
         /**

@@ -18,28 +18,28 @@ class VideoDecodeStatsRecorder_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<VideoDecodeStatsRecorder, VideoDecodeStatsRecorder.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<VideoDecodeStatsRecorder, VideoDecodeStatsRecorder.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::VideoDecodeStatsRecorder";
+            return "media.mojom.VideoDecodeStatsRecorder";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, VideoDecodeStatsRecorder impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public VideoDecodeStatsRecorder[] buildArray(int size) {
           return new VideoDecodeStatsRecorder[size];
@@ -62,15 +62,11 @@ class VideoDecodeStatsRecorder_Internal {
 
         @Override
         public void startNewRecord(
-int profile, org.chromium.gfx.mojom.Size videoSize, int framesPerSec) {
+PredictionFeatures features) {
 
             VideoDecodeStatsRecorderStartNewRecordParams _message = new VideoDecodeStatsRecorderStartNewRecordParams();
 
-            _message.profile = profile;
-
-            _message.videoSize = videoSize;
-
-            _message.framesPerSec = framesPerSec;
+            _message.features = features;
 
 
             getProxyHandler().getMessageReceiver().accept(
@@ -83,15 +79,11 @@ int profile, org.chromium.gfx.mojom.Size videoSize, int framesPerSec) {
 
         @Override
         public void updateRecord(
-int framesDecoded, int framesDropped, int framesDecodedPowerEfficient) {
+PredictionTargets targets) {
 
             VideoDecodeStatsRecorderUpdateRecordParams _message = new VideoDecodeStatsRecorderUpdateRecordParams();
 
-            _message.framesDecoded = framesDecoded;
-
-            _message.framesDropped = framesDropped;
-
-            _message.framesDecodedPowerEfficient = framesDecodedPowerEfficient;
+            _message.targets = targets;
 
 
             getProxyHandler().getMessageReceiver().accept(
@@ -120,38 +112,38 @@ int framesDecoded, int framesDropped, int framesDecodedPowerEfficient) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 VideoDecodeStatsRecorder_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case START_NEW_RECORD_ORDINAL: {
-            
+
                         VideoDecodeStatsRecorderStartNewRecordParams data =
                                 VideoDecodeStatsRecorderStartNewRecordParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().startNewRecord(data.profile, data.videoSize, data.framesPerSec);
+
+                        getImpl().startNewRecord(data.features);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case UPDATE_RECORD_ORDINAL: {
-            
+
                         VideoDecodeStatsRecorderUpdateRecordParams data =
                                 VideoDecodeStatsRecorderUpdateRecordParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().updateRecord(data.framesDecoded, data.framesDropped, data.framesDecodedPowerEfficient);
+
+                        getImpl().updateRecord(data.targets);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -171,16 +163,16 @@ int framesDecoded, int framesDropped, int framesDecodedPowerEfficient) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), VideoDecodeStatsRecorder_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -194,39 +186,34 @@ int framesDecoded, int framesDropped, int framesDecodedPowerEfficient) {
 
     
     static final class VideoDecodeStatsRecorderStartNewRecordParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public int profile;
-        public org.chromium.gfx.mojom.Size videoSize;
-        public int framesPerSec;
-    
+        public PredictionFeatures features;
+
         private VideoDecodeStatsRecorderStartNewRecordParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public VideoDecodeStatsRecorderStartNewRecordParams() {
             this(0);
         }
-    
+
         public static VideoDecodeStatsRecorderStartNewRecordParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static VideoDecodeStatsRecorderStartNewRecordParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static VideoDecodeStatsRecorderStartNewRecordParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -236,71 +223,26 @@ int framesDecoded, int framesDropped, int framesDecodedPowerEfficient) {
             VideoDecodeStatsRecorderStartNewRecordParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoDecodeStatsRecorderStartNewRecordParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.profile = decoder0.readInt(8);
-                        VideoCodecProfile.validate(result.profile);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.framesPerSec = decoder0.readInt(12);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                    result.videoSize = org.chromium.gfx.mojom.Size.decode(decoder1);
-                }
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoDecodeStatsRecorderStartNewRecordParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.features = PredictionFeatures.decode(decoder1);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.profile, 8);
-            
-            encoder0.encode(this.framesPerSec, 12);
-            
-            encoder0.encode(this.videoSize, 16, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            VideoDecodeStatsRecorderStartNewRecordParams other = (VideoDecodeStatsRecorderStartNewRecordParams) object;
-            if (this.profile!= other.profile)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.videoSize, other.videoSize))
-                return false;
-            if (this.framesPerSec!= other.framesPerSec)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.profile);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoSize);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.framesPerSec);
-            return result;
+            encoder0.encode(this.features, 8, false);
         }
     }
 
@@ -308,39 +250,34 @@ int framesDecoded, int framesDropped, int framesDecodedPowerEfficient) {
 
     
     static final class VideoDecodeStatsRecorderUpdateRecordParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public int framesDecoded;
-        public int framesDropped;
-        public int framesDecodedPowerEfficient;
-    
+        public PredictionTargets targets;
+
         private VideoDecodeStatsRecorderUpdateRecordParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public VideoDecodeStatsRecorderUpdateRecordParams() {
             this(0);
         }
-    
+
         public static VideoDecodeStatsRecorderUpdateRecordParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static VideoDecodeStatsRecorderUpdateRecordParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static VideoDecodeStatsRecorderUpdateRecordParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -350,69 +287,26 @@ int framesDecoded, int framesDropped, int framesDecodedPowerEfficient) {
             VideoDecodeStatsRecorderUpdateRecordParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoDecodeStatsRecorderUpdateRecordParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.framesDecoded = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.framesDropped = decoder0.readInt(12);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.framesDecodedPowerEfficient = decoder0.readInt(16);
-                }
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoDecodeStatsRecorderUpdateRecordParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.targets = PredictionTargets.decode(decoder1);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.framesDecoded, 8);
-            
-            encoder0.encode(this.framesDropped, 12);
-            
-            encoder0.encode(this.framesDecodedPowerEfficient, 16);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            VideoDecodeStatsRecorderUpdateRecordParams other = (VideoDecodeStatsRecorderUpdateRecordParams) object;
-            if (this.framesDecoded!= other.framesDecoded)
-                return false;
-            if (this.framesDropped!= other.framesDropped)
-                return false;
-            if (this.framesDecodedPowerEfficient!= other.framesDecodedPowerEfficient)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.framesDecoded);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.framesDropped);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.framesDecodedPowerEfficient);
-            return result;
+            encoder0.encode(this.targets, 8, false);
         }
     }
 

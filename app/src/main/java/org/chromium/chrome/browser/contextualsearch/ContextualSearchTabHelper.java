@@ -11,6 +11,7 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
 import org.chromium.chrome.browser.firstrun.FirstRunStatus;
+import org.chromium.chrome.browser.fullscreen.FullscreenOptions;
 import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.profiles.Profile;
@@ -29,6 +30,9 @@ public class ContextualSearchTabHelper
         extends EmptyTabObserver implements NetworkChangeNotifier.ConnectionTypeObserver {
     /** The Tab that this helper tracks. */
     private final Tab mTab;
+
+    // Device scale factor.
+    private final float mPxToDp;
 
     /** Notification handler for Contextual Search events. */
     private TemplateUrlServiceObserver mTemplateUrlObserver;
@@ -73,6 +77,11 @@ public class ContextualSearchTabHelper
         if (NetworkChangeNotifier.isInitialized()) {
             NetworkChangeNotifier.addConnectionTypeObserver(this);
         }
+        float scaleFactor = 1.f;
+        if (tab != null && tab.getActivity() != null && tab.getActivity().getResources() != null) {
+            scaleFactor /= tab.getActivity().getResources().getDisplayMetrics().density;
+        }
+        mPxToDp = scaleFactor;
     }
 
     // ============================================================================================
@@ -130,7 +139,15 @@ public class ContextualSearchTabHelper
     }
 
     @Override
-    public void onToggleFullscreenMode(Tab tab, boolean enable) {
+    public void onEnterFullscreenMode(Tab tab, FullscreenOptions options) {
+        ContextualSearchManager manager = getContextualSearchManager(tab);
+        if (manager != null) {
+            manager.hideContextualSearch(StateChangeReason.UNKNOWN);
+        }
+    }
+
+    @Override
+    public void onExitFullscreenMode(Tab tab) {
         ContextualSearchManager manager = getContextualSearchManager(tab);
         if (manager != null) {
             manager.hideContextualSearch(StateChangeReason.UNKNOWN);
@@ -170,7 +187,7 @@ public class ContextualSearchTabHelper
 
     /**
      * Should be called whenever the Tab's WebContents may have changed. Removes hooks from the
-     * existing WebContents, if necessary, and then adds hooks for the new ContentViewCore.
+     * existing WebContents, if necessary, and then adds hooks for the new WebContents.
      * @param tab The current tab.
      */
     private void updateHooksForTab(Tab tab) {
@@ -219,6 +236,7 @@ public class ContextualSearchTabHelper
                             contextualSearchManager.getContextualSearchSelectionClient()));
             contextualSearchManager.suppressContextualSearchForSmartSelection(
                     mSelectionClientManager.isSmartSelectionEnabledInChrome());
+            nativeInstallUnhandledTapNotifierIfNeeded(mNativeHelper, webContents, mPxToDp);
         }
     }
 
@@ -303,6 +321,21 @@ public class ContextualSearchTabHelper
         }
     }
 
+    /**
+     * Notifies this helper to show the Unhandled Tap UI due to a tap at the given pixel
+     * coordinates.
+     */
+    @CalledByNative
+    void onShowUnhandledTapUIIfNeeded(int x, int y, int fontSizeDips, int textRunLength) {
+        // Only notify the manager if we currently have a valid listener.
+        if (mGestureStateListener != null && getContextualSearchManager(mTab) != null) {
+            getContextualSearchManager(mTab).onShowUnhandledTapUIIfNeeded(
+                    x, y, fontSizeDips, textRunLength);
+        }
+    }
+
     private native long nativeInit(Profile profile);
+    private native void nativeInstallUnhandledTapNotifierIfNeeded(
+            long nativeContextualSearchTabHelper, WebContents webContents, float pxToDpScaleFactor);
     private native void nativeDestroy(long nativeContextualSearchTabHelper);
 }

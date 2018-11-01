@@ -29,19 +29,19 @@ public class ChromeBaseCheckBoxPreference extends CheckBoxPreference {
      */
     public void setManagedPreferenceDelegate(ManagedPreferenceDelegate delegate) {
         mManagedPrefDelegate = delegate;
-        if (mManagedPrefDelegate != null) mManagedPrefDelegate.initPreference(this);
+        ManagedPreferencesUtils.initPreference(mManagedPrefDelegate, this);
     }
 
     @Override
     protected void onBindView(View view) {
         super.onBindView(view);
         ((TextView) view.findViewById(android.R.id.title)).setSingleLine(false);
-        if (mManagedPrefDelegate != null) mManagedPrefDelegate.onBindViewToPreference(this, view);
+        ManagedPreferencesUtils.onBindViewToPreference(mManagedPrefDelegate, this, view);
     }
 
     @Override
     protected void onClick() {
-        if (mManagedPrefDelegate != null && mManagedPrefDelegate.onClickPreference(this)) return;
+        if (ManagedPreferencesUtils.onClickPreference(mManagedPrefDelegate, this)) return;
         super.onClick();
     }
 }

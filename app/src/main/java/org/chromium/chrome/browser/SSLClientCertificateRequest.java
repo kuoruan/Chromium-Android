@@ -9,13 +9,13 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface.OnClickListener;
-import android.os.AsyncTask;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
 import android.security.KeyChainException;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
@@ -49,7 +49,7 @@ public class SSLClientCertificateRequest {
      * The key store is accessed in background, as the APIs being exercised
      * may be blocking. The results are posted back to native on the UI thread.
      */
-    private static class CertAsyncTaskKeyChain extends AsyncTask<Void, Void, Void> {
+    private static class CertAsyncTaskKeyChain extends AsyncTask<Void> {
         // These fields will store the results computed in doInBackground so that they can be posted
         // back in onPostExecute.
         private byte[][] mEncodedChain;
@@ -70,7 +70,7 @@ public class SSLClientCertificateRequest {
         }
 
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground() {
             String alias = getAlias();
             if (alias == null) return null;
 
@@ -156,7 +156,8 @@ public class SSLClientCertificateRequest {
                     ThreadUtils.runOnUiThread(
                             () -> nativeOnSystemRequestCompletion(mNativePtr, null, null));
                 } else {
-                    new CertAsyncTaskKeyChain(mContext, mNativePtr, alias).execute();
+                    new CertAsyncTaskKeyChain(mContext, mNativePtr, alias)
+                            .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 }
             });
         }

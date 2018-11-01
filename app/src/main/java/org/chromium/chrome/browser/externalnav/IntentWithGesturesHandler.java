@@ -6,8 +6,8 @@ package org.chromium.chrome.browser.externalnav;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.os.AsyncTask;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.Log;
 import org.chromium.base.SecureRandomInitializer;
 import org.chromium.chrome.browser.IntentHandler;
@@ -38,7 +38,7 @@ public class IntentWithGesturesHandler {
     private static final Object INSTANCE_LOCK = new Object();
     private static IntentWithGesturesHandler sIntentWithGesturesHandler;
     private SecureRandom mSecureRandom;
-    private AsyncTask<Void, Void, SecureRandom> mSecureRandomInitializer;
+    private AsyncTask<SecureRandom> mSecureRandomInitializer;
     private byte[] mIntentToken;
     private String mUri;
 
@@ -55,12 +55,12 @@ public class IntentWithGesturesHandler {
     }
 
     private IntentWithGesturesHandler() {
-        mSecureRandomInitializer = new AsyncTask<Void, Void, SecureRandom>() {
+        mSecureRandomInitializer = new AsyncTask<SecureRandom>() {
             // SecureRandomInitializer addresses the bug in SecureRandom that "TrulyRandom"
             // warns about, so this lint warning can safely be suppressed.
             @SuppressLint("TrulyRandom")
             @Override
-            protected SecureRandom doInBackground(Void... params) {
+            protected SecureRandom doInBackground() {
                 SecureRandom secureRandom = null;
                 try {
                     secureRandom = new SecureRandom();
@@ -70,7 +70,7 @@ public class IntentWithGesturesHandler {
                 }
                 return secureRandom;
             }
-        }.execute();
+        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**

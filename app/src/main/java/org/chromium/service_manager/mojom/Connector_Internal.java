@@ -18,28 +18,28 @@ class Connector_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<Connector, Connector.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<Connector, Connector.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "service_manager::mojom::Connector";
+            return "service_manager.mojom.Connector";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, Connector impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public Connector[] buildArray(int size) {
           return new Connector[size];
@@ -222,46 +222,46 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 Connector_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
+
+
                     case CLONE_ORDINAL: {
-            
+
                         ConnectorCloneParams data =
                                 ConnectorCloneParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().clone(data.request);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case FILTER_INTERFACES_ORDINAL: {
-            
+
                         ConnectorFilterInterfacesParams data =
                                 ConnectorFilterInterfacesParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().filterInterfaces(data.spec, data.source, data.sourceRequest, data.target);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -281,76 +281,76 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), Connector_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case BIND_INTERFACE_ORDINAL: {
-            
+
                         ConnectorBindInterfaceParams data =
                                 ConnectorBindInterfaceParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().bindInterface(data.target, data.interfaceName, data.interfacePipe, new ConnectorBindInterfaceResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case QUERY_SERVICE_ORDINAL: {
-            
+
                         ConnectorQueryServiceParams data =
                                 ConnectorQueryServiceParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().queryService(data.target, new ConnectorQueryServiceResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case START_SERVICE_ORDINAL: {
-            
+
                         ConnectorStartServiceParams data =
                                 ConnectorStartServiceParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().startService(data.target, new ConnectorStartServiceResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case START_SERVICE_WITH_PROCESS_ORDINAL: {
-            
+
                         ConnectorStartServiceWithProcessParams data =
                                 ConnectorStartServiceWithProcessParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().startServiceWithProcess(data.target, data.service, data.pidReceiverRequest, new ConnectorStartServiceWithProcessResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -364,40 +364,37 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
 
     
     static final class ConnectorBindInterfaceParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public Identity target;
         public String interfaceName;
         public org.chromium.mojo.system.MessagePipeHandle interfacePipe;
-    
+
         private ConnectorBindInterfaceParams(int version) {
             super(STRUCT_SIZE, version);
             this.interfacePipe = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
-    
+
         public ConnectorBindInterfaceParams() {
             this(0);
         }
-    
+
         public static ConnectorBindInterfaceParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ConnectorBindInterfaceParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ConnectorBindInterfaceParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -407,26 +404,28 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             ConnectorBindInterfaceParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ConnectorBindInterfaceParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ConnectorBindInterfaceParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.target = Identity.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.interfaceName = decoder0.readString(16, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.interfacePipe = decoder0.readMessagePipeHandle(24, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -438,78 +437,41 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             
             encoder0.encode(this.interfacePipe, 24, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ConnectorBindInterfaceParams other = (ConnectorBindInterfaceParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.target, other.target))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.interfaceName, other.interfaceName))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.interfacePipe, other.interfacePipe))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.target);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.interfaceName);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.interfacePipe);
-            return result;
-        }
     }
 
 
 
     
     static final class ConnectorBindInterfaceResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int result;
         public Identity userId;
-    
+
         private ConnectorBindInterfaceResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ConnectorBindInterfaceResponseParams() {
             this(0);
         }
-    
+
         public static ConnectorBindInterfaceResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ConnectorBindInterfaceResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ConnectorBindInterfaceResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -519,23 +481,25 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             ConnectorBindInterfaceResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ConnectorBindInterfaceResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ConnectorBindInterfaceResponseParams(elementsOrVersion);
+                    {
+                        
                     result.result = decoder0.readInt(8);
                         ConnectResult.validate(result.result);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.userId = Identity.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -544,37 +508,6 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             encoder0.encode(this.result, 8);
             
             encoder0.encode(this.userId, 16, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ConnectorBindInterfaceResponseParams other = (ConnectorBindInterfaceResponseParams) object;
-            if (this.result!= other.result)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.userId, other.userId))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.result);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.userId);
-            return result;
         }
     }
 
@@ -645,37 +578,34 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
 
     
     static final class ConnectorQueryServiceParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public Identity target;
-    
+
         private ConnectorQueryServiceParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ConnectorQueryServiceParams() {
             this(0);
         }
-    
+
         public static ConnectorQueryServiceParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ConnectorQueryServiceParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ConnectorQueryServiceParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -685,18 +615,20 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             ConnectorQueryServiceParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ConnectorQueryServiceParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ConnectorQueryServiceParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.target = Identity.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -704,72 +636,41 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             
             encoder0.encode(this.target, 8, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ConnectorQueryServiceParams other = (ConnectorQueryServiceParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.target, other.target))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.target);
-            return result;
-        }
     }
 
 
 
     
     static final class ConnectorQueryServiceResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int result;
         public String sandboxType;
-    
+
         private ConnectorQueryServiceResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ConnectorQueryServiceResponseParams() {
             this(0);
         }
-    
+
         public static ConnectorQueryServiceResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ConnectorQueryServiceResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ConnectorQueryServiceResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -779,22 +680,24 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             ConnectorQueryServiceResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ConnectorQueryServiceResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ConnectorQueryServiceResponseParams(elementsOrVersion);
+                    {
+                        
                     result.result = decoder0.readInt(8);
                         ConnectResult.validate(result.result);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.sandboxType = decoder0.readString(16, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -803,37 +706,6 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             encoder0.encode(this.result, 8);
             
             encoder0.encode(this.sandboxType, 16, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ConnectorQueryServiceResponseParams other = (ConnectorQueryServiceResponseParams) object;
-            if (this.result!= other.result)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sandboxType, other.sandboxType))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.result);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sandboxType);
-            return result;
         }
     }
 
@@ -904,37 +776,34 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
 
     
     static final class ConnectorStartServiceParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public Identity target;
-    
+
         private ConnectorStartServiceParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ConnectorStartServiceParams() {
             this(0);
         }
-    
+
         public static ConnectorStartServiceParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ConnectorStartServiceParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ConnectorStartServiceParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -944,18 +813,20 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             ConnectorStartServiceParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ConnectorStartServiceParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ConnectorStartServiceParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.target = Identity.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -963,72 +834,41 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             
             encoder0.encode(this.target, 8, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ConnectorStartServiceParams other = (ConnectorStartServiceParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.target, other.target))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.target);
-            return result;
-        }
     }
 
 
 
     
     static final class ConnectorStartServiceResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int result;
         public Identity identity;
-    
+
         private ConnectorStartServiceResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ConnectorStartServiceResponseParams() {
             this(0);
         }
-    
+
         public static ConnectorStartServiceResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ConnectorStartServiceResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ConnectorStartServiceResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1038,23 +878,25 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             ConnectorStartServiceResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ConnectorStartServiceResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ConnectorStartServiceResponseParams(elementsOrVersion);
+                    {
+                        
                     result.result = decoder0.readInt(8);
                         ConnectResult.validate(result.result);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.identity = Identity.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1063,37 +905,6 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             encoder0.encode(this.result, 8);
             
             encoder0.encode(this.identity, 16, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ConnectorStartServiceResponseParams other = (ConnectorStartServiceResponseParams) object;
-            if (this.result!= other.result)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.identity, other.identity))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.result);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.identity);
-            return result;
         }
     }
 
@@ -1164,40 +975,37 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
 
     
     static final class ConnectorStartServiceWithProcessParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public Identity target;
         public org.chromium.mojo.system.MessagePipeHandle service;
         public org.chromium.mojo.bindings.InterfaceRequest<PidReceiver> pidReceiverRequest;
-    
+
         private ConnectorStartServiceWithProcessParams(int version) {
             super(STRUCT_SIZE, version);
             this.service = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
-    
+
         public ConnectorStartServiceWithProcessParams() {
             this(0);
         }
-    
+
         public static ConnectorStartServiceWithProcessParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ConnectorStartServiceWithProcessParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ConnectorStartServiceWithProcessParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1207,26 +1015,28 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             ConnectorStartServiceWithProcessParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ConnectorStartServiceWithProcessParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ConnectorStartServiceWithProcessParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.target = Identity.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.service = decoder0.readMessagePipeHandle(16, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.pidReceiverRequest = decoder0.readInterfaceRequest(20, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1238,78 +1048,41 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             
             encoder0.encode(this.pidReceiverRequest, 20, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ConnectorStartServiceWithProcessParams other = (ConnectorStartServiceWithProcessParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.target, other.target))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.service, other.service))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.pidReceiverRequest, other.pidReceiverRequest))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.target);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.service);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pidReceiverRequest);
-            return result;
-        }
     }
 
 
 
     
     static final class ConnectorStartServiceWithProcessResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int result;
         public Identity identity;
-    
+
         private ConnectorStartServiceWithProcessResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ConnectorStartServiceWithProcessResponseParams() {
             this(0);
         }
-    
+
         public static ConnectorStartServiceWithProcessResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ConnectorStartServiceWithProcessResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ConnectorStartServiceWithProcessResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1319,23 +1092,25 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             ConnectorStartServiceWithProcessResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ConnectorStartServiceWithProcessResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ConnectorStartServiceWithProcessResponseParams(elementsOrVersion);
+                    {
+                        
                     result.result = decoder0.readInt(8);
                         ConnectResult.validate(result.result);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.identity = Identity.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1344,37 +1119,6 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             encoder0.encode(this.result, 8);
             
             encoder0.encode(this.identity, 16, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ConnectorStartServiceWithProcessResponseParams other = (ConnectorStartServiceWithProcessResponseParams) object;
-            if (this.result!= other.result)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.identity, other.identity))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.result);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.identity);
-            return result;
         }
     }
 
@@ -1445,37 +1189,34 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
 
     
     static final class ConnectorCloneParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.InterfaceRequest<Connector> request;
-    
+
         private ConnectorCloneParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ConnectorCloneParams() {
             this(0);
         }
-    
+
         public static ConnectorCloneParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ConnectorCloneParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ConnectorCloneParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1485,17 +1226,19 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             ConnectorCloneParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ConnectorCloneParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ConnectorCloneParams(elementsOrVersion);
+                    {
+                        
                     result.request = decoder0.readInterfaceRequest(8, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1503,41 +1246,13 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             
             encoder0.encode(this.request, 8, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ConnectorCloneParams other = (ConnectorCloneParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.request, other.request))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.request);
-            return result;
-        }
     }
 
 
 
     
     static final class ConnectorFilterInterfacesParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 40;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
@@ -1545,32 +1260,29 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
         public Identity source;
         public org.chromium.mojo.bindings.InterfaceRequest<InterfaceProvider> sourceRequest;
         public InterfaceProvider target;
-    
+
         private ConnectorFilterInterfacesParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ConnectorFilterInterfacesParams() {
             this(0);
         }
-    
+
         public static ConnectorFilterInterfacesParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ConnectorFilterInterfacesParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ConnectorFilterInterfacesParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1580,30 +1292,32 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             ConnectorFilterInterfacesParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ConnectorFilterInterfacesParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ConnectorFilterInterfacesParams(elementsOrVersion);
+                    {
+                        
                     result.spec = decoder0.readString(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.source = Identity.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.sourceRequest = decoder0.readInterfaceRequest(24, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.target = decoder0.readServiceInterface(28, false, InterfaceProvider.MANAGER);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1616,43 +1330,6 @@ String spec, Identity source, org.chromium.mojo.bindings.InterfaceRequest<Interf
             encoder0.encode(this.sourceRequest, 24, false);
             
             encoder0.encode(this.target, 28, false, InterfaceProvider.MANAGER);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ConnectorFilterInterfacesParams other = (ConnectorFilterInterfacesParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.spec, other.spec))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.source, other.source))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sourceRequest, other.sourceRequest))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.target, other.target))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.spec);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.source);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sourceRequest);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.target);
-            return result;
         }
     }
 

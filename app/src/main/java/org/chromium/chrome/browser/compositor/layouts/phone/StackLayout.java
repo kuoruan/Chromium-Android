@@ -5,490 +5,98 @@
 package org.chromium.chrome.browser.compositor.layouts.phone;
 
 import android.content.Context;
-import android.graphics.Rect;
-import android.graphics.RectF;
-import android.os.SystemClock;
-import android.view.ViewConfiguration;
-import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
-import android.view.animation.Interpolator;
-import android.widget.FrameLayout;
 
-import org.chromium.base.VisibleForTesting;
-import org.chromium.chrome.browser.compositor.LayerTitleCache;
-import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable;
-import org.chromium.chrome.browser.compositor.layouts.Layout;
-import org.chromium.chrome.browser.compositor.layouts.LayoutManager;
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.compositor.layouts.LayoutRenderHost;
 import org.chromium.chrome.browser.compositor.layouts.LayoutUpdateHost;
-import org.chromium.chrome.browser.compositor.layouts.components.LayoutTab;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilter;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.GestureEventFilter;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.GestureHandler;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.ScrollDirection;
-import org.chromium.chrome.browser.compositor.layouts.phone.stack.Stack;
-import org.chromium.chrome.browser.compositor.layouts.phone.stack.StackTab;
-import org.chromium.chrome.browser.compositor.scene_layer.SceneLayer;
-import org.chromium.chrome.browser.compositor.scene_layer.TabListSceneLayer;
-import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
-import org.chromium.chrome.browser.partnercustomizations.HomepageManager;
+import org.chromium.chrome.browser.compositor.layouts.phone.stack.NonOverlappingStack;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.tabmodel.TabList;
 import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelUtils;
-import org.chromium.chrome.browser.util.FeatureUtilities;
-import org.chromium.chrome.browser.util.MathUtils;
-import org.chromium.ui.base.LocalizationUtils;
-import org.chromium.ui.interpolators.BakedBezierInterpolator;
-import org.chromium.ui.resources.ResourceManager;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 
 /**
- * Defines the layout for 2 stacks and manages the events to switch between
- * them.
+ * Layout that displays all normal tabs in one stack and all incognito tabs in a second.
  */
+public class StackLayout extends StackLayoutBase {
+    // One stack for normal tabs and one stack for incognito tabs.
+    private static final int NUM_STACKS = 2;
 
-public class StackLayout extends Layout implements Animatable<StackLayout.Property> {
-    public enum Property {
-        INNER_MARGIN_PERCENT,
-        STACK_SNAP,
-        STACK_OFFSET_Y_PERCENT,
-    }
-
-    private enum SwipeMode { NONE, SEND_TO_STACK, SWITCH_STACK }
-
-    private static final String TAG = "StackLayout";
-    // Width of the partially shown stack when there are multiple stacks.
-    private static final int MIN_INNER_MARGIN_PERCENT_DP = 55;
-    private static final float INNER_MARGIN_PERCENT_PERCENT = 0.17f;
-
-    // Speed of the automatic fling in dp/ms
-    private static final float FLING_SPEED_DP = 1.5f; // dp / ms
-    private static final int FLING_MIN_DURATION = 100; // ms
-
-    private static final float THRESHOLD_TO_SWITCH_STACK = 0.4f;
-    private static final float THRESHOLD_TIME_TO_SWITCH_STACK_INPUT_MODE = 200;
-    private static final int NEW_TAB_ANIMATION_DURATION_MS = 300;
-
-    public static final int MODERN_TOP_MARGIN_DP = 16;
-
-    /**
-     * The delta time applied on the velocity from the fling. This is to compute the kick to help
-     * switching the stack.
-     */
-    private static final float SWITCH_STACK_FLING_DT = 1.0f / 30.0f;
-
-    /** The array of potentially visible stacks. The code works for only 2 stacks. */
-    private final Stack[] mStacks;
-
-    /** Rectangles that defines the area where each stack need to be laid out. */
-    private final RectF[] mStackRects;
-
-    private int mStackAnimationCount;
-
-    private float mFlingSpeed; // pixel/ms
+    public static final int NORMAL_STACK_INDEX = 0;
+    public static final int INCOGNITO_STACK_INDEX = 1;
 
     /** Whether the current fling animation is the result of switching stacks. */
     private boolean mFlingFromModelChange;
 
-    private boolean mClicked;
-
-    // If not overscroll, then mRenderedScrollIndex == mScrollIndex;
-    // Otherwise, mRenderedScrollIndex is updated with the actual index passed in
-    // from the event handler; and mRenderedScrollIndex is the value we get
-    // after map mScrollIndex through a decelerate function.
-    // Here we use float as index so we can smoothly animate the transition between stack.
-    private float mRenderedScrollOffset;
-    private float mScrollIndexOffset;
-
-    private final int mMinMaxInnerMargin;
-    private float mInnerMarginPercent;
-    private float mStackOffsetYPercent;
-
-    private SwipeMode mInputMode = SwipeMode.NONE;
-    private float mLastOnDownX;
-    private float mLastOnDownY;
-    private long mLastOnDownTimeStamp;
-    private final float mMinShortPressThresholdSqr; // Computed from Android ViewConfiguration
-    private final float mMinDirectionThreshold; // Computed from Android ViewConfiguration
-
-    // Pre-allocated temporary arrays that store id of visible tabs.
-    // They can be used to call populatePriorityVisibilityList.
-    // We use StackTab[] instead of ArrayList<StackTab> because the sorting function does
-    // an allocation to iterate over the elements.
-    // Do not use out of the context of {@link #updateTabPriority}.
-    private StackTab[] mSortedPriorityArray;
-
-    private final ArrayList<Integer> mVisibilityArray = new ArrayList<Integer>();
-    private final VisibilityComparator mVisibilityComparator = new VisibilityComparator();
-    private final OrderComparator mOrderComparator = new OrderComparator();
-    private Comparator<StackTab> mSortingComparator = mVisibilityComparator;
-
-    private static final int LAYOUTTAB_ASYNCHRONOUS_INITIALIZATION_BATCH_SIZE = 4;
-    private boolean mDelayedLayoutTabInitRequired;
-
-    private Boolean mTemporarySelectedStack;
-
-    // Orientation Variables
-    private PortraitViewport mCachedPortraitViewport;
-    private PortraitViewport mCachedLandscapeViewport;
-
-    private final ViewGroup mViewContainer;
-
-    private final GestureEventFilter mGestureEventFilter;
-    private final TabListSceneLayer mSceneLayer;
-
-    private StackLayoutGestureHandler mGestureHandler;
-
-    /** A {@link LayoutTab} used for new tab animations. */
-    private LayoutTab mNewTabLayoutTab;
-
-    /**
-     * Whether or not the new layout tab has been properly initialized (a frame can occur between
-     * creation and initialization).
-     */
-    private boolean mIsNewTabInitialized;
-
-    private class StackLayoutGestureHandler implements GestureHandler {
-        @Override
-        public void onDown(float x, float y, boolean fromMouse, int buttons) {
-            long time = time();
-            mLastOnDownX = x;
-            mLastOnDownY = y;
-            mLastOnDownTimeStamp = time;
-            mInputMode = computeInputMode(time, x, y, 0, 0);
-            mStacks[getTabStackIndex()].onDown(time);
-        }
-
-        @Override
-        public void onUpOrCancel() {
-            onUpOrCancel(time());
-        }
-
-        @Override
-        public void drag(float x, float y, float dx, float dy, float tx, float ty) {
-            SwipeMode oldInputMode = mInputMode;
-            long time = time();
-            float amountX = dx;
-            float amountY = dy;
-            mInputMode = computeInputMode(time, x, y, amountX, amountY);
-
-            if (oldInputMode == SwipeMode.SEND_TO_STACK && mInputMode == SwipeMode.SWITCH_STACK) {
-                mStacks[getTabStackIndex()].onUpOrCancel(time);
-            } else if (oldInputMode == SwipeMode.SWITCH_STACK
-                    && mInputMode == SwipeMode.SEND_TO_STACK) {
-                onUpOrCancel(time);
-            }
-
-            if (mInputMode == SwipeMode.SEND_TO_STACK) {
-                mStacks[getTabStackIndex()].drag(time, x, y, amountX, amountY);
-            } else if (mInputMode == SwipeMode.SWITCH_STACK) {
-                scrollStacks(getOrientation() == Orientation.PORTRAIT ? amountX : amountY);
-            }
-        }
-
-        @Override
-        public void click(float x, float y, boolean fromMouse, int buttons) {
-            // Click event happens before the up event. mClicked is set to mute the up event.
-            mClicked = true;
-            PortraitViewport viewportParams = getViewportParameters();
-            int stackIndexAt = viewportParams.getStackIndexAt(x, y);
-            if (stackIndexAt == getTabStackIndex()) {
-                mStacks[getTabStackIndex()].click(time(), x, y);
-            } else {
-                flingStacks(getTabStackIndex() == 0);
-            }
-            requestStackUpdate();
-        }
-
-        @Override
-        public void fling(float x, float y, float velocityX, float velocityY) {
-            long time = time();
-            float vx = velocityX;
-            float vy = velocityY;
-
-            if (mInputMode == SwipeMode.NONE) {
-                mInputMode = computeInputMode(
-                        time, x, y, vx * SWITCH_STACK_FLING_DT, vy * SWITCH_STACK_FLING_DT);
-            }
-
-            if (mInputMode == SwipeMode.SEND_TO_STACK) {
-                mStacks[getTabStackIndex()].fling(time, x, y, vx, vy);
-            } else if (mInputMode == SwipeMode.SWITCH_STACK) {
-                final float velocity = getOrientation() == Orientation.PORTRAIT ? vx : vy;
-                final float origin = getOrientation() == Orientation.PORTRAIT ? x : y;
-                final float max =
-                        getOrientation() == Orientation.PORTRAIT ? getWidth() : getHeight();
-                final float predicted = origin + velocity * SWITCH_STACK_FLING_DT;
-                final float delta = MathUtils.clamp(predicted, 0, max) - origin;
-                scrollStacks(delta);
-            }
-            requestStackUpdate();
-        }
-
-        @Override
-        public void onLongPress(float x, float y) {
-            mStacks[getTabStackIndex()].onLongPress(time(), x, y);
-        }
-
-        @Override
-        public void onPinch(float x0, float y0, float x1, float y1, boolean firstEvent) {
-            mStacks[getTabStackIndex()].onPinch(time(), x0, y0, x1, y1, firstEvent);
-        }
-
-        private void onUpOrCancel(long time) {
-            int currentIndex = getTabStackIndex();
-            int nextIndex = 1 - currentIndex;
-            if (!mClicked
-                    && Math.abs(currentIndex + mRenderedScrollOffset) > THRESHOLD_TO_SWITCH_STACK
-                    && mStacks[nextIndex].isDisplayable()) {
-                setActiveStackState(nextIndex == 1);
-            }
-            mClicked = false;
-            finishScrollStacks();
-            mStacks[getTabStackIndex()].onUpOrCancel(time);
-            mInputMode = SwipeMode.NONE;
-        }
-
-        private long time() {
-            return LayoutManager.time();
-        }
-    }
+    /** Disable the incognito button while selecting a tab. */
+    private boolean mAnimatingStackSwitch;
 
     /**
      * @param context     The current Android's context.
      * @param updateHost  The {@link LayoutUpdateHost} view for this layout.
      * @param renderHost  The {@link LayoutRenderHost} view for this layout.
-     * @param eventFilter The {@link EventFilter} that is needed for this view.
      */
     public StackLayout(Context context, LayoutUpdateHost updateHost, LayoutRenderHost renderHost) {
         super(context, updateHost, renderHost);
-
-        mGestureHandler = new StackLayoutGestureHandler();
-        mGestureEventFilter = new GestureEventFilter(context, mGestureHandler);
-        final ViewConfiguration configuration = ViewConfiguration.get(context);
-        mMinDirectionThreshold = configuration.getScaledTouchSlop();
-        mMinShortPressThresholdSqr =
-                configuration.getScaledPagingTouchSlop() * configuration.getScaledPagingTouchSlop();
-
-        mMinMaxInnerMargin = (int) (MIN_INNER_MARGIN_PERCENT_DP + 0.5);
-        mFlingSpeed = FLING_SPEED_DP;
-        mStacks = new Stack[2];
-        mStacks[0] = new Stack(context, this);
-        mStacks[1] = new Stack(context, this);
-        mStackRects = new RectF[2];
-        mStackRects[0] = new RectF();
-        mStackRects[1] = new RectF();
-
-        mViewContainer = new FrameLayout(getContext());
-        mSceneLayer = new TabListSceneLayer();
     }
 
     @Override
-    public boolean forceShowBrowserControlsAndroidView() {
-        return true;
-    }
-
-    /**
-     * Simulates a click on the view at the specified pixel offset
-     * from the top left of the view.
-     * This is used by UI tests.
-     * @param x Coordinate of the click in dp.
-     * @param y Coordinate of the click in dp.
-     */
-    @VisibleForTesting
-    public void simulateClick(float x, float y) {
-        mGestureHandler.click(x, y, false, -1);
-    }
-
-    /**
-     * Simulates a drag and issues Up-event to commit the drag.
-     * @param x  Coordinate to start the Drag from in dp.
-     * @param y  Coordinate to start the Drag from in dp.
-     * @param dX Amount of drag in X direction in dp.
-     * @param dY Amount of drag in Y direction in dp.
-     */
-    @VisibleForTesting
-    public void simulateDrag(float x, float y, float dX, float dY) {
-        mGestureHandler.onDown(x, y, false, -1);
-        mGestureHandler.drag(x, y, dX, dY, -1, -1);
-        mGestureHandler.onUpOrCancel();
-    }
-
-    @Override
-    public ViewportMode getViewportMode() {
-        return ViewportMode.ALWAYS_FULLSCREEN;
+    protected boolean shouldIgnoreTouchInput() {
+        return mAnimatingStackSwitch;
     }
 
     @Override
     public void setTabModelSelector(TabModelSelector modelSelector, TabContentManager manager) {
         super.setTabModelSelector(modelSelector, manager);
-        mStacks[0].setTabList(modelSelector.getModel(false));
-        mStacks[1].setTabList(modelSelector.getModel(true));
-        resetScrollData();
-    }
-
-    /**
-     * Get the tab stack state for the specified mode.
-     *
-     * @param incognito Whether the TabStackState to be returned should be the one for incognito.
-     * @return The tab stack state for the given mode.
-     * @VisibleForTesting
-     */
-    public Stack getTabStack(boolean incognito) {
-        return mStacks[incognito ? 1 : 0];
-    }
-
-    /**
-     * Get the tab stack state.
-     * @return The tab stack index for the given tab id.
-     */
-    private int getTabStackIndex() {
-        return getTabStackIndex(Tab.INVALID_TAB_ID);
-    }
-
-    /**
-     * Get the tab stack state for the specified tab id.
-     *
-     * @param tabId The id of the tab to lookup.
-     * @return The tab stack index for the given tab id.
-     * @VisibleForTesting
-     */
-    protected int getTabStackIndex(int tabId) {
-        if (tabId == Tab.INVALID_TAB_ID) {
-            boolean incognito = mTemporarySelectedStack != null
-                    ? mTemporarySelectedStack
-                    : mTabModelSelector.isIncognitoSelected();
-            return incognito ? 1 : 0;
-        } else {
-            return TabModelUtils.getTabById(mTabModelSelector.getModel(true), tabId) != null ? 1
-                                                                                             : 0;
-        }
-    }
-
-    /**
-     * Get the tab stack state for the specified tab id.
-     *
-     * @param tabId The id of the tab to lookup.
-     * @return The tab stack state for the given tab id.
-     * @VisibleForTesting
-     */
-    protected Stack getTabStack(int tabId) {
-        return mStacks[getTabStackIndex(tabId)];
-    }
-
-    /**
-     * Commits outstanding model states.
-     * @param time  The current time of the app in ms.
-     */
-    public void commitOutstandingModelState(long time) {
-        mStacks[1].ensureCleaningUpDyingTabs(time);
-        mStacks[0].ensureCleaningUpDyingTabs(time);
+        ArrayList<TabList> tabLists = new ArrayList<TabList>();
+        tabLists.add(modelSelector.getModel(false));
+        tabLists.add(modelSelector.getModel(true));
+        setTabLists(tabLists);
     }
 
     @Override
-    public void onTabSelecting(long time, int tabId) {
-        commitOutstandingModelState(time);
-        if (tabId == Tab.INVALID_TAB_ID) tabId = mTabModelSelector.getCurrentTabId();
-        super.onTabSelecting(time, tabId);
-        mStacks[getTabStackIndex()].tabSelectingEffect(time, tabId);
-        startMarginAnimation(false);
-        startYOffsetAnimation(false);
-        finishScrollStacks();
+    protected int getTabStackIndex(int tabId) {
+        if (tabId == Tab.INVALID_TAB_ID) {
+            if (mTemporarySelectedStack != INVALID_STACK_INDEX) return mTemporarySelectedStack;
+
+            return mTabModelSelector.isIncognitoSelected() ? INCOGNITO_STACK_INDEX
+                                                           : NORMAL_STACK_INDEX;
+        } else {
+            return TabModelUtils.getTabById(mTabModelSelector.getModel(true), tabId) != null
+                    ? INCOGNITO_STACK_INDEX
+                    : NORMAL_STACK_INDEX;
+        }
     }
 
     @Override
     public void onTabClosing(long time, int id) {
-        Stack stack = getTabStack(id);
-        if (stack == null) return;
-        stack.tabClosingEffect(time, id);
-
+        super.onTabClosing(time, id);
         // Just in case we closed the last tab of a stack we need to trigger the overlap animation.
         startMarginAnimation(true);
-
         // Animate the stack to leave incognito mode.
-        if (!mStacks[1].isDisplayable()) uiPreemptivelySelectTabModel(false);
+        if (!mStacks.get(INCOGNITO_STACK_INDEX).isDisplayable()) onTabModelSwitched(false);
     }
 
     @Override
     public void onTabsAllClosing(long time, boolean incognito) {
         super.onTabsAllClosing(time, incognito);
-        getTabStack(incognito).tabsAllClosingEffect(time);
+        getTabStackAtIndex(incognito ? INCOGNITO_STACK_INDEX : NORMAL_STACK_INDEX)
+                .tabsAllClosingEffect(time);
         // trigger the overlap animation.
         startMarginAnimation(true);
         // Animate the stack to leave incognito mode.
-        if (!mStacks[1].isDisplayable()) uiPreemptivelySelectTabModel(false);
+        if (!mStacks.get(INCOGNITO_STACK_INDEX).isDisplayable()) onTabModelSwitched(false);
     }
 
     @Override
     public void onTabClosureCancelled(long time, int id, boolean incognito) {
         super.onTabClosureCancelled(time, id, incognito);
-        getTabStack(incognito).undoClosure(time, id);
-    }
-
-    @Override
-    public boolean handlesCloseAll() {
-        return true;
-    }
-
-    @Override
-    public boolean handlesTabCreating() {
-        return true;
-    }
-
-    @Override
-    public boolean handlesTabClosing() {
-        return true;
-    }
-
-    @Override
-    public void attachViews(ViewGroup container) {
-        // TODO(dtrainor): This is a hack.  We're attaching to the parent of the view container
-        // which is the content container of the Activity.
-        ((ViewGroup) container.getParent())
-                .addView(mViewContainer,
-                        new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-    }
-
-    @Override
-    public void detachViews() {
-        if (mViewContainer.getParent() != null) {
-            ((ViewGroup) mViewContainer.getParent()).removeView(mViewContainer);
-        }
-        mViewContainer.removeAllViews();
-    }
-
-    /**
-     * @return A {@link ViewGroup} that {@link Stack}s can use to interact with the Android view
-     *         hierarchy.
-     */
-    public ViewGroup getViewContainer() {
-        return mViewContainer;
-    }
-
-    @Override
-    public boolean onBackPressed() {
-        // Force any in progress animations to end. This was introduced because
-        // we end up with 0 tabs if the animation for all tabs closing is still
-        // running when the back button is pressed. We should finish the animation
-        // and close Chrome instead.
-        // See http://crbug.com/522447
-        onUpdateAnimation(SystemClock.currentThreadTimeMillis(), true);
-        return false;
-    }
-
-    @Override
-    public void onTabCreating(int sourceTabId) {
-        // Force any in progress animations to end. This was introduced because
-        // we end up with 0 tabs if the animation for all tabs closing is still
-        // running when a new tab is created.
-        // See http://crbug.com/496557
-        onUpdateAnimation(SystemClock.currentThreadTimeMillis(), true);
+        getTabStackAtIndex(incognito ? INCOGNITO_STACK_INDEX : NORMAL_STACK_INDEX)
+                .undoClosure(time, id);
     }
 
     @Override
@@ -496,102 +104,71 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
             boolean background, float originX, float originY) {
         super.onTabCreated(
                 time, id, tabIndex, sourceId, newIsIncognito, background, originX, originY);
-        startHiding(id, false);
-        mStacks[getTabStackIndex(id)].tabCreated(time, id);
-
-        if (FeatureUtilities.isChromeHomeEnabled()) {
-            mNewTabLayoutTab = createLayoutTab(id, newIsIncognito, NO_CLOSE_BUTTON, NO_TITLE);
-            mNewTabLayoutTab.setScale(1.f);
-            mNewTabLayoutTab.setBorderScale(1.f);
-            mNewTabLayoutTab.setDecorationAlpha(0.f);
-            mNewTabLayoutTab.setY(getHeight() / 2);
-
-            mIsNewTabInitialized = true;
-
-            Interpolator interpolator = BakedBezierInterpolator.TRANSFORM_CURVE;
-            addToAnimation(mNewTabLayoutTab, LayoutTab.Property.Y, mNewTabLayoutTab.getY(), 0.f,
-                    NEW_TAB_ANIMATION_DURATION_MS, 0, false, interpolator);
-        } else {
-            startMarginAnimation(false);
-        }
-
-        uiPreemptivelySelectTabModel(newIsIncognito);
-    }
-
-    @Override
-    public void onTabRestored(long time, int tabId) {
-        super.onTabRestored(time, tabId);
-        // Call show() so that new stack tabs and potentially new stacks get created.
-        // TODO(twellington): add animation for showing the restored tab.
-        show(time, false);
+        onTabModelSwitched(newIsIncognito);
     }
 
     @Override
     public void onTabModelSwitched(boolean toIncognitoTabModel) {
-        flingStacks(toIncognitoTabModel);
-        mFlingFromModelChange = true;
-    }
+        if (isHorizontalTabSwitcherFlagEnabled()) {
+            // Don't allow switching between normal and incognito again until the animations finish.
+            mAnimatingStackSwitch = true;
 
-    @Override
-    public boolean onUpdateAnimation(long time, boolean jumpToEnd) {
-        boolean animationsWasDone = super.onUpdateAnimation(time, jumpToEnd);
-        boolean finishedView0 = mStacks[0].onUpdateViewAnimation(time, jumpToEnd);
-        boolean finishedView1 = mStacks[1].onUpdateViewAnimation(time, jumpToEnd);
-        boolean finishedCompositor0 = mStacks[0].onUpdateCompositorAnimations(time, jumpToEnd);
-        boolean finishedCompositor1 = mStacks[1].onUpdateCompositorAnimations(time, jumpToEnd);
-        if (animationsWasDone && finishedView0 && finishedView1 && finishedCompositor0
-                && finishedCompositor1) {
-            return true;
+            // Make sure we update the tab switcher's background color even if no tabs are open and
+            // therefore neither the switch away nor switch to animations run.
+            requestUpdate();
+
+            NonOverlappingStack oldStack = (NonOverlappingStack) mStacks.get(
+                    toIncognitoTabModel ? NORMAL_STACK_INDEX : INCOGNITO_STACK_INDEX);
+            oldStack.runSwitchAwayAnimation(toIncognitoTabModel
+                            ? NonOverlappingStack.SwitchDirection.LEFT
+                            : NonOverlappingStack.SwitchDirection.RIGHT);
         } else {
-            if (!animationsWasDone || !finishedCompositor0 || !finishedCompositor1) {
-                requestStackUpdate();
-            }
-
-            return false;
+            flingStacks(toIncognitoTabModel ? INCOGNITO_STACK_INDEX : NORMAL_STACK_INDEX);
+            mFlingFromModelChange = true;
         }
     }
 
     @Override
-    protected void onAnimationStarted() {
-        if (mStackAnimationCount == 0) super.onAnimationStarted();
+    public void onSwitchAwayFinished() {
+        int newStackIndex = getTabStackIndex(Tab.INVALID_TAB_ID);
+        mRenderedScrollOffset = -newStackIndex;
+        NonOverlappingStack newStack = (NonOverlappingStack) mStacks.get(newStackIndex);
+        newStack.runSwitchToAnimation(newStackIndex == INCOGNITO_STACK_INDEX
+                        ? NonOverlappingStack.SwitchDirection.LEFT
+                        : NonOverlappingStack.SwitchDirection.RIGHT);
+    }
+
+    @Override
+    public void onSwitchToFinished() {
+        mAnimatingStackSwitch = false;
     }
 
     @Override
     protected void onAnimationFinished() {
+        super.onAnimationFinished();
         mFlingFromModelChange = false;
-        if (mTemporarySelectedStack != null) {
-            mTabModelSelector.selectModel(mTemporarySelectedStack);
-            mTemporarySelectedStack = null;
-        }
-        if (mStackAnimationCount == 0) super.onAnimationFinished();
-        if (mNewTabLayoutTab != null) {
-            mIsNewTabInitialized = false;
-            mNewTabLayoutTab = null;
+        if (mTemporarySelectedStack != INVALID_STACK_INDEX) {
+            mTabModelSelector.selectModel(mTemporarySelectedStack == INCOGNITO_STACK_INDEX);
+            mTemporarySelectedStack = INVALID_STACK_INDEX;
         }
     }
 
-    /**
-     * Called when a UI element is attempting to select a tab.  This will perform the animation
-     * and then actually propagate the action.  This starts hiding this layout which, when complete,
-     * will actually select the tab.
-     * @param time The current time of the app in ms.
-     * @param id   The id of the tab to select.
-     */
-    public void uiSelectingTab(long time, int id) {
-        onTabSelecting(time, id);
+    @Override
+    protected int getMinRenderedScrollOffset() {
+        // If the horizontal tab switcher flag is enabled, we let the user tap the incognito button
+        // to switch to incognito mode, even if no incognito tabs are open.
+        if (isHorizontalTabSwitcherFlagEnabled()) return -1;
+
+        // If there's at least one incognito tab open, or we're in the process of switching back
+        // from incognito to normal mode, return -1 so we don't cause any clamping. Otherwise,
+        // return 0 to prevent scrolling.
+        if (mStacks.get(INCOGNITO_STACK_INDEX).isDisplayable() || mFlingFromModelChange) return -1;
+        return 0;
     }
 
-    /**
-     * Called when a UI element is attempting to close a tab.  This will perform the required close
-     * animations.  When the UI is ready to actually close the tab
-     * {@link #uiDoneClosingTab(long, int, boolean, boolean)} should be called to actually propagate
-     * the event to the model.
-     * @param time The current time of the app in ms.
-     * @param id   The id of the tab to close.
-     */
+    @Override
     public void uiRequestingCloseTab(long time, int id) {
-        // Start the tab closing effect if necessary.
-        getTabStack(id).tabClosingEffect(time, id);
+        super.uiRequestingCloseTab(time, id);
 
         int incognitoCount = mTabModelSelector.getModel(true).getCount();
         TabModel model = mTabModelSelector.getModelForTabId(id);
@@ -600,688 +177,34 @@ public class StackLayout extends Layout implements Animatable<StackLayout.Proper
 
         // Make sure we show/hide both stacks depending on which tab we're closing.
         startMarginAnimation(true, incognitoVisible);
-        if (!incognitoVisible) uiPreemptivelySelectTabModel(false);
-    }
-
-    /**
-     * Called when a UI element is done animating the close tab effect started by
-     * {@link #uiRequestingCloseTab(long, int)}.  This actually pushes the close event to the model.
-     * @param time      The current time of the app in ms.
-     * @param id        The id of the tab to close.
-     * @param canUndo   Whether or not this close can be undone.
-     * @param incognito Whether or not this was for the incognito stack or not.
-     */
-    public void uiDoneClosingTab(long time, int id, boolean canUndo, boolean incognito) {
-        // If homepage is enabled and there is a maximum of 1 tab in both models
-        // (this is the last tab), the tab closure cannot be undone.
-        canUndo &= !(HomepageManager.isHomepageEnabled()
-                && (mTabModelSelector.getModel(true).getCount()
-                                   + mTabModelSelector.getModel(false).getCount()
-                           < 2));
-
-        // Propagate the tab closure to the model.
-        TabModelUtils.closeTabById(mTabModelSelector.getModel(incognito), id, canUndo);
-    }
-
-    public void uiDoneClosingAllTabs(boolean incognito) {
-        // Propagate the tab closure to the model.
-        mTabModelSelector.getModel(incognito).closeAllTabs(false, false);
-    }
-
-    /**
-     * Called when a {@link Stack} instance is done animating the stack enter effect.
-     */
-    public void uiDoneEnteringStack() {
-        mSortingComparator = mVisibilityComparator;
-        doneShowing();
-    }
-
-    private void uiPreemptivelySelectTabModel(boolean incognito) {
-        onTabModelSwitched(incognito);
-    }
-
-    /**
-     * Starts the animation for the opposite stack to slide in or out when entering
-     * or leaving stack view.  The animation should be super fast to match more or less
-     * the fling animation.
-     * @param enter True if the stack view is being entered, false if the stack view
-     *              is being left.
-     */
-    private void startMarginAnimation(boolean enter) {
-        startMarginAnimation(enter, mStacks[1].isDisplayable());
-    }
-
-    private void startMarginAnimation(boolean enter, boolean showIncognito) {
-        // Any outstanding animations must be cancelled to avoid race condition.
-        cancelAnimation(this, Property.INNER_MARGIN_PERCENT);
-
-        float start = mInnerMarginPercent;
-        float end = enter && showIncognito ? 1.0f : 0.0f;
-        if (start != end) {
-            addToAnimation(this, Property.INNER_MARGIN_PERCENT, start, end, 200, 0);
-        }
-    }
-
-    private void startYOffsetAnimation(boolean enter) {
-        // Any outstanding animations must be cancelled to avoid race condition.
-        cancelAnimation(this, Property.STACK_OFFSET_Y_PERCENT);
-
-        float start = mStackOffsetYPercent;
-        float end = enter ? 1.f : 0.f;
-        if (start != end) {
-            addToAnimation(this, Property.STACK_OFFSET_Y_PERCENT, start, end, 300, 0);
-        }
+        if (!incognitoVisible) onTabModelSwitched(false);
     }
 
     @Override
-    public void show(long time, boolean animate) {
-        super.show(time, animate);
+    protected @SwipeMode int computeInputMode(long time, float x, float y, float dx, float dy) {
+        // If this experiment flag is enabled, we add an incognito toggle button to the toolbar, and
+        // disable swiping between the stacks.
+        if (isHorizontalTabSwitcherFlagEnabled()) return SwipeMode.SEND_TO_STACK;
 
-        Tab tab = mTabModelSelector.getCurrentTab();
-        if (tab != null && tab.isNativePage()) mTabContentManager.cacheTabThumbnail(tab);
+        if (mStacks.size() == 2 && !mStacks.get(1).isDisplayable()) return SwipeMode.SEND_TO_STACK;
+        return super.computeInputMode(time, x, y, dx, dy);
+    }
 
-        // Remove any views in case we're getting another call to show before we hide (quickly
-        // toggling the tab switcher button).
-        mViewContainer.removeAllViews();
-        int currentTabModel = mTabModelSelector.isIncognitoSelected() ? 1 : 0;
-
-        for (int i = mStacks.length - 1; i >= 0; --i) {
-            mStacks[i].reset();
-            if (mStacks[i].isDisplayable()) {
-                mStacks[i].show(i == currentTabModel);
+    @Override
+    public void setActiveStackState(int stackIndex) {
+        if (stackIndex != getTabStackIndex(Tab.INVALID_TAB_ID)) {
+            if (stackIndex == NORMAL_STACK_INDEX) {
+                RecordUserAction.record("MobileStackViewNormalMode");
             } else {
-                mStacks[i].cleanupTabs();
-            }
-        }
-        // Initialize the animation and the positioning of all the elements
-        mSortingComparator = mOrderComparator;
-        resetScrollData();
-        for (int i = mStacks.length - 1; i >= 0; --i) {
-            if (mStacks[i].isDisplayable()) {
-                boolean offscreen = (i != getTabStackIndex());
-                mStacks[i].stackEntered(time, !offscreen);
-            }
-        }
-        startMarginAnimation(true);
-        startYOffsetAnimation(true);
-        flingStacks(getTabStackIndex() == 1);
-
-        if (!animate) onUpdateAnimation(time, true);
-
-        // We will render before we get a call to updateLayout.  Need to make sure all of the tabs
-        // we need to render are up to date.
-        updateLayout(time, 0);
-    }
-
-    @Override
-    public void swipeStarted(long time, ScrollDirection direction, float x, float y) {
-        mStacks[getTabStackIndex()].swipeStarted(time, direction, x, y);
-    }
-
-    @Override
-    public void swipeUpdated(long time, float x, float y, float dx, float dy, float tx, float ty) {
-        mStacks[getTabStackIndex()].swipeUpdated(time, x, y, dx, dy, tx, ty);
-    }
-
-    @Override
-    public void swipeFinished(long time) {
-        mStacks[getTabStackIndex()].swipeFinished(time);
-    }
-
-    @Override
-    public void swipeCancelled(long time) {
-        mStacks[getTabStackIndex()].swipeCancelled(time);
-    }
-
-    @Override
-    public void swipeFlingOccurred(
-            long time, float x, float y, float tx, float ty, float vx, float vy) {
-        mStacks[getTabStackIndex()].swipeFlingOccurred(time, x, y, tx, ty, vx, vy);
-    }
-
-    private void requestStackUpdate() {
-        // TODO(jgreenwald): It isn't always necessary to invalidate both
-        // stacks.
-        mStacks[0].requestUpdate();
-        mStacks[1].requestUpdate();
-    }
-
-    @Override
-    public void notifySizeChanged(float width, float height, int orientation) {
-        mCachedLandscapeViewport = null;
-        mCachedPortraitViewport = null;
-        mStacks[0].notifySizeChanged(width, height, orientation);
-        mStacks[1].notifySizeChanged(width, height, orientation);
-        resetScrollData();
-        requestStackUpdate();
-    }
-
-    @Override
-    public void contextChanged(Context context) {
-        super.contextChanged(context);
-        StackTab.resetDimensionConstants(context);
-        mStacks[0].contextChanged(context);
-        mStacks[1].contextChanged(context);
-        requestStackUpdate();
-    }
-
-    /**
-     * Computes the input mode for drag and fling based on the first event position.
-     * @param time The current time of the app in ms.
-     * @param x    The x layout position of the mouse (without the displacement).
-     * @param y    The y layout position of the mouse (without the displacement).
-     * @param dx   The x displacement happening this frame.
-     * @param dy   The y displacement happening this frame.
-     * @return     The input mode to select.
-     */
-    private SwipeMode computeInputMode(long time, float x, float y, float dx, float dy) {
-        if (!mStacks[1].isDisplayable()) return SwipeMode.SEND_TO_STACK;
-        int currentIndex = getTabStackIndex();
-        float relativeX = mLastOnDownX - (x + dx);
-        float relativeY = mLastOnDownY - (y + dy);
-        float distanceToDownSqr = dx * dx + dy * dy;
-        float switchDelta = getOrientation() == Orientation.PORTRAIT ? relativeX : relativeY;
-        float otherDelta = getOrientation() == Orientation.PORTRAIT ? relativeY : relativeX;
-
-        // Dragging in the opposite direction of the stack switch
-        if (distanceToDownSqr > mMinDirectionThreshold * mMinDirectionThreshold
-                && Math.abs(otherDelta) > Math.abs(switchDelta)) {
-            return SwipeMode.SEND_TO_STACK;
-        }
-        // Dragging in a direction the stack cannot switch
-        if (Math.abs(switchDelta) > mMinDirectionThreshold) {
-            if ((currentIndex == 0) ^ (switchDelta > 0)
-                    ^ (getOrientation() == Orientation.PORTRAIT
-                              && LocalizationUtils.isLayoutRtl())) {
-                return SwipeMode.SEND_TO_STACK;
-            } else {
-                return SwipeMode.SWITCH_STACK;
+                RecordUserAction.record("MobileStackViewIncognitoMode");
             }
         }
 
-        // Not moving the finger
-        if (time - mLastOnDownTimeStamp > THRESHOLD_TIME_TO_SWITCH_STACK_INPUT_MODE) {
-            return SwipeMode.SEND_TO_STACK;
-        }
-        // Dragging fast
-        if (distanceToDownSqr > mMinShortPressThresholdSqr) {
-            return SwipeMode.SWITCH_STACK;
-        }
-        return SwipeMode.NONE;
-    }
-
-    class PortraitViewport {
-        protected float mWidth, mHeight;
-        PortraitViewport() {
-            mWidth = StackLayout.this.getWidth();
-            mHeight = StackLayout.this.getHeightMinusBrowserControls();
-        }
-
-        float getClampedRenderedScrollOffset() {
-            if (mStacks[1].isDisplayable() || mFlingFromModelChange) {
-                return MathUtils.clamp(mRenderedScrollOffset, 0, -1);
-            } else {
-                return 0;
-            }
-        }
-
-        float getInnerMargin() {
-            float margin = mInnerMarginPercent
-                    * Math.max(mMinMaxInnerMargin, mWidth * INNER_MARGIN_PERCENT_PERCENT);
-            return margin;
-        }
-
-        int getStackIndexAt(float x, float y) {
-            if (LocalizationUtils.isLayoutRtl()) {
-                // On RTL portrait mode, stack1 (incognito) is on the left.
-                float separation = getStack0Left();
-                return x < separation ? 1 : 0;
-            } else {
-                float separation = getStack0Left() + getWidth();
-                return x < separation ? 0 : 1;
-            }
-        }
-
-        float getStack0Left() {
-            return LocalizationUtils.isLayoutRtl()
-                    ? getInnerMargin() - getClampedRenderedScrollOffset() * getFullScrollDistance()
-                    : getClampedRenderedScrollOffset() * getFullScrollDistance();
-        }
-
-        float getWidth() {
-            return mWidth - getInnerMargin();
-        }
-
-        float getHeight() {
-            return mHeight;
-        }
-
-        float getStack0Top() {
-            return getTopHeightOffset();
-        }
-
-        float getStack0ToStack1TranslationX() {
-            return Math.round(LocalizationUtils.isLayoutRtl() ? -mWidth + getInnerMargin() : mWidth
-                                    - getInnerMargin());
-        }
-
-        float getStack0ToStack1TranslationY() {
-            return 0.0f;
-        }
-
-        float getTopHeightOffset() {
-            if (FeatureUtilities.isChromeHomeEnabled()) return MODERN_TOP_MARGIN_DP;
-            return (StackLayout.this.getHeight() - getHeightMinusBrowserControls())
-                    * mStackOffsetYPercent;
-        }
-    }
-
-    class LandscapeViewport extends PortraitViewport {
-        LandscapeViewport() {
-            // This is purposefully inverted.
-            mWidth = StackLayout.this.getHeightMinusBrowserControls();
-            mHeight = StackLayout.this.getWidth();
-        }
-
-        @Override
-        float getInnerMargin() {
-            float margin = mInnerMarginPercent
-                    * Math.max(mMinMaxInnerMargin, mWidth * INNER_MARGIN_PERCENT_PERCENT);
-            return margin;
-        }
-
-        @Override
-        int getStackIndexAt(float x, float y) {
-            float separation = getStack0Top() + getHeight();
-            return y < separation ? 0 : 1;
-        }
-
-        @Override
-        float getStack0Left() {
-            return 0.f;
-        }
-
-        @Override
-        float getStack0Top() {
-            return getClampedRenderedScrollOffset() * getFullScrollDistance()
-                    + getTopHeightOffset();
-        }
-
-        @Override
-        float getWidth() {
-            return super.getHeight();
-        }
-
-        @Override
-        float getHeight() {
-            return super.getWidth();
-        }
-
-        @Override
-        float getStack0ToStack1TranslationX() {
-            return super.getStack0ToStack1TranslationY();
-        }
-
-        @Override
-        float getStack0ToStack1TranslationY() {
-            return Math.round(mWidth - getInnerMargin());
-        }
-    }
-
-    private PortraitViewport getViewportParameters() {
-        if (getOrientation() == Orientation.PORTRAIT) {
-            if (mCachedPortraitViewport == null) {
-                mCachedPortraitViewport = new PortraitViewport();
-            }
-            return mCachedPortraitViewport;
-        } else {
-            if (mCachedLandscapeViewport == null) {
-                mCachedLandscapeViewport = new LandscapeViewport();
-            }
-            return mCachedLandscapeViewport;
-        }
-    }
-
-    private void scrollStacks(float delta) {
-        cancelAnimation(this, Property.STACK_SNAP);
-        float fullDistance = getFullScrollDistance();
-        mScrollIndexOffset += MathUtils.flipSignIf(delta / fullDistance,
-                getOrientation() == Orientation.PORTRAIT && LocalizationUtils.isLayoutRtl());
-        mRenderedScrollOffset = MathUtils.clamp(mScrollIndexOffset, 0, -1);
-        requestStackUpdate();
-    }
-
-    private void flingStacks(boolean toIncognito) {
-        // velocityX is measured in pixel per second.
-        setActiveStackState(toIncognito);
-        finishScrollStacks();
-        requestStackUpdate();
-    }
-
-    /**
-     * Animate to the final position of the stack.  Unfortunately, both touch-up
-     * and fling can be called and this depends on fling always being called last.
-     * If fling is called first, onUpOrCancel can override the fling position
-     * with the opposite.  For example, if the user does a very small fling from
-     * incognito to non-incognito, which leaves the up event in the incognito side.
-     */
-    private void finishScrollStacks() {
-        cancelAnimation(this, Property.STACK_SNAP);
-        final int currentModelIndex = getTabStackIndex();
-        float delta = Math.abs(currentModelIndex + mRenderedScrollOffset);
-        float target = -currentModelIndex;
-        if (delta != 0) {
-            long duration = FLING_MIN_DURATION
-                    + (long) Math.abs(delta * getFullScrollDistance() / mFlingSpeed);
-            addToAnimation(this, Property.STACK_SNAP, mRenderedScrollOffset, target, duration, 0);
-        } else {
-            setProperty(Property.STACK_SNAP, target);
-            if (mTemporarySelectedStack != null) {
-                mTabModelSelector.selectModel(mTemporarySelectedStack);
-                mTemporarySelectedStack = null;
-            }
-        }
-    }
-
-    /**
-     * Pushes a rectangle to be drawn on the screen on top of everything.
-     *
-     * @param rect  The rectangle to be drawn on screen
-     * @param color The color of the rectangle
-     */
-    public void pushDebugRect(Rect rect, int color) {
-        if (rect.left > rect.right) {
-            int tmp = rect.right;
-            rect.right = rect.left;
-            rect.left = tmp;
-        }
-        if (rect.top > rect.bottom) {
-            int tmp = rect.bottom;
-            rect.bottom = rect.top;
-            rect.top = tmp;
-        }
-        mRenderHost.pushDebugRect(rect, color);
+        super.setActiveStackState(stackIndex);
     }
 
     @Override
-    protected void updateLayout(long time, long dt) {
-        super.updateLayout(time, dt);
-        boolean needUpdate = false;
-
-        final PortraitViewport viewport = getViewportParameters();
-        mStackRects[0].left = viewport.getStack0Left();
-        mStackRects[0].right = mStackRects[0].left + viewport.getWidth();
-        mStackRects[0].top = viewport.getStack0Top();
-        mStackRects[0].bottom = mStackRects[0].top + viewport.getHeight();
-        mStackRects[1].left = mStackRects[0].left + viewport.getStack0ToStack1TranslationX();
-        mStackRects[1].right = mStackRects[1].left + viewport.getWidth();
-        mStackRects[1].top = mStackRects[0].top + viewport.getStack0ToStack1TranslationY();
-        mStackRects[1].bottom = mStackRects[1].top + viewport.getHeight();
-
-        mStacks[0].setStackFocusInfo(1.0f + mRenderedScrollOffset,
-                mSortingComparator == mOrderComparator ? mTabModelSelector.getModel(false).index()
-                                                       : -1);
-        mStacks[1].setStackFocusInfo(-mRenderedScrollOffset, mSortingComparator == mOrderComparator
-                        ? mTabModelSelector.getModel(true).index()
-                        : -1);
-
-        // Compute position and visibility
-        mStacks[0].computeTabPosition(time, mStackRects[0]);
-        mStacks[1].computeTabPosition(time, mStackRects[1]);
-
-        // Pre-allocate/resize {@link #mLayoutTabs} before it get populated by
-        // computeTabPositionAndAppendLayoutTabs.
-        final int tabVisibleCount = mStacks[0].getVisibleCount() + mStacks[1].getVisibleCount();
-
-        int layoutTabCount = tabVisibleCount + (mNewTabLayoutTab == null ? 0 : 1);
-
-        if (layoutTabCount == 0) {
-            mLayoutTabs = null;
-        } else if (mLayoutTabs == null || mLayoutTabs.length != layoutTabCount) {
-            mLayoutTabs = new LayoutTab[layoutTabCount];
-        }
-
-        int index = 0;
-        if (getTabStackIndex() == 1) {
-            index = appendVisibleLayoutTabs(time, 0, mLayoutTabs, index);
-            index = appendVisibleLayoutTabs(time, 1, mLayoutTabs, index);
-        } else {
-            index = appendVisibleLayoutTabs(time, 1, mLayoutTabs, index);
-            index = appendVisibleLayoutTabs(time, 0, mLayoutTabs, index);
-        }
-        assert index == tabVisibleCount : "index should be incremented up to tabVisibleCount";
-
-        // Update tab snapping
-        for (int i = 0; i < tabVisibleCount; i++) {
-            if (mLayoutTabs[i].updateSnap(dt)) needUpdate = true;
-        }
-
-        if (mNewTabLayoutTab != null && mIsNewTabInitialized) {
-            mLayoutTabs[mLayoutTabs.length - 1] = mNewTabLayoutTab;
-            if (mNewTabLayoutTab.updateSnap(dt)) needUpdate = true;
-        }
-
-        if (needUpdate) requestUpdate();
-
-        // Since we've updated the positions of the stacks and tabs, let's go ahead and update
-        // the visible tabs.
-        updateTabPriority();
-    }
-
-    private int appendVisibleLayoutTabs(long time, int stackIndex, LayoutTab[] tabs, int tabIndex) {
-        final StackTab[] stackTabs = mStacks[stackIndex].getTabs();
-        if (stackTabs != null) {
-            for (int i = 0; i < stackTabs.length; i++) {
-                LayoutTab t = stackTabs[i].getLayoutTab();
-                if (t.isVisible()) tabs[tabIndex++] = t;
-            }
-        }
-        return tabIndex;
-    }
-
-    /**
-     * Sets the active tab stack.
-     *
-     * @param isIncognito True if the model to select is incognito.
-     * @return Whether the tab stack index passed in differed from the currently selected stack.
-     */
-    public boolean setActiveStackState(boolean isIncognito) {
-        if (isIncognito == mTabModelSelector.isIncognitoSelected()) return false;
-        mTemporarySelectedStack = isIncognito;
-        return true;
-    }
-
-    private void resetScrollData() {
-        mScrollIndexOffset = -getTabStackIndex();
-        mRenderedScrollOffset = mScrollIndexOffset;
-    }
-
-    private float getFullScrollDistance() {
-        float distance = getOrientation() == Orientation.PORTRAIT ? getWidth()
-                                                                  : getHeightMinusBrowserControls();
-        return distance - 2 * getViewportParameters().getInnerMargin();
-    }
-
-    @Override
-    public void doneHiding() {
-        super.doneHiding();
-
-        mInnerMarginPercent = 0.0f;
-        mStackOffsetYPercent = 0.0f;
-        mTabModelSelector.commitAllTabClosures();
-    }
-
-    /**
-     * Extracts the tabs from a stack and append them into a list.
-     * @param stack     The stack that contains the tabs.
-     * @param outList   The output list where will be the tabs from the stack.
-     * @param index     The current number of item in the outList.
-     * @return The updated index incremented by the number of tabs in the stack.
-     */
-    private static int addAllTabs(Stack stack, StackTab[] outList, int index) {
-        StackTab[] stackTabs = stack.getTabs();
-        if (stackTabs != null) {
-            for (int i = 0; i < stackTabs.length; ++i) {
-                outList[index++] = stackTabs[i];
-            }
-        }
-        return index;
-    }
-
-    /**
-     * Comparator that helps ordering StackTab's visibility sorting value in a decreasing order.
-     */
-    private static class VisibilityComparator implements Comparator<StackTab>, Serializable {
-        @Override
-        public int compare(StackTab tab1, StackTab tab2) {
-            return (int) (tab2.getVisiblitySortingValue() - tab1.getVisiblitySortingValue());
-        }
-    }
-
-    /**
-     * Comparator that helps ordering StackTab's visibility sorting value in a decreasing order.
-     */
-    private static class OrderComparator implements Comparator<StackTab>, Serializable {
-        @Override
-        public int compare(StackTab tab1, StackTab tab2) {
-            return tab1.getOrderSortingValue() - tab2.getOrderSortingValue();
-        }
-    }
-
-    private boolean updateSortedPriorityArray(Comparator<StackTab> comparator) {
-        final int allTabsCount = mStacks[0].getCount() + mStacks[1].getCount();
-        if (allTabsCount == 0) return false;
-        if (mSortedPriorityArray == null || mSortedPriorityArray.length != allTabsCount) {
-            mSortedPriorityArray = new StackTab[allTabsCount];
-        }
-        int sortedOffset = 0;
-        sortedOffset = addAllTabs(mStacks[0], mSortedPriorityArray, sortedOffset);
-        sortedOffset = addAllTabs(mStacks[1], mSortedPriorityArray, sortedOffset);
-        assert sortedOffset == mSortedPriorityArray.length;
-        Arrays.sort(mSortedPriorityArray, comparator);
-        return true;
-    }
-
-    /**
-     * Updates the priority list of the {@link LayoutTab} and sends it the systems having processing
-     * to do on a per {@link LayoutTab} basis. Priority meaning may change based on the current
-     * comparator stored in {@link #mSortingComparator}.
-     *
-     * Do not use {@link #mSortedPriorityArray} out side this context. It is only a member to avoid
-     * doing an allocation every frames.
-     */
-    private void updateTabPriority() {
-        if (!updateSortedPriorityArray(mSortingComparator)) return;
-        updateTabsVisibility(mSortedPriorityArray);
-        updateDelayedLayoutTabInit(mSortedPriorityArray);
-    }
-
-    /**
-     * Updates the list of visible tab Id that the tab content manager is suppose to serve. The list
-     * is ordered by priority. The first ones must be in the manager, then the remaining ones should
-     * have at least approximations if possible.
-     *
-     * @param sortedPriorityArray The array of all the {@link StackTab} sorted by priority.
-     */
-    private void updateTabsVisibility(StackTab[] sortedPriorityArray) {
-        mVisibilityArray.clear();
-        for (int i = 0; i < sortedPriorityArray.length; i++) {
-            mVisibilityArray.add(sortedPriorityArray[i].getId());
-        }
-        updateCacheVisibleIds(mVisibilityArray);
-    }
-
-    /**
-     * Initializes the {@link LayoutTab} a few at a time. This function is to be called once a
-     * frame.
-     * The logic of that function is not as trivial as it should be because the input array we want
-     * to initialize the tab from keeps getting reordered from calls to call. This is needed to
-     * get the highest priority tab initialized first.
-     *
-     * @param sortedPriorityArray The array of all the {@link StackTab} sorted by priority.
-     */
-    private void updateDelayedLayoutTabInit(StackTab[] sortedPriorityArray) {
-        if (!mDelayedLayoutTabInitRequired) return;
-
-        int initialized = 0;
-        final int count = sortedPriorityArray.length;
-        for (int i = 0; i < count; i++) {
-            if (initialized >= LAYOUTTAB_ASYNCHRONOUS_INITIALIZATION_BATCH_SIZE) return;
-
-            LayoutTab layoutTab = sortedPriorityArray[i].getLayoutTab();
-            // The actual initialization is done by the parent class.
-            if (super.initLayoutTabFromHost(layoutTab)) {
-                initialized++;
-            }
-        }
-        if (initialized == 0) mDelayedLayoutTabInitRequired = false;
-    }
-
-    @Override
-    protected boolean initLayoutTabFromHost(LayoutTab layoutTab) {
-        if (layoutTab.isInitFromHostNeeded()) mDelayedLayoutTabInitRequired = true;
-        return false;
-    }
-
-    /**
-     * Sets properties for animations.
-     * @param prop The property to update
-     * @param p New value of the property
-     */
-    @Override
-    public void setProperty(Property prop, float p) {
-        switch (prop) {
-            case STACK_SNAP:
-                mRenderedScrollOffset = p;
-                mScrollIndexOffset = p;
-                break;
-            case INNER_MARGIN_PERCENT:
-                mInnerMarginPercent = p;
-                break;
-            case STACK_OFFSET_Y_PERCENT:
-                mStackOffsetYPercent = p;
-                break;
-        }
-    }
-
-    @Override
-    public void onPropertyAnimationFinished(Property prop) {}
-
-    /**
-     * Called by the stacks whenever they start an animation.
-     */
-    public void onStackAnimationStarted() {
-        if (mStackAnimationCount == 0) super.onAnimationStarted();
-        mStackAnimationCount++;
-    }
-
-    /**
-     * Called by the stacks whenever they finish their animations.
-     */
-    public void onStackAnimationFinished() {
-        mStackAnimationCount--;
-        if (mStackAnimationCount == 0) super.onAnimationFinished();
-    }
-
-    @Override
-    protected EventFilter getEventFilter() {
-        return mGestureEventFilter;
-    }
-
-    @Override
-    protected SceneLayer getSceneLayer() {
-        return mSceneLayer;
-    }
-
-    @Override
-    protected void updateSceneLayer(RectF viewport, RectF contentViewport,
-            LayerTitleCache layerTitleCache, TabContentManager tabContentManager,
-            ResourceManager resourceManager, ChromeFullscreenManager fullscreenManager) {
-        super.updateSceneLayer(viewport, contentViewport, layerTitleCache, tabContentManager,
-                resourceManager, fullscreenManager);
-        assert mSceneLayer != null;
-
-        mSceneLayer.pushLayers(getContext(), viewport, contentViewport, this, layerTitleCache,
-                tabContentManager, resourceManager, fullscreenManager);
+    public boolean shouldAllowIncognitoSwitching() {
+        return !mAnimatingStackSwitch;
     }
 }

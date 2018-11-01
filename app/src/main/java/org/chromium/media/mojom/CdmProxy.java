@@ -19,68 +19,68 @@ public interface CdmProxy extends org.chromium.mojo.bindings.Interface {
 
 
     public static final class Status {
-    
-    
-    
+
+
+
         private static final boolean IS_EXTENSIBLE = false;
-    
+
         public static boolean isKnownValue(int value) {
             return false;
         }
-    
+
         public static void validate(int value) {
             if (IS_EXTENSIBLE || isKnownValue(value))
                 return;
-    
+
             throw new DeserializationException("Invalid enum value.");
         }
-    
+
         private Status() {}
-    
+
     }
 
 
     public static final class Protocol {
-    
-    
-    
+
+
+
         private static final boolean IS_EXTENSIBLE = false;
-    
+
         public static boolean isKnownValue(int value) {
             return false;
         }
-    
+
         public static void validate(int value) {
             if (IS_EXTENSIBLE || isKnownValue(value))
                 return;
-    
+
             throw new DeserializationException("Invalid enum value.");
         }
-    
+
         private Protocol() {}
-    
+
     }
 
 
     public static final class Function {
-    
-    
-    
+
+
+
         private static final boolean IS_EXTENSIBLE = false;
-    
+
         public static boolean isKnownValue(int value) {
             return false;
         }
-    
+
         public static void validate(int value) {
             if (IS_EXTENSIBLE || isKnownValue(value))
                 return;
-    
+
             throw new DeserializationException("Invalid enum value.");
         }
-    
+
         private Function() {}
-    
+
     }
 
 

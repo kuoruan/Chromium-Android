@@ -3,9 +3,10 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
+    xmlns:tools="http://schemas.android.com/tools"
     tools:targetApi="21">
 
     <aapt:attr name="android:drawable">
@@ -19,27 +20,19 @@
             <path
                 android:name="ic_check"
                 android:pathData="M4.12,12.705 l4.88,4.88 l11.295,-11.29"
-                android:strokeColor="#4285F4"
-                android:strokeWidth="2" />
+                android:strokeWidth="2"
+                android:strokeColor="@color/default_icon_color_blue"/>
         </vector>
     </aapt:attr>
 
-    <target android:name="ic_check" >
+    <target android:name="ic_check">
         <aapt:attr name="android:animation">
-            <set>
-                <objectAnimator
-                    android:duration="200"
-                    android:propertyName="pathData"
-                    android:valueFrom="M4.12,12.705 l0,0 l0,0"
-                    android:valueTo="M4.12,12.705 l4.88,4.88 l0,0"
-                    android:valueType="pathType"/>
-                <objectAnimator
-                    android:duration="200"
-                    android:propertyName="pathData"
-                    android:valueFrom="M4.12,12.705 l4.88,4.88 l0,0"
-                    android:valueTo="M4.12,12.705 l4.88,4.88 l11.295,-11.29"
-                    android:valueType="pathType"/>
-            </set>
+            <objectAnimator
+                android:duration="400"
+                android:propertyName="trimPathEnd"
+                android:valueFrom="0"
+                android:valueTo="1"
+                tools:valueFrom="1"/>
         </aapt:attr>
     </target>
 </animated-vector>

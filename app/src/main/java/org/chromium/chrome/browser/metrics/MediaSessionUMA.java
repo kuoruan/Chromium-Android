@@ -4,33 +4,41 @@
 
 package org.chromium.chrome.browser.metrics;
 
+import android.support.annotation.IntDef;
+
 import org.chromium.base.metrics.RecordHistogram;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * Centralizes UMA data collection for Android-specific MediaSession features.
  */
 public class MediaSessionUMA {
     // MediaSessionAction defined in tools/metrics/histograms/histograms.xml.
-    public static final int MEDIA_SESSION_ACTION_SOURCE_MEDIA_NOTIFICATION = 0;
-    public static final int MEDIA_SESSION_ACTION_SOURCE_MEDIA_SESSION = 1;
-    public static final int MEDIA_SESSION_ACTION_SOURCE_HEADSET_UNPLUG = 2;
-    public static final int MEDIA_SESSION_ACTION_SOURCE_MAX = 3;
+    @IntDef({MediaSessionActionSource.MEDIA_NOTIFICATION, MediaSessionActionSource.MEDIA_SESSION,
+            MediaSessionActionSource.HEADSET_UNPLUG})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface MediaSessionActionSource {
+        int MEDIA_NOTIFICATION = 0;
+        int MEDIA_SESSION = 1;
+        int HEADSET_UNPLUG = 2;
 
-    public static void recordPlay(int action) {
-        assert action >= 0 && action < MEDIA_SESSION_ACTION_SOURCE_MAX;
-        RecordHistogram.recordEnumeratedHistogram("Media.Session.Play", action,
-                MEDIA_SESSION_ACTION_SOURCE_MAX);
+        int NUM_ENTRIES = 3;
     }
 
-    public static void recordPause(int action) {
-        assert action >= 0 && action < MEDIA_SESSION_ACTION_SOURCE_MAX;
-        RecordHistogram.recordEnumeratedHistogram("Media.Session.Pause", action,
-                MEDIA_SESSION_ACTION_SOURCE_MAX);
+    public static void recordPlay(@MediaSessionActionSource int action) {
+        RecordHistogram.recordEnumeratedHistogram(
+                "Media.Session.Play", action, MediaSessionActionSource.NUM_ENTRIES);
     }
 
-    public static void recordStop(int action) {
-        assert action >= 0 && action < MEDIA_SESSION_ACTION_SOURCE_MAX;
-        RecordHistogram.recordEnumeratedHistogram("Media.Session.Stop", action,
-                MEDIA_SESSION_ACTION_SOURCE_MAX);
+    public static void recordPause(@MediaSessionActionSource int action) {
+        RecordHistogram.recordEnumeratedHistogram(
+                "Media.Session.Pause", action, MediaSessionActionSource.NUM_ENTRIES);
+    }
+
+    public static void recordStop(@MediaSessionActionSource int action) {
+        RecordHistogram.recordEnumeratedHistogram(
+                "Media.Session.Stop", action, MediaSessionActionSource.NUM_ENTRIES);
     }
 }

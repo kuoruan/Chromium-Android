@@ -15,6 +15,7 @@ public class NavigationEntry {
     private final String mUrl;
     private final String mOriginalUrl;
     private final String mVirtualUrl;
+    private final String mReferrerUrl;
     private final String mTitle;
     private Bitmap mFavicon;
     private int mTransition;
@@ -23,11 +24,12 @@ public class NavigationEntry {
      * Default constructor.
      */
     public NavigationEntry(int index, String url, String virtualUrl, String originalUrl,
-            String title, Bitmap favicon, int transition) {
+            String referrerUrl, String title, Bitmap favicon, int transition) {
         mIndex = index;
         mUrl = url;
         mVirtualUrl = virtualUrl;
         mOriginalUrl = originalUrl;
+        mReferrerUrl = referrerUrl;
         mTitle = title;
         mFavicon = favicon;
         mTransition = transition;
@@ -69,6 +71,13 @@ public class NavigationEntry {
      */
     public String getOriginalUrl() {
         return mOriginalUrl;
+    }
+
+    /**
+     * @return The referring URL, can be empty.
+     */
+    public String getReferrerUrl() {
+        return mReferrerUrl;
     }
 
     /**

@@ -32,7 +32,7 @@ public abstract class BackendItems extends ArrayList<DownloadHistoryItemWrapper>
         HashSet<String> filePaths = new HashSet<>();
         for (DownloadHistoryItemWrapper item : this) {
             String path = item.getFilePath();
-            if (item.isVisibleToUser(DownloadFilter.FILTER_ALL) && !filePaths.contains(path)) {
+            if (item.isVisibleToUser(DownloadFilter.Type.ALL) && !filePaths.contains(path)) {
                 totalSize += item.getFileSize();
             }
             if (path != null && !path.isEmpty()) filePaths.add(path);

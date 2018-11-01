@@ -16,7 +16,6 @@ by a child template that "extends" this file.
     tools:ignore="MissingVersion">
     <!-- android:versionCode and android:versionName is set through gyp. See build/common.gypi -->
 
-    <uses-sdk android:minSdkVersion="16" android:targetSdkVersion="27" />
     <uses-feature android:glEsVersion="0x00020000" />
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -32,11 +31,13 @@ by a child template that "extends" this file.
     -->
     <uses-permission-sdk-23 android:name="android.permission.BLUETOOTH"/>
     <uses-permission-sdk-23 android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission-sdk-23 android:name="android.permission.READ_CONTACTS"/>
     <uses-permission-sdk-23 android:name="android.permission.REORDER_TASKS"/>
     <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
+        <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.MANAGE_ACCOUNTS"/>
@@ -62,6 +63,8 @@ by a child template that "extends" this file.
       android:orientation attribute.
     -->
     <uses-feature android:name="android.hardware.screen.landscape" android:required="false"/>
+    <!-- Indicates that head tracking should be done in 6DoF, if available -->
+    <uses-feature android:name="android.hardware.vr.headtracking" android:version="1" android:required="false"/>
 
     <permission android:name="org.chromium.chrome.permission.CHILD_SERVICE" android:protectionLevel="signature" />
     <permission android:name="org.chromium.chrome.permission.READ_WRITE_BOOKMARK_FOLDERS" android:protectionLevel="signatureOrSystem" />
@@ -132,6 +135,21 @@ by a child template that "extends" this file.
         <meta-data android:name="android.content.APP_RESTRICTIONS"
             android:resource="@xml/app_restrictions"/>
 
+        <!-- ARCore APK integration -->
+        <!-- This tag indicates that this application optionally uses ARCore. -->
+        <meta-data android:name="com.google.ar.core" android:value="optional" />
+        <!-- This value referes to ARCore 1.1.
+             This value should be updated when ARCore features require
+             a newer version of the ARCore SDK. -->
+        <meta-data android:name="com.google.ar.core.min_apk_version"
+            android:value="180226000"/>
+
+        <!-- Cast support -->
+        <meta-data
+            android:name=
+            "com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
+            android:value="org.chromium.chrome.browser.media.router.caf.CastOptionsProvider"/>
+
         <!-- Note: All activities directly or indirectly derived from ChromeActivity
              must specify android:hardwareAccelerated="false".
 
@@ -144,6 +162,20 @@ by a child template that "extends" this file.
             android:taskAffinity=""
             android:excludeFromRecents="true"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density">
+            <!-- TODO(mthiesse, b/72214458): This is a duplication of the icon metadata below.
+                 Daydream will actually ignore the metadata here, and use the metadata on the
+                 activity-alias. However, play store apk validation fails to find the icons on the
+                 alias, so we need to include them here to pass validation. -->
+            <meta-data android:name="com.google.android.vr.icon"
+                android:resource="@drawable/daydream_icon_foreground" />
+            <meta-data android:name="com.google.android.vr.icon_background"
+                android:resource="@drawable/daydream_icon_background" />
+                        <intent-filter>
+                <action android:name="org.chromium.chrome.browser.dummy.action" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
+                <category android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.IntentDispatcher"
             android:targetActivity="org.chromium.chrome.browser.document.ChromeLauncherActivity"
@@ -151,6 +183,7 @@ by a child template that "extends" this file.
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.NOTIFICATION_PREFERENCES" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
             </intent-filter>
             <!-- Matches the common case of intents with no MIME type.
                  Make sure to keep in sync with the next filter.  -->
@@ -158,6 +191,7 @@ by a child template that "extends" this file.
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
 <data android:scheme="googlechrome" />                <data android:scheme="http" />
                 <data android:scheme="https" />
                 <data android:scheme="about" />
@@ -166,14 +200,16 @@ by a child template that "extends" this file.
             <!-- Same filter as above but with MIME types.  Intents that
                  do not specify a MIME type won't match. -->
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
+                                <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
 <data android:scheme="googlechrome" />                <data android:scheme="http" />
                 <data android:scheme="https" />
                 <data android:scheme="about" />
-                <data android:scheme="content" />
                 <data android:scheme="javascript" />
+
+                <data android:scheme="content" />
                 <data android:mimeType="text/html"/>
                 <data android:mimeType="text/plain"/>
                 <data android:mimeType="application/xhtml+xml"/>
@@ -197,6 +233,7 @@ by a child template that "extends" this file.
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
                 <data android:scheme="file"/>
                 <data android:scheme="content"/>
                 <data android:host="*" />
@@ -206,15 +243,17 @@ by a child template that "extends" this file.
             <!-- Same filter as above but with mimeType="*/*". Used for
                  handling intent send by ShareIt. -->
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
+                                <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="com.google.intent.category.DAYDREAM" />
                 <data android:scheme="file"/>
                 <data android:scheme="content"/>
                 <data android:host="*" />
-                <data android:mimeType="*/*"/>
                 <data android:pathPattern="/.*\\.mhtml"/>
                 <data android:pathPattern="/.*\\.mht"/>
+
+                <data android:mimeType="*/*"/>
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_SEARCH" />
@@ -238,14 +277,26 @@ by a child template that "extends" this file.
             </intent-filter>
             <meta-data android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
-
-                        <intent-filter>
-                <action android:name="org.chromium.chrome.browser.dummy.action" />
-                <category android:name="com.google.intent.category.DAYDREAM" />
-                <category android:name="com.google.intent.category.CARDBOARD" />
-            </intent-filter>
-
+            <meta-data android:name="com.google.android.vr.icon"
+                android:resource="@drawable/daydream_icon_foreground" />
+            <meta-data android:name="com.google.android.vr.icon_background"
+                android:resource="@drawable/daydream_icon_background" />
         </activity-alias>
+
+        <activity android:name="org.chromium.chrome.browser.media.MediaLauncherActivity"
+            android:theme="@android:style/Theme.NoDisplay"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:enabled="false"><!-- This will be selectively enabled at runtime. -->
+            <intent-filter tools:ignore="AppLinkUrlError">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <!-- TODO(https://crbug.com/800875): Limit these to supported MIME types. -->
+                <data android:mimeType="audio/*" />
+                <data android:mimeType="image/*" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+        </activity>
 
         <activity android:name="org.chromium.chrome.browser.LauncherShortcutActivity"
             android:theme="@android:style/Theme.NoDisplay"
@@ -285,6 +336,7 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 >
+            
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.document.DocumentActivity"
             android:targetActivity="org.chromium.chrome.browser.document.DocumentActivity"
@@ -300,6 +352,7 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 >
+            
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.document.IncognitoDocumentActivity"
             android:targetActivity="org.chromium.chrome.browser.document.IncognitoDocumentActivity"
@@ -323,6 +376,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity"
             android:theme="@style/MainTheme"
@@ -344,6 +398,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity0"
             android:theme="@style/MainTheme"
@@ -366,6 +421,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity1"
             android:theme="@style/MainTheme"
@@ -388,6 +444,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity2"
             android:theme="@style/MainTheme"
@@ -410,6 +467,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity3"
             android:theme="@style/MainTheme"
@@ -432,6 +490,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity4"
             android:theme="@style/MainTheme"
@@ -454,6 +513,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity5"
             android:theme="@style/MainTheme"
@@ -476,6 +536,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity6"
             android:theme="@style/MainTheme"
@@ -498,6 +559,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity7"
             android:theme="@style/MainTheme"
@@ -520,6 +582,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity8"
             android:theme="@style/MainTheme"
@@ -542,6 +605,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity9"
             android:theme="@style/MainTheme"
@@ -564,70 +628,12 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
-        <activity android:name="org.chromium.chrome.browser.vr.VrMainActivity"
-            android:theme="@style/VrSupportThemeLauncher"
-            android:exported="true"
-            android:enableVrMode="@string/gvr_vr_mode_component"
-            android:taskAffinity=""
-            android:relinquishTaskIdentity="true"
-            android:excludeFromRecents="true"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density">
-            <!-- TODO(mthiesse, b/72214458): This is a duplication of the icon metadata below.
-                 Daydream will actually ignore the metadata here, and use the metadata on the
-                 activity-alias. However, play store apk validation fails to find the icons on the
-                 alias, so we need to include them here to pass validation. -->
-            <meta-data android:name="com.google.android.vr.icon"
-                android:resource="@drawable/daydream_icon_foreground" />
-            <meta-data android:name="com.google.android.vr.icon_background"
-                android:resource="@drawable/daydream_icon_background" />
-                        <intent-filter>
-                <action android:name="org.chromium.chrome.browser.dummy.action" />
-                <category android:name="com.google.intent.category.DAYDREAM" />
-                <category android:name="com.google.intent.category.CARDBOARD" />
-            </intent-filter>
 
-        </activity>
-        <!-- This alias allows us to dynamically toggle whether the Chrome icon shows up in Daydream
-             home. It starts off disabled and is enabled dynamically via a feature flag when Chrome
-             is started. -->
-        <activity-alias android:name="com.google.android.apps.chrome.VrIntentDispatcher"
-            android:targetActivity="org.chromium.chrome.browser.vr.VrMainActivity"
-            android:enabled="false"
-            android:exported="true">
-            <!-- These icons are placeholders, and only show up behind a flag that's disabled by
-                 default. -->
-            <meta-data android:name="com.google.android.vr.icon"
-                android:resource="@drawable/daydream_icon_foreground" />
-            <meta-data android:name="com.google.android.vr.icon_background"
-                android:resource="@drawable/daydream_icon_background" />
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <!-- Show icon in Daydream app launcher. -->
-                <category android:name="com.google.intent.category.DAYDREAM" />
-            </intent-filter>
-        </activity-alias>
-        <activity android:name="org.chromium.chrome.browser.vr.CustomTabVrActivity"
-            android:theme="@style/VrSupportTheme"
-            android:screenOrientation="landscape"
-            android:enableVrMode="@string/gvr_vr_mode_component"
-            android:taskAffinity=""
-            android:persistableMode="persistNever"
-            android:autoRemoveFromRecents="false"
-                        android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
-            android:hardwareAccelerated="false"
-
-                        android:supportsPictureInPicture="true"
-            android:resizeableActivity="true"
-
-        >
-                        <intent-filter>
-                <action android:name="org.chromium.chrome.browser.dummy.action" />
-                <category android:name="com.google.intent.category.DAYDREAM" />
-                <category android:name="com.google.intent.category.CARDBOARD" />
-            </intent-filter>
-
+        <activity android:name="org.chromium.chrome.browser.incognito.IncognitoDisclosureActivity"
+          android:theme="@style/FullscreenTransparentActivityTheme"
+          android:exported="false">
         </activity>
 
         <!-- ChromeTabbedActivity related -->
@@ -651,6 +657,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.DAYDREAM" />
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
+
         </activity>
         <!-- TODO(crbug.com/780674): retarget .Main back to CTA for non-modern APK -->
         <activity-alias android:name="com.google.android.apps.chrome.Main"
@@ -691,6 +698,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.multiwindow.MultiInstanceChromeTabbedActivity"
             android:theme="@style/TabbedModeTheme"
@@ -699,6 +707,7 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize|uiMode|density"
             android:hardwareAccelerated="false"
 >
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.FullscreenActivity"
             android:theme="@style/MainTheme"
@@ -711,6 +720,7 @@ by a child template that "extends" this file.
                         android:supportsPictureInPicture="true"
             android:resizeableActivity="true"
  >
+            
         </activity>
 
         <activity android:name="org.chromium.chrome.browser.sync.ui.PassphraseActivity"
@@ -747,7 +757,7 @@ by a child template that "extends" this file.
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize"
 >
         </activity>
-        <activity android:name="org.chromium.chrome.browser.vr_shell.VrFirstRunActivity"
+        <activity android:name="org.chromium.chrome.browser.vr.VrFirstRunActivity"
             android:exported="false"
             android:launchMode="singleInstance"
             android:theme="@style/VrActivityTheme"
@@ -765,6 +775,11 @@ by a child template that "extends" this file.
             android:theme="@style/DialogWhenLarge"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize">
         </activity>
+        <activity android:name="org.chromium.chrome.browser.signin.SigninActivity"
+            android:theme="@style/DialogWhenLarge"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize"
+            android:exported="false">
+        </activity>
         <activity android:name="org.chromium.chrome.browser.preferences.Preferences"
             android:theme="@style/PreferencesTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize"
@@ -772,7 +787,7 @@ by a child template that "extends" this file.
             android:exported="false">
         </activity>
         <activity android:name="org.chromium.chrome.browser.preferences.website.ManageSpaceActivity"
-            android:theme="@style/PreferencesTheme"
+            android:theme="@style/ManageSpaceTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize"
             android:label="@string/storage_management_activity_label"
             android:exported="false">
@@ -870,6 +885,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity"
@@ -899,6 +915,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+           
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity0"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity0"
@@ -926,6 +943,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+           
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity1"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity1"
@@ -953,6 +971,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+           
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity2"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity2"
@@ -980,6 +999,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+           
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity3"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity3"
@@ -1007,6 +1027,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+           
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity4"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity4"
@@ -1034,6 +1055,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+           
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity5"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity5"
@@ -1061,6 +1083,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+           
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity6"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity6"
@@ -1088,6 +1111,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+           
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity7"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity7"
@@ -1115,6 +1139,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+           
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity8"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity8"
@@ -1142,6 +1167,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+           
         </activity>
         <activity-alias android:name="com.google.android.apps.chrome.webapps.WebappActivity9"
             android:targetActivity="org.chromium.chrome.browser.webapps.WebappActivity9"
@@ -1169,6 +1195,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity0"
             android:theme="@style/WebappTheme"
@@ -1191,6 +1218,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity1"
             android:theme="@style/WebappTheme"
@@ -1213,6 +1241,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity2"
             android:theme="@style/WebappTheme"
@@ -1235,6 +1264,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity3"
             android:theme="@style/WebappTheme"
@@ -1257,6 +1287,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity4"
             android:theme="@style/WebappTheme"
@@ -1279,6 +1310,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity5"
             android:theme="@style/WebappTheme"
@@ -1301,6 +1333,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity6"
             android:theme="@style/WebappTheme"
@@ -1323,6 +1356,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity7"
             android:theme="@style/WebappTheme"
@@ -1345,6 +1379,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity8"
             android:theme="@style/WebappTheme"
@@ -1367,6 +1402,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
         <activity android:name="org.chromium.chrome.browser.webapps.WebApkActivity9"
             android:theme="@style/WebappTheme"
@@ -1389,6 +1425,7 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
+            
         </activity>
 
         <activity android:name="org.chromium.chrome.browser.media.remote.ExpandedControllerActivity"
@@ -1438,7 +1475,7 @@ by a child template that "extends" this file.
         </activity>
 
         <activity
-            android:name="org.chromium.chrome.browser.vr_shell.VrCancelAnimationActivity"
+            android:name="org.chromium.chrome.browser.vr.VrCancelAnimationActivity"
             android:exported="false"
             android:theme="@android:style/Theme.NoDisplay"
             android:noHistory="true"
@@ -1451,37 +1488,6 @@ by a child template that "extends" this file.
                 <category android:name="com.google.intent.category.CARDBOARD" />
             </intent-filter>
 
-        </activity>
-
-        <!-- Service for handling Nearby Messages -->
-        <service android:name="org.chromium.chrome.browser.physicalweb.NearbyMessageIntentService"
-            android:exported="false" />
-
-        <!-- This activity is to expose the PhysicalWeb Share option via the generic Android share action. -->
-        <activity
-            android:name="org.chromium.chrome.browser.physicalweb.PhysicalWebShareActivity"
-            android:icon="@drawable/physical_web_notification_large"
-            android:label="@string/physical_web_share_activity_title"
-            android:enabled="false"
-            android:excludeFromRecents="true"
-            android:noHistory="true"
-            android:theme="@android:style/Theme.NoDisplay"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize" >
-            <intent-filter>
-                <action android:name="android.intent.action.SEND" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="text/plain" />
-            </intent-filter>
-        </activity>
-
-        <!-- This activity is to expose the PhysicalWeb Share option via the generic Android share action. -->
-        <activity
-            android:name="org.chromium.chrome.browser.physicalweb.PhysicalWebShareEntryActivity"
-            android:label="@string/physical_web_share_entry_title"
-            android:excludeFromRecents="true"
-            android:noHistory="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|mcc|mnc|screenLayout|smallestScreenSize" >
         </activity>
 
         <!-- Activities for Browser Actions -->
@@ -1501,17 +1507,7 @@ by a child template that "extends" this file.
             android:exported="false">
         </service>
 
-        <!-- Service for Broadcasting a Physical Web URL -->
-        <service
-            android:name="org.chromium.chrome.browser.physicalweb.PhysicalWebBroadcastService"
-            android:exported="false">
-        </service>
-
-        <!-- Service for decoding images in a sandboxed process.  When
-             use_order_profiling is set, all processes need to be able to write
-             profiling information and thus cannot be sandboxed. Order profiling
-             is used only on bots to optimize binary layout, and is never used
-             for a released version of chrome. -->
+        <!-- Service for decoding images in a sandboxed process. -->
         <service
             android:description="@string/decoder_description"
             android:name="org.chromium.chrome.browser.photo_picker.DecoderService"
@@ -1742,9 +1738,6 @@ by a child template that "extends" this file.
             android:exported="false"/>
         <service android:name="org.chromium.chrome.browser.incognito.IncognitoNotificationService"
             android:exported="false"/>
-        <service android:name="org.chromium.chrome.browser.webapps.WebApkDisclosureNotificationService"
-            android:exported="false"/>
-
 
         <!-- The following service entries exist in order to allow us to
              start more than one sandboxed process. -->
@@ -1752,204 +1745,244 @@ by a child template that "extends" this file.
         <!-- NOTE: If you change the value of "android:process" for the below services,
              you also need to update kHelperProcessExecutableName in chrome_constants.cc. -->
         <meta-data android:name="org.chromium.content.browser.NUM_SANDBOXED_SERVICES"
-            android:value="20"/>
+            android:value="40"/>
 
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService0"
             android:process=":sandboxed_process0"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService1"
             android:process=":sandboxed_process1"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService2"
             android:process=":sandboxed_process2"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService3"
             android:process=":sandboxed_process3"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService4"
             android:process=":sandboxed_process4"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService5"
             android:process=":sandboxed_process5"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService6"
             android:process=":sandboxed_process6"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService7"
             android:process=":sandboxed_process7"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService8"
             android:process=":sandboxed_process8"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService9"
             android:process=":sandboxed_process9"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService10"
             android:process=":sandboxed_process10"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService11"
             android:process=":sandboxed_process11"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService12"
             android:process=":sandboxed_process12"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService13"
             android:process=":sandboxed_process13"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService14"
             android:process=":sandboxed_process14"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService15"
             android:process=":sandboxed_process15"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService16"
             android:process=":sandboxed_process16"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService17"
             android:process=":sandboxed_process17"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService18"
             android:process=":sandboxed_process18"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"
  />
-        <!-- When use_order_profiling is set, the renderer processes need to be
-             able to write profiling information and thus cannot be
-             sandboxed. Order profiling is used only on bots to optimize binary
-             layout, and is never used for a released version of chrome. -->
         <service android:name="org.chromium.content.app.SandboxedProcessService19"
             android:process=":sandboxed_process19"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService20"
+            android:process=":sandboxed_process20"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService21"
+            android:process=":sandboxed_process21"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService22"
+            android:process=":sandboxed_process22"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService23"
+            android:process=":sandboxed_process23"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService24"
+            android:process=":sandboxed_process24"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService25"
+            android:process=":sandboxed_process25"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService26"
+            android:process=":sandboxed_process26"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService27"
+            android:process=":sandboxed_process27"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService28"
+            android:process=":sandboxed_process28"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService29"
+            android:process=":sandboxed_process29"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService30"
+            android:process=":sandboxed_process30"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService31"
+            android:process=":sandboxed_process31"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService32"
+            android:process=":sandboxed_process32"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService33"
+            android:process=":sandboxed_process33"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService34"
+            android:process=":sandboxed_process34"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService35"
+            android:process=":sandboxed_process35"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService36"
+            android:process=":sandboxed_process36"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService37"
+            android:process=":sandboxed_process37"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService38"
+            android:process=":sandboxed_process38"
+            android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
+            android:isolatedProcess="true"
+            android:exported="False"
+ />
+        <service android:name="org.chromium.content.app.SandboxedProcessService39"
+            android:process=":sandboxed_process39"
             android:permission="org.chromium.chrome.permission.CHILD_SERVICE"
             android:isolatedProcess="true"
             android:exported="False"

@@ -13,11 +13,12 @@ import android.os.Handler;
 import android.os.Looper;
 
 import org.chromium.base.Log;
-import org.chromium.base.ObserverList;
 import org.chromium.base.VisibleForTesting;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Queue;
 
 /**
  * This class is responsible for allocating and managing connections to child
@@ -26,17 +27,6 @@ import java.util.Arrays;
  */
 public class ChildConnectionAllocator {
     private static final String TAG = "ChildConnAllocator";
-
-    /** Listener that clients can use to get notified when connections get allocated/freed. */
-    public abstract static class Listener {
-        /** Called when a connection has been allocated, before it gets bound. */
-        public void onConnectionAllocated(
-                ChildConnectionAllocator allocator, ChildProcessConnection connection) {}
-
-        /** Called when a connection has been freed. */
-        public void onConnectionFreed(
-                ChildConnectionAllocator allocator, ChildProcessConnection connection) {}
-    }
 
     /** Factory interface. Used by tests to specialize created connections. */
     @VisibleForTesting
@@ -64,6 +54,9 @@ public class ChildConnectionAllocator {
     // Connections to services. Indices of the array correspond to the service numbers.
     private final ChildProcessConnection[] mChildProcessConnections;
 
+    // Runnable which will be called when allocator wants to allocate a new connection, but does
+    // not have any more free slots. May be null.
+    private final Runnable mFreeSlotCallback;
     private final String mPackageName;
     private final String mServiceClassName;
     private final boolean mBindToCaller;
@@ -73,7 +66,7 @@ public class ChildConnectionAllocator {
     // The list of free (not bound) service indices.
     private final ArrayList<Integer> mFreeConnectionIndices;
 
-    private final ObserverList<Listener> mListeners = new ObserverList<>();
+    private final Queue<Runnable> mPendingAllocations = new ArrayDeque<>();
 
     private ConnectionFactory mConnectionFactory = new ConnectionFactoryImpl();
 
@@ -82,8 +75,9 @@ public class ChildConnectionAllocator {
      * AndroidManifest.xml.
      */
     public static ChildConnectionAllocator create(Context context, Handler launcherHandler,
-            String packageName, String serviceClassName, String numChildServicesManifestKey,
-            boolean bindToCaller, boolean bindAsExternalService, boolean useStrongBinding) {
+            Runnable freeSlotCallback, String packageName, String serviceClassName,
+            String numChildServicesManifestKey, boolean bindToCaller, boolean bindAsExternalService,
+            boolean useStrongBinding) {
         int numServices = -1;
         PackageManager packageManager = context.getPackageManager();
         try {
@@ -109,28 +103,9 @@ public class ChildConnectionAllocator {
             throw new RuntimeException("Illegal meta data value: the child service doesn't exist");
         }
 
-        return new ChildConnectionAllocator(launcherHandler, packageName, serviceClassName,
-                bindToCaller, bindAsExternalService, useStrongBinding, numServices);
-    }
-
-    // TODO(jcivelli): remove this method once crbug.com/693484 has been addressed.
-    public static int getNumberOfServices(
-            Context context, String packageName, String numChildServicesManifestKey) {
-        int numServices = -1;
-        try {
-            PackageManager packageManager = context.getPackageManager();
-            ApplicationInfo appInfo =
-                    packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-            if (appInfo.metaData != null) {
-                numServices = appInfo.metaData.getInt(numChildServicesManifestKey, -1);
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            throw new RuntimeException("Could not get application info", e);
-        }
-        if (numServices < 0) {
-            throw new RuntimeException("Illegal meta data value for number of child services");
-        }
-        return numServices;
+        return new ChildConnectionAllocator(launcherHandler, freeSlotCallback, packageName,
+                serviceClassName, bindToCaller, bindAsExternalService, useStrongBinding,
+                numServices);
     }
 
     /**
@@ -138,16 +113,18 @@ public class ChildConnectionAllocator {
      * instead of being retrieved from the AndroidManifest.xml.
      */
     @VisibleForTesting
-    public static ChildConnectionAllocator createForTest(String packageName,
-            String serviceClassName, int serviceCount, boolean bindToCaller,
+    public static ChildConnectionAllocator createForTest(Runnable freeSlotCallback,
+            String packageName, String serviceClassName, int serviceCount, boolean bindToCaller,
             boolean bindAsExternalService, boolean useStrongBinding) {
-        return new ChildConnectionAllocator(new Handler(), packageName, serviceClassName,
-                bindToCaller, bindAsExternalService, useStrongBinding, serviceCount);
+        return new ChildConnectionAllocator(new Handler(), freeSlotCallback, packageName,
+                serviceClassName, bindToCaller, bindAsExternalService, useStrongBinding,
+                serviceCount);
     }
 
-    private ChildConnectionAllocator(Handler launcherHandler, String packageName,
-            String serviceClassName, boolean bindToCaller, boolean bindAsExternalService,
-            boolean useStrongBinding, int numChildServices) {
+    private ChildConnectionAllocator(Handler launcherHandler, Runnable freeSlotCallback,
+            String packageName, String serviceClassName, boolean bindToCaller,
+            boolean bindAsExternalService, boolean useStrongBinding, int numChildServices) {
+        mFreeSlotCallback = freeSlotCallback;
         mLauncherHandler = launcherHandler;
         assert isRunningOnLauncherThread();
         mPackageName = packageName;
@@ -242,10 +219,6 @@ public class ChildConnectionAllocator {
                 context, serviceName, mBindToCaller, mBindAsExternalService, serviceBundle);
         mChildProcessConnections[slot] = connection;
 
-        for (Listener listener : mListeners) {
-            listener.onConnectionAllocated(this, connection);
-        }
-
         connection.start(mUseStrongBinding, serviceCallbackWrapper);
         Log.d(TAG, "Allocator allocated and bound a connection, name: %s, slot: %d",
                 mServiceClassName, slot);
@@ -269,9 +242,20 @@ public class ChildConnectionAllocator {
             Log.d(TAG, "Allocator freed a connection, name: %s, slot: %d", mServiceClassName, slot);
         }
 
-        for (Listener listener : mListeners) {
-            listener.onConnectionFreed(this, connection);
-        }
+        if (mPendingAllocations.isEmpty()) return;
+        mPendingAllocations.remove().run();
+        assert mFreeConnectionIndices.isEmpty();
+        if (!mPendingAllocations.isEmpty() && mFreeSlotCallback != null) mFreeSlotCallback.run();
+    }
+
+    // Can only be called once all slots are full, ie when allocate returns null.
+    // The callback will be called when a slot becomes free, and should synchronous call
+    // allocate to take the slot.
+    public void queueAllocation(Runnable runnable) {
+        assert mFreeConnectionIndices.isEmpty();
+        boolean wasEmpty = mPendingAllocations.isEmpty();
+        mPendingAllocations.add(runnable);
+        if (wasEmpty && mFreeSlotCallback != null) mFreeSlotCallback.run();
     }
 
     public String getPackageName() {
@@ -289,16 +273,6 @@ public class ChildConnectionAllocator {
 
     public int getNumberOfServices() {
         return mChildProcessConnections.length;
-    }
-
-    public void addListener(Listener listener) {
-        assert !mListeners.hasObserver(listener);
-        mListeners.addObserver(listener);
-    }
-
-    public void removeListener(Listener listener) {
-        boolean removed = mListeners.removeObserver(listener);
-        assert removed;
     }
 
     public boolean isConnectionFromAllocator(ChildProcessConnection connection) {

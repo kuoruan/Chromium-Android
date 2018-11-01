@@ -8,9 +8,9 @@ import android.accounts.AccountManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 
 import org.chromium.base.ApplicationStatus;
+import org.chromium.base.AsyncTask;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.library_loader.ProcessInitException;
@@ -34,9 +34,9 @@ public class AccountsChangedReceiver extends BroadcastReceiver {
         if (!AccountManager.LOGIN_ACCOUNTS_CHANGED_ACTION.equals(intent.getAction())) return;
 
         final Context appContext = context.getApplicationContext();
-        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+        AsyncTask<Void> task = new AsyncTask<Void>() {
             @Override
-            protected Void doInBackground(Void... params) {
+            protected Void doInBackground() {
                 SigninHelper.updateAccountRenameData(appContext);
                 return null;
             }
@@ -46,7 +46,7 @@ public class AccountsChangedReceiver extends BroadcastReceiver {
                 continueHandleAccountChangeIfNeeded(appContext);
             }
         };
-        task.execute();
+        task.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
     }
 
     private void continueHandleAccountChangeIfNeeded(final Context context) {

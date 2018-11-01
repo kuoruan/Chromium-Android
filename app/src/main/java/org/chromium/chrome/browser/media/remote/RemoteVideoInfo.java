@@ -4,38 +4,38 @@
 
 package org.chromium.chrome.browser.media.remote;
 
+import android.support.annotation.IntDef;
 import android.text.TextUtils;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * Exposes information about the current video to the external clients.
  */
 public class RemoteVideoInfo {
-
     /**
      * This lists all the states that the remote video can be in.
      */
-    public enum PlayerState {
+    @IntDef({PlayerState.STOPPED, PlayerState.LOADING, PlayerState.PLAYING, PlayerState.PAUSED,
+            PlayerState.ERROR, PlayerState.INVALIDATED, PlayerState.FINISHED})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface PlayerState {
         /** The remote player is currently stopped. */
-        STOPPED,
-
+        int STOPPED = 0;
         /** The remote player is buffering this video. */
-        LOADING,
-
+        int LOADING = 1;
         /** The remote player is playing this video. */
-        PLAYING,
-
+        int PLAYING = 2;
         /** The remote player is paused. */
-        PAUSED,
-
+        int PAUSED = 3;
         /** The remote player is in an error state. */
-        ERROR,
-
+        int ERROR = 4;
         /** The remote player has been replaced by another player (so the current session has
          * finished) */
-        INVALIDATED,
-
+        int INVALIDATED = 5;
         /** The remote video has completed playing. */
-        FINISHED
+        int FINISHED = 6;
     }
 
     /**
@@ -49,7 +49,7 @@ public class RemoteVideoInfo {
     /**
      * The current state of the video
      */
-    public PlayerState state;
+    public @PlayerState int state;
     /**
      * The last known position in the video
      */
@@ -68,7 +68,7 @@ public class RemoteVideoInfo {
      * @param currentTimeMillis
      * @param errorMessage
      */
-    public RemoteVideoInfo(String title, long durationMillis, PlayerState state,
+    public RemoteVideoInfo(String title, long durationMillis, @PlayerState int state,
             long currentTimeMillis, String errorMessage) {
         this.title = title;
         this.durationMillis = durationMillis;
@@ -88,12 +88,8 @@ public class RemoteVideoInfo {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (!(obj instanceof RemoteVideoInfo)) {
-            return false;
-        }
+        if (obj == this) return true;
+        if (!(obj instanceof RemoteVideoInfo)) return false;
 
         RemoteVideoInfo other = (RemoteVideoInfo) obj;
         return durationMillis == other.durationMillis
@@ -110,7 +106,7 @@ public class RemoteVideoInfo {
         result = 31 * result + (int) currentTimeMillis;
         result = 31 * result + (int) (currentTimeMillis >> 32);
         result = 31 * result + (title == null ? 0 : title.hashCode());
-        result = 31 * result + (state == null ? 0 : state.hashCode());
+        result = 31 * result + state;
         result = 31 * result + (errorMessage == null ? 0 : errorMessage.hashCode());
         return result;
     }

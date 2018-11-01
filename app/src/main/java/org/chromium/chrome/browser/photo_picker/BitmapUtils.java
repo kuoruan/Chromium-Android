@@ -100,13 +100,13 @@ class BitmapUtils {
         if (width < size) {
             float scale = (float) size / width;
             width = size;
-            height *= scale;
+            height = (int) (height * scale);
         }
 
         if (height < size) {
             float scale = (float) size / height;
             height = size;
-            width *= scale;
+            width = (int) (width * scale);
         }
 
         return Bitmap.createScaledBitmap(bitmap, width, height, true);

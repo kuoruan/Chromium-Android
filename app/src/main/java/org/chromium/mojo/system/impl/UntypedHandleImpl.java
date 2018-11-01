@@ -14,7 +14,6 @@ import org.chromium.mojo.system.UntypedHandle;
  * Implementation of {@link UntypedHandle}.
  */
 class UntypedHandleImpl extends HandleBase implements UntypedHandle {
-
     /**
      * @see HandleBase#HandleBase(CoreImpl, int)
      */
@@ -68,5 +67,4 @@ class UntypedHandleImpl extends HandleBase implements UntypedHandle {
     public SharedBufferHandle toSharedBufferHandle() {
         return new SharedBufferHandleImpl(this);
     }
-
 }

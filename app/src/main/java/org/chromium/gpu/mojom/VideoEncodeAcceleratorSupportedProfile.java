@@ -42,9 +42,6 @@ public final class VideoEncodeAcceleratorSupportedProfile extends org.chromium.m
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static VideoEncodeAcceleratorSupportedProfile deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -58,25 +55,27 @@ public final class VideoEncodeAcceleratorSupportedProfile extends org.chromium.m
         VideoEncodeAcceleratorSupportedProfile result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new VideoEncodeAcceleratorSupportedProfile(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new VideoEncodeAcceleratorSupportedProfile(elementsOrVersion);
+                {
+                    
                 result.profile = decoder0.readInt(8);
                     VideoCodecProfile.validate(result.profile);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.maxFramerateNumerator = decoder0.readInt(12);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 result.maxResolution = org.chromium.gfx.mojom.Size.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.maxFramerateDenominator = decoder0.readInt(24);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -95,42 +94,5 @@ public final class VideoEncodeAcceleratorSupportedProfile extends org.chromium.m
         encoder0.encode(this.maxResolution, 16, false);
         
         encoder0.encode(this.maxFramerateDenominator, 24);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        VideoEncodeAcceleratorSupportedProfile other = (VideoEncodeAcceleratorSupportedProfile) object;
-        if (this.profile!= other.profile)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.maxResolution, other.maxResolution))
-            return false;
-        if (this.maxFramerateNumerator!= other.maxFramerateNumerator)
-            return false;
-        if (this.maxFramerateDenominator!= other.maxFramerateDenominator)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.profile);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxResolution);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxFramerateNumerator);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxFramerateDenominator);
-        return result;
     }
 }

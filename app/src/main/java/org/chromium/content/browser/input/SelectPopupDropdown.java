@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.PopupWindow;
 
-import org.chromium.content_public.browser.ContentViewCore;
 import org.chromium.ui.DropdownAdapter;
 import org.chromium.ui.DropdownPopupWindow;
 
@@ -18,19 +17,16 @@ import java.util.List;
 /**
  * Handles the dropdown popup for the <select> HTML tag support.
  */
-public class SelectPopupDropdown implements SelectPopup {
-
-    private final ContentViewCore mContentViewCore;
-    private final Context mContext;
+public class SelectPopupDropdown implements SelectPopup.Ui {
+    private final SelectPopup mSelectPopup;
     private final DropdownPopupWindow mDropdownPopupWindow;
 
     private boolean mSelectionNotified;
 
-    public SelectPopupDropdown(ContentViewCore contentViewCore, View anchorView,
+    public SelectPopupDropdown(SelectPopup selectPopup, Context context, View anchorView,
             List<SelectPopupItem> items, int[] selected, boolean rightAligned) {
-        mContentViewCore = contentViewCore;
-        mContext = mContentViewCore.getContext();
-        mDropdownPopupWindow = new DropdownPopupWindow(mContext, anchorView);
+        mSelectPopup = selectPopup;
+        mDropdownPopupWindow = new DropdownPopupWindow(context, anchorView);
         mDropdownPopupWindow.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -44,9 +40,7 @@ public class SelectPopupDropdown implements SelectPopup {
             initialSelection = selected[0];
         }
         mDropdownPopupWindow.setInitialSelection(initialSelection);
-        mDropdownPopupWindow.setAdapter(new DropdownAdapter(
-                mContext, items, null /* separators */, null /* backgroundColor */,
-                null /* dividerColor */, null /* dropdownItemHeight */, null /* margin */));
+        mDropdownPopupWindow.setAdapter(new DropdownAdapter(context, items, null /* separators */));
         mDropdownPopupWindow.setRtl(rightAligned);
         mDropdownPopupWindow.setOnDismissListener(
                 new PopupWindow.OnDismissListener() {
@@ -59,7 +53,7 @@ public class SelectPopupDropdown implements SelectPopup {
 
     private void notifySelection(int[] indicies) {
         if (mSelectionNotified) return;
-        mContentViewCore.selectPopupMenuItems(indicies);
+        mSelectPopup.selectMenuItems(indicies);
         mSelectionNotified = true;
     }
 

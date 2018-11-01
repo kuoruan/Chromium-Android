@@ -4,9 +4,11 @@
 
 package org.chromium.chrome.browser.crash;
 
+import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import org.chromium.base.ApiCompatibilityUtils;
@@ -23,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /**
  * Creates a crash report and uploads it to crash server if there is a Java exception.
@@ -44,9 +47,12 @@ public class PureJavaExceptionReporter {
     public static final String PACKAGE = "package";
     public static final String MODEL = "model";
     public static final String BRAND = "brand";
+    public static final String BOARD = "board";
     public static final String EXCEPTION_INFO = "exception_info";
     public static final String PROCESS_TYPE = "ptype";
     public static final String EARLY_JAVA_EXCEPTION = "early_java_exception";
+    public static final String CUSTOM_THEMES = "custom_themes";
+    public static final String RESOURCES_VERSION = "resources_version";
 
     private static final String CRASH_DUMP_DIR = "Crash Reports";
     private static final String FILE_PREFIX = "chromium-browser-minidump-";
@@ -99,6 +105,7 @@ public class PureJavaExceptionReporter {
         }
     }
 
+    @SuppressLint("WrongConstant")
     private void createReport(Throwable javaException) {
         try {
             String minidumpFileName = FILE_PREFIX + mLocalId + FILE_SUFFIX;
@@ -116,24 +123,33 @@ public class PureJavaExceptionReporter {
             processName = "browser";
         }
 
-        String[] allInfo = BuildInfo.getAll();
+        BuildInfo buildInfo = BuildInfo.getInstance();
         addPairedString(PRODUCT, "Chrome_Android");
         addPairedString(PROCESS_TYPE, processName);
-        addPairedString(DEVICE, allInfo[BuildInfo.DEVICE_INDEX]);
+        addPairedString(DEVICE, Build.DEVICE);
         addPairedString(VERSION, ChromeVersionInfo.getProductVersion());
         addPairedString(CHANNEL, getChannel());
-        addPairedString(ANDROID_BUILD_ID, allInfo[BuildInfo.ANDROID_BUILD_ID_INDEX]);
-        addPairedString(MODEL, allInfo[BuildInfo.MODEL_INDEX]);
-        addPairedString(BRAND, allInfo[BuildInfo.BRAND_INDEX]);
-        addPairedString(ANDROID_BUILD_FP, allInfo[BuildInfo.ANDROID_BUILD_FP_INDEX]);
-        addPairedString(GMS_CORE_VERSION, allInfo[BuildInfo.GMS_CORE_VERSION_INDEX]);
-        addPairedString(INSTALLER_PACKAGE_NAME, allInfo[BuildInfo.INSTALLER_PACKAGE_NAME_INDEX]);
-        addPairedString(ABI_NAME, allInfo[BuildInfo.ABI_NAME_INDEX]);
+        addPairedString(ANDROID_BUILD_ID, Build.ID);
+        addPairedString(MODEL, Build.MODEL);
+        addPairedString(BRAND, Build.BRAND);
+        addPairedString(BOARD, Build.BOARD);
+        addPairedString(ANDROID_BUILD_FP, buildInfo.androidBuildFingerprint);
+        addPairedString(GMS_CORE_VERSION, buildInfo.gmsVersionCode);
+        addPairedString(INSTALLER_PACKAGE_NAME, buildInfo.installerPackageName);
+        addPairedString(ABI_NAME, buildInfo.abiString);
         addPairedString(EXCEPTION_INFO, Log.getStackTraceString(javaException));
         addPairedString(EARLY_JAVA_EXCEPTION, "true");
         addPairedString(PACKAGE,
-                BuildConfig.FIREBASE_APP_ID + " v" + BuildInfo.getPackageVersionCode() + " ("
-                        + BuildInfo.getPackageVersionName() + ")");
+                String.format("%s v%s (%s)", BuildConfig.FIREBASE_APP_ID, buildInfo.versionCode,
+                        buildInfo.versionName));
+        addPairedString(CUSTOM_THEMES, buildInfo.customThemes);
+        addPairedString(RESOURCES_VERSION, buildInfo.resourcesVersion);
+
+        AtomicReferenceArray<String> values = CrashKeys.getInstance().getValues();
+        for (int i = 0; i < values.length(); i++) {
+            String value = values.get(i);
+            if (value != null) addPairedString(CrashKeys.getKey(i), value);
+        }
 
         addString(mBoundary);
     }

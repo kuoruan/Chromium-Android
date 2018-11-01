@@ -8,6 +8,8 @@ import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import org.chromium.base.Callback;
+
 /** Provides thumbnails that represent different files. */
 public interface ThumbnailProvider {
     /**
@@ -28,6 +30,21 @@ public interface ThumbnailProvider {
         /** The requested size (maximum dimension (pixel) of the smaller side) of the thumbnail to
          * be retrieved. */
         int getIconSize();
+
+        /**
+         * Provides an independent way of getting thumbnail for offline items, thereby bypassing the
+         * thumbnail disk storage and thumbnail generator. The implementer can override this method
+         * and provide a special way to fetch the thumbnail by themselves, after which they must
+         * return true and invoke the |callback|. Otherwise the fallback mechanism provided by
+         * {@link ThumbnailProviderImpl} is executed. For the fallback scenario, this method must
+         * return false and the |callback| shouldn't be invoked.
+         * @param callback The callback to be invoked after getting the thumbnail.
+         * @return True, if the request can directly provide the thumbnail, false otherwise.
+         */
+        default boolean
+            getThumbnail(Callback<Bitmap> callback) {
+                return false;
+            }
     }
 
     /** Destroys the class. */

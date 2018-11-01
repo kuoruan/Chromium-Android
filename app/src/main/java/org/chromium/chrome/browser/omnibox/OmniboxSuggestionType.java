@@ -23,11 +23,12 @@ import java.lang.annotation.RetentionPolicy;
     OmniboxSuggestionType.SEARCH_SUGGEST, OmniboxSuggestionType.SEARCH_SUGGEST_ENTITY,
     OmniboxSuggestionType.SEARCH_SUGGEST_TAIL, OmniboxSuggestionType.SEARCH_SUGGEST_PERSONALIZED,
     OmniboxSuggestionType.SEARCH_SUGGEST_PROFILE, OmniboxSuggestionType.SEARCH_OTHER_ENGINE,
-    OmniboxSuggestionType.EXTENSION_APP, OmniboxSuggestionType.CONTACT_DEPRECATED,
+    OmniboxSuggestionType.EXTENSION_APP_DEPRECATED, OmniboxSuggestionType.CONTACT_DEPRECATED,
     OmniboxSuggestionType.BOOKMARK_TITLE, OmniboxSuggestionType.NAVSUGGEST_PERSONALIZED,
     OmniboxSuggestionType.CALCULATOR, OmniboxSuggestionType.CLIPBOARD,
-    OmniboxSuggestionType.VOICE_SUGGEST, OmniboxSuggestionType.PHYSICAL_WEB,
-    OmniboxSuggestionType.PHYSICAL_WEB_OVERFLOW, OmniboxSuggestionType.TAB_SEARCH,
+    OmniboxSuggestionType.VOICE_SUGGEST, OmniboxSuggestionType.PHYSICAL_WEB_DEPRECATED,
+    OmniboxSuggestionType.PHYSICAL_WEB_OVERFLOW_DEPRECATED,
+    OmniboxSuggestionType.TAB_SEARCH_DEPRECATED, OmniboxSuggestionType.DOCUMENT_SUGGESTION,
     OmniboxSuggestionType.NUM_TYPES
 })
 @Retention(RetentionPolicy.SOURCE)
@@ -64,7 +65,7 @@ public @interface OmniboxSuggestionType {
    * Google+ profile.
    */
   int SEARCH_OTHER_ENGINE = 13;
-  int EXTENSION_APP = 14;
+  int EXTENSION_APP_DEPRECATED = 14;
   /**
    * contains the input (deprecated).
    */
@@ -83,14 +84,18 @@ public @interface OmniboxSuggestionType {
   /**
    * indicates a search from voice recognizer.
    */
-  int PHYSICAL_WEB = 21;
-  int PHYSICAL_WEB_OVERFLOW = 22;
+  int PHYSICAL_WEB_DEPRECATED = 21;
   /**
-   * Physical Web nearby URLs.
+   * (deprecated).
    */
-  int TAB_SEARCH = 23;
+  int PHYSICAL_WEB_OVERFLOW_DEPRECATED = 22;
   /**
-   * URL or title, via HQP.
+   * Physical Web nearby URLs (deprecated).
    */
-  int NUM_TYPES = 24;
+  int TAB_SEARCH_DEPRECATED = 23;
+  /**
+   * URL or title, via HQP (deprecated).
+   */
+  int DOCUMENT_SUGGESTION = 24;
+  int NUM_TYPES = 25;
 }

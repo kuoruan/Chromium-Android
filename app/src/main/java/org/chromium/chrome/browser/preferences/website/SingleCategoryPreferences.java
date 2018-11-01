@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.preferences.website;
 
+import static org.chromium.chrome.browser.preferences.SearchUtils.handleSearchNavigation;
+
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.os.Build;
@@ -14,23 +16,27 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
-import android.support.v4.view.MenuItemCompat;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.SearchView;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.text.format.Formatter;
+import android.text.style.ForegroundColorSpan;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ContentSettingsType;
 import org.chromium.chrome.browser.help.HelpAndFeedback;
 import org.chromium.chrome.browser.media.cdm.MediaDrmCredentialManager;
 import org.chromium.chrome.browser.media.cdm.MediaDrmCredentialManager.MediaDrmCredentialManagerCallback;
@@ -44,15 +50,18 @@ import org.chromium.chrome.browser.preferences.ManagedPreferencesUtils;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.PreferenceUtils;
 import org.chromium.chrome.browser.preferences.ProtectedContentResetCredentialConfirmDialogFragment;
+import org.chromium.chrome.browser.preferences.SearchUtils;
 import org.chromium.chrome.browser.preferences.website.Website.StoredDataClearedCallback;
 import org.chromium.chrome.browser.profiles.Profile;
-import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.ui.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Shows a list of sites in a particular Site Settings category. For example, this could show all
@@ -71,14 +80,14 @@ public class SingleCategoryPreferences extends PreferenceFragment
 
     // The view to show when the list is empty.
     private TextView mEmptyView;
-    // The view for searching the list of items.
-    private SearchView mSearchView;
+    // The item for searching the list of items.
+    private MenuItem mSearchItem;
     // The clear button displayed in the Storage view.
     private Button mClearButton;
     // The Site Settings Category we are showing.
     private SiteSettingsCategory mCategory;
     // If not blank, represents a substring to use to search for site names.
-    private String mSearch = "";
+    private String mSearch;
     // Whether to group by allowed/blocked list.
     private boolean mGroupByAllowBlock;
     // Whether the Blocked list should be shown expanded.
@@ -91,13 +100,20 @@ public class SingleCategoryPreferences extends PreferenceFragment
     private int mAllowedSiteCount;
     // The websites that are currently displayed to the user.
     private List<WebsitePreference> mWebsites;
+    // Whether tri-state ContentSetting is required.
+    private boolean mRequiresTriStateSetting = false;
 
-    // Keys for individual preferences.
-    public static final String READ_WRITE_TOGGLE_KEY = "read_write_toggle";
+    // Keys for common ContentSetting toggle for categories. These two toggles are mutually
+    // exclusive: a category should only show one of them, at most.
+    public static final String BINARY_TOGGLE_KEY = "binary_toggle";
+    public static final String TRI_STATE_TOGGLE_KEY = "tri_state_toggle";
+
+    // Keys for category-specific preferences (toggle, link, button etc.), dynamically shown.
     public static final String THIRD_PARTY_COOKIES_TOGGLE_KEY = "third_party_cookies";
     public static final String NOTIFICATIONS_VIBRATE_TOGGLE_KEY = "notifications_vibrate";
     public static final String EXPLAIN_PROTECTED_MEDIA_KEY = "protected_content_learn_more";
     private static final String ADD_EXCEPTION_KEY = "add_exception";
+
     // Keys for Allowed/Blocked preference groups/headers.
     private static final String ALLOWED_GROUP = "allowed_group";
     private static final String BLOCKED_GROUP = "blocked_group";
@@ -115,12 +131,6 @@ public class SingleCategoryPreferences extends PreferenceFragment
         fetcher.fetchPreferencesForCategory(mCategory);
     }
 
-    private void displayEmptyScreenMessage() {
-        if (mEmptyView != null) {
-            mEmptyView.setText(R.string.no_saved_website_settings);
-        }
-    }
-
     private class ResultsPopulator implements WebsitePermissionsFetcher.WebsitePermissionsCallback {
         @Override
         public void onWebsitePermissionsAvailable(Collection<Website> sites) {
@@ -129,84 +139,14 @@ public class SingleCategoryPreferences extends PreferenceFragment
             if (getActivity() == null) return;
             mWebsites = null;
 
-            // Find origins matching the current search.
-            List<WebsitePreference> websites = new ArrayList<>();
-            for (Website site : sites) {
-                if (mSearch.isEmpty() || site.getTitle().contains(mSearch)) {
-                    websites.add(new WebsitePreference(getActivity(), site, mCategory));
-                }
-            }
-
             resetList();
-            Collections.sort(websites);
-            mAllowedSiteCount = 0;
-            int blocked = 0;
-            if (websites.size() > 0) {
-                if (!mGroupByAllowBlock) {
-                    // We're not grouping sites into Allowed/Blocked lists, so show all in order
-                    // (will be alphabetical).
-                    for (WebsitePreference website : websites) {
-                        getPreferenceScreen().addPreference(website);
-                    }
-                } else {
-                    // Group sites into Allowed/Blocked lists.
-                    PreferenceGroup allowedGroup =
-                            (PreferenceGroup) getPreferenceScreen().findPreference(
-                                    ALLOWED_GROUP);
-                    PreferenceGroup blockedGroup =
-                            (PreferenceGroup) getPreferenceScreen().findPreference(
-                                    BLOCKED_GROUP);
 
-                    for (WebsitePreference website : websites) {
-                        if (isOnBlockList(website)) {
-                            blockedGroup.addPreference(website);
-                            blocked += 1;
-                        } else {
-                            allowedGroup.addPreference(website);
-                            mAllowedSiteCount += 1;
-                        }
-                    }
+            boolean hasEntries = mCategory.showSites(SiteSettingsCategory.Type.USB)
+                    ? addChosenObjects(sites)
+                    : addWebsites(sites);
 
-                    // For the ads permission, the Allowed list should appear first. Default
-                    // collapsed settings should not change.
-                    if (mCategory.showAdsSites()) {
-                        blockedGroup.setOrder(allowedGroup.getOrder() + 1);
-                    }
-
-                    // The default, when the two lists are shown for the first time, is for the
-                    // Blocked list to be collapsed and Allowed expanded -- because the data in
-                    // the Allowed list is normally more useful than the data in the Blocked
-                    // list. A collapsed initial Blocked list works well *except* when there's
-                    // nothing in the Allowed list because then there's only Blocked items to
-                    // show and it doesn't make sense for those items to be hidden. So, in that
-                    // case (and only when the list is shown for the first time) do we ignore
-                    // the collapsed directive. The user can still collapse and expand the
-                    // Blocked list at will.
-                    if (mIsInitialRun) {
-                        if (allowedGroup.getPreferenceCount() == 0) mBlockListExpanded = true;
-                        mIsInitialRun = false;
-                    }
-
-                    if (!mBlockListExpanded) {
-                        blockedGroup.removeAll();
-                    }
-
-                    if (!mAllowListExpanded) {
-                        allowedGroup.removeAll();
-                    }
-                }
-
-                mWebsites = websites;
-                updateBlockedHeader(blocked);
-                ChromeSwitchPreference globalToggle = (ChromeSwitchPreference)
-                        getPreferenceScreen().findPreference(READ_WRITE_TOGGLE_KEY);
-                updateAllowedHeader(mAllowedSiteCount,
-                                    (globalToggle != null ? globalToggle.isChecked() : true));
-            } else {
-                displayEmptyScreenMessage();
-                updateBlockedHeader(0);
-                updateAllowedHeader(0, true);
-            }
+            if (!hasEntries && mEmptyView != null)
+                mEmptyView.setText(R.string.no_saved_website_settings);
         }
     }
 
@@ -215,36 +155,47 @@ public class SingleCategoryPreferences extends PreferenceFragment
      * @param website The website to check.
      */
     private boolean isOnBlockList(WebsitePreference website) {
+        ContentSetting setting;
         // This list is ordered alphabetically by permission.
-        if (mCategory.showAdsSites()) {
-            return website.site().getAdsPermission() == ContentSetting.BLOCK;
-        } else if (mCategory.showAutoplaySites()) {
-            return website.site().getAutoplayPermission() == ContentSetting.BLOCK;
-        } else if (mCategory.showBackgroundSyncSites()) {
-            return website.site().getBackgroundSyncPermission() == ContentSetting.BLOCK;
-        } else if (mCategory.showCameraSites()) {
-            return website.site().getCameraPermission() == ContentSetting.BLOCK;
-        } else if (mCategory.showClipboardSites()) {
-            return website.site().getClipboardPermission() == ContentSetting.BLOCK;
-        } else if (mCategory.showCookiesSites()) {
-            return website.site().getCookiePermission() == ContentSetting.BLOCK;
-        } else if (mCategory.showGeolocationSites()) {
-            return website.site().getGeolocationPermission() == ContentSetting.BLOCK;
-        } else if (mCategory.showJavaScriptSites()) {
-            return website.site().getJavaScriptPermission() == ContentSetting.BLOCK;
-        } else if (mCategory.showMicrophoneSites()) {
-            return website.site().getMicrophonePermission() == ContentSetting.BLOCK;
-        } else if (mCategory.showNotificationsSites()) {
-            return website.site().getNotificationPermission() == ContentSetting.BLOCK;
-        } else if (mCategory.showPopupSites()) {
-            return website.site().getPopupPermission() == ContentSetting.BLOCK;
-        } else if (mCategory.showProtectedMediaSites()) {
-            return website.site().getProtectedMediaIdentifierPermission() == ContentSetting.BLOCK;
-        } else if (mCategory.showSoundSites()) {
-            return website.site().getSoundPermission() == ContentSetting.BLOCK;
+        if (mCategory.showSites(SiteSettingsCategory.Type.ADS)) {
+            setting = website.site().getContentSettingPermission(ContentSettingException.Type.ADS);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.AUTOPLAY)) {
+            setting = website.site().getContentSettingPermission(
+                    ContentSettingException.Type.AUTOPLAY);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.BACKGROUND_SYNC)) {
+            setting = website.site().getContentSettingPermission(
+                    ContentSettingException.Type.BACKGROUND_SYNC);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.CAMERA)) {
+            setting = website.site().getPermission(PermissionInfo.Type.CAMERA);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.CLIPBOARD)) {
+            setting = website.site().getPermission(PermissionInfo.Type.CLIPBOARD);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.COOKIES)) {
+            setting =
+                    website.site().getContentSettingPermission(ContentSettingException.Type.COOKIE);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.DEVICE_LOCATION)) {
+            setting = website.site().getPermission(PermissionInfo.Type.GEOLOCATION);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.JAVASCRIPT)) {
+            setting = website.site().getContentSettingPermission(
+                    ContentSettingException.Type.JAVASCRIPT);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.MICROPHONE)) {
+            setting = website.site().getPermission(PermissionInfo.Type.MICROPHONE);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.NOTIFICATIONS)) {
+            setting = website.site().getPermission(PermissionInfo.Type.NOTIFICATION);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.POPUPS)) {
+            setting =
+                    website.site().getContentSettingPermission(ContentSettingException.Type.POPUP);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.PROTECTED_MEDIA)) {
+            setting = website.site().getPermission(PermissionInfo.Type.PROTECTED_MEDIA_IDENTIFIER);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.SENSORS)) {
+            setting = website.site().getPermission(PermissionInfo.Type.SENSORS);
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.SOUND)) {
+            setting =
+                    website.site().getContentSettingPermission(ContentSettingException.Type.SOUND);
+        } else {
+            return false;
         }
 
-        return false;
+        return setting == ContentSetting.BLOCK;
     }
 
     /**
@@ -266,14 +217,8 @@ public class SingleCategoryPreferences extends PreferenceFragment
         int resourceId = toggleValue
                 ? R.string.website_settings_allowed_group_heading
                 : R.string.website_settings_exceptions_group_heading;
-
-        // Set the title and arrow icons for the header.
-        allowedGroup.setGroupTitle(resourceId, numAllowed);
-        TintedDrawable icon = TintedDrawable.constructTintedDrawable(getResources(),
-                mAllowListExpanded ? R.drawable.ic_expand_more_black_24dp
-                                   : R.drawable.ic_expand_less_black_24dp);
+        allowedGroup.setTitle(getHeaderTitle(resourceId, numAllowed));
         allowedGroup.setExpanded(mAllowListExpanded);
-        allowedGroup.setIcon(icon);
     }
 
     private void updateBlockedHeader(int numBlocked) {
@@ -286,30 +231,50 @@ public class SingleCategoryPreferences extends PreferenceFragment
         if (!mGroupByAllowBlock) return;
 
         // Set the title and arrow icons for the header.
-        int resourceId = mCategory.showSoundSites()
+        int resourceId = mCategory.showSites(SiteSettingsCategory.Type.SOUND)
                 ? R.string.website_settings_blocked_group_heading_sound
                 : R.string.website_settings_blocked_group_heading;
-        blockedGroup.setGroupTitle(resourceId, numBlocked);
-        TintedDrawable icon = TintedDrawable.constructTintedDrawable(getResources(),
-                mBlockListExpanded ? R.drawable.ic_expand_more_black_24dp
-                                   : R.drawable.ic_expand_less_black_24dp);
+        blockedGroup.setTitle(getHeaderTitle(resourceId, numBlocked));
         blockedGroup.setExpanded(mBlockListExpanded);
-        blockedGroup.setIcon(icon);
+    }
+
+    private CharSequence getHeaderTitle(int resourceId, int count) {
+        SpannableStringBuilder spannable =
+                new SpannableStringBuilder(getResources().getString(resourceId));
+        String prefCount = String.format(Locale.getDefault(), " - %d", count);
+        spannable.append(prefCount);
+
+        // Color the first part of the title blue.
+        ForegroundColorSpan blueSpan = new ForegroundColorSpan(
+                ApiCompatibilityUtils.getColor(getResources(), R.color.default_text_color_link));
+        spannable.setSpan(blueSpan, 0, spannable.length() - prefCount.length(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        // Gray out the total count of items.
+        int gray = ApiCompatibilityUtils.getColor(
+                getResources(), R.color.default_text_color_secondary);
+        spannable.setSpan(new ForegroundColorSpan(gray), spannable.length() - prefCount.length(),
+                spannable.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return spannable;
     }
 
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Read which category we should be showing.
-        String category = "";
         if (getArguments() != null) {
-            category = getArguments().getString(EXTRA_CATEGORY, "");
-            mCategory = SiteSettingsCategory.fromString(category);
+            mCategory = SiteSettingsCategory.createFromPreferenceKey(
+                    getArguments().getString(EXTRA_CATEGORY, ""));
         }
         if (mCategory == null) {
-            mCategory = SiteSettingsCategory.fromString(SiteSettingsCategory.CATEGORY_ALL_SITES);
+            mCategory = SiteSettingsCategory.createFromType(SiteSettingsCategory.Type.ALL_SITES);
         }
-        if (!mCategory.showStorageSites()) {
+
+        int contentType = mCategory.getContentSettingsType();
+        mRequiresTriStateSetting =
+                PrefServiceBridge.getInstance().requiresTriStateContentSetting(contentType);
+
+        if (!mCategory.showSites(SiteSettingsCategory.Type.USE_STORAGE)) {
             return super.onCreateView(inflater, container, savedInstanceState);
         } else {
             return inflater.inflate(R.layout.storage_preferences, container, false);
@@ -328,9 +293,7 @@ public class SingleCategoryPreferences extends PreferenceFragment
      * asynchronously, and then we call {@link #getInfoForOrigins()} when we're done.
      */
     public void clearStorage() {
-        if (mWebsites == null) {
-            return;
-        }
+        if (mWebsites == null) return;
         RecordUserAction.record("MobileSettingsStorageClearAll");
 
         // The goal is to refresh the info for origins again after we've cleared all of them, so we
@@ -342,9 +305,7 @@ public class SingleCategoryPreferences extends PreferenceFragment
             preference.site().clearAllStoredData(new StoredDataClearedCallback() {
                 @Override
                 public void onStoredDataCleared() {
-                    if (--numLeft[0] <= 0) {
-                        getInfoForOrigins();
-                    }
+                    if (--numLeft[0] <= 0) getInfoForOrigins();
                 }
             });
         }
@@ -359,9 +320,7 @@ public class SingleCategoryPreferences extends PreferenceFragment
         listView.setDivider(null);
 
         mClearButton = (Button) getView().findViewById(R.id.clear_button);
-        if (mClearButton != null) {
-            mClearButton.setOnClickListener(this);
-        }
+        if (mClearButton != null) mClearButton.setOnClickListener(this);
 
         String title = getArguments().getString(EXTRA_TITLE);
         if (title != null) getActivity().setTitle(title);
@@ -378,28 +337,15 @@ public class SingleCategoryPreferences extends PreferenceFragment
         menu.clear();
         inflater.inflate(R.menu.website_preferences_menu, menu);
 
-        MenuItem searchItem = menu.findItem(R.id.search);
-        mSearchView = (SearchView) MenuItemCompat.getActionView(searchItem);
-        mSearchView.setImeOptions(EditorInfo.IME_FLAG_NO_FULLSCREEN);
-        SearchView.OnQueryTextListener queryTextListener =
-                new SearchView.OnQueryTextListener() {
-                    @Override
-                    public boolean onQueryTextSubmit(String query) {
-                        return true;
-                    }
+        mSearchItem = menu.findItem(R.id.search);
+        SearchUtils.initializeSearchView(mSearchItem, mSearch, getActivity(), (query) -> {
+            boolean queryHasChanged =
+                    mSearch == null ? query != null && !query.isEmpty() : !mSearch.equals(query);
+            mSearch = query;
+            if (queryHasChanged) getInfoForOrigins();
+        });
 
-                    @Override
-                    public boolean onQueryTextChange(String query) {
-                        if (query.equals(mSearch)) return true;
-
-                        mSearch = query;
-                        getInfoForOrigins();
-                        return true;
-                    }
-                };
-        mSearchView.setOnQueryTextListener(queryTextListener);
-
-        if (mCategory.showProtectedMediaSites()) {
+        if (mCategory.showSites(SiteSettingsCategory.Type.PROTECTED_MEDIA)) {
             // Add a menu item to reset protected media identifier device credentials.
             MenuItem resetMenu =
                     menu.add(Menu.NONE, Menu.NONE, Menu.NONE, R.string.reset_device_credentials);
@@ -416,18 +362,25 @@ public class SingleCategoryPreferences extends PreferenceFragment
 
         MenuItem help = menu.add(
                 Menu.NONE, R.id.menu_id_targeted_help, Menu.NONE, R.string.menu_help);
-        help.setIcon(R.drawable.ic_help_and_feedback);
+        help.setIcon(VectorDrawableCompat.create(
+                getResources(), R.drawable.ic_help_and_feedback, getActivity().getTheme()));
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.menu_id_targeted_help) {
             int helpContextResId = R.string.help_context_settings;
-            if (mCategory.showProtectedMediaSites()) {
+            if (mCategory.showSites(SiteSettingsCategory.Type.PROTECTED_MEDIA)) {
                 helpContextResId = R.string.help_context_protected_content;
             }
             HelpAndFeedback.getInstance(getActivity()).show(
                     getActivity(), getString(helpContextResId), Profile.getLastUsedProfile(), null);
+            return true;
+        }
+        if (handleSearchNavigation(item, mSearchItem, mSearch, getActivity())) {
+            boolean queryHasChanged = mSearch != null && !mSearch.isEmpty();
+            mSearch = null;
+            if (queryHasChanged) getInfoForOrigins();
             return true;
         }
         return false;
@@ -436,17 +389,10 @@ public class SingleCategoryPreferences extends PreferenceFragment
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen screen, Preference preference) {
         // Do not show the toast if the System Location setting is disabled.
-        if (getPreferenceScreen().findPreference(READ_WRITE_TOGGLE_KEY) != null
+        if (getPreferenceScreen().findPreference(BINARY_TOGGLE_KEY) != null
                 && mCategory.isManaged()) {
             showManagedToast();
             return false;
-        }
-
-        if (!mSearch.isEmpty()) {
-            // Clear out any lingering searches, so that the full list is shown
-            // when coming back to this page.
-            mSearch = "";
-            mSearchView.setQuery("", false);
         }
 
         if (preference instanceof WebsitePreference) {
@@ -454,7 +400,7 @@ public class SingleCategoryPreferences extends PreferenceFragment
             website.setFragment(SingleWebsitePreferences.class.getName());
             // EXTRA_SITE re-uses already-fetched permissions, which we can only use if the Website
             // was populated with data for all permission types.
-            if (mCategory.showAllSites()) {
+            if (mCategory.showSites(SiteSettingsCategory.Type.ALL_SITES)) {
                 website.putSiteIntoExtras(SingleWebsitePreferences.EXTRA_SITE);
             } else {
                 website.putSiteAddressIntoExtras(SingleWebsitePreferences.EXTRA_SITE_ADDRESS);
@@ -496,44 +442,36 @@ public class SingleCategoryPreferences extends PreferenceFragment
     // OnPreferenceChangeListener:
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
-        if (READ_WRITE_TOGGLE_KEY.equals(preference.getKey())) {
+        PrefServiceBridge prefServiceBridge = PrefServiceBridge.getInstance();
+
+        if (BINARY_TOGGLE_KEY.equals(preference.getKey())) {
             assert !mCategory.isManaged();
 
-            if (mCategory.showAdsSites()) {
-                PrefServiceBridge.getInstance().setAllowAdsEnabled((boolean) newValue);
-            } else if (mCategory.showAutoplaySites()) {
-                PrefServiceBridge.getInstance().setAutoplayEnabled((boolean) newValue);
-            } else if (mCategory.showBackgroundSyncSites()) {
-                PrefServiceBridge.getInstance().setBackgroundSyncEnabled((boolean) newValue);
-            } else if (mCategory.showCameraSites()) {
-                PrefServiceBridge.getInstance().setCameraEnabled((boolean) newValue);
-            } else if (mCategory.showClipboardSites()) {
-                PrefServiceBridge.getInstance().setClipboardEnabled((boolean) newValue);
-            } else if (mCategory.showCookiesSites()) {
-                PrefServiceBridge.getInstance().setAllowCookiesEnabled((boolean) newValue);
-                updateThirdPartyCookiesCheckBox();
-            } else if (mCategory.showGeolocationSites()) {
-                PrefServiceBridge.getInstance().setAllowLocationEnabled((boolean) newValue);
-            } else if (mCategory.showJavaScriptSites()) {
-                PrefServiceBridge.getInstance().setJavaScriptEnabled((boolean) newValue);
-            } else if (mCategory.showMicrophoneSites()) {
-                PrefServiceBridge.getInstance().setMicEnabled((boolean) newValue);
-            } else if (mCategory.showNotificationsSites()) {
-                PrefServiceBridge.getInstance().setNotificationsEnabled((boolean) newValue);
-                updateNotificationsVibrateCheckBox();
-            } else if (mCategory.showPopupSites()) {
-                PrefServiceBridge.getInstance().setAllowPopupsEnabled((boolean) newValue);
-            } else if (mCategory.showProtectedMediaSites()) {
-                PrefServiceBridge.getInstance().setProtectedMediaIdentifierEnabled(
-                        (boolean) newValue);
-            } else if (mCategory.showSoundSites()) {
-                PrefServiceBridge.getInstance().setSoundEnabled((boolean) newValue);
+            for (@SiteSettingsCategory.Type int type = 0;
+                    type < SiteSettingsCategory.Type.NUM_ENTRIES; type++) {
+                if (type == SiteSettingsCategory.Type.ALL_SITES
+                        || type == SiteSettingsCategory.Type.USE_STORAGE
+                        || !mCategory.showSites(type)) {
+                    continue;
+                }
+
+                prefServiceBridge.setCategoryEnabled(
+                        SiteSettingsCategory.contentSettingsType(type), (boolean) newValue);
+
+                if (type == SiteSettingsCategory.Type.COOKIES) {
+                    updateThirdPartyCookiesCheckBox();
+                } else if (type == SiteSettingsCategory.Type.NOTIFICATIONS) {
+                    updateNotificationsVibrateCheckBox();
+                }
+                break;
             }
 
             // Categories that support adding exceptions also manage the 'Add site' preference.
             // This should only be used for settings that have host-pattern based exceptions.
-            if (mCategory.showAutoplaySites() || mCategory.showBackgroundSyncSites()
-                    || mCategory.showJavaScriptSites() || mCategory.showSoundSites()) {
+            if (mCategory.showSites(SiteSettingsCategory.Type.AUTOPLAY)
+                    || mCategory.showSites(SiteSettingsCategory.Type.BACKGROUND_SYNC)
+                    || mCategory.showSites(SiteSettingsCategory.Type.JAVASCRIPT)
+                    || mCategory.showSites(SiteSettingsCategory.Type.SOUND)) {
                 if ((boolean) newValue) {
                     Preference addException = getPreferenceScreen().findPreference(
                             ADD_EXCEPTION_KEY);
@@ -547,29 +485,36 @@ public class SingleCategoryPreferences extends PreferenceFragment
                 }
             }
 
-            ChromeSwitchPreference globalToggle = (ChromeSwitchPreference)
-                    getPreferenceScreen().findPreference(READ_WRITE_TOGGLE_KEY);
-            updateAllowedHeader(mAllowedSiteCount, !globalToggle.isChecked());
+            ChromeSwitchPreference binaryToggle =
+                    (ChromeSwitchPreference) getPreferenceScreen().findPreference(
+                            BINARY_TOGGLE_KEY);
+            updateAllowedHeader(mAllowedSiteCount, !binaryToggle.isChecked());
 
             getInfoForOrigins();
+        } else if (TRI_STATE_TOGGLE_KEY.equals(preference.getKey())) {
+            ContentSetting setting = (ContentSetting) newValue;
+            prefServiceBridge.setContentSetting(
+                    mCategory.getContentSettingsType(), setting.toInt());
+            getInfoForOrigins();
         } else if (THIRD_PARTY_COOKIES_TOGGLE_KEY.equals(preference.getKey())) {
-            PrefServiceBridge.getInstance().setBlockThirdPartyCookiesEnabled(!((boolean) newValue));
+            prefServiceBridge.setBlockThirdPartyCookiesEnabled(!((boolean) newValue));
         } else if (NOTIFICATIONS_VIBRATE_TOGGLE_KEY.equals(preference.getKey())) {
-            PrefServiceBridge.getInstance().setNotificationsVibrateEnabled((boolean) newValue);
+            prefServiceBridge.setNotificationsVibrateEnabled((boolean) newValue);
         }
         return true;
     }
 
     private String getAddExceptionDialogMessage() {
         int resource = 0;
-        if (mCategory.showAutoplaySites()) {
+        if (mCategory.showSites(SiteSettingsCategory.Type.AUTOPLAY)) {
             resource = R.string.website_settings_add_site_description_autoplay;
-        } else if (mCategory.showBackgroundSyncSites()) {
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.BACKGROUND_SYNC)) {
             resource = R.string.website_settings_add_site_description_background_sync;
-        } else if (mCategory.showJavaScriptSites()) {
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.JAVASCRIPT)) {
             resource = R.string.website_settings_add_site_description_javascript;
-        } else if (mCategory.showSoundSites()) {
-            resource = PrefServiceBridge.getInstance().isSoundEnabled()
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.SOUND)) {
+            resource = PrefServiceBridge.getInstance().isCategoryEnabled(
+                               ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND)
                     ? R.string.website_settings_add_site_description_sound_block
                     : R.string.website_settings_add_site_description_sound_allow;
         }
@@ -580,7 +525,7 @@ public class SingleCategoryPreferences extends PreferenceFragment
     // OnPreferenceClickListener:
     @Override
     public boolean onPreferenceClick(Preference preference) {
-        if (ALLOWED_GROUP.equals(preference.getKey()))  {
+        if (ALLOWED_GROUP.equals(preference.getKey())) {
             mAllowListExpanded = !mAllowListExpanded;
         } else {
             mBlockListExpanded = !mBlockListExpanded;
@@ -593,6 +538,11 @@ public class SingleCategoryPreferences extends PreferenceFragment
     public void onResume() {
         super.onResume();
 
+        if (mSearch == null && mSearchItem != null) {
+            SearchUtils.clearSearch(mSearchItem, getActivity());
+            mSearch = null;
+        }
+
         getInfoForOrigins();
     }
 
@@ -601,12 +551,13 @@ public class SingleCategoryPreferences extends PreferenceFragment
     public void onAddSite(String hostname) {
         // The Sound content setting has exception lists for both BLOCK and ALLOW (others just
         // have exceptions to ALLOW).
-        int setting =
-                (mCategory.showSoundSites() && PrefServiceBridge.getInstance().isSoundEnabled())
+        int setting = (mCategory.showSites(SiteSettingsCategory.Type.SOUND)
+                              && PrefServiceBridge.getInstance().isCategoryEnabled(
+                                         ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND))
                 ? ContentSetting.BLOCK.toInt()
                 : ContentSetting.ALLOW.toInt();
         PrefServiceBridge.getInstance().nativeSetContentSettingForPattern(
-                mCategory.toContentSettingsType(), hostname, setting);
+                mCategory.getContentSettingsType(), hostname, setting);
 
         Toast.makeText(getActivity(),
                 String.format(getActivity().getString(
@@ -616,7 +567,7 @@ public class SingleCategoryPreferences extends PreferenceFragment
 
         getInfoForOrigins();
 
-        if (mCategory.showSoundSites()) {
+        if (mCategory.showSites(SiteSettingsCategory.Type.SOUND)) {
             if (setting == ContentSetting.BLOCK.toInt()) {
                 RecordUserAction.record("SoundContentSetting.MuteBy.PatternException");
             } else {
@@ -636,166 +587,311 @@ public class SingleCategoryPreferences extends PreferenceFragment
 
         configureGlobalToggles();
 
-        if ((mCategory.showAutoplaySites() && !PrefServiceBridge.getInstance().isAutoplayEnabled())
-                || (mCategory.showJavaScriptSites()
-                           && !PrefServiceBridge.getInstance().javaScriptEnabled())
-                || mCategory.showSoundSites()
-                || (mCategory.showBackgroundSyncSites()
-                           && !PrefServiceBridge.getInstance().isBackgroundSyncAllowed())) {
-            getPreferenceScreen().addPreference(
-                    new AddExceptionPreference(getActivity(), ADD_EXCEPTION_KEY,
-                            getAddExceptionDialogMessage(), this));
+        boolean exception = false;
+        if (mCategory.showSites(SiteSettingsCategory.Type.SOUND)) {
+            exception = true;
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.AUTOPLAY)
+                && !PrefServiceBridge.getInstance().isCategoryEnabled(
+                           ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY)) {
+            exception = true;
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.JAVASCRIPT)
+                && !PrefServiceBridge.getInstance().isCategoryEnabled(
+                           ContentSettingsType.CONTENT_SETTINGS_TYPE_JAVASCRIPT)) {
+            exception = true;
+        } else if (mCategory.showSites(SiteSettingsCategory.Type.BACKGROUND_SYNC)
+                && !PrefServiceBridge.getInstance().isCategoryEnabled(
+                           ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC)) {
+            exception = true;
+        }
+        if (exception) {
+            getPreferenceScreen().addPreference(new AddExceptionPreference(
+                    getActivity(), ADD_EXCEPTION_KEY, getAddExceptionDialogMessage(), this));
         }
     }
 
-    private void configureGlobalToggles() {
-        // Only some have a global toggle at the top.
-        ChromeSwitchPreference globalToggle = (ChromeSwitchPreference)
-                getPreferenceScreen().findPreference(READ_WRITE_TOGGLE_KEY);
+    private boolean addWebsites(Collection<Website> sites) {
+        List<WebsitePreference> websites = new ArrayList<>();
 
-        // Configure/hide the third-party cookie toggle, as needed.
-        Preference thirdPartyCookies = getPreferenceScreen().findPreference(
-                THIRD_PARTY_COOKIES_TOGGLE_KEY);
-        if (mCategory.showCookiesSites()) {
-            thirdPartyCookies.setOnPreferenceChangeListener(this);
-            updateThirdPartyCookiesCheckBox();
-        } else {
-            getPreferenceScreen().removePreference(thirdPartyCookies);
-        }
-
-        // Configure/hide the notifications vibrate toggle, as needed.
-        Preference notificationsVibrate =
-                getPreferenceScreen().findPreference(NOTIFICATIONS_VIBRATE_TOGGLE_KEY);
-        if (mCategory.showNotificationsSites() && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            notificationsVibrate.setOnPreferenceChangeListener(this);
-            updateNotificationsVibrateCheckBox();
-        } else {
-            getPreferenceScreen().removePreference(notificationsVibrate);
-        }
-
-        // Show/hide the link that explains protected media settings, as needed.
-        if (!mCategory.showProtectedMediaSites()) {
-            getPreferenceScreen().removePreference(
-                    getPreferenceScreen().findPreference(EXPLAIN_PROTECTED_MEDIA_KEY));
-        }
-
-        if (mCategory.showAllSites()
-                    || mCategory.showStorageSites()) {
-            getPreferenceScreen().removePreference(globalToggle);
-            getPreferenceScreen().removePreference(
-                    getPreferenceScreen().findPreference(ALLOWED_GROUP));
-            getPreferenceScreen().removePreference(
-                    getPreferenceScreen().findPreference(BLOCKED_GROUP));
-        } else {
-            // When this menu opens, make sure the Blocked list is collapsed.
-            if (!mGroupByAllowBlock) {
-                mBlockListExpanded = false;
-                mAllowListExpanded = true;
+        // Find origins matching the current search.
+        for (Website site : sites) {
+            if (mSearch == null || mSearch.isEmpty() || site.getTitle().contains(mSearch)) {
+                websites.add(new WebsitePreference(getActivity(), site, mCategory));
             }
-            mGroupByAllowBlock = true;
+        }
+
+        mAllowedSiteCount = 0;
+
+        if (websites.size() == 0) {
+            updateBlockedHeader(0);
+            updateAllowedHeader(0, true);
+            return false;
+        }
+
+        Collections.sort(websites);
+        int blocked = 0;
+
+        if (!mGroupByAllowBlock) {
+            // We're not grouping sites into Allowed/Blocked lists, so show all in order
+            // (will be alphabetical).
+            for (WebsitePreference website : websites) {
+                getPreferenceScreen().addPreference(website);
+            }
+        } else {
+            // Group sites into Allowed/Blocked lists.
             PreferenceGroup allowedGroup =
-                    (PreferenceGroup) getPreferenceScreen().findPreference(
-                            ALLOWED_GROUP);
+                    (PreferenceGroup) getPreferenceScreen().findPreference(ALLOWED_GROUP);
             PreferenceGroup blockedGroup =
-                    (PreferenceGroup) getPreferenceScreen().findPreference(
-                            BLOCKED_GROUP);
+                    (PreferenceGroup) getPreferenceScreen().findPreference(BLOCKED_GROUP);
+
+            for (WebsitePreference website : websites) {
+                if (isOnBlockList(website)) {
+                    blockedGroup.addPreference(website);
+                    blocked += 1;
+                } else {
+                    allowedGroup.addPreference(website);
+                    mAllowedSiteCount += 1;
+                }
+            }
+
+            // For the ads permission, the Allowed list should appear first. Default
+            // collapsed settings should not change.
+            if (mCategory.showSites(SiteSettingsCategory.Type.ADS)) {
+                blockedGroup.setOrder(allowedGroup.getOrder() + 1);
+            }
+
+            // The default, when the two lists are shown for the first time, is for the
+            // Blocked list to be collapsed and Allowed expanded -- because the data in
+            // the Allowed list is normally more useful than the data in the Blocked
+            // list. A collapsed initial Blocked list works well *except* when there's
+            // nothing in the Allowed list because then there's only Blocked items to
+            // show and it doesn't make sense for those items to be hidden. So, in that
+            // case (and only when the list is shown for the first time) do we ignore
+            // the collapsed directive. The user can still collapse and expand the
+            // Blocked list at will.
+            if (mIsInitialRun) {
+                if (allowedGroup.getPreferenceCount() == 0) mBlockListExpanded = true;
+                mIsInitialRun = false;
+            }
+
+            if (!mBlockListExpanded) blockedGroup.removeAll();
+            if (!mAllowListExpanded) allowedGroup.removeAll();
+        }
+
+        mWebsites = websites;
+        updateBlockedHeader(blocked);
+        updateAllowedHeader(mAllowedSiteCount, !isBlocked());
+
+        return websites.size() != 0;
+    }
+
+    private boolean addChosenObjects(Collection<Website> sites) {
+        Map<String, Pair<ArrayList<ChosenObjectInfo>, ArrayList<Website>>> objects =
+                new HashMap<>();
+
+        // Find chosen objects matching the current search and collect the list of sites
+        // that have permission to access each.
+        for (Website site : sites) {
+            for (ChosenObjectInfo info : site.getChosenObjectInfo()) {
+                if (mSearch.isEmpty() || info.getName().toLowerCase().contains(mSearch)) {
+                    Pair<ArrayList<ChosenObjectInfo>, ArrayList<Website>> entry =
+                            objects.get(info.getObject());
+                    if (entry == null) {
+                        entry = Pair.create(
+                                new ArrayList<ChosenObjectInfo>(), new ArrayList<Website>());
+                        objects.put(info.getObject(), entry);
+                    }
+                    entry.first.add(info);
+                    entry.second.add(site);
+                }
+            }
+        }
+
+        updateBlockedHeader(0);
+        updateAllowedHeader(0, true);
+
+        for (Pair<ArrayList<ChosenObjectInfo>, ArrayList<Website>> entry : objects.values()) {
+            Preference preference = new Preference(getActivity());
+            Bundle extras = preference.getExtras();
+            extras.putInt(
+                    ChosenObjectPreferences.EXTRA_CATEGORY, mCategory.getContentSettingsType());
+            extras.putString(EXTRA_TITLE, getActivity().getTitle().toString());
+            extras.putSerializable(ChosenObjectPreferences.EXTRA_OBJECT_INFOS, entry.first);
+            extras.putSerializable(ChosenObjectPreferences.EXTRA_SITES, entry.second);
+            preference.setIcon(
+                    ContentSettingsResources.getIcon(mCategory.getContentSettingsType()));
+            preference.setTitle(entry.first.get(0).getName());
+            preference.setFragment(ChosenObjectPreferences.class.getCanonicalName());
+            getPreferenceScreen().addPreference(preference);
+        }
+
+        return objects.size() != 0;
+    }
+
+    private boolean isBlocked() {
+        if (mRequiresTriStateSetting) {
+            TriStateSiteSettingsPreference triStateToggle =
+                    (TriStateSiteSettingsPreference) getPreferenceScreen().findPreference(
+                            TRI_STATE_TOGGLE_KEY);
+            return (triStateToggle.getCheckedSetting() == ContentSetting.BLOCK);
+        } else {
+            ChromeSwitchPreference binaryToggle =
+                    (ChromeSwitchPreference) getPreferenceScreen().findPreference(
+                            BINARY_TOGGLE_KEY);
+            if (binaryToggle != null) return !binaryToggle.isChecked();
+        }
+        return false;
+    }
+
+    private void configureGlobalToggles() {
+        PrefServiceBridge prefServiceBridge = PrefServiceBridge.getInstance();
+        int contentType = mCategory.getContentSettingsType();
+        PreferenceScreen screen = getPreferenceScreen();
+
+        // Find all preferencs on the current preference screen. Some preferences are
+        // not needed for the current category and will be removed in the steps below.
+        ChromeSwitchPreference binaryToggle =
+                (ChromeSwitchPreference) screen.findPreference(BINARY_TOGGLE_KEY);
+        TriStateSiteSettingsPreference triStateToggle =
+                (TriStateSiteSettingsPreference) screen.findPreference(TRI_STATE_TOGGLE_KEY);
+        Preference thirdPartyCookies = screen.findPreference(THIRD_PARTY_COOKIES_TOGGLE_KEY);
+        Preference notificationsVibrate = screen.findPreference(NOTIFICATIONS_VIBRATE_TOGGLE_KEY);
+        Preference explainProtectedMediaKey = screen.findPreference(EXPLAIN_PROTECTED_MEDIA_KEY);
+        PreferenceGroup allowedGroup = (PreferenceGroup) screen.findPreference(ALLOWED_GROUP);
+        PreferenceGroup blockedGroup = (PreferenceGroup) screen.findPreference(BLOCKED_GROUP);
+
+        // For these categories, no binary, tri-state or custom toggles should be shown.
+        boolean hideAllToggles = mCategory.showSites(SiteSettingsCategory.Type.ALL_SITES)
+                || mCategory.showSites(SiteSettingsCategory.Type.USE_STORAGE)
+                || mCategory.showPermissionBlockedMessage(getActivity());
+
+        if (hideAllToggles) {
+            screen.removePreference(binaryToggle);
+            screen.removePreference(triStateToggle);
+            screen.removePreference(thirdPartyCookies);
+            screen.removePreference(notificationsVibrate);
+            screen.removePreference(explainProtectedMediaKey);
+            screen.removePreference(allowedGroup);
+            screen.removePreference(blockedGroup);
 
             if (mCategory.showPermissionBlockedMessage(getActivity())) {
-                getPreferenceScreen().removePreference(globalToggle);
-                getPreferenceScreen().removePreference(allowedGroup);
-                getPreferenceScreen().removePreference(blockedGroup);
-
                 // Show the link to system settings since permission is disabled.
                 ChromeBasePreference osWarning = new ChromeBasePreference(getActivity(), null);
                 ChromeBasePreference osWarningExtra = new ChromeBasePreference(getActivity(), null);
-                mCategory.configurePermissionIsOffPreferences(osWarning, osWarningExtra,
-                        getActivity(), true);
+                mCategory.configurePermissionIsOffPreferences(
+                        osWarning, osWarningExtra, getActivity(), true);
                 if (osWarning.getTitle() != null) {
-                    getPreferenceScreen().addPreference(osWarning);
+                    screen.addPreference(osWarning);
                 }
                 if (osWarningExtra.getTitle() != null) {
-                    getPreferenceScreen().addPreference(osWarningExtra);
-                }
-            } else {
-                allowedGroup.setOnPreferenceClickListener(this);
-                blockedGroup.setOnPreferenceClickListener(this);
-
-                // Determine what toggle to use and what it should display.
-                int contentType = mCategory.toContentSettingsType();
-                globalToggle.setOnPreferenceChangeListener(this);
-                globalToggle.setTitle(ContentSettingsResources.getTitle(contentType));
-                if (mCategory.showGeolocationSites()
-                        && PrefServiceBridge.getInstance().isLocationAllowedByPolicy()) {
-                    globalToggle.setSummaryOn(
-                            ContentSettingsResources.getGeolocationAllowedSummary());
-                } else {
-                    globalToggle.setSummaryOn(
-                            ContentSettingsResources.getEnabledSummary(contentType));
-                }
-                globalToggle.setSummaryOff(
-                        ContentSettingsResources.getDisabledSummary(contentType));
-                globalToggle.setManagedPreferenceDelegate(new ManagedPreferenceDelegate() {
-                    @Override
-                    public boolean isPreferenceControlledByPolicy(Preference preference) {
-                        // TODO(bauerb): Align the ManagedPreferenceDelegate and
-                        // SiteSettingsCategory interfaces better to avoid this indirection.
-                        return mCategory.isManaged() && !mCategory.isManagedByCustodian();
-                    }
-
-                    @Override
-                    public boolean isPreferenceControlledByCustodian(Preference preference) {
-                        return mCategory.isManagedByCustodian();
-                    }
-                });
-                if (mCategory.showAdsSites()) {
-                    globalToggle.setChecked(PrefServiceBridge.getInstance().adsEnabled());
-                } else if (mCategory.showAutoplaySites()) {
-                    globalToggle.setChecked(
-                            PrefServiceBridge.getInstance().isAutoplayEnabled());
-                } else if (mCategory.showBackgroundSyncSites()) {
-                    globalToggle.setChecked(
-                            PrefServiceBridge.getInstance().isBackgroundSyncAllowed());
-                } else if (mCategory.showCameraSites()) {
-                    globalToggle.setChecked(PrefServiceBridge.getInstance().isCameraEnabled());
-                } else if (mCategory.showClipboardSites()) {
-                    globalToggle.setChecked(PrefServiceBridge.getInstance().isClipboardEnabled());
-                } else if (mCategory.showCookiesSites()) {
-                    globalToggle.setChecked(
-                            PrefServiceBridge.getInstance().isAcceptCookiesEnabled());
-                } else if (mCategory.showGeolocationSites()) {
-                    globalToggle.setChecked(
-                            LocationSettings.getInstance().isChromeLocationSettingEnabled());
-                } else if (mCategory.showJavaScriptSites()) {
-                    globalToggle.setChecked(PrefServiceBridge.getInstance().javaScriptEnabled());
-                } else if (mCategory.showMicrophoneSites()) {
-                    globalToggle.setChecked(PrefServiceBridge.getInstance().isMicEnabled());
-                } else if (mCategory.showNotificationsSites()) {
-                    globalToggle.setChecked(
-                            PrefServiceBridge.getInstance().isNotificationsEnabled());
-                } else if (mCategory.showPopupSites()) {
-                    globalToggle.setChecked(PrefServiceBridge.getInstance().popupsEnabled());
-                } else if (mCategory.showProtectedMediaSites()) {
-                    globalToggle.setChecked(
-                            PrefServiceBridge.getInstance().isProtectedMediaIdentifierEnabled());
-                } else if (mCategory.showSoundSites()) {
-                    globalToggle.setChecked(PrefServiceBridge.getInstance().isSoundEnabled());
+                    screen.addPreference(osWarningExtra);
                 }
             }
+
+            // Since all preferences are hidden, there's nothing to do further and we can
+            // simply return.
+            return;
+        }
+
+        // Now show and configure the binary toggle or the tri-state toggle, but not both.
+        // No early return in either case since we also need to configure the category
+        // specific toggles (e.g. third-party cookie) below.
+        if (mRequiresTriStateSetting) {
+            screen.removePreference(binaryToggle);
+            configureTriStateToggle(triStateToggle, contentType);
+        } else {
+            screen.removePreference(triStateToggle);
+            configureBinaryToggle(binaryToggle, contentType);
+        }
+
+        // Configure/hide the third-party cookie toggle, as needed.
+        if (mCategory.showSites(SiteSettingsCategory.Type.COOKIES)) {
+            thirdPartyCookies.setOnPreferenceChangeListener(this);
+            updateThirdPartyCookiesCheckBox();
+        } else {
+            screen.removePreference(thirdPartyCookies);
+        }
+
+        // Configure/hide the notifications vibrate toggle, as needed.
+        if (mCategory.showSites(SiteSettingsCategory.Type.NOTIFICATIONS)
+                && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            notificationsVibrate.setOnPreferenceChangeListener(this);
+            updateNotificationsVibrateCheckBox();
+        } else {
+            screen.removePreference(notificationsVibrate);
+        }
+
+        // Only show the link that explains protected content settings when needed.
+        if (!mCategory.showSites(SiteSettingsCategory.Type.PROTECTED_MEDIA)) {
+            screen.removePreference(explainProtectedMediaKey);
+        }
+
+        // When this menu opens, make sure the Blocked list is collapsed.
+        if (!mGroupByAllowBlock) {
+            mBlockListExpanded = false;
+            mAllowListExpanded = true;
+        }
+        mGroupByAllowBlock = true;
+
+        allowedGroup.setOnPreferenceClickListener(this);
+        blockedGroup.setOnPreferenceClickListener(this);
+    }
+
+    private void configureTriStateToggle(
+            TriStateSiteSettingsPreference triStateToggle, int contentType) {
+        triStateToggle.setOnPreferenceChangeListener(this);
+        ContentSetting setting = ContentSetting.fromInt(
+                PrefServiceBridge.getInstance().getContentSetting(contentType));
+        int[] descriptionIds =
+                ContentSettingsResources.getTriStateSettingDescriptionIDs(contentType);
+        triStateToggle.initialize(setting, descriptionIds);
+    }
+
+    private void configureBinaryToggle(ChromeSwitchPreference binaryToggle, int contentType) {
+        binaryToggle.setOnPreferenceChangeListener(this);
+        binaryToggle.setTitle(ContentSettingsResources.getTitle(contentType));
+
+        // Set summary on or off.
+        if (mCategory.showSites(SiteSettingsCategory.Type.DEVICE_LOCATION)
+                && PrefServiceBridge.getInstance().isLocationAllowedByPolicy()) {
+            binaryToggle.setSummaryOn(ContentSettingsResources.getGeolocationAllowedSummary());
+        } else {
+            binaryToggle.setSummaryOn(ContentSettingsResources.getEnabledSummary(contentType));
+        }
+        binaryToggle.setSummaryOff(ContentSettingsResources.getDisabledSummary(contentType));
+
+        binaryToggle.setManagedPreferenceDelegate(new ManagedPreferenceDelegate() {
+            @Override
+            public boolean isPreferenceControlledByPolicy(Preference preference) {
+                // TODO(bauerb): Align the ManagedPreferenceDelegate and
+                // SiteSettingsCategory interfaces better to avoid this indirection.
+                return mCategory.isManaged() && !mCategory.isManagedByCustodian();
+            }
+
+            @Override
+            public boolean isPreferenceControlledByCustodian(Preference preference) {
+                return mCategory.isManagedByCustodian();
+            }
+        });
+
+        // Set the checked value.
+        if (mCategory.showSites(SiteSettingsCategory.Type.DEVICE_LOCATION)) {
+            binaryToggle.setChecked(
+                    LocationSettings.getInstance().isChromeLocationSettingEnabled());
+        } else {
+            binaryToggle.setChecked(PrefServiceBridge.getInstance().isCategoryEnabled(contentType));
         }
     }
 
     private void updateThirdPartyCookiesCheckBox() {
-        ChromeBaseCheckBoxPreference thirdPartyCookiesPref = (ChromeBaseCheckBoxPreference)
-                getPreferenceScreen().findPreference(THIRD_PARTY_COOKIES_TOGGLE_KEY);
+        ChromeBaseCheckBoxPreference thirdPartyCookiesPref =
+                (ChromeBaseCheckBoxPreference) getPreferenceScreen().findPreference(
+                        THIRD_PARTY_COOKIES_TOGGLE_KEY);
         thirdPartyCookiesPref.setChecked(
                 !PrefServiceBridge.getInstance().isBlockThirdPartyCookiesEnabled());
-        thirdPartyCookiesPref.setEnabled(PrefServiceBridge.getInstance().isAcceptCookiesEnabled());
-        thirdPartyCookiesPref.setManagedPreferenceDelegate(new ManagedPreferenceDelegate() {
-            @Override
-            public boolean isPreferenceControlledByPolicy(Preference preference) {
-                return PrefServiceBridge.getInstance().isBlockThirdPartyCookiesManaged();
-            }
-        });
+        thirdPartyCookiesPref.setEnabled(PrefServiceBridge.getInstance().isCategoryEnabled(
+                ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES));
+        thirdPartyCookiesPref.setManagedPreferenceDelegate(
+                preference -> PrefServiceBridge.getInstance().isBlockThirdPartyCookiesManaged());
     }
 
     private void updateNotificationsVibrateCheckBox() {
@@ -803,7 +899,8 @@ public class SingleCategoryPreferences extends PreferenceFragment
                 (ChromeBaseCheckBoxPreference) getPreferenceScreen().findPreference(
                         NOTIFICATIONS_VIBRATE_TOGGLE_KEY);
         if (preference != null) {
-            preference.setEnabled(PrefServiceBridge.getInstance().isNotificationsEnabled());
+            preference.setEnabled(PrefServiceBridge.getInstance().isCategoryEnabled(
+                    ContentSettingsType.CONTENT_SETTINGS_TYPE_NOTIFICATIONS));
         }
     }
 
@@ -822,8 +919,9 @@ public class SingleCategoryPreferences extends PreferenceFragment
             @Override
             public void onCredentialResetFinished(boolean succeeded) {
                 if (succeeded) return;
-                String message = getString(R.string.protected_content_reset_failed);
-                Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), getString(R.string.protected_content_reset_failed),
+                             Toast.LENGTH_SHORT)
+                        .show();
             }
         });
     }

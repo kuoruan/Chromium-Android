@@ -16,12 +16,11 @@ import org.chromium.ui.base.WindowAndroid;
 /** Tracks the Activiy for a given WebContents on behalf of a NFC instance that cannot talk
  * directly to WebContents.
  */
-class NfcHost extends WebContentsObserver implements WindowAndroidChangedObserver {
+class NfcHost extends WebContentsObserver implements WindowEventObserver {
     private static final SparseArray<NfcHost> sContextHostsMap = new SparseArray<NfcHost>();
 
     // The WebContents with which this host is associated.
     private final WebContents mWebContents;
-    private final ContentViewCoreImpl mContentViewCore;
 
     // The context ID with which this host is associated.
     private final int mContextId;
@@ -46,13 +45,13 @@ class NfcHost extends WebContentsObserver implements WindowAndroidChangedObserve
         super(webContents);
 
         mWebContents = webContents;
-        mContentViewCore = ContentViewCoreImpl.fromWebContents(mWebContents);
 
-        // NFC will not work if there is no CVC associated with the WebContents, and it will only
-        // be requested in contexts where there is a CVC associated with the WebContents as far as
-        // we are aware. If the latter ever proves false, then we will need to simply drop any NFC
-        // request that comes in if there is no CVC available.
-        assert mContentViewCore != null;
+        // NFC will not work if there is no WindowEventObserverManager associated with the
+        // WebContents, and it will only be requested in contexts where there is one associated with
+        // the WebContents as far as we are aware. If the latter ever proves false, then we will
+        // need to simply drop any NFC request that comes in if there is no
+        // WindowEventObserverManager available.
+        assert WindowEventObserverManager.from(mWebContents) != null;
         mContextId = contextId;
         sContextHostsMap.put(mContextId, this);
     }
@@ -69,14 +68,10 @@ class NfcHost extends WebContentsObserver implements WindowAndroidChangedObserve
         // a request to track activity changes while there is already such a request.
         assert mCallback == null : "Unexpected request to track activity changes";
         mCallback = callback;
-        Activity activity = null;
 
-        mContentViewCore.addWindowAndroidChangedObserver(this);
-        if (mContentViewCore.getWindowAndroid() != null) {
-            activity = mContentViewCore.getWindowAndroid().getActivity().get();
-        }
-
-        mCallback.onResult(activity);
+        WindowEventObserverManager.from(mWebContents).addObserver(this);
+        WindowAndroid window = mWebContents.getTopLevelNativeWindow();
+        mCallback.onResult(window != null ? window.getActivity().get() : null);
     }
 
     /**
@@ -84,7 +79,7 @@ class NfcHost extends WebContentsObserver implements WindowAndroidChangedObserve
      */
     public void stopTrackingActivityChanges() {
         mCallback = null;
-        mContentViewCore.removeWindowAndroidChangedObserver(this);
+        WindowEventObserverManager.from(mWebContents).removeObserver(this);
     }
 
     /**

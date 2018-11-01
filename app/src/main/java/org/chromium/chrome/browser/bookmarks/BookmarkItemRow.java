@@ -7,16 +7,14 @@ package org.chromium.chrome.browser.bookmarks;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
-import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.AttributeSet;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
 import org.chromium.chrome.browser.favicon.IconType;
 import org.chromium.chrome.browser.favicon.LargeIconBridge.LargeIconCallback;
 import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.util.ViewUtils;
 import org.chromium.chrome.browser.widget.RoundedIconGenerator;
 import org.chromium.components.bookmarks.BookmarkId;
 
@@ -29,23 +27,16 @@ public class BookmarkItemRow extends BookmarkRow implements LargeIconCallback {
     private RoundedIconGenerator mIconGenerator;
     private final int mMinIconSize;
     private final int mDisplayedIconSize;
-    private final int mCornerRadius;
 
     /**
      * Constructor for inflating from XML.
      */
     public BookmarkItemRow(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mCornerRadius = getResources().getDimensionPixelSize(R.dimen.default_favicon_corner_radius);
         mMinIconSize = (int) getResources().getDimension(R.dimen.default_favicon_min_size);
         mDisplayedIconSize = getResources().getDimensionPixelSize(R.dimen.default_favicon_size);
-        int textSize = getResources().getDimensionPixelSize(R.dimen.default_favicon_icon_text_size);
-        int iconColor = ApiCompatibilityUtils.getColor(
-                getResources(), R.color.default_favicon_background_color);
-        mIconGenerator = new RoundedIconGenerator(mDisplayedIconSize, mDisplayedIconSize,
-                FeatureUtilities.isChromeModernDesignEnabled() ? mDisplayedIconSize / 2
-                                                               : mCornerRadius,
-                iconColor, textSize);
+        mIconGenerator = ViewUtils.createDefaultRoundedIconGenerator(
+                FeatureUtilities.isChromeModernDesignEnabled());
     }
 
     // BookmarkRow implementation.
@@ -92,11 +83,9 @@ public class BookmarkItemRow extends BookmarkRow implements LargeIconCallback {
             icon = mIconGenerator.generateIconForUrl(mUrl);
             setIconDrawable(new BitmapDrawable(getResources(), icon));
         } else {
-            RoundedBitmapDrawable roundedIcon = RoundedBitmapDrawableFactory.create(
-                    getResources(),
-                    Bitmap.createScaledBitmap(icon, mDisplayedIconSize, mDisplayedIconSize, false));
-            roundedIcon.setCornerRadius(mCornerRadius);
-            setIconDrawable(roundedIcon);
+            setIconDrawable(ViewUtils.createRoundedBitmapDrawable(
+                    Bitmap.createScaledBitmap(icon, mDisplayedIconSize, mDisplayedIconSize, false),
+                    ViewUtils.DEFAULT_FAVICON_CORNER_RADIUS));
         }
     }
 }

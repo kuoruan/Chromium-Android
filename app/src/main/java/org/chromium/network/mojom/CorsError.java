@@ -20,9 +20,7 @@ public final class CorsError {
 
     public static final int INVALID_RESPONSE = DISALLOWED_BY_MODE + 1;
 
-    public static final int ALLOW_ORIGIN_MISMATCH = INVALID_RESPONSE + 1;
-
-    public static final int WILDCARD_ORIGIN_NOT_ALLOWED = ALLOW_ORIGIN_MISMATCH + 1;
+    public static final int WILDCARD_ORIGIN_NOT_ALLOWED = INVALID_RESPONSE + 1;
 
     public static final int MISSING_ALLOW_ORIGIN_HEADER = WILDCARD_ORIGIN_NOT_ALLOWED + 1;
 
@@ -30,11 +28,29 @@ public final class CorsError {
 
     public static final int INVALID_ALLOW_ORIGIN_VALUE = MULTIPLE_ALLOW_ORIGIN_VALUES + 1;
 
-    public static final int DISALLOW_CREDENTIALS_NOT_SET_TO_TRUE = INVALID_ALLOW_ORIGIN_VALUE + 1;
+    public static final int ALLOW_ORIGIN_MISMATCH = INVALID_ALLOW_ORIGIN_VALUE + 1;
 
-    public static final int PREFLIGHT_INVALID_STATUS = DISALLOW_CREDENTIALS_NOT_SET_TO_TRUE + 1;
+    public static final int INVALID_ALLOW_CREDENTIALS = ALLOW_ORIGIN_MISMATCH + 1;
 
-    public static final int PREFLIGHT_MISSING_ALLOW_EXTERNAL = PREFLIGHT_INVALID_STATUS + 1;
+    public static final int CORS_DISABLED_SCHEME = INVALID_ALLOW_CREDENTIALS + 1;
+
+    public static final int PREFLIGHT_INVALID_STATUS = CORS_DISABLED_SCHEME + 1;
+
+    public static final int PREFLIGHT_DISALLOWED_REDIRECT = PREFLIGHT_INVALID_STATUS + 1;
+
+    public static final int PREFLIGHT_WILDCARD_ORIGIN_NOT_ALLOWED = PREFLIGHT_DISALLOWED_REDIRECT + 1;
+
+    public static final int PREFLIGHT_MISSING_ALLOW_ORIGIN_HEADER = PREFLIGHT_WILDCARD_ORIGIN_NOT_ALLOWED + 1;
+
+    public static final int PREFLIGHT_MULTIPLE_ALLOW_ORIGIN_VALUES = PREFLIGHT_MISSING_ALLOW_ORIGIN_HEADER + 1;
+
+    public static final int PREFLIGHT_INVALID_ALLOW_ORIGIN_VALUE = PREFLIGHT_MULTIPLE_ALLOW_ORIGIN_VALUES + 1;
+
+    public static final int PREFLIGHT_ALLOW_ORIGIN_MISMATCH = PREFLIGHT_INVALID_ALLOW_ORIGIN_VALUE + 1;
+
+    public static final int PREFLIGHT_INVALID_ALLOW_CREDENTIALS = PREFLIGHT_ALLOW_ORIGIN_MISMATCH + 1;
+
+    public static final int PREFLIGHT_MISSING_ALLOW_EXTERNAL = PREFLIGHT_INVALID_ALLOW_CREDENTIALS + 1;
 
     public static final int PREFLIGHT_INVALID_ALLOW_EXTERNAL = PREFLIGHT_MISSING_ALLOW_EXTERNAL + 1;
 
@@ -46,11 +62,7 @@ public final class CorsError {
 
     public static final int HEADER_DISALLOWED_BY_PREFLIGHT_RESPONSE = METHOD_DISALLOWED_BY_PREFLIGHT_RESPONSE + 1;
 
-    public static final int REDIRECT_DISALLOWED_SCHEME = HEADER_DISALLOWED_BY_PREFLIGHT_RESPONSE + 1;
-
-    public static final int REDIRECT_CONTAINS_CREDENTIALS = REDIRECT_DISALLOWED_SCHEME + 1;
-
-    public static final int LAST = (int) (CorsError.REDIRECT_CONTAINS_CREDENTIALS);
+    public static final int REDIRECT_CONTAINS_CREDENTIALS = HEADER_DISALLOWED_BY_PREFLIGHT_RESPONSE + 1;
 
 
     private static final boolean IS_EXTENSIBLE = false;
@@ -74,6 +86,13 @@ public final class CorsError {
             case 14:
             case 15:
             case 16:
+            case 17:
+            case 18:
+            case 19:
+            case 20:
+            case 21:
+            case 22:
+            case 23:
                 return true;
         }
         return false;

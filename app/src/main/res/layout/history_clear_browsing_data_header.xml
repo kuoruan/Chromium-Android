@@ -25,6 +25,6 @@
             android:textColor="@color/blue_when_enabled"
             android:textSize="@dimen/text_size_medium" />
 
-        <View style="@style/Divider" />
+        <View style="@style/HorizontalDivider" />
 
 </LinearLayout>

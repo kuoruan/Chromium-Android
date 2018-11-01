@@ -18,28 +18,28 @@ class ProxyResolverFactory_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<ProxyResolverFactory, ProxyResolverFactory.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<ProxyResolverFactory, ProxyResolverFactory.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "proxy_resolver::mojom::ProxyResolverFactory";
+            return "proxy_resolver.mojom.ProxyResolverFactory";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, ProxyResolverFactory impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public ProxyResolverFactory[] buildArray(int size) {
           return new ProxyResolverFactory[size];
@@ -97,25 +97,25 @@ String pacScript, org.chromium.mojo.bindings.InterfaceRequest<ProxyResolver> res
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 ProxyResolverFactory_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case CREATE_RESOLVER_ORDINAL: {
-            
+
                         ProxyResolverFactoryCreateResolverParams data =
                                 ProxyResolverFactoryCreateResolverParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().createResolver(data.pacScript, data.resolver, data.client);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -135,14 +135,14 @@ String pacScript, org.chromium.mojo.bindings.InterfaceRequest<ProxyResolver> res
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), ProxyResolverFactory_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -156,39 +156,36 @@ String pacScript, org.chromium.mojo.bindings.InterfaceRequest<ProxyResolver> res
 
     
     static final class ProxyResolverFactoryCreateResolverParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public String pacScript;
         public org.chromium.mojo.bindings.InterfaceRequest<ProxyResolver> resolver;
         public ProxyResolverFactoryRequestClient client;
-    
+
         private ProxyResolverFactoryCreateResolverParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ProxyResolverFactoryCreateResolverParams() {
             this(0);
         }
-    
+
         public static ProxyResolverFactoryCreateResolverParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ProxyResolverFactoryCreateResolverParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ProxyResolverFactoryCreateResolverParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -198,25 +195,27 @@ String pacScript, org.chromium.mojo.bindings.InterfaceRequest<ProxyResolver> res
             ProxyResolverFactoryCreateResolverParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ProxyResolverFactoryCreateResolverParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ProxyResolverFactoryCreateResolverParams(elementsOrVersion);
+                    {
+                        
                     result.pacScript = decoder0.readString(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.resolver = decoder0.readInterfaceRequest(16, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.client = decoder0.readServiceInterface(20, false, ProxyResolverFactoryRequestClient.MANAGER);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -227,40 +226,6 @@ String pacScript, org.chromium.mojo.bindings.InterfaceRequest<ProxyResolver> res
             encoder0.encode(this.resolver, 16, false);
             
             encoder0.encode(this.client, 20, false, ProxyResolverFactoryRequestClient.MANAGER);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ProxyResolverFactoryCreateResolverParams other = (ProxyResolverFactoryCreateResolverParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.pacScript, other.pacScript))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.resolver, other.resolver))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.client, other.client))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pacScript);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.resolver);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
-            return result;
         }
     }
 

@@ -9,12 +9,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.StrictModeContext;
@@ -195,7 +195,7 @@ public class DownloadManagerDelegate {
     /**
      * Async task to query download status from Android DownloadManager
      */
-    private class DownloadQueryTask extends AsyncTask<Void, Void, DownloadQueryResult> {
+    private class DownloadQueryTask extends AsyncTask<DownloadQueryResult> {
         private final DownloadItem mDownloadItem;
         private final boolean mShowNotifications;
         private final DownloadQueryCallback mCallback;
@@ -208,25 +208,26 @@ public class DownloadManagerDelegate {
         }
 
         @Override
-        public DownloadQueryResult doInBackground(Void... voids) {
+        public DownloadQueryResult doInBackground() {
             DownloadManager manager =
                     (DownloadManager) mContext.getSystemService(Context.DOWNLOAD_SERVICE);
             Cursor c = manager.query(
                     new DownloadManager.Query().setFilterById(mDownloadItem.getSystemDownloadId()));
             if (c == null) {
                 return new DownloadQueryResult(mDownloadItem,
-                        DownloadManagerService.DOWNLOAD_STATUS_CANCELLED, 0, 0, false, 0);
+                        DownloadManagerService.DownloadStatus.CANCELLED, 0, 0, false, 0);
             }
             long bytesDownloaded = 0;
             boolean canResolve = false;
-            int downloadStatus = DownloadManagerService.DOWNLOAD_STATUS_IN_PROGRESS;
+            @DownloadManagerService.DownloadStatus
+            int downloadStatus = DownloadManagerService.DownloadStatus.IN_PROGRESS;
             int failureReason = 0;
             long lastModifiedTime = 0;
             if (c.moveToNext()) {
                 int statusIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS);
                 int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
                 if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                    downloadStatus = DownloadManagerService.DOWNLOAD_STATUS_COMPLETE;
+                    downloadStatus = DownloadManagerService.DownloadStatus.COMPLETE;
                     DownloadInfo.Builder builder = mDownloadItem.getDownloadInfo() == null
                             ? new DownloadInfo.Builder()
                             : DownloadInfo.Builder.fromDownloadInfo(
@@ -241,7 +242,7 @@ public class DownloadManagerDelegate {
                                         mContext, mDownloadItem, false);
                     }
                 } else if (status == DownloadManager.STATUS_FAILED) {
-                    downloadStatus = DownloadManagerService.DOWNLOAD_STATUS_FAILED;
+                    downloadStatus = DownloadManagerService.DownloadStatus.FAILED;
                     failureReason = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_REASON));
                 }
                 lastModifiedTime =
@@ -249,7 +250,7 @@ public class DownloadManagerDelegate {
                 bytesDownloaded =
                         c.getLong(c.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
             } else {
-                downloadStatus = DownloadManagerService.DOWNLOAD_STATUS_CANCELLED;
+                downloadStatus = DownloadManagerService.DownloadStatus.CANCELLED;
             }
             c.close();
             long totalTime = Math.max(0, lastModifiedTime - mDownloadItem.getStartTime());
@@ -292,7 +293,8 @@ public class DownloadManagerDelegate {
      */
     public void enqueueDownloadManagerRequest(final DownloadItem item, boolean notifyCompleted,
             EnqueueDownloadRequestCallback callback) {
-        new EnqueueDownloadRequestTask(item, notifyCompleted, callback).execute();
+        new EnqueueDownloadRequestTask(item, notifyCompleted, callback)
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**
@@ -314,7 +316,7 @@ public class DownloadManagerDelegate {
     /**
      * Async task to enqueue a download request into DownloadManager.
      */
-    private class EnqueueDownloadRequestTask extends AsyncTask<Void, Void, Boolean> {
+    private class EnqueueDownloadRequestTask extends AsyncTask<Boolean> {
         private final DownloadItem mDownloadItem;
         private final boolean mNotifyCompleted;
         private final EnqueueDownloadRequestCallback mCallback;
@@ -330,7 +332,7 @@ public class DownloadManagerDelegate {
         }
 
         @Override
-        public Boolean doInBackground(Void... voids) {
+        public Boolean doInBackground() {
             Uri uri = Uri.parse(mDownloadItem.getDownloadInfo().getUrl());
             DownloadManager.Request request;
             DownloadInfo info = mDownloadItem.getDownloadInfo();

@@ -4,8 +4,11 @@
 
 package org.chromium.chrome.browser.searchwidget;
 
+import android.content.res.ColorStateList;
+
 import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.chrome.browser.ntp.NewTabPage;
+import org.chromium.chrome.browser.omnibox.UrlBarData;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.toolbar.ToolbarDataProvider;
@@ -19,7 +22,7 @@ class SearchBoxDataProvider implements ToolbarDataProvider {
      * @param tab The tab to use.
      */
     public void onNativeLibraryReady(Tab tab) {
-        assert LibraryLoader.isInitialized();
+        assert LibraryLoader.getInstance().isInitialized();
         mTab = tab;
     }
 
@@ -41,8 +44,8 @@ class SearchBoxDataProvider implements ToolbarDataProvider {
     }
 
     @Override
-    public String getText() {
-        return null;
+    public UrlBarData getUrlBarData() {
+        return UrlBarData.EMPTY;
     }
 
     @Override
@@ -76,22 +79,12 @@ class SearchBoxDataProvider implements ToolbarDataProvider {
     }
 
     @Override
-    public boolean shouldShowGoogleG(String urlBarText) {
-        return false;
-    }
-
-    @Override
     public boolean isOfflinePage() {
         return false;
     }
 
     @Override
-    public boolean isShowingUntrustedOfflinePage() {
-        return false;
-    }
-
-    @Override
-    public boolean shouldShowSecurityIcon() {
+    public boolean isPreview() {
         return false;
     }
 
@@ -106,12 +99,17 @@ class SearchBoxDataProvider implements ToolbarDataProvider {
     }
 
     @Override
-    public int getSecurityIconResource() {
+    public int getSecurityIconResource(boolean isTablet) {
         return 0;
     }
 
     @Override
-    public boolean isDisplayingQueryTerms() {
+    public ColorStateList getSecurityIconColorStateList() {
+        return null;
+    }
+
+    @Override
+    public boolean shouldDisplaySearchTerms() {
         return false;
     }
 }

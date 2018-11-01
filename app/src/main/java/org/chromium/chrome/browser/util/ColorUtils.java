@@ -71,10 +71,15 @@ public class ColorUtils {
     }
 
     /**
-     * @return The base color for the textbox given a toolbar background color.
+     * Determine the text box color based on the current toolbar background color.
+     * @param res {@link Resources} used to retrieve colors.
+     * @param isLocationBarShownInNtp Whether the location bar is currently shown in an NTP.
+     * @param color The color of the toolbar background.
+     * @param useModernDesign Whether to use the "modern" visual design.
+     @return The base color for the textbox given a toolbar background color.
      */
     public static int getTextBoxColorForToolbarBackground(
-            Resources res, boolean isNtp, int color, boolean useModernDesign) {
+            Resources res, boolean isLocationBarShownInNtp, int color, boolean useModernDesign) {
         // If modern is enabled, it is a special case. It's toolbar is white with a darker text box
         // background.
         boolean usingDefaultThemeColor =
@@ -83,14 +88,16 @@ public class ColorUtils {
             // In modern, the default theme color is white, so the text box uses a darker color
             // which is different from all other cases. In the case of the NTP, the location bar is
             // not visible by default, so we make it white to appear as part of the background.
-            return isNtp ? Color.WHITE
-                         : ApiCompatibilityUtils.getColor(res, R.color.modern_light_grey);
+            return isLocationBarShownInNtp
+                    ? Color.WHITE
+                    : ApiCompatibilityUtils.getColor(res, R.color.modern_grey_100);
         }
 
         if (shouldUseOpaqueTextboxBackground(color)) {
             // NTP should have no visible textbox in the toolbar, so just return the toolbar's
             // background color.
-            return isNtp ? ApiCompatibilityUtils.getColor(res, R.color.ntp_bg) : Color.WHITE;
+            return isLocationBarShownInNtp ? ApiCompatibilityUtils.getColor(res, R.color.ntp_bg)
+                                           : Color.WHITE;
         }
         return getColorWithOverlay(color, Color.WHITE, LOCATION_BAR_TRANSPARENT_BACKGROUND_ALPHA);
     }

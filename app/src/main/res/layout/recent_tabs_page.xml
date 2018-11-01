@@ -21,11 +21,13 @@
 
         <org.chromium.chrome.browser.ntp.RecentTabsExpandableListView
             android:id="@+id/odp_listview"
+            android:paddingTop="@dimen/recent_tabs_group_view_vertical_padding"
             android:layout_height="match_parent"
             android:layout_width="match_parent"
-            android:cacheColorHint="@color/ntp_bg"
+            android:cacheColorHint="@color/modern_primary_color"
             android:childDivider="@null"
             android:divider="@null"
+            android:background="@color/modern_primary_color"
             android:listSelector="@android:color/transparent"
             android:scrollbarStyle="outsideOverlay" />
 

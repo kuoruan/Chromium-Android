@@ -40,9 +40,6 @@ public final class MutablePartialNetworkTrafficAnnotationTag extends org.chromiu
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static MutablePartialNetworkTrafficAnnotationTag deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,15 +53,17 @@ public final class MutablePartialNetworkTrafficAnnotationTag extends org.chromiu
         MutablePartialNetworkTrafficAnnotationTag result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new MutablePartialNetworkTrafficAnnotationTag(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new MutablePartialNetworkTrafficAnnotationTag(elementsOrVersion);
+                {
+                    
                 result.uniqueIdHashCode = decoder0.readInt(8);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.completingIdHashCode = decoder0.readInt(12);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -79,36 +78,5 @@ public final class MutablePartialNetworkTrafficAnnotationTag extends org.chromiu
         encoder0.encode(this.uniqueIdHashCode, 8);
         
         encoder0.encode(this.completingIdHashCode, 12);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        MutablePartialNetworkTrafficAnnotationTag other = (MutablePartialNetworkTrafficAnnotationTag) object;
-        if (this.uniqueIdHashCode!= other.uniqueIdHashCode)
-            return false;
-        if (this.completingIdHashCode!= other.completingIdHashCode)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.uniqueIdHashCode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.completingIdHashCode);
-        return result;
     }
 }

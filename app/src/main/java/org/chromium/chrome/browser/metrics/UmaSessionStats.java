@@ -7,11 +7,10 @@ package org.chromium.chrome.browser.metrics;
 import android.content.ComponentCallbacks;
 import android.content.Context;
 import android.content.res.Configuration;
-import android.os.AsyncTask;
 import android.text.TextUtils;
 
-import org.chromium.base.ContextUtils;
-import org.chromium.base.metrics.RecordUserAction;
+import org.chromium.base.AsyncTask;
+import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.DefaultBrowserInfo;
 import org.chromium.chrome.browser.instantapps.InstantAppsHandler;
 import org.chromium.chrome.browser.preferences.privacy.PrivacyPreferencesManager;
@@ -28,8 +27,6 @@ import org.chromium.content_public.browser.WebContents;
  * and the framework's MetricService.
  */
 public class UmaSessionStats {
-    public static final String LAST_USED_TIME_PREF = "umasessionstats.lastusedtime";
-
     private static final String SAMSUNG_MULTWINDOW_PACKAGE = "com.sec.feature.multiwindow";
 
     private static long sNativeUmaSessionStats;
@@ -63,9 +60,10 @@ public class UmaSessionStats {
         String url = tab.getUrl();
         if (!TextUtils.isEmpty(url) && UrlUtilities.isHttpOrHttps(url)) {
             AsyncTask.THREAD_POOL_EXECUTOR.execute(() -> {
-                if (InstantAppsHandler.getInstance().getInstantAppIntentForUrl(url) != null) {
-                    RecordUserAction.record("Android.InstantApps.InstantAppsEligiblePageLoaded");
-                }
+                boolean isEligible =
+                        InstantAppsHandler.getInstance().getInstantAppIntentForUrl(url) != null;
+                RecordHistogram.recordBooleanHistogram(
+                        "Android.InstantApps.EligiblePageLoaded", isEligible);
             });
         }
 
@@ -151,10 +149,6 @@ public class UmaSessionStats {
         }
 
         nativeUmaEndSession(sNativeUmaSessionStats);
-        ContextUtils.getAppSharedPreferences()
-                .edit()
-                .putLong(LAST_USED_TIME_PREF, System.currentTimeMillis())
-                .apply();
     }
 
     /**
@@ -170,6 +164,27 @@ public class UmaSessionStats {
         nativeChangeMetricsReportingConsent(consent);
 
         updateMetricsServiceState();
+    }
+
+    /**
+     * Initializes the metrics consent bit to false. Used only for testing.
+     */
+    public static void initMetricsAndCrashReportingForTesting() {
+        nativeInitMetricsAndCrashReportingForTesting();
+    }
+
+    /**
+     * Clears the metrics consent bit used for testing to original setting. Used only for testing.
+     */
+    public static void unSetMetricsAndCrashReportingForTesting() {
+        nativeUnsetMetricsAndCrashReportingForTesting();
+    }
+
+    /**
+     * Updates the metrics consent bit to |consent|. Used only for testing.
+     */
+    public static void updateMetricsAndCrashReportingForTesting(boolean consent) {
+        nativeUpdateMetricsAndCrashReportingForTesting(consent);
     }
 
     /**
@@ -212,6 +227,9 @@ public class UmaSessionStats {
 
     private static native long nativeInit();
     private static native void nativeChangeMetricsReportingConsent(boolean consent);
+    private static native void nativeInitMetricsAndCrashReportingForTesting();
+    private static native void nativeUnsetMetricsAndCrashReportingForTesting();
+    private static native void nativeUpdateMetricsAndCrashReportingForTesting(boolean consent);
     private static native void nativeUpdateMetricsServiceState(boolean mayUpload);
     private native void nativeUmaResumeSession(long nativeUmaSessionStats);
     private native void nativeUmaEndSession(long nativeUmaSessionStats);

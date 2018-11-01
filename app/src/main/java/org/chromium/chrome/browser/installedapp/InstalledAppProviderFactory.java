@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.installedapp;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.browser.instantapps.InstantAppsHandler;
-import org.chromium.content.browser.framehost.RenderFrameHostImpl;
 import org.chromium.content_public.browser.RenderFrameHost;
 import org.chromium.installedapp.mojom.InstalledAppProvider;
 import org.chromium.services.service_manager.InterfaceFactory;
@@ -20,10 +19,10 @@ public class InstalledAppProviderFactory implements InterfaceFactory<InstalledAp
 
     private static final class FrameUrlDelegateImpl
             implements InstalledAppProviderImpl.FrameUrlDelegate {
-        private final RenderFrameHostImpl mRenderFrameHost;
+        private final RenderFrameHost mRenderFrameHost;
 
         public FrameUrlDelegateImpl(RenderFrameHost renderFrameHost) {
-            mRenderFrameHost = (RenderFrameHostImpl) renderFrameHost;
+            mRenderFrameHost = renderFrameHost;
         }
 
         @Override

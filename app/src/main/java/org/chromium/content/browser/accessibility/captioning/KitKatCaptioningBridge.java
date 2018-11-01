@@ -9,6 +9,8 @@ import android.content.Context;
 import android.os.Build;
 import android.view.accessibility.CaptioningManager;
 
+import org.chromium.base.ContextUtils;
+
 import java.util.Locale;
 
 /**
@@ -58,22 +60,20 @@ public class KitKatCaptioningBridge implements SystemCaptioningBridge {
      * @param context the Context to associate with this bridge.
      * @return the singleton instance of KitKatCaptioningBridge.
      */
-    public static KitKatCaptioningBridge getInstance(Context context) {
+    public static KitKatCaptioningBridge getInstance() {
         if (sKitKatCaptioningBridge == null) {
-            sKitKatCaptioningBridge = new KitKatCaptioningBridge(context);
+            sKitKatCaptioningBridge = new KitKatCaptioningBridge();
         }
         return sKitKatCaptioningBridge;
     }
 
     /**
      * Construct a new KitKat+ captioning bridge
-     *
-     * @param context the Context to associate with this bridge.
      */
-    private KitKatCaptioningBridge(Context context) {
+    private KitKatCaptioningBridge() {
         mCaptioningChangeDelegate = new CaptioningChangeDelegate();
         mCaptioningManager =
-                (CaptioningManager) context.getApplicationContext().getSystemService(
+                (CaptioningManager) ContextUtils.getApplicationContext().getSystemService(
                         Context.CAPTIONING_SERVICE);
     }
 

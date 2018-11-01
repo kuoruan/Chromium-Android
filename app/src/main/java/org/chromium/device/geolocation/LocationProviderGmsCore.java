@@ -27,8 +27,7 @@ import org.chromium.base.ThreadUtils;
  * https://developers.google.com/android/reference/com/google/android/gms/location/package-summary
  */
 public class LocationProviderGmsCore implements ConnectionCallbacks, OnConnectionFailedListener,
-                                                LocationListener,
-                                                LocationProviderFactory.LocationProvider {
+                                                LocationListener, LocationProvider {
     private static final String TAG = "cr_LocationProvider";
 
     // Values for the LocationRequest's setInterval for normal and high accuracy, respectively.
@@ -105,7 +104,7 @@ public class LocationProviderGmsCore implements ConnectionCallbacks, OnConnectio
                 "Failed to connect to Google Play Services: " + result.toString());
     }
 
-    // LocationProviderFactory.LocationProvider implementation
+    // LocationProvider implementation
     @Override
     public void start(boolean enableHighAccuracy) {
         ThreadUtils.assertOnUiThread();

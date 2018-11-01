@@ -7,6 +7,7 @@ package org.chromium.ui.widget;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.text.Layout;
 import android.text.SpannableString;
 import android.text.style.ClickableSpan;
@@ -29,7 +30,8 @@ import org.chromium.base.VisibleForTesting;
  * ClickableSpan, we activate it. If there's more than one, we pop up a
  * PopupMenu to disambiguate.
  */
-public class TextViewWithClickableSpans extends TextViewWithLeading {
+public class TextViewWithClickableSpans
+        extends TextViewWithLeading implements View.OnLongClickListener {
     private AccessibilityManager mAccessibilityManager;
     private PopupMenu mDisambiguationMenu;
 
@@ -43,6 +45,21 @@ public class TextViewWithClickableSpans extends TextViewWithLeading {
         init();
     }
 
+    @CallSuper
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        ensureValidLongClickListenerState();
+    }
+
+    @CallSuper
+    @Override
+    protected void onWindowVisibilityChanged(int visibility) {
+        super.onWindowVisibilityChanged(visibility);
+        if (visibility == View.GONE) return;
+        ensureValidLongClickListenerState();
+    }
+
     private void init() {
         // This disables the saving/restoring since the saved text may be in the wrong language
         // (if the user just changed system language), and restoring spans doesn't work anyway.
@@ -50,16 +67,31 @@ public class TextViewWithClickableSpans extends TextViewWithLeading {
         setSaveEnabled(false);
         mAccessibilityManager = (AccessibilityManager)
                 getContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
-        setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                if (!mAccessibilityManager.isTouchExplorationEnabled()) {
-                    return false;
-                }
-                openDisambiguationMenu();
-                return true;
-            }
-        });
+        ensureValidLongClickListenerState();
+    }
+
+    @Override
+    public boolean onLongClick(View v) {
+        assert v == this;
+        if (!mAccessibilityManager.isTouchExplorationEnabled()) {
+            assert false : "Long click listener should have been removed if not in"
+                           + " accessibility mode.";
+            return false;
+        }
+        openDisambiguationMenu();
+        return true;
+    }
+
+    @Override
+    public final void setOnLongClickListener(View.OnLongClickListener listener) {
+        // Ensure that no one changes the long click listener to anything but this view.
+        assert listener == this || listener == null;
+        super.setOnLongClickListener(listener);
+    }
+
+    private void ensureValidLongClickListenerState() {
+        if (mAccessibilityManager == null) return;
+        setOnLongClickListener(mAccessibilityManager.isTouchExplorationEnabled() ? this : null);
     }
 
     @Override
@@ -88,7 +120,14 @@ public class TextViewWithClickableSpans extends TextViewWithLeading {
         return superResult;
     }
 
-    private boolean touchIntersectsAnyClickableSpans(MotionEvent event) {
+    /**
+     * Determines whether the motion event intersects with any of the ClickableSpan(s) within the
+     * text.
+     *
+     * @param event The motion event to compare the spans against.
+     * @return Whether the motion event intersected any clickable spans.
+     */
+    protected boolean touchIntersectsAnyClickableSpans(MotionEvent event) {
         // This logic is borrowed from android.text.method.LinkMovementMethod.
         //
         // ClickableSpan doesn't stop propagation of the event in its click handler,

@@ -30,7 +30,7 @@ int inputCount, org.chromium.gfx.mojom.Size inputCodedSize, int outputBufferSize
 
 
     void bitstreamBufferReady(
-int bitstreamBufferId, int payloadSize, boolean keyFrame, org.chromium.mojo.common.mojom.TimeDelta timestamp);
+int bitstreamBufferId, BitstreamBufferMetadata metadata);
 
 
 

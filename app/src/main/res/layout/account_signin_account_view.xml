@@ -4,7 +4,9 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/selectableItemBackground"
@@ -18,7 +20,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginEnd="16dp"
-        android:contentDescription="@null" />
+        tools:ignore="ContentDescription" />
 
     <!-- 2dp bottom padding is necessary to move text 1dp up according to the Material spec.
          See https://crbug.com/701221#c37. -->
@@ -38,7 +40,7 @@
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_marginStart="16dp"
-        android:contentDescription="@null"
+        tools:ignore="ContentDescription"
         android:src="@drawable/ic_check_googblue_24dp"
         android:visibility="gone" />
 </LinearLayout>

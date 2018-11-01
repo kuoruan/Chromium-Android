@@ -14,7 +14,8 @@ public class EmptyBrowserParts implements BrowserParts {
     }
 
     @Override
-    public void setContentViewAndLoadLibrary() {
+    public void setContentViewAndLoadLibrary(Runnable onInflationCompleteCallback) {
+        onInflationCompleteCallback.run();
     }
 
     @Override

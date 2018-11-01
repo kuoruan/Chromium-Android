@@ -228,6 +228,14 @@ class WebContentsObserverProxy extends WebContentsObserver {
 
     @Override
     @CalledByNative
+    public void viewportFitChanged(@WebContentsObserver.ViewportFitType int value) {
+        for (mObserversIterator.rewind(); mObserversIterator.hasNext();) {
+            mObserversIterator.next().viewportFitChanged(value);
+        }
+    }
+
+    @Override
+    @CalledByNative
     public void destroy() {
         // Super destruction semantics (removing the observer from the
         // Java-based WebContents) are quite different, so we explicitly avoid

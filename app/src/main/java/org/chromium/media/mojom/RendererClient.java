@@ -25,7 +25,7 @@ public interface RendererClient extends org.chromium.mojo.bindings.Interface {
 
 
     void onTimeUpdate(
-org.chromium.mojo.common.mojom.TimeDelta time, org.chromium.mojo.common.mojom.TimeDelta maxTime, org.chromium.mojo.common.mojom.TimeTicks captureTime);
+org.chromium.mojo_base.mojom.TimeDelta time, org.chromium.mojo_base.mojom.TimeDelta maxTime, org.chromium.mojo_base.mojom.TimeTicks captureTime);
 
 
 
@@ -75,7 +75,7 @@ PipelineStatistics stats);
 
 
     void onDurationChange(
-org.chromium.mojo.common.mojom.TimeDelta duration);
+org.chromium.mojo_base.mojom.TimeDelta duration);
 
 
 }

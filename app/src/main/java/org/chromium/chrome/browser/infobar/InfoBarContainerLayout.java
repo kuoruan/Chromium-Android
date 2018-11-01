@@ -12,6 +12,7 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -97,6 +98,12 @@ public class InfoBarContainerLayout extends FrameLayout {
         boolean isLegalDisclosure();
 
         /**
+         * Returns whether the infobar is a low prirority one and thus if there are other infobars,
+         * they would be shown in front of this one.
+         */
+        boolean isBottomMostInfoBar();
+
+        /**
          * Returns the type of infobar, as best as can be determined at this time.  See
          * components/infobars/core/infobar_delegate.h.
          */
@@ -107,11 +114,12 @@ public class InfoBarContainerLayout extends FrameLayout {
     /**
      * Creates an empty InfoBarContainerLayout.
      */
-    InfoBarContainerLayout(Context context) {
+    InfoBarContainerLayout(Context context, Runnable makeContainerVisibleRunnable) {
         super(context);
         Resources res = context.getResources();
         mBackInfobarHeight = res.getDimensionPixelSize(R.dimen.infobar_peeking_height);
         mFloatingBehavior = new FloatingBehavior(this);
+        mMakeContainerVisibleRunnable = makeContainerVisibleRunnable;
     }
 
     /**
@@ -119,12 +127,26 @@ public class InfoBarContainerLayout extends FrameLayout {
      * current animation, if any, finishes.
      */
     void addInfoBar(Item item) {
-        if (item.isLegalDisclosure()) {
-            mItems.add(0, item);
-        } else {
-            mItems.add(item);
-        }
+        mItems.add(findInsertIndex(item), item);
         processPendingAnimations();
+    }
+
+    /**
+     * Finds the appropriate index in the infobar stack for inserting this item. Legal disclosures
+     * are at the top and bottommost infobar at the bottom, everything else goes in the middle.
+     * @param item The infobar to be inserted.
+     */
+    private int findInsertIndex(Item item) {
+        if (item.isLegalDisclosure()) return 0;
+        if (item.isBottomMostInfoBar()) return mItems.size();
+
+        // Insert at the end before any bottom most infobars.
+        for (int i = 0; i < mItems.size(); i++) {
+            if (mItems.get(i).isBottomMostInfoBar()) return i;
+        }
+
+        // Just be the last in the stack by default.
+        return mItems.size();
     }
 
     /**
@@ -346,6 +368,10 @@ public class InfoBarContainerLayout extends FrameLayout {
             }
             mFrontWrapper.setTranslationY(newFrontStart);
             mFrontContents.setAlpha(0f);
+
+            // Since we are adding the infobar to the top of the stack, make the container fully
+            // visible since it could be at hidden or partially hidden state.
+            mMakeContainerVisibleRunnable.run();
 
             AnimatorSet animator = new AnimatorSet();
             animator.play(createTranslationYAnimator(mFrontWrapper,
@@ -710,6 +736,9 @@ public class InfoBarContainerLayout extends FrameLayout {
 
     private FloatingBehavior mFloatingBehavior;
 
+    /** The runnable to make infobar container fully visible. */
+    private Runnable mMakeContainerVisibleRunnable;
+
     /**
      * Determines whether any animations need to run in order to make the visible views match the
      * current list of Items in mItems. If so, kicks off the next animation that's needed.
@@ -843,6 +872,12 @@ public class InfoBarContainerLayout extends FrameLayout {
         widthMeasureSpec = mFloatingBehavior.beforeOnMeasure(widthMeasureSpec);
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         mFloatingBehavior.afterOnMeasure(getMeasuredHeight());
+    }
+
+    @Override
+    public void announceForAccessibility(CharSequence text) {
+        if (TextUtils.isEmpty(text)) return;
+        super.announceForAccessibility(text);
     }
 
     @Override

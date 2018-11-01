@@ -12,13 +12,13 @@
     </item>
     <item android:top="0dp" android:left="10dp">
         <shape android:shape="rectangle">
-            <solid android:color="@color/google_grey_200"/>
+            <solid android:color="@color/modern_grey_200"/>
             <size android:height="10dp" android:width="10dp"/>
         </shape>
     </item>
     <item android:top="10dp" android:left="0dp">
         <shape android:shape="rectangle">
-            <solid android:color="@color/google_grey_200"/>
+            <solid android:color="@color/modern_grey_200"/>
             <size android:height="10dp" android:width="10dp"/>
         </shape>
     </item>

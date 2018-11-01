@@ -20,24 +20,30 @@ public final class UrlLoaderFactoryConstants {
     public static final int URL_LOAD_OPTION_NONE = (int) 0L;
 
 
+
     
     public static final int URL_LOAD_OPTION_SEND_SSL_INFO_WITH_RESPONSE = (int) 1L;
+
 
 
     
     public static final int URL_LOAD_OPTION_SNIFF_MIME_TYPE = (int) 2L;
 
 
+
     
     public static final int URL_LOAD_OPTION_SYNCHRONOUS = (int) 4L;
+
 
 
     
     public static final int URL_LOAD_OPTION_SEND_SSL_INFO_FOR_CERTIFICATE_ERROR = (int) 8L;
 
 
+
     
     public static final int URL_LOAD_OPTION_PAUSE_ON_RESPONSE_STARTED = (int) 16L;
+
 
 
     private UrlLoaderFactoryConstants() {}

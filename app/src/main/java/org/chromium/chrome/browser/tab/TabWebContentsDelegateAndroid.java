@@ -33,7 +33,7 @@ import org.chromium.chrome.browser.document.DocumentUtils;
 import org.chromium.chrome.browser.document.DocumentWebContentsDelegate;
 import org.chromium.chrome.browser.findinpage.FindMatchRectsDetails;
 import org.chromium.chrome.browser.findinpage.FindNotificationDetails;
-import org.chromium.chrome.browser.fullscreen.FullscreenManager;
+import org.chromium.chrome.browser.fullscreen.FullscreenOptions;
 import org.chromium.chrome.browser.media.MediaCaptureNotificationService;
 import org.chromium.chrome.browser.policy.PolicyAuditor;
 import org.chromium.chrome.browser.policy.PolicyAuditor.AuditEvent;
@@ -42,10 +42,8 @@ import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.TabModelUtils;
 import org.chromium.chrome.browser.tabmodel.TabWindowManager;
-import org.chromium.components.web_contents_delegate_android.WebContentsDelegateAndroid;
-import org.chromium.content.browser.ActivityContentVideoViewEmbedder;
-import org.chromium.content.browser.ContentVideoViewEmbedder;
-import org.chromium.content_public.browser.ContentViewCore;
+import org.chromium.components.embedder_support.delegate.WebContentsDelegateAndroid;
+import org.chromium.content_public.browser.GestureListenerManager;
 import org.chromium.content_public.browser.InvalidateTypes;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.common.ResourceRequestBody;
@@ -216,11 +214,21 @@ public class TabWebContentsDelegateAndroid extends WebContentsDelegateAndroid {
     }
 
     @Override
-    public void toggleFullscreenModeForTab(boolean enableFullscreen) {
+    public void enterFullscreenModeForTab(boolean prefersNavigationBar) {
+        FullscreenOptions options = new FullscreenOptions(prefersNavigationBar);
         if (FullscreenActivity.shouldUseFullscreenActivity(mTab)) {
-            FullscreenActivity.toggleFullscreenMode(enableFullscreen, mTab);
+            FullscreenActivity.enterFullscreenMode(mTab, options);
         } else {
-            mTab.toggleFullscreenMode(enableFullscreen);
+            mTab.enterFullscreenMode(options);
+        }
+    }
+
+    @Override
+    public void exitFullscreenModeForTab() {
+        if (FullscreenActivity.shouldUseFullscreenActivity(mTab)) {
+            FullscreenActivity.exitFullscreenMode(mTab);
+        } else {
+            mTab.exitFullscreenMode();
         }
     }
 
@@ -527,37 +535,11 @@ public class TabWebContentsDelegateAndroid extends WebContentsDelegateAndroid {
         return mTab.getWindowAndroid().getDisplay().getDipScale();
     }
 
-    @Override
-    public ContentVideoViewEmbedder getContentVideoViewEmbedder() {
-        return new ActivityContentVideoViewEmbedder(mTab.getActivity()) {
-            @Override
-            public void enterFullscreenVideo(View view, boolean isVideoLoaded) {
-                super.enterFullscreenVideo(view, isVideoLoaded);
-                FullscreenManager fullscreenManager = mTab.getFullscreenManager();
-                if (fullscreenManager != null) {
-                    fullscreenManager.setOverlayVideoMode(true);
-                    // Disable double tap for video.
-                    ContentViewCore cvc = mTab.getContentViewCore();
-                    if (cvc != null) {
-                        cvc.updateDoubleTapSupport(false);
-                    }
-                }
-            }
-
-            @Override
-            public void exitFullscreenVideo() {
-                FullscreenManager fullscreenManager = mTab.getFullscreenManager();
-                if (fullscreenManager != null) {
-                    fullscreenManager.setOverlayVideoMode(false);
-                    // Disable double tap for video.
-                    ContentViewCore cvc = mTab.getContentViewCore();
-                    if (cvc != null) {
-                        cvc.updateDoubleTapSupport(true);
-                    }
-                }
-                super.exitFullscreenVideo();
-            }
-        };
+    private void enableDoubleTap(boolean enable) {
+        WebContents wc = mTab.getWebContents();
+        GestureListenerManager gestureManager =
+                wc != null ? GestureListenerManager.fromWebContents(wc) : null;
+        if (gestureManager != null) gestureManager.updateDoubleTapSupport(enable);
     }
 
     public void showFramebustBlockInfobarForTesting(String url) {

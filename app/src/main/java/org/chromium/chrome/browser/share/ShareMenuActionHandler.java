@@ -13,13 +13,12 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.feature_engagement.ScreenshotTabObserver;
 import org.chromium.chrome.browser.offlinepages.OfflinePageUtils;
-import org.chromium.chrome.browser.physicalweb.PhysicalWebShareActivity;
 import org.chromium.chrome.browser.printing.PrintShareActivity;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.ChromeFileProvider;
 import org.chromium.components.ui_metrics.CanonicalURLResult;
-import org.chromium.content_public.browser.ContentBitmapCallback;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.net.GURLUtils;
 
@@ -72,9 +71,6 @@ public class ShareMenuActionHandler {
 
         if (PrintShareActivity.featureIsAvailable(currentTab)) {
             classesToEnable.add(PrintShareActivity.class);
-        }
-        if (PhysicalWebShareActivity.featureIsAvailable()) {
-            classesToEnable.add(PhysicalWebShareActivity.class);
         }
 
         if (!classesToEnable.isEmpty()) {
@@ -148,12 +144,13 @@ public class ShareMenuActionHandler {
 
     private void triggerShare(final Activity activity, final Tab currentTab,
             final boolean shareDirectly, boolean isIncognito) {
-        boolean isOfflinePage = OfflinePageUtils.isOfflinePage(currentTab);
-        RecordHistogram.recordBooleanHistogram("OfflinePages.SharedPageWasOffline", isOfflinePage);
-
-        if (isOfflinePage
-                && OfflinePageUtils.maybeShareOfflinePage(
-                           activity, currentTab, (ShareParams p) -> mDelegate.share(p))) {
+        ScreenshotTabObserver tabObserver = ScreenshotTabObserver.from(currentTab);
+        if (tabObserver != null) {
+            tabObserver.onActionPerformedAfterScreenshot(
+                    ScreenshotTabObserver.SCREENSHOT_ACTION_SHARE);
+        }
+        if (OfflinePageUtils.maybeShareOfflinePage(
+                    activity, currentTab, (ShareParams p) -> mDelegate.share(p))) {
             return;
         }
 
@@ -200,15 +197,14 @@ public class ShareMenuActionHandler {
         if (blockingUri == null) return;
 
         // Start screenshot capture and notify the provider when it is ready.
-        ContentBitmapCallback callback =
-                (bitmap) -> ShareHelper.saveScreenshotToDisk(bitmap, mainActivity, result -> {
+        Callback<Uri> callback = (saveFile) -> {
             // Unblock the file once it is saved to disk.
-            ChromeFileProvider.notifyFileReady(blockingUri, result);
-        });
+            ChromeFileProvider.notifyFileReady(blockingUri, saveFile);
+        };
         if (sScreenshotCaptureSkippedForTesting) {
-            callback.onFinishGetBitmap(null);
+            callback.onResult(null);
         } else {
-            webContents.getContentBitmapAsync(0, 0, callback);
+            ShareHelper.captureScreenshotForContents(webContents, 0, 0, callback);
         }
     }
 

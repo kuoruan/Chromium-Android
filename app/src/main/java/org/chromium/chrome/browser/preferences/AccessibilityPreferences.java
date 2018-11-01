@@ -11,9 +11,9 @@ import android.preference.PreferenceFragment;
 import android.widget.ListView;
 
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.accessibility.FontSizePrefs;
 import org.chromium.chrome.browser.accessibility.FontSizePrefs.FontSizePrefsObserver;
+import org.chromium.chrome.browser.util.AccessibilityUtil;
 
 import java.text.NumberFormat;
 
@@ -32,7 +32,7 @@ public class AccessibilityPreferences extends PreferenceFragment
 
     private TextScalePreference mTextScalePref;
     private SeekBarLinkedCheckBoxPreference mForceEnableZoomPref;
-    private ChromeBaseCheckBoxPreference mReaderForAccessibilityPref;
+    private ChromeBaseCheckBoxPreference mAccessibilityTabSwitcherPref;
 
     private FontSizePrefsObserver mFontSizePrefsObserver = new FontSizePrefsObserver() {
         @Override
@@ -63,14 +63,20 @@ public class AccessibilityPreferences extends PreferenceFragment
         mForceEnableZoomPref.setOnPreferenceChangeListener(this);
         mForceEnableZoomPref.setLinkedSeekBarPreference(mTextScalePref);
 
-        mReaderForAccessibilityPref =
+        ChromeBaseCheckBoxPreference readerForAccessibilityPref =
                 (ChromeBaseCheckBoxPreference) findPreference(PREF_READER_FOR_ACCESSIBILITY);
-        if (ChromeFeatureList.isEnabled(ChromeFeatureList.ALLOW_READER_FOR_ACCESSIBILITY)) {
-            mReaderForAccessibilityPref.setChecked(PrefServiceBridge.getInstance().getBoolean(
-                    Pref.READER_FOR_ACCESSIBILITY_ENABLED));
-            mReaderForAccessibilityPref.setOnPreferenceChangeListener(this);
+        readerForAccessibilityPref.setChecked(
+                PrefServiceBridge.getInstance().getBoolean(Pref.READER_FOR_ACCESSIBILITY_ENABLED));
+        readerForAccessibilityPref.setOnPreferenceChangeListener(this);
+
+        mAccessibilityTabSwitcherPref = (ChromeBaseCheckBoxPreference) findPreference(
+                ChromePreferenceManager.ACCESSIBILITY_TAB_SWITCHER);
+        if (AccessibilityUtil.isAccessibilityEnabled()) {
+            mAccessibilityTabSwitcherPref.setChecked(
+                    ChromePreferenceManager.getInstance().readBoolean(
+                            ChromePreferenceManager.ACCESSIBILITY_TAB_SWITCHER, true));
         } else {
-            this.getPreferenceScreen().removePreference(mReaderForAccessibilityPref);
+            getPreferenceScreen().removePreference(mAccessibilityTabSwitcherPref);
         }
     }
 
@@ -79,6 +85,7 @@ public class AccessibilityPreferences extends PreferenceFragment
         super.onActivityCreated(savedInstanceState);
 
         ((ListView) getView().findViewById(android.R.id.list)).setItemsCanFocus(true);
+        ((ListView) getView().findViewById(android.R.id.list)).setDivider(null);
     }
 
     @Override

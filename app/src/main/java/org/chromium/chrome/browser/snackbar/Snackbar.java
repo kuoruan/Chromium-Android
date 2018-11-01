@@ -6,7 +6,9 @@ package org.chromium.chrome.browser.snackbar;
 
 import android.graphics.drawable.Drawable;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.R;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarController;
 
 /**
@@ -31,6 +33,14 @@ public class Snackbar {
      * one by one.
      */
     public static final int TYPE_NOTIFICATION = 1;
+
+    /**
+     * Snackbars that need to persist until acknowledged. These snackbars are stored in a queue and
+     * are lower priority than both {@link #TYPE_ACTION}, and {@link #TYPE_NOTIFICATION}. These must
+     * be dismissed one by one via a click. As such, snackbars of this type MUST call
+     * {@link #setAction(String, Object)} so that there is a way to remove them.
+     */
+    public static final int TYPE_PERSISTENT = 2;
 
     /**
      * UMA Identifiers of features using snackbar. See SnackbarIdentifier enum in histograms.
@@ -61,6 +71,11 @@ public class Snackbar {
     public static final int UMA_SNIPPET_FETCH_FAILED = 21;
     // Obsolete; don't use: UMA_CHROME_HOME_OPT_OUT_SURVEY = 22;
     public static final int UMA_SNIPPET_FETCH_NO_NEW_SUGGESTIONS = 23;
+    public static final int UMA_MISSING_FILES_NO_SD_CARD = 24;
+    public static final int UMA_OFFLINE_INDICATOR = 25;
+    public static final int UMA_FEED_NTP_STREAM = 26;
+    public static final int UMA_WEBAPK_PRIVACY_DISCLOSURE = 27;
+    public static final int UMA_TWA_PRIVACY_DISCLOSURE = 28;
 
     private SnackbarController mController;
     private CharSequence mText;
@@ -94,6 +109,12 @@ public class Snackbar {
         s.mController = controller;
         s.mType = type;
         s.mIdentifier = identifier;
+        if (type == TYPE_PERSISTENT) {
+            // For persistent snackbars we set a default action text to ensure the snackbar can be
+            // closed.
+            s.mActionText =
+                    ContextUtils.getApplicationContext().getResources().getString(R.string.ok);
+        }
         return s;
     }
 
@@ -142,6 +163,7 @@ public class Snackbar {
      * use the default duration.
      */
     public Snackbar setDuration(int durationMs) {
+        assert !isTypePersistent() : "Persistent snackbars do not timeout.";
         mDurationMs = durationMs;
         return this;
     }
@@ -191,7 +213,7 @@ public class Snackbar {
         return mSingleLine;
     }
 
-    int getDuration() {
+    public int getDuration() {
         return mDurationMs;
     }
 
@@ -225,5 +247,12 @@ public class Snackbar {
      */
     boolean isTypeAction() {
         return mType == TYPE_ACTION;
+    }
+
+    /**
+     * @return Whether the snackbar is of {@link #TYPE_PERSISTENT}.
+     */
+    boolean isTypePersistent() {
+        return mType == TYPE_PERSISTENT;
     }
 }

@@ -49,8 +49,8 @@ public class RecentScrollTapSuppression extends ContextualSearchHeuristic {
     }
 
     @Override
-    protected void logRankerTapSuppression(ContextualSearchRankerLogger logger) {
-        logger.logFeature(ContextualSearchRankerLogger.Feature.DURATION_AFTER_SCROLL_MS,
+    protected void logRankerTapSuppression(ContextualSearchInteractionRecorder logger) {
+        logger.logFeature(ContextualSearchInteractionRecorder.Feature.DURATION_AFTER_SCROLL_MS,
                 mDurationSinceRecentScrollMs);
     }
 }

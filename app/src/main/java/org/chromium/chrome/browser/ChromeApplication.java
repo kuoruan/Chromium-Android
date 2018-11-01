@@ -11,7 +11,9 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import org.chromium.base.ActivityState;
+import org.chromium.base.ApplicationState;
 import org.chromium.base.ApplicationStatus;
+import org.chromium.base.AsyncTask;
 import org.chromium.base.BuildConfig;
 import org.chromium.base.CommandLineInitUtil;
 import org.chromium.base.ContextUtils;
@@ -22,57 +24,52 @@ import org.chromium.base.ThreadUtils;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.annotations.MainDex;
 import org.chromium.base.library_loader.ProcessInitException;
+import org.chromium.base.memory.MemoryPressureMonitor;
 import org.chromium.base.multidex.ChromiumMultiDexInstaller;
 import org.chromium.build.BuildHooks;
 import org.chromium.build.BuildHooksAndroid;
 import org.chromium.build.BuildHooksConfig;
 import org.chromium.chrome.browser.crash.PureJavaExceptionHandler;
 import org.chromium.chrome.browser.crash.PureJavaExceptionReporter;
-import org.chromium.chrome.browser.document.DocumentActivity;
-import org.chromium.chrome.browser.document.IncognitoDocumentActivity;
 import org.chromium.chrome.browser.init.InvalidStartupDialog;
 import org.chromium.chrome.browser.metrics.UmaUtils;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
-import org.chromium.chrome.browser.tabmodel.document.ActivityDelegateImpl;
-import org.chromium.chrome.browser.tabmodel.document.DocumentTabModelSelector;
-import org.chromium.chrome.browser.tabmodel.document.StorageDelegate;
-import org.chromium.chrome.browser.tabmodel.document.TabDelegate;
-import org.chromium.chrome.browser.vr_shell.OnExitVrRequestListener;
-import org.chromium.chrome.browser.vr_shell.VrIntentUtils;
-import org.chromium.chrome.browser.vr_shell.VrShellDelegate;
+import org.chromium.chrome.browser.vr.OnExitVrRequestListener;
+import org.chromium.chrome.browser.vr.VrModuleProvider;
 
 /**
  * Basic application functionality that should be shared among all browser applications that use
  * chrome layer.
  */
-@MainDex
 public class ChromeApplication extends Application {
     private static final String COMMAND_LINE_FILE = "chrome-command-line";
     private static final String TAG = "ChromiumApplication";
 
-    private static DocumentTabModelSelector sDocumentTabModelSelector;
     private DiscardableReferencePool mReferencePool;
 
     // Called by the framework for ALL processes. Runs before ContentProviders are created.
     // Quirk: context.getApplicationContext() returns null during this method.
     @Override
     protected void attachBaseContext(Context context) {
-        UmaUtils.recordMainEntryPointTime();
+        boolean browserProcess = ContextUtils.isMainProcess();
+        if (browserProcess) UmaUtils.recordMainEntryPointTime();
         super.attachBaseContext(context);
-        checkAppBeingReplaced();
-        if (BuildConfig.isMultidexEnabled()) {
-            ChromiumMultiDexInstaller.install(this);
-        }
         ContextUtils.initApplicationContext(this);
 
-        if (ContextUtils.isMainProcess()) {
+        if (browserProcess) {
+            if (BuildConfig.IS_MULTIDEX_ENABLED) {
+                ChromiumMultiDexInstaller.install(this);
+            }
+            checkAppBeingReplaced();
+
             // Renderers and GPU process have command line passed to them via IPC
             // (see ChildProcessService.java).
             Supplier<Boolean> shouldUseDebugFlags = new Supplier<Boolean>() {
                 @Override
                 public Boolean get() {
                     ChromePreferenceManager manager = ChromePreferenceManager.getInstance();
-                    return manager.getCommandLineOnNonRootedEnabled();
+                    return manager.readBoolean(
+                            ChromePreferenceManager.COMMAND_LINE_ON_NON_ROOTED_ENABLED_KEY, false);
                 }
             };
             CommandLineInitUtil.initCommandLine(COMMAND_LINE_FILE, shouldUseDebugFlags);
@@ -89,9 +86,20 @@ public class ChromeApplication extends Application {
             // Only browser process requires custom resources.
             BuildHooksAndroid.initCustomResources(this);
 
+            // Disable MemoryPressureMonitor polling when Chrome goes to the background.
+            ApplicationStatus.registerApplicationStateListener(newState -> {
+                if (newState == ApplicationState.HAS_RUNNING_ACTIVITIES) {
+                    MemoryPressureMonitor.INSTANCE.enablePolling();
+                } else if (newState == ApplicationState.HAS_STOPPED_ACTIVITIES) {
+                    MemoryPressureMonitor.INSTANCE.disablePolling();
+                }
+            });
+
             // Not losing much to not cover the below conditional since it just has simple setters.
             TraceEvent.end("ChromeApplication.attachBaseContext");
         }
+
+        MemoryPressureMonitor.INSTANCE.registerComponentCallbacks();
 
         if (!ContextUtils.isIsolatedProcess()) {
             // Incremental install disables process isolation, so things in this block will actually
@@ -102,6 +110,7 @@ public class ChromeApplication extends Application {
                         PureJavaExceptionReporter::reportJavaException);
             }
         }
+        AsyncTask.takeOverAndroidThreadPool();
     }
 
     /** Ensure this application object is not out-of-date. */
@@ -109,12 +118,13 @@ public class ChromeApplication extends Application {
         // During app update the old apk can still be triggered by broadcasts and spin up an
         // out-of-date application. Kill old applications in this bad state. See
         // http://crbug.com/658130 for more context and http://b.android.com/56296 for the bug.
-        if (getResources() == null) {
+        if (ContextUtils.getApplicationAssets() == null) {
             Log.e(TAG, "getResources() null, closing app.");
             System.exit(0);
         }
     }
 
+    @MainDex
     @Override
     public void onTrimMemory(int level) {
         super.onTrimMemory(level);
@@ -139,25 +149,9 @@ public class ChromeApplication extends Application {
     }
 
     /**
-     * Returns the singleton instance of the DocumentTabModelSelector.
-     * TODO(dfalcantara): Find a better place for this once we differentiate between activity and
-     *                    application-level TabModelSelectors.
-     * @return The DocumentTabModelSelector for the application.
-     */
-    public static DocumentTabModelSelector getDocumentTabModelSelector() {
-        ThreadUtils.assertOnUiThread();
-        if (sDocumentTabModelSelector == null) {
-            ActivityDelegateImpl activityDelegate = new ActivityDelegateImpl(
-                    DocumentActivity.class, IncognitoDocumentActivity.class);
-            sDocumentTabModelSelector = new DocumentTabModelSelector(activityDelegate,
-                    new StorageDelegate(), new TabDelegate(false), new TabDelegate(true));
-        }
-        return sDocumentTabModelSelector;
-    }
-
-    /**
      * @return The DiscardableReferencePool for the application.
      */
+    @MainDex
     public DiscardableReferencePool getReferencePool() {
         ThreadUtils.assertOnUiThread();
         if (mReferencePool == null) {
@@ -173,15 +167,16 @@ public class ChromeApplication extends Application {
 
     @Override
     public void startActivity(Intent intent, Bundle options) {
-        if (!VrShellDelegate.isInVr() || VrIntentUtils.isVrIntent(intent)) {
+        if (VrModuleProvider.getDelegate().canLaunch2DIntents()
+                || VrModuleProvider.getIntentDelegate().isVrIntent(intent)) {
             super.startActivity(intent, options);
             return;
         }
 
-        VrShellDelegate.requestToExitVr(new OnExitVrRequestListener() {
+        VrModuleProvider.getDelegate().requestToExitVr(new OnExitVrRequestListener() {
             @Override
             public void onSucceeded() {
-                if (VrShellDelegate.isInVr()) {
+                if (!VrModuleProvider.getDelegate().canLaunch2DIntents()) {
                     throw new IllegalStateException("Still in VR after having exited VR.");
                 }
                 startActivity(intent, options);

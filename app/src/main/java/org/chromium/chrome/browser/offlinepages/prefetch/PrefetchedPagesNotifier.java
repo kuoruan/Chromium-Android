@@ -11,6 +11,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.support.v4.app.NotificationCompat;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
@@ -24,8 +25,8 @@ import org.chromium.chrome.browser.notifications.NotificationUmaTracker;
 import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 import org.chromium.chrome.browser.preferences.NotificationsPreferences;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
-import org.chromium.content.browser.BrowserStartupController;
-import org.chromium.content.browser.BrowserStartupController.StartupCallback;
+import org.chromium.content_public.browser.BrowserStartupController;
+import org.chromium.content_public.browser.BrowserStartupController.StartupCallback;
 
 /**
  * Helper that can notify about prefetched pages and also receive the click events.
@@ -45,9 +46,7 @@ public class PrefetchedPagesNotifier {
     private static PrefetchedPagesNotifier sInstance;
 
     public static PrefetchedPagesNotifier getInstance() {
-        if (sInstance == null) {
-            sInstance = new PrefetchedPagesNotifier();
-        }
+        if (sInstance == null) sInstance = new PrefetchedPagesNotifier();
         return sInstance;
     }
 
@@ -115,13 +114,13 @@ public class PrefetchedPagesNotifier {
         ChromeNotificationBuilder builder =
                 NotificationBuilderFactory
                         .createChromeNotificationBuilder(true /* preferCompat */,
-                                ChannelDefinitions.CHANNEL_ID_CONTENT_SUGGESTIONS)
+                                ChannelDefinitions.ChannelId.CONTENT_SUGGESTIONS)
                         .setAutoCancel(true)
                         .setContentIntent(clickIntent)
                         .setContentTitle(title)
                         .setContentText(text)
                         .setGroup(NOTIFICATION_TAG)
-                        .setPriority(Notification.PRIORITY_LOW)
+                        .setPriorityBeforeO(NotificationCompat.PRIORITY_LOW)
                         .setSmallIcon(R.drawable.ic_chrome);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             PendingIntent settingsIntent = getPendingBroadcastFor(context, SettingsReceiver.class);
@@ -129,9 +128,11 @@ public class PrefetchedPagesNotifier {
                     settingsIntent);
         }
 
+        Notification notification = builder.build();
+
         NotificationManager manager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(NOTIFICATION_TAG, notificationId, builder.build());
+        manager.notify(NOTIFICATION_TAG, notificationId, notification);
 
         // Increment ignored notification counter.  This will be reset on click.
         PrefetchPrefs.setIgnoredNotificationCounter(
@@ -140,8 +141,8 @@ public class PrefetchedPagesNotifier {
         // Metrics tracking
         recordNotificationAction(NOTIFICATION_ACTION_SHOWN);
         NotificationUmaTracker.getInstance().onNotificationShown(
-                NotificationUmaTracker.OFFLINE_CONTENT_SUGGESTION,
-                ChannelDefinitions.CHANNEL_ID_CONTENT_SUGGESTIONS);
+                NotificationUmaTracker.SystemNotificationType.OFFLINE_CONTENT_SUGGESTION,
+                notification);
     }
 
     private static PendingIntent getPendingBroadcastFor(Context context, Class clazz) {
@@ -176,7 +177,7 @@ public class PrefetchedPagesNotifier {
         if (!browserStartup.isStartupSuccessfullyCompleted()) {
             browserStartup.addStartupCompletedObserver(new StartupCallback() {
                 @Override
-                public void onSuccess(boolean alreadyStarted) {
+                public void onSuccess() {
                     r.run();
                 }
                 @Override

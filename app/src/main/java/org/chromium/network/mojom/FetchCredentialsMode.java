@@ -22,8 +22,6 @@ public final class FetchCredentialsMode {
 
     public static final int INCLUDE = SAME_ORIGIN + 1;
 
-    public static final int LAST = (int) (FetchCredentialsMode.INCLUDE);
-
 
     private static final boolean IS_EXTENSIBLE = false;
 

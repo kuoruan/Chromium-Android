@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.content;
 
+import org.chromium.content_public.browser.WebContents;
+
 /**
  * A utility class to expose content functionality.
  */
@@ -15,5 +17,16 @@ public class ContentUtils {
         return nativeGetBrowserUserAgent();
     }
 
+    /**
+     * Set the user agent used for override. Currently, the only use case we have
+     * for overriding a user agent involves spoofing a desktop Linux user agent
+     * for "Request desktop site". Set it for WebContents so that it is available
+     * when a NavigationEntry requires the user agent to be overridden.
+     */
+    public static void setUserAgentOverride(WebContents webContents) {
+        nativeSetUserAgentOverride(webContents);
+    }
+
     private static native String nativeGetBrowserUserAgent();
+    private static native void nativeSetUserAgentOverride(WebContents webContents);
 }

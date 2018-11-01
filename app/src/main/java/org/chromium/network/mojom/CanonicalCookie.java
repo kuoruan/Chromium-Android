@@ -23,9 +23,9 @@ public final class CanonicalCookie extends org.chromium.mojo.bindings.Struct {
     public String value;
     public String domain;
     public String path;
-    public org.chromium.mojo.common.mojom.Time creation;
-    public org.chromium.mojo.common.mojom.Time expiry;
-    public org.chromium.mojo.common.mojom.Time lastAccess;
+    public org.chromium.mojo_base.mojom.Time creation;
+    public org.chromium.mojo_base.mojom.Time expiry;
+    public org.chromium.mojo_base.mojom.Time lastAccess;
     public boolean secure;
     public boolean httponly;
     public int siteRestrictions;
@@ -53,9 +53,6 @@ public final class CanonicalCookie extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static CanonicalCookie deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -69,56 +66,58 @@ public final class CanonicalCookie extends org.chromium.mojo.bindings.Struct {
         CanonicalCookie result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new CanonicalCookie(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new CanonicalCookie(elementsOrVersion);
+                {
+                    
                 result.name = decoder0.readString(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.value = decoder0.readString(16, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.domain = decoder0.readString(24, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.path = decoder0.readString(32, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(40, true);
-                result.creation = org.chromium.mojo.common.mojom.Time.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(48, true);
-                result.expiry = org.chromium.mojo.common.mojom.Time.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(56, true);
-                result.lastAccess = org.chromium.mojo.common.mojom.Time.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(40, false);
+                result.creation = org.chromium.mojo_base.mojom.Time.decode(decoder1);
+                }
+                {
+                    
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(48, false);
+                result.expiry = org.chromium.mojo_base.mojom.Time.decode(decoder1);
+                }
+                {
+                    
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(56, false);
+                result.lastAccess = org.chromium.mojo_base.mojom.Time.decode(decoder1);
+                }
+                {
+                    
                 result.secure = decoder0.readBoolean(64, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.httponly = decoder0.readBoolean(64, 1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.siteRestrictions = decoder0.readInt(68);
                     CookieSameSite.validate(result.siteRestrictions);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.priority = decoder0.readInt(72);
                     CookiePriority.validate(result.priority);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -138,11 +137,11 @@ public final class CanonicalCookie extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.path, 32, false);
         
-        encoder0.encode(this.creation, 40, true);
+        encoder0.encode(this.creation, 40, false);
         
-        encoder0.encode(this.expiry, 48, true);
+        encoder0.encode(this.expiry, 48, false);
         
-        encoder0.encode(this.lastAccess, 56, true);
+        encoder0.encode(this.lastAccess, 56, false);
         
         encoder0.encode(this.secure, 64, 0);
         
@@ -151,63 +150,5 @@ public final class CanonicalCookie extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.siteRestrictions, 68);
         
         encoder0.encode(this.priority, 72);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        CanonicalCookie other = (CanonicalCookie) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.name, other.name))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.value, other.value))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.domain, other.domain))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.path, other.path))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.creation, other.creation))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.expiry, other.expiry))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.lastAccess, other.lastAccess))
-            return false;
-        if (this.secure!= other.secure)
-            return false;
-        if (this.httponly!= other.httponly)
-            return false;
-        if (this.siteRestrictions!= other.siteRestrictions)
-            return false;
-        if (this.priority!= other.priority)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.name);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.value);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.domain);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.path);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.creation);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.expiry);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.lastAccess);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.secure);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.httponly);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.siteRestrictions);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.priority);
-        return result;
     }
 }

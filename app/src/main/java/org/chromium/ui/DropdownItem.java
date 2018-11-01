@@ -44,17 +44,9 @@ public interface DropdownItem {
      */
     int getLabelFontColorResId();
     /**
-     * Returns resource ID of label's font size.
-     */
-    int getLabelFontSizeResId();
-    /**
      * Returns resource ID of sublabel's font size.
      */
     int getSublabelFontSizeResId();
-    /**
-     * Returns whether label and sublabel should be on the same line.
-     */
-    boolean isLabelAndSublabelOnSameLine();
     /**
      * Returns whether the icon should be displayed at the start, before label
      * and sublabel.

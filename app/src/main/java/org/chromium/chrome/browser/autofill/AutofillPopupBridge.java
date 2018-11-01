@@ -15,6 +15,7 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ResourceId;
 import org.chromium.components.autofill.AutofillDelegate;
 import org.chromium.components.autofill.AutofillPopup;
@@ -47,8 +48,10 @@ public class AutofillPopupBridge implements AutofillDelegate, DialogInterface.On
         } else {
             mAutofillPopup = new AutofillPopup(activity, anchorView, this);
             mContext = activity;
+            ChromeActivity chromeActivity = (ChromeActivity) activity;
+            chromeActivity.getManualFillingController().notifyPopupAvailable(mAutofillPopup);
             mWebContentsAccessibility = WebContentsAccessibility.fromWebContents(
-                    ((ChromeActivity) activity).getCurrentContentViewCore().getWebContents());
+                    chromeActivity.getCurrentWebContents());
         }
     }
 
@@ -98,21 +101,11 @@ public class AutofillPopupBridge implements AutofillDelegate, DialogInterface.On
      * Shows an Autofill popup with specified suggestions.
      * @param suggestions Autofill suggestions to be displayed.
      * @param isRtl @code true if right-to-left text.
-     * @param backgroundColor popup background color, or {@code Color.TRANSPARENT} if not specified
-     * in experiment.
-     * @param dividerColor color for divider between popup items, or {@code Color.TRANSPARENT} if
-     * not specified in experiment.
-     * @param dropdownItemHeight height of each dropdown item in dimension independent pixel units,
-     * 0 if not specified in experiment.
-     * @param margin Margin for icon, label and between icon and label in dimension independent
-     * pixel units, 0 if not specified in experiment.
      */
     @CalledByNative
-    private void show(AutofillSuggestion[] suggestions, boolean isRtl, int backgroundColor,
-            int dividerColor, int dropdownItemHeight, int margin) {
+    private void show(AutofillSuggestion[] suggestions, boolean isRtl) {
         if (mAutofillPopup != null) {
-            mAutofillPopup.filterAndShow(
-                    suggestions, isRtl, backgroundColor, dividerColor, dropdownItemHeight, margin);
+            mAutofillPopup.filterAndShow(suggestions, isRtl, shouldUseRefreshStyle());
             mWebContentsAccessibility.onAutofillPopupDisplayed(mAutofillPopup.getListView());
         }
     }
@@ -126,6 +119,10 @@ public class AutofillPopupBridge implements AutofillDelegate, DialogInterface.On
                 .setPositiveButton(R.string.ok, this)
                 .create();
         mDeletionDialog.show();
+    }
+
+    private static boolean shouldUseRefreshStyle() {
+        return ChromeFeatureList.isEnabled(ChromeFeatureList.AUTOFILL_EXPANDED_POPUP_VIEWS);
     }
 
     // Helper methods for AutofillSuggestion

@@ -59,7 +59,7 @@ public class DefaultSearchEnginePromoDialog extends PromoDialog {
         setCancelable(false);
         setCanceledOnTouchOutside(false);
 
-        if (dialogType == LocaleManager.SEARCH_ENGINE_PROMO_SHOW_NEW) forceOpaqueBackground();
+        if (dialogType == LocaleManager.SearchEnginePromoType.SHOW_NEW) forceOpaqueBackground();
     }
 
     @Override
@@ -98,9 +98,9 @@ public class DefaultSearchEnginePromoDialog extends PromoDialog {
         if (sCurrentDialog != null) sCurrentDialog.dismiss();
         setCurrentDialog(this);
 
-        if (mDialogType == LocaleManager.SEARCH_ENGINE_PROMO_SHOW_NEW) {
+        if (mDialogType == LocaleManager.SearchEnginePromoType.SHOW_NEW) {
             RecordUserAction.record("SearchEnginePromo.NewDevice.Shown.Dialog");
-        } else if (mDialogType == LocaleManager.SEARCH_ENGINE_PROMO_SHOW_EXISTING) {
+        } else if (mDialogType == LocaleManager.SearchEnginePromoType.SHOW_EXISTING) {
             RecordUserAction.record("SearchEnginePromo.ExistingDevice.Shown.Dialog");
         }
         if (sObserver != null) sObserver.onDialogShown(this);

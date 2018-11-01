@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.payments;
 
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -13,6 +12,7 @@ import android.text.style.ForegroundColorSpan;
 import android.util.Pair;
 
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.AsyncTask;
 import org.chromium.base.Callback;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
@@ -22,11 +22,12 @@ import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.CreditCard;
 import org.chromium.chrome.browser.payments.PaymentRequestImpl.PaymentRequestServiceObserverForTest;
-import org.chromium.chrome.browser.payments.ui.EditorFieldModel;
-import org.chromium.chrome.browser.payments.ui.EditorFieldModel.EditorFieldValidator;
-import org.chromium.chrome.browser.payments.ui.EditorFieldModel.EditorValueIconGenerator;
-import org.chromium.chrome.browser.payments.ui.EditorModel;
 import org.chromium.chrome.browser.preferences.autofill.AutofillProfileBridge.DropdownKeyValue;
+import org.chromium.chrome.browser.widget.prefeditor.EditorBase;
+import org.chromium.chrome.browser.widget.prefeditor.EditorFieldModel;
+import org.chromium.chrome.browser.widget.prefeditor.EditorFieldModel.EditorFieldValidator;
+import org.chromium.chrome.browser.widget.prefeditor.EditorFieldModel.EditorValueIconGenerator;
+import org.chromium.chrome.browser.widget.prefeditor.EditorModel;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.payments.mojom.PaymentMethodData;
 
@@ -147,7 +148,7 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
     private final Handler mHandler;
     private final EditorFieldValidator mCardNumberValidator;
     private final EditorValueIconGenerator mCardIconGenerator;
-    private final AsyncTask<Void, Void, Calendar> mCalendar;
+    private final AsyncTask<Calendar> mCalendar;
 
     @Nullable private EditorFieldModel mIconHint;
     @Nullable private EditorFieldModel mNumberField;
@@ -195,7 +196,7 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
             mProfilesForBillingAddress.add(profile);
             Pair<Integer, Integer> editMessageResIds = AutofillAddress.getEditMessageAndTitleResIds(
                     AutofillAddress.checkAddressCompletionStatus(
-                            profile, AutofillAddress.IGNORE_PHONE_COMPLETENESS_CHECK));
+                            profile, AutofillAddress.CompletenessCheckType.IGNORE_PHONE));
             if (editMessageResIds.first.intValue() != 0) {
                 mIncompleteProfilesForBillingAddress.put(
                         profile.getGUID(), editMessageResIds.first);
@@ -205,11 +206,11 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
         // Sort profiles for billing address according to completeness.
         Collections.sort(mProfilesForBillingAddress, (a, b) -> {
             boolean isAComplete = AutofillAddress.checkAddressCompletionStatus(
-                    a, AutofillAddress.NORMAL_COMPLETENESS_CHECK)
-                    == AutofillAddress.COMPLETE;
+                                          a, AutofillAddress.CompletenessCheckType.NORMAL)
+                    == AutofillAddress.CompletionStatus.COMPLETE;
             boolean isBComplete = AutofillAddress.checkAddressCompletionStatus(
-                    b, AutofillAddress.NORMAL_COMPLETENESS_CHECK)
-                    == AutofillAddress.COMPLETE;
+                                          b, AutofillAddress.CompletenessCheckType.NORMAL)
+                    == AutofillAddress.CompletionStatus.COMPLETE;
             return ApiCompatibilityUtils.compareBoolean(isBComplete, isAComplete);
         });
 
@@ -261,13 +262,13 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
             return cardTypeInfo.icon;
         };
 
-        mCalendar = new AsyncTask<Void, Void, Calendar>() {
+        mCalendar = new AsyncTask<Calendar>() {
             @Override
-            protected Calendar doInBackground(Void... unused) {
+            protected Calendar doInBackground() {
                 return Calendar.getInstance();
             }
         };
-        mCalendar.execute();
+        mCalendar.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         ChromeActivity activity = ChromeActivity.fromWebContents(mWebContents);
         mIsIncognito = activity != null && activity.getCurrentTabModel() != null
@@ -301,24 +302,22 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
     }
 
     /**
-     * Adds accepted payment methods to the editor, if they are recognized credit card types.
+     * Adds accepted payment method to the editor, if they are recognized credit card types.
      *
-     * @param data Supported methods and method specific data. Should not be null.
+     * @param data Supported method and method specific data. Should not be null.
      */
-    public void addAcceptedPaymentMethodsIfRecognized(PaymentMethodData data) {
+    public void addAcceptedPaymentMethodIfRecognized(PaymentMethodData data) {
         assert data != null;
-        for (int i = 0; i < data.supportedMethods.length; i++) {
-            String method = data.supportedMethods[i];
-            if (mCardIssuerNetworks.containsKey(method)) {
-                addAcceptedNetwork(method);
-            } else if (BasicCardUtils.BASIC_CARD_METHOD_NAME.equals(method)) {
-                Set<String> basicCardNetworks = BasicCardUtils.convertBasicCardToNetworks(data);
-                mAcceptedBasicCardIssuerNetworks.addAll(basicCardNetworks);
-                for (String network : basicCardNetworks) {
-                    addAcceptedNetwork(network);
-                }
-                mAcceptedBasicCardTypes.addAll(BasicCardUtils.convertBasicCardToTypes(data));
+        String method = data.supportedMethod;
+        if (mCardIssuerNetworks.containsKey(method)) {
+            addAcceptedNetwork(method);
+        } else if (BasicCardUtils.BASIC_CARD_METHOD_NAME.equals(method)) {
+            Set<String> basicCardNetworks = BasicCardUtils.convertBasicCardToNetworks(data);
+            mAcceptedBasicCardIssuerNetworks.addAll(basicCardNetworks);
+            for (String network : basicCardNetworks) {
+                addAcceptedNetwork(network);
             }
+            mAcceptedBasicCardTypes.addAll(BasicCardUtils.convertBasicCardToTypes(data));
         }
     }
 
@@ -481,7 +480,7 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
                     mContext.getString(R.string.autofill_credit_card_editor_number),
                     null /* suggestions */, null /* formatter */, mCardNumberValidator,
                     mCardIconGenerator,
-                    mContext.getString(R.string.payments_field_required_validation_message),
+                    mContext.getString(R.string.pref_edit_dialog_field_required_validation_message),
                     mContext.getString(R.string.payments_card_number_invalid_validation_message),
                     null /* value */);
             if (mCanScan) {
@@ -498,13 +497,13 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
 
         // Name on card is required.
         if (mNameField == null) {
-            mNameField =
-                    EditorFieldModel.createTextInput(EditorFieldModel.INPUT_TYPE_HINT_PERSON_NAME,
-                            mContext.getString(R.string.autofill_credit_card_editor_name),
-                            null /* suggestions */, null /* formatter */, null /* validator */,
-                            null /* valueIconGenerator */,
-                            mContext.getString(R.string.payments_field_required_validation_message),
-                            null /* invalidErrorMessage */, null /* value */);
+            mNameField = EditorFieldModel.createTextInput(
+                    EditorFieldModel.INPUT_TYPE_HINT_PERSON_NAME,
+                    mContext.getString(R.string.autofill_credit_card_editor_name),
+                    null /* suggestions */, null /* formatter */, null /* validator */,
+                    null /* valueIconGenerator */,
+                    mContext.getString(R.string.pref_edit_dialog_field_required_validation_message),
+                    null /* invalidErrorMessage */, null /* value */);
         }
         mNameField.setValue(card.getName());
         editor.addField(mNameField);
@@ -658,7 +657,7 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
                 int endIndex = builder.length();
 
                 Object foregroundSpanner = new ForegroundColorSpan(ApiCompatibilityUtils.getColor(
-                        mContext.getResources(), R.color.google_blue_700));
+                        mContext.getResources(), R.color.default_text_color_link));
                 builder.setSpan(foregroundSpanner, startIndex, endIndex, 0);
 
                 // The text size in the dropdown is 14dp.
@@ -682,7 +681,7 @@ public class CardEditor extends EditorBase<AutofillPaymentInstrument>
 
         // The billing address is required.
         mBillingAddressField.setRequiredErrorMessage(
-                mContext.getString(R.string.payments_field_required_validation_message));
+                mContext.getString(R.string.pref_edit_dialog_field_required_validation_message));
 
         mBillingAddressField.setDropdownCallback(new Callback<Pair<String, Runnable>>() {
             @Override

@@ -9,6 +9,8 @@ import android.support.v7.media.MediaRouteSelector;
 
 import com.google.android.gms.cast.CastMediaControlIntent;
 
+import org.chromium.chrome.browser.media.router.MediaSource;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,6 +19,7 @@ import javax.annotation.Nullable;
 /**
  * Abstracts parsing the Cast application id and other parameters from the source ID.
  */
+// Reused in CafMRP. No need to migrate. See https://crbug.com/711860.
 public class CastMediaSource implements MediaSource {
     public static final String AUTOJOIN_CUSTOM_CONTROLLER_SCOPED = "custom_controller_scoped";
     public static final String AUTOJOIN_TAB_AND_ORIGIN_SCOPED = "tab_and_origin_scoped";

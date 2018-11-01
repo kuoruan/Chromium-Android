@@ -17,9 +17,6 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.util.MathUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * A layout that arranges tiles in a grid.
  */
@@ -33,7 +30,6 @@ public class TileGridLayout extends FrameLayout {
 
     private int mMaxRows;
     private int mMaxColumns;
-    private int mExtraVerticalSpacing;
 
     /**
      * Constructor for inflating from XML.
@@ -71,20 +67,6 @@ public class TileGridLayout extends FrameLayout {
      */
     public void setMaxColumns(int columns) {
         mMaxColumns = columns;
-    }
-
-    /**
-     * Sets the extra vertical spacing that must be used. It will be distributed evenly above each
-     * row.
-     */
-    public void setExtraVerticalSpacing(int spacing) {
-        if (mExtraVerticalSpacing == spacing) {
-            return;
-        }
-        mExtraVerticalSpacing = spacing;
-
-        // Clear the measure cache for this view and make sure it will be remeasured.
-        forceLayout();
     }
 
     @Override
@@ -126,15 +108,12 @@ public class TileGridLayout extends FrameLayout {
         int paddingTop = getPaddingTop();
         boolean isRtl = ApiCompatibilityUtils.isLayoutRtl(this);
 
-        List<TileView> orderedChildren = getCorrectTileViewOrder(numColumns, numRows);
-
         for (int i = 0; i < visibleChildCount; i++) {
-            View child = orderedChildren.get(i);
+            View child = getChildAt(i);
             child.setVisibility(View.VISIBLE);
             int row = i / numColumns;
             int column = i % numColumns;
-            int verticalOffset = Math.round(mExtraVerticalSpacing * ((float) (row + 1) / numRows));
-            int childTop = row * (childHeight + mVerticalSpacing) + verticalOffset;
+            int childTop = row * (childHeight + mVerticalSpacing);
             int childStart = gridStart + (column * (childWidth + horizontalSpacing));
             MarginLayoutParams layoutParams = (MarginLayoutParams) child.getLayoutParams();
             layoutParams.setMargins(isRtl ? 0 : childStart, childTop, isRtl ? childStart : 0, 0);
@@ -144,43 +123,13 @@ public class TileGridLayout extends FrameLayout {
         // Hide any extra children in case there are more than needed for the maximum number of
         // rows.
         for (int i = visibleChildCount; i < childCount; i++) {
-            orderedChildren.get(i).setVisibility(View.GONE);
+            getChildAt(i).setVisibility(View.GONE);
         }
 
         int totalHeight = paddingTop + getPaddingBottom() + numRows * childHeight
-                + (numRows - 1) * mVerticalSpacing + mExtraVerticalSpacing;
+                + (numRows - 1) * mVerticalSpacing;
 
         setMeasuredDimension(totalWidth, resolveSize(totalHeight, heightMeasureSpec));
-    }
-
-    /**
-     * Returns a list of {@link TileView}s in the order that they should be displayed in the tile
-     * grid. The {@link TileView}s in the list are the children of the {@link TileGridLayout}.
-     *
-     * If there is a home page tile view:
-     *  - For multiple rows: pin it to the very first position.
-     *  - For a single row: keep the position or use it as last tile in that role.
-     *
-     * @param numColumns The number of columns that the tile grid will display.
-     * @param numRows The number of rows that the tile grid will display.
-     * @return A list of {@link TileView}s in the order they should be displayed.
-     */
-    private List<TileView> getCorrectTileViewOrder(int numColumns, int numRows) {
-        List<TileView> orderedChildren = new ArrayList<>(getChildCount());
-
-        for (int i = 0; i < getChildCount(); i++) {
-            TileView view = (TileView) getChildAt(i);
-
-            if (view.getTileSource() != TileSource.HOMEPAGE) {
-                orderedChildren.add(view);
-            } else if (numRows > 1) {
-                orderedChildren.add(0, view);
-            } else {
-                orderedChildren.add(Math.min(i, numColumns - 1), view);
-            }
-        }
-
-        return orderedChildren;
     }
 
     /**

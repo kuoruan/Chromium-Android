@@ -4,6 +4,8 @@
 package org.chromium.chrome.browser.webapps;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.StrictMode;
 import android.provider.Browser;
@@ -22,6 +24,7 @@ import org.chromium.chrome.browser.tabmodel.document.AsyncTabCreationParams;
 import org.chromium.chrome.browser.tabmodel.document.TabDelegate;
 
 import java.net.URISyntaxException;
+import java.util.List;
 
 /**
  * Asynchronously creates Tabs for navigation originating from an installed PWA.
@@ -42,11 +45,10 @@ public class WebappTabDelegate extends TabDelegate {
     }
 
     @Override
-    public void createNewTab(AsyncTabCreationParams asyncParams, TabLaunchType type, int parentId) {
+    public void createNewTab(
+            AsyncTabCreationParams asyncParams, @TabLaunchType int type, int parentId) {
         String url = asyncParams.getLoadUrlParams().getUrl();
-        if (maybeStartExternalActivity(url)) {
-            return;
-        }
+        if (maybeStartExternalActivity(url)) return;
 
         int assignedTabId = TabIdManager.getInstance().generateValidId(Tab.INVALID_TAB_ID);
         AsyncTabParamsManager.add(assignedTabId, asyncParams);
@@ -74,8 +76,25 @@ public class WebappTabDelegate extends TabDelegate {
         // See http://crbug.com/613977 for more context.
         StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
         try {
+            List<ResolveInfo> handlers =
+                    ContextUtils.getApplicationContext().getPackageManager().queryIntentActivities(
+                            intent, PackageManager.GET_RESOLVED_FILTER);
+
+            boolean foundSpecializedHandler = false;
+
+            for (String result : ExternalNavigationDelegateImpl.getSpecializedHandlersWithFilter(
+                         handlers, null, null)) {
+                if (result.equals(mApkPackageName)) {
+                    // Current webapk matches, don't intercept so that we can launch a cct. See
+                    // http://crbug.com/831806 for more context.
+                    return false;
+                } else {
+                    foundSpecializedHandler = true;
+                }
+            }
+
             // Launch a native app iff there is a specialized handler for a given URL.
-            if (ExternalNavigationDelegateImpl.isPackageSpecializedHandler(null, intent)) {
+            if (foundSpecializedHandler) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 ContextUtils.getApplicationContext().startActivity(intent);
                 return true;

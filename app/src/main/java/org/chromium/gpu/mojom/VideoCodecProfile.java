@@ -66,7 +66,11 @@ public final class VideoCodecProfile {
 
     public static final int THEORAPROFILE_ANY = DOLBYVISION_PROFILE7 + 1;
 
-    public static final int AV1PROFILE_PROFILE0 = THEORAPROFILE_ANY + 1;
+    public static final int AV1PROFILE_PROFILE_MAIN = THEORAPROFILE_ANY + 1;
+
+    public static final int AV1PROFILE_PROFILE_HIGH = AV1PROFILE_PROFILE_MAIN + 1;
+
+    public static final int AV1PROFILE_PROFILE_PRO = AV1PROFILE_PROFILE_HIGH + 1;
 
 
     private static final boolean IS_EXTENSIBLE = false;
@@ -99,6 +103,8 @@ public final class VideoCodecProfile {
             case 22:
             case 23:
             case 24:
+            case 25:
+            case 26:
                 return true;
         }
         return false;

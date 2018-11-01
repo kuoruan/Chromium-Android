@@ -15,7 +15,6 @@ import java.lang.annotation.Target;
  * This generally means it's used by renderer processes, which can't load secondary dexes
  * on K and below.
  */
-@Target(ElementType.TYPE)
+@Target({ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.CLASS)
-public @interface MainDex {
-}
+public @interface MainDex {}

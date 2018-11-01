@@ -77,7 +77,7 @@ public interface PrintingController {
 
     /**
      * Sets the data required to initiate a printing process. The process can later be started using
-     * {@link #startPendingPrint(PrintingContextInterface)}.
+     * {@link #startPendingPrint()}.
      *
      * @param printable An object capable of starting native side PDF generation, i.e. typically
      *     a Tab.
@@ -92,11 +92,6 @@ public interface PrintingController {
     /**
      * Starts printing, provided that the current object already has sufficient data to start the
      * process. (using {@link #setPendingPrint(Printable, PrintManagerDelegate)} for example)
-     *
-     * @param jsOriginatedPrintingContext The printingContext holding the callback to be used to
-     *     reply when javascript can resume. When printing is done (or could not start),
-     *     {@link PrintingContextInterface#showSystemDialogDone()} will be called on this object.
      */
-    void startPendingPrint(PrintingContextInterface jsOriginatedPrintingContext);
-
+    void startPendingPrint();
 }

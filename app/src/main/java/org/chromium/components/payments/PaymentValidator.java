@@ -6,6 +6,7 @@ package org.chromium.components.payments;
 
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.payments.mojom.PaymentDetails;
+import org.chromium.payments.mojom.PaymentValidationErrors;
 
 import java.nio.ByteBuffer;
 
@@ -21,5 +22,13 @@ public class PaymentValidator {
         return nativeValidatePaymentDetailsAndroid(details.serialize());
     }
 
+    public static boolean validatePaymentValidationErrors(PaymentValidationErrors errors) {
+        if (errors == null) {
+            return false;
+        }
+        return nativeValidatePaymentValidationErrorsAndroid(errors.serialize());
+    }
+
     private static native boolean nativeValidatePaymentDetailsAndroid(ByteBuffer buffer);
+    private static native boolean nativeValidatePaymentValidationErrorsAndroid(ByteBuffer buffer);
 };

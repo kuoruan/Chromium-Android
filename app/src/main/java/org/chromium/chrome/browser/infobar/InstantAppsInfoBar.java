@@ -32,7 +32,7 @@ public class InstantAppsInfoBar extends ConfirmInfoBar {
         layout.setIsUsingBigIcon();
         layout.setMessage(mData.getAppName());
         layout.getMessageLayout().addDescription(
-                UrlFormatter.formatUrlForSecurityDisplay(mData.getUrl(), false));
+                UrlFormatter.formatUrlForSecurityDisplayOmitScheme(mData.getUrl()));
         layout.getPrimaryButton()
                 .setButtonColor(ApiCompatibilityUtils.getColor(getContext().getResources(),
                         R.color.app_banner_install_button_bg));
@@ -42,7 +42,8 @@ public class InstantAppsInfoBar extends ConfirmInfoBar {
     protected void setButtons(InfoBarLayout layout, String primaryText, String secondaryText) {
         ImageView playLogo = new ImageView(layout.getContext());
         playLogo.setImageResource(R.drawable.google_play);
-        layout.setBottomViews(primaryText, playLogo, DualControlLayout.ALIGN_APART);
+        layout.setBottomViews(
+                primaryText, playLogo, DualControlLayout.DualControlLayoutAlignment.APART);
     }
 
     @CalledByNative

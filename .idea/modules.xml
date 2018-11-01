@@ -2,17 +2,17 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Chromium.iml" filepath="$PROJECT_DIR$/Chromium.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Chromium-Android.iml" filepath="$PROJECT_DIR$/Chromium-Android.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/components/autofill/autofill.iml" filepath="$PROJECT_DIR$/components/autofill/autofill.iml" />
-      <module fileurl="file://$PROJECT_DIR$/browseractions/browseractions.iml" filepath="$PROJECT_DIR$/browseractions/browseractions.iml" />
       <module fileurl="file://$PROJECT_DIR$/components/components.iml" filepath="$PROJECT_DIR$/components/components.iml" />
       <module fileurl="file://$PROJECT_DIR$/components/components_base/components_base.iml" filepath="$PROJECT_DIR$/components/components_base/components_base.iml" />
       <module fileurl="file://$PROJECT_DIR$/content/content.iml" filepath="$PROJECT_DIR$/content/content.iml" />
+      <module fileurl="file://$PROJECT_DIR$/customtabs/customtabs.iml" filepath="$PROJECT_DIR$/customtabs/customtabs.iml" />
       <module fileurl="file://$PROJECT_DIR$/data_chart/data_chart.iml" filepath="$PROJECT_DIR$/data_chart/data_chart.iml" />
+      <module fileurl="file://$PROJECT_DIR$/components/embedder_support/embedder_support.iml" filepath="$PROJECT_DIR$/components/embedder_support/embedder_support.iml" />
       <module fileurl="file://$PROJECT_DIR$/media/media.iml" filepath="$PROJECT_DIR$/media/media.iml" />
       <module fileurl="file://$PROJECT_DIR$/ui/ui.iml" filepath="$PROJECT_DIR$/ui/ui.iml" />
-      <module fileurl="file://$PROJECT_DIR$/components/web_contents_delegate/web_contents_delegate.iml" filepath="$PROJECT_DIR$/components/web_contents_delegate/web_contents_delegate.iml" />
     </modules>
   </component>
 </project>

@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,17 +15,23 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.jsdialog.JavascriptModalDialogView;
+import org.chromium.chrome.browser.modaldialog.ModalDialogManager;
+import org.chromium.chrome.browser.modaldialog.ModalDialogView;
+import org.chromium.chrome.browser.vr.VrModuleProvider;
 import org.chromium.ui.base.WindowAndroid;
 
 /**
  * A dialog shown via JavaScript. This can be an alert dialog, a prompt dialog, a confirm dialog,
  * or an onbeforeunload dialog.
  */
-public class JavascriptAppModalDialog implements DialogInterface.OnClickListener {
-    private static final String TAG = "JavascriptAppModalDialog";
+public class JavascriptAppModalDialog
+        implements DialogInterface.OnClickListener, ModalDialogView.Controller {
+    private static final String TAG = "JSAppModalDialog";
 
     private final String mTitle;
     private final String mMessage;
@@ -37,6 +42,9 @@ public class JavascriptAppModalDialog implements DialogInterface.OnClickListener
     private AlertDialog mDialog;
     private CheckBox mSuppressCheckBox;
     private TextView mPromptTextView;
+
+    private ModalDialogManager mModalDialogManager;
+    private JavascriptModalDialogView mDialogView;
 
     private JavascriptAppModalDialog(String title, String message,
             int positiveButtonTextId, int negativeButtonTextId,
@@ -90,24 +98,37 @@ public class JavascriptAppModalDialog implements DialogInterface.OnClickListener
         // Cache the native dialog pointer so that we can use it to return the response.
         mNativeDialogPointer = nativeDialogPointer;
 
-        LayoutInflater inflater = LayoutInflater.from(context);
-        ViewGroup layout = (ViewGroup) inflater.inflate(R.layout.js_modal_dialog, null);
-        mSuppressCheckBox = (CheckBox) layout.findViewById(R.id.suppress_js_modal_dialogs);
-        mPromptTextView = (TextView) layout.findViewById(R.id.js_modal_dialog_prompt);
+        if (VrModuleProvider.getDelegate().isInVr()) {
+            // Use JavascriptModalDialogView while in VR.
+            ChromeActivity activity = (ChromeActivity) window.getActivity().get();
+            mModalDialogManager = activity.getModalDialogManager();
+            // Only BeforeUnloadDialog should be created this way, so it is safe to set prompt text
+            // to null. We also disabled suppress checkbox in VR. In the future, it is possible that
+            // we bring it back. See https://crbug.com/830057.
+            assert !(this instanceof JavascriptAppPromptDialog);
+            mDialogView = JavascriptModalDialogView.create(this, mTitle, mMessage, null, false,
+                    mPositiveButtonTextId, mNegativeButtonTextId);
+            mModalDialogManager.showDialog(mDialogView, ModalDialogManager.ModalDialogType.TAB);
+        } else {
+            LayoutInflater inflater = LayoutInflater.from(context);
+            ViewGroup layout = (ViewGroup) inflater.inflate(R.layout.js_modal_dialog, null);
+            mSuppressCheckBox = (CheckBox) layout.findViewById(R.id.suppress_js_modal_dialogs);
+            mPromptTextView = (TextView) layout.findViewById(R.id.js_modal_dialog_prompt);
 
-        prepare(layout);
+            prepare(layout);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.AlertDialogTheme)
-                .setView(layout)
-                .setTitle(mTitle)
-                .setOnCancelListener(dialog -> cancel(false));
-        if (mPositiveButtonTextId != 0) builder.setPositiveButton(mPositiveButtonTextId, this);
-        if (mNegativeButtonTextId != 0) builder.setNegativeButton(mNegativeButtonTextId, this);
+            AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.AlertDialogTheme)
+                                                  .setView(layout)
+                                                  .setTitle(mTitle)
+                                                  .setOnCancelListener(dialog -> cancel(false));
+            if (mPositiveButtonTextId != 0) builder.setPositiveButton(mPositiveButtonTextId, this);
+            if (mNegativeButtonTextId != 0) builder.setNegativeButton(mNegativeButtonTextId, this);
 
-        mDialog = builder.create();
-        mDialog.setCanceledOnTouchOutside(false);
-        mDialog.getDelegate().setHandleNativeActionModesEnabled(false);
-        mDialog.show();
+            mDialog = builder.create();
+            mDialog.setCanceledOnTouchOutside(false);
+            mDialog.getDelegate().setHandleNativeActionModesEnabled(false);
+            mDialog.show();
+        }
     }
 
     @Override
@@ -125,6 +146,30 @@ public class JavascriptAppModalDialog implements DialogInterface.OnClickListener
                 Log.e(TAG, "Unexpected button pressed in dialog: " + which);
         }
     }
+
+    @Override
+    public void onClick(@ModalDialogView.ButtonType int buttonType) {
+        switch (buttonType) {
+            case ModalDialogView.ButtonType.POSITIVE:
+                confirm(mDialogView.getPromptText(), false);
+                mModalDialogManager.dismissDialog(mDialogView);
+                break;
+            case ModalDialogView.ButtonType.NEGATIVE:
+                cancel(false);
+                mModalDialogManager.dismissDialog(mDialogView);
+                break;
+            default:
+                Log.e(TAG, "Unexpected button pressed in dialog: " + buttonType);
+        }
+    }
+
+    @Override
+    public void onCancel() {
+        cancel(false);
+    }
+
+    @Override
+    public void onDismiss() {}
 
     protected void prepare(final ViewGroup layout) {
         // Display the checkbox for suppressing dialogs if necessary.
@@ -165,7 +210,11 @@ public class JavascriptAppModalDialog implements DialogInterface.OnClickListener
 
     @CalledByNative
     private void dismiss() {
-        mDialog.dismiss();
+        if (mDialog != null) {
+            mDialog.dismiss();
+        } else {
+            mModalDialogManager.dismissDialog(mDialogView);
+        }
         mNativeDialogPointer = 0;
     }
 

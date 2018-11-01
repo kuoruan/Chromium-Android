@@ -4,8 +4,7 @@
 
 package org.chromium.components.gcm_driver;
 
-import android.os.AsyncTask;
-
+import org.chromium.base.AsyncTask;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
@@ -64,9 +63,9 @@ public class GCMDriver {
 
     @CalledByNative
     private void register(final String appId, final String senderId) {
-        new AsyncTask<Void, Void, String>() {
+        new AsyncTask<String>() {
             @Override
-            protected String doInBackground(Void... voids) {
+            protected String doInBackground() {
                 try {
                     String subtype = appId;
                     String registrationId = mSubscriber.subscribe(senderId, subtype, null);
@@ -81,14 +80,15 @@ public class GCMDriver {
                 nativeOnRegisterFinished(mNativeGCMDriverAndroid, appId, registrationId,
                                          !registrationId.isEmpty());
             }
-        }.execute();
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     @CalledByNative
     private void unregister(final String appId, final String senderId) {
-        new AsyncTask<Void, Void, Boolean>() {
+        new AsyncTask<Boolean>() {
             @Override
-            protected Boolean doInBackground(Void... voids) {
+            protected Boolean doInBackground() {
                 try {
                     String subtype = appId;
                     mSubscriber.unsubscribe(senderId, subtype, null);
@@ -103,7 +103,8 @@ public class GCMDriver {
             protected void onPostExecute(Boolean success) {
                 nativeOnUnregisterFinished(mNativeGCMDriverAndroid, appId, success);
             }
-        }.execute();
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     // The caller of this function is responsible for ensuring the browser process is initialized.

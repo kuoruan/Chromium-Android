@@ -69,8 +69,8 @@ public final class ChildAccountInfoFetcher {
 
     private void fetch() {
         Log.d(TAG, "Checking child account status for %s", mAccount.name);
-        AccountManagerFacade.get().checkChildAccount(
-                mAccount, isChildAccount -> setIsChildAccount(isChildAccount));
+        AccountManagerFacade.get().checkChildAccountStatus(
+                mAccount, status -> setIsChildAccount(ChildAccountStatus.isChild(status)));
     }
 
     @CalledByNative

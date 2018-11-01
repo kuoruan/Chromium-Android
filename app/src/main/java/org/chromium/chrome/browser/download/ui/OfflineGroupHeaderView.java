@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.download.ui;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.support.v7.content.res.AppCompatResources;
 import android.text.format.DateUtils;
 import android.text.format.Formatter;
 import android.util.AttributeSet;
@@ -48,13 +49,13 @@ public class OfflineGroupHeaderView
         super(context, attrs);
         mIconBackgroundColor = DownloadUtils.getIconBackgroundColor(context);
         mIconBackgroundColorSelected =
-                ApiCompatibilityUtils.getColor(getResources(), R.color.google_grey_600);
+                ApiCompatibilityUtils.getColor(getResources(), R.color.modern_grey_600);
         mCheckedIconForegroundColorList = DownloadUtils.getIconForegroundColorList(context);
         mIconBackgroundResId = R.drawable.list_item_icon_modern_bg;
 
         if (FeatureUtilities.isChromeModernDesignEnabled()) {
-            mIconForegroundColorList = ApiCompatibilityUtils.getColorStateList(
-                    context.getResources(), R.color.dark_mode_tint);
+            mIconForegroundColorList =
+                    AppCompatResources.getColorStateList(context, R.color.dark_mode_tint);
         } else {
             mIconForegroundColorList = DownloadUtils.getIconForegroundColorList(context);
         }

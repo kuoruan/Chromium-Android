@@ -5,14 +5,14 @@
 
 <org.chromium.chrome.browser.preferences.datareduction.DataReductionMainMenuItem
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
     android:id="@+id/data_reduction_menu_item"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="#EDFAFAFA" >
+    android:orientation="vertical" >
 
-    <View style="@style/Divider" />
+    <View
+        android:id="@+id/data_reduction_menu_divider"
+        style="@style/HorizontalDivider" />
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -42,15 +42,13 @@
                 android:id="@+id/menu_item_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textAppearance="@style/RobotoMediumStyle" />
+                android:textAppearance="@style/BlackTitle2" />
 
             <TextView
                 android:id="@+id/menu_item_summary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textColor="@color/descriptive_text_color" />
+                android:textAppearance="@style/BlackBody" />
         </LinearLayout>
 
     </FrameLayout>

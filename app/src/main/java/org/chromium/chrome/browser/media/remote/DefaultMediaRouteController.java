@@ -24,6 +24,7 @@ import com.google.android.gms.cast.CastMediaControlIntent;
 
 import org.chromium.base.ApplicationState;
 import org.chromium.base.ApplicationStatus;
+import org.chromium.base.AsyncTask;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.RemovableInRelease;
 import org.chromium.base.annotations.UsedByReflection;
@@ -97,13 +98,9 @@ public class DefaultMediaRouteController extends AbstractMediaRouteController {
             new ApplicationStatus.ApplicationStateListener() {
                 @Override
                 public void onApplicationStateChange(int newState) {
-                    switch (newState) {
-                        // HAS_DESTROYED_ACTIVITIES means all Chrome activities have been destroyed.
-                        case ApplicationState.HAS_DESTROYED_ACTIVITIES:
-                            onActivitiesDestroyed();
-                            break;
-                        default:
-                            break;
+                    // HAS_DESTROYED_ACTIVITIES means all Chrome activities have been destroyed.
+                    if (newState == ApplicationState.HAS_DESTROYED_ACTIVITIES) {
+                        onActivitiesDestroyed();
                     }
                 }
             };
@@ -140,10 +137,7 @@ public class DefaultMediaRouteController extends AbstractMediaRouteController {
 
     @Override
     public boolean canPlayMedia(String sourceUrl, String frameUrl) {
-
-        if (mediaRouterInitializationFailed()) return false;
-
-        if (sourceUrl == null) return false;
+        if (mediaRouterInitializationFailed() || sourceUrl == null) return false;
 
         try {
             String scheme = new URI(sourceUrl).getScheme();
@@ -478,8 +472,7 @@ public class DefaultMediaRouteController extends AbstractMediaRouteController {
 
         RecordCastAction.castPlayRequested();
 
-        RecordCastAction.remotePlaybackDeviceSelected(
-                RecordCastAction.DEVICE_TYPE_CAST_GENERIC);
+        RecordCastAction.remotePlaybackDeviceSelected(RecordCastAction.DeviceType.CAST_GENERIC);
         installBroadcastReceivers();
 
         if (getMediaStateListener() == null) {
@@ -818,7 +811,11 @@ public class DefaultMediaRouteController extends AbstractMediaRouteController {
             public void deliverResult(Uri uri, boolean playable) {
                 callback.onResult(playable, uri.toString(), frameUrl);
             }
-        }, userAgent).execute();
+
+            // Some webpages have >100 media files, which causes the THREAD_POOL_EXECUTOR to get
+            // flooded with requests and causes a crash. We use SERIAL_EXECUTOR instead, to allow
+            // for an unlimited number of tasks. See https://crbug.com/873941.
+        }, userAgent).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
     }
 
     @Override

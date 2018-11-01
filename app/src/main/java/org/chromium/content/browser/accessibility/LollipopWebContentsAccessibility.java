@@ -18,6 +18,7 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.content_public.browser.WebContents;
 
@@ -159,7 +160,7 @@ public class LollipopWebContentsAccessibility extends KitKatWebContentsAccessibi
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         if (!isNativeInitialized()) return;
-        mContext.getApplicationContext().unregisterReceiver(mBroadcastReceiver);
+        ContextUtils.getApplicationContext().unregisterReceiver(mBroadcastReceiver);
     }
 
     @Override
@@ -172,7 +173,7 @@ public class LollipopWebContentsAccessibility extends KitKatWebContentsAccessibi
         if (!isNativeInitialized()) return;
         try {
             IntentFilter filter = new IntentFilter(Intent.ACTION_LOCALE_CHANGED);
-            mContext.getApplicationContext().registerReceiver(mBroadcastReceiver, filter);
+            ContextUtils.getApplicationContext().registerReceiver(mBroadcastReceiver, filter);
         } catch (ReceiverCallNotAllowedException e) {
             // WebView may be running inside a BroadcastReceiver, in which case registerReceiver is
             // not allowed.

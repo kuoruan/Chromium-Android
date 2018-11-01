@@ -39,4 +39,12 @@ SetCanonicalCookieResponse callback);
     interface SetCanonicalCookieResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Boolean> { }
 
 
+
+    void addChangeListener(
+org.chromium.url.mojom.Url url, org.chromium.url.mojom.Url siteForCookies, CookieChangeListener listener, 
+AddChangeListenerResponse callback);
+
+    interface AddChangeListenerResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
+
+
 }

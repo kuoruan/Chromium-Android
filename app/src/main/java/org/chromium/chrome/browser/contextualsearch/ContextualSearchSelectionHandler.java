@@ -34,8 +34,8 @@ interface ContextualSearchSelectionHandler {
     /**
      * Handle a new selection of the given type, created at the given x,y position.
      */
-    public void handleSelection(String selection, boolean selectionValid, SelectionType type,
-            float x, float y);
+    public void handleSelection(
+            String selection, boolean selectionValid, @SelectionType int type, float x, float y);
 
     /**
      * Handle a modification to the selection, done at the given x,y position.
@@ -73,7 +73,8 @@ interface ContextualSearchSelectionHandler {
     /**
      * Logs all the features that we can obtain without accessing heuristics, i.e. from global
      * state.
-     * @param rankerLogger The {@link ContextualSearchRankerLogger} to log the features to.
+     * @param interactionRecorder The {@link ContextualSearchInteractionRecorder} to log the
+     * features to.
      */
-    public void logNonHeuristicFeatures(ContextualSearchRankerLogger rankerLogger);
+    public void logNonHeuristicFeatures(ContextualSearchInteractionRecorder interactionRecorder);
 }

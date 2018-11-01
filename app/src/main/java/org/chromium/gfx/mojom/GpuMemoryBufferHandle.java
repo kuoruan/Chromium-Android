@@ -16,8 +16,8 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class GpuMemoryBufferHandle extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 48;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(48, 0)};
+    private static final int STRUCT_SIZE = 56;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(56, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public int type;
     public GpuMemoryBufferId id;
@@ -26,6 +26,7 @@ public final class GpuMemoryBufferHandle extends org.chromium.mojo.bindings.Stru
     public int stride;
     public NativePixmapHandle nativePixmapHandle;
     public org.chromium.mojo.system.UntypedHandle machPort;
+    public AHardwareBufferHandle androidHardwareBufferHandle;
 
     private GpuMemoryBufferHandle(int version) {
         super(STRUCT_SIZE, version);
@@ -47,9 +48,6 @@ public final class GpuMemoryBufferHandle extends org.chromium.mojo.bindings.Stru
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static GpuMemoryBufferHandle deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -63,38 +61,45 @@ public final class GpuMemoryBufferHandle extends org.chromium.mojo.bindings.Stru
         GpuMemoryBufferHandle result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new GpuMemoryBufferHandle(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new GpuMemoryBufferHandle(elementsOrVersion);
+                {
+                    
                 result.type = decoder0.readInt(8);
                     GpuMemoryBufferType.validate(result.type);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.sharedMemoryHandle = decoder0.readSharedBufferHandle(12, true);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 result.id = GpuMemoryBufferId.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.offset = decoder0.readInt(24);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.stride = decoder0.readInt(28);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, true);
                 result.nativePixmapHandle = NativePixmapHandle.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.machPort = decoder0.readUntypedHandle(40, true);
-            }
+                }
+                {
+                    
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(48, true);
+                result.androidHardwareBufferHandle = AHardwareBufferHandle.decode(decoder1);
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -119,51 +124,7 @@ public final class GpuMemoryBufferHandle extends org.chromium.mojo.bindings.Stru
         encoder0.encode(this.nativePixmapHandle, 32, true);
         
         encoder0.encode(this.machPort, 40, true);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        GpuMemoryBufferHandle other = (GpuMemoryBufferHandle) object;
-        if (this.type!= other.type)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.id, other.id))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sharedMemoryHandle, other.sharedMemoryHandle))
-            return false;
-        if (this.offset!= other.offset)
-            return false;
-        if (this.stride!= other.stride)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.nativePixmapHandle, other.nativePixmapHandle))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.machPort, other.machPort))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.id);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sharedMemoryHandle);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.offset);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.stride);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.nativePixmapHandle);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.machPort);
-        return result;
+        
+        encoder0.encode(this.androidHardwareBufferHandle, 48, true);
     }
 }

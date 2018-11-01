@@ -5,5 +5,5 @@
 
 <View 
     xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/Divider"
+    style="@style/HorizontalDivider"
     android:importantForAccessibility="no" />

@@ -40,9 +40,6 @@ public final class HttpRequestHeaderKeyValuePair extends org.chromium.mojo.bindi
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static HttpRequestHeaderKeyValuePair deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,15 +53,17 @@ public final class HttpRequestHeaderKeyValuePair extends org.chromium.mojo.bindi
         HttpRequestHeaderKeyValuePair result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new HttpRequestHeaderKeyValuePair(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new HttpRequestHeaderKeyValuePair(elementsOrVersion);
+                {
+                    
                 result.key = decoder0.readString(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.value = decoder0.readString(16, false);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -79,36 +78,5 @@ public final class HttpRequestHeaderKeyValuePair extends org.chromium.mojo.bindi
         encoder0.encode(this.key, 8, false);
         
         encoder0.encode(this.value, 16, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        HttpRequestHeaderKeyValuePair other = (HttpRequestHeaderKeyValuePair) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.key, other.key))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.value, other.value))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.key);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.value);
-        return result;
     }
 }

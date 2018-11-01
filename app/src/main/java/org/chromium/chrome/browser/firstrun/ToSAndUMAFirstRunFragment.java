@@ -4,8 +4,9 @@
 
 package org.chromium.chrome.browser.firstrun;
 
-import android.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewCompat;
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,9 +16,9 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeVersionInfo;
+import org.chromium.components.signin.ChildAccountStatus;
 import org.chromium.ui.text.NoUnderlineClickableSpan;
 import org.chromium.ui.text.SpanApplier;
 import org.chromium.ui.text.SpanApplier.SpanInfo;
@@ -76,10 +77,10 @@ public class ToSAndUMAFirstRunFragment extends Fragment implements FirstRunFragm
         if (ChromeVersionInfo.isOfficialBuild()) {
             int paddingStart = getResources().getDimensionPixelSize(
                     R.dimen.fre_tos_checkbox_padding);
-            ApiCompatibilityUtils.setPaddingRelative(mSendReportCheckBox,
-                    ApiCompatibilityUtils.getPaddingStart(mSendReportCheckBox) + paddingStart,
+            ViewCompat.setPaddingRelative(mSendReportCheckBox,
+                    ViewCompat.getPaddingStart(mSendReportCheckBox) + paddingStart,
                     mSendReportCheckBox.getPaddingTop(),
-                    ApiCompatibilityUtils.getPaddingEnd(mSendReportCheckBox),
+                    ViewCompat.getPaddingEnd(mSendReportCheckBox),
                     mSendReportCheckBox.getPaddingBottom());
 
             mSendReportCheckBox.setChecked(FirstRunActivity.DEFAULT_METRICS_AND_CRASH_REPORTING);
@@ -89,33 +90,28 @@ public class ToSAndUMAFirstRunFragment extends Fragment implements FirstRunFragm
 
         mTosAndPrivacy.setMovementMethod(LinkMovementMethod.getInstance());
 
-        NoUnderlineClickableSpan clickableTermsSpan = new NoUnderlineClickableSpan() {
-            @Override
-            public void onClick(View widget) {
-                if (!isAdded()) return;
-                getPageDelegate().showInfoPage(R.string.chrome_terms_of_service_url);
-            }
-        };
+        NoUnderlineClickableSpan clickableTermsSpan = new NoUnderlineClickableSpan((view1) -> {
+            if (!isAdded()) return;
+            getPageDelegate().showInfoPage(R.string.chrome_terms_of_service_url);
+        });
 
-        NoUnderlineClickableSpan clickablePrivacySpan = new NoUnderlineClickableSpan() {
-            @Override
-            public void onClick(View widget) {
-                if (!isAdded()) return;
-                getPageDelegate().showInfoPage(R.string.chrome_privacy_notice_url);
-            }
-        };
+        NoUnderlineClickableSpan clickablePrivacySpan = new NoUnderlineClickableSpan((view1) -> {
+            if (!isAdded()) return;
+            getPageDelegate().showInfoPage(R.string.chrome_privacy_notice_url);
+        });
 
-        NoUnderlineClickableSpan clickableFamilyLinkPrivacySpan = new NoUnderlineClickableSpan() {
-            @Override
-            public void onClick(View widget) {
-                if (!isAdded()) return;
-                getPageDelegate().showInfoPage(R.string.family_link_privacy_policy_url);
-            }
-        };
+        NoUnderlineClickableSpan clickableFamilyLinkPrivacySpan =
+                new NoUnderlineClickableSpan((view1) -> {
+                    if (!isAdded()) return;
+                    getPageDelegate().showInfoPage(R.string.family_link_privacy_policy_url);
+                });
 
         final CharSequence tosAndPrivacyText;
         Bundle freProperties = getPageDelegate().getProperties();
-        if (freProperties.getBoolean(AccountFirstRunFragment.IS_CHILD_ACCOUNT)) {
+        @ChildAccountStatus.Status
+        int childAccountStatus = freProperties.getInt(
+                AccountFirstRunFragment.CHILD_ACCOUNT_STATUS, ChildAccountStatus.NOT_CHILD);
+        if (childAccountStatus == ChildAccountStatus.REGULAR_CHILD) {
             tosAndPrivacyText =
                     SpanApplier.applySpans(getString(R.string.fre_tos_and_privacy_child_account),
                             new SpanInfo("<LINK1>", "</LINK1>", clickableTermsSpan),

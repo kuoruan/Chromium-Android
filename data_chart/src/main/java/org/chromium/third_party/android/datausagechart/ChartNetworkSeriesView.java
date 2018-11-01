@@ -139,6 +139,9 @@ public class ChartNetworkSeriesView extends View {
     public void setBounds(long start, long end) {
         mStart = start;
         mEnd = end;
+        if (end > mEndTime) {
+            mEndTime = end;
+        }
     }
 
     /**
@@ -171,7 +174,7 @@ public class ChartNetworkSeriesView extends View {
         mPathValid = true;
 
         // bail when not enough stats to render
-        if (mStats == null || mStats.size() < 2) {
+        if (mStats == null || mStats.size() < 1) {
             return;
         }
 
@@ -274,6 +277,16 @@ public class ChartNetworkSeriesView extends View {
         } else {
             return maxVisible;
         }
+    }
+
+    /** Returns the total network byte count in the current stats. */
+    public long getMaxStats() {
+        if (mStats == null) {
+            return 0;
+        }
+        final NetworkStatsHistory.Entry entry =
+                mStats.getValues(mStats.getStart(), mStats.getEnd(), null);
+        return entry.rxBytes + entry.txBytes;
     }
 
     @Override

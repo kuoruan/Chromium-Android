@@ -16,7 +16,7 @@
     android:id="@+id/payment_request_spinny"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/payments_section_large_spacing" >
+    android:layout_marginBottom="@dimen/editor_dialog_section_large_spacing" >
 
     <!-- Indeterminate spinny to show that things are processing. -->
     <ProgressBar
@@ -36,11 +36,10 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="80dp"
-        android:layout_marginStart="@dimen/payments_section_large_spacing"
-        android:layout_marginEnd="@dimen/payments_section_large_spacing"
-        android:layout_marginBottom="@dimen/payments_section_large_spacing" 
+        android:layout_marginStart="@dimen/editor_dialog_section_large_spacing"
+        android:layout_marginEnd="@dimen/editor_dialog_section_large_spacing"
+        android:layout_marginBottom="@dimen/editor_dialog_section_large_spacing"
         android:gravity="center_horizontal"
-        android:textColor="@color/descriptive_text_color"
-        android:textSize="16sp" />
+        android:textAppearance="@style/BlackHint1" />
 
 </FrameLayout>

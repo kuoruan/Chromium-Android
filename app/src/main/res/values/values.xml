@@ -55,7 +55,6 @@
     <string name="help_context_incognito_learn_more">chrome_incognito</string>
     <string name="help_context_usage_reports">send_crash_report</string>
     <string name="help_context_sad_tab">mobile_awsnap</string>
-    <string name="help_context_physical_web">physical_web</string>
     <string name="help_context_clear_browsing_data">clear_browsing_data</string>
     <string name="help_context_change_sync_passphrase">change_sync_passphrase</string>
     <!-- TODO(peconn): Add help section. -->
@@ -64,16 +63,21 @@
     <!-- Our manage space activity. Default pre-KitKat to be nothing. -->
     <string name="manage_space_activity"></string>
 
-    <!-- Whether the device is a tablet or large tablet. Used to determine which resources the OS
-         loaded. -->
-    <bool name="is_tablet">false</bool>
-    <bool name="is_large_tablet">false</bool>
-
     <!-- Value for scaleX to mirror drawables correctly for LTR / RTL layouts. -->
     <integer name="automirror_scale_x">1</integer>
+    <integer name="automirror_scale_x_reverse">-1</integer>
 
     <!-- Modern List Item -->
     <integer name="list_item_level_default">0</integer>
     <integer name="list_item_level_selected">1</integer>
     <integer name="list_item_level_incognito">2</integer>
+
+    <!-- Download InfoBar animation. -->
+    <integer name="download_infobar_sweep_up_delay">500</integer>
+    <integer name="download_infobar_sweep_down_delay">800</integer>
+    <integer name="download_infobar_fill_in_delay">1200</integer>
+    <integer name="download_infobar_fill_out_delay">200</integer>
+    <integer name="download_infobar_bar_start_offset">800</integer>
+    <integer name="download_infobar_bar_fill_in_delay">400</integer>
+    <integer name="download_infobar_bar_fill_out_delay">200</integer>
 </resources>

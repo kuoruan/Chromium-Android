@@ -58,9 +58,8 @@ public class WebApkValidator {
      * @return Package name of WebAPK which can handle the URL. Null if the url should not be
      * handled by a WebAPK.
      */
-    public static String queryWebApkPackage(Context context, String url) {
-        return findWebApkPackage(
-                context, resolveInfosForUrlAndOptionalPackage(context, url, null /* package*/));
+    public static @Nullable String queryWebApkPackage(Context context, String url) {
+        return findWebApkPackage(context, resolveInfosForUrl(context, url));
     }
 
     /**
@@ -75,25 +74,31 @@ public class WebApkValidator {
      * @return Resolve Info of a WebAPK which can handle the URL. Null if the url should not be
      *     handled by a WebAPK.
      */
-    public static ResolveInfo queryResolveInfo(Context context, String url) {
-        return findResolveInfo(
-                context, resolveInfosForUrlAndOptionalPackage(context, url, null /* package */));
+    public static @Nullable ResolveInfo queryWebApkResolveInfo(Context context, String url) {
+        return findWebApkResolveInfo(context, resolveInfosForUrl(context, url));
     }
 
     /**
      * @param context The context to use to check whether WebAPK is valid.
-     * @param infos The ResolveInfos to search.
-     * @return Package name of the ResolveInfo which corresponds to a WebAPK. Null if none of the
-     *     ResolveInfos corresponds to a WebAPK.
+     * @param infos The {@link ResolveInfo}s to search.
+     * @return Package name of the {@link ResolveInfo} which corresponds to a WebAPK. Null if none
+     *         of the {@link ResolveInfo}s corresponds to a WebAPK.
      */
-    public static String findWebApkPackage(Context context, List<ResolveInfo> infos) {
-        ResolveInfo resolveInfo = findResolveInfo(context, infos);
+    public static @Nullable String findWebApkPackage(Context context, List<ResolveInfo> infos) {
+        ResolveInfo resolveInfo = findWebApkResolveInfo(context, infos);
         if (resolveInfo != null) {
             return resolveInfo.activityInfo.packageName;
         }
         return null;
     }
 
+    /**
+     * Whether the given package corresponds to a WebAPK that can handle the URL.
+     * @param context The application context.
+     * @param webApkPackage The package to consider.
+     * @param url The URL the package must be able to handle.
+     * @return Whether the URL can be handled by that package.
+     */
     public static boolean canWebApkHandleUrl(Context context, String webApkPackage, String url) {
         List<ResolveInfo> infos = resolveInfosForUrlAndOptionalPackage(context, url, webApkPackage);
         for (ResolveInfo info : infos) {
@@ -106,12 +111,22 @@ public class WebApkValidator {
     }
 
     /**
-     * Fetches the list of resolve infos from the PackageManager that can handle the URL.
+     * Fetches a list of {@link ResolveInfo}s from the PackageManager that can handle the URL.
+     * @param context The application context.
+     * @param url The URL to check.
+     * @return The list of {@link ResolveInfo}s found that can handle the URL.
+     */
+    public static List<ResolveInfo> resolveInfosForUrl(Context context, String url) {
+        return resolveInfosForUrlAndOptionalPackage(context, url, null);
+    }
+
+    /**
+     * Fetches the list of {@link ResolveInfo}s from the PackageManager that can handle the URL.
      *
      * @param context The application context.
-     * @param url The url to check.
+     * @param url The URL to check.
      * @param applicationPackage The optional package name to set for intent resolution.
-     * @return The list of resolve infos found that can handle the URL.
+     * @return The list of {@link ResolveInfo}s found that can handle the URL.
      */
     private static List<ResolveInfo> resolveInfosForUrlAndOptionalPackage(
             Context context, String url, @Nullable String applicationPackage) {
@@ -133,26 +148,31 @@ public class WebApkValidator {
             selector.addCategory(Intent.CATEGORY_BROWSABLE);
             selector.setComponent(null);
         }
-        List<ResolveInfo> resolveInfoList;
+
+        // StrictMode is relaxed due to https://crbug.com/843092.
+        StrictMode.ThreadPolicy policy = StrictMode.allowThreadDiskReads();
         try {
-            resolveInfoList = context.getPackageManager().queryIntentActivities(
+            return context.getPackageManager().queryIntentActivities(
                     intent, PackageManager.GET_RESOLVED_FILTER);
         } catch (Exception e) {
             // We used to catch only java.util.MissingResourceException, but we need to catch more
             // exceptions to handle "Package manager has died" exception.
             // http://crbug.com/794363
-            resolveInfoList = new LinkedList<>();
+            return new LinkedList<>();
+        } finally {
+            StrictMode.setThreadPolicy(policy);
         }
-        return resolveInfoList;
     }
 
     /**
+     * Searches the given {@link ResolveInfo}s for one corresponding to a WebAPK.
      * @param context The context to use to check whether WebAPK is valid.
-     * @param infos The ResolveInfos to search.
-     * @return ResolveInfo which corresponds to a WebAPK. Null if none of the ResolveInfos
+     * @param infos The {@link ResolveInfo}s to search.
+     * @return {@link ResolveInfo} which corresponds to a WebAPK. Null if none of the ResolveInfos
      * corresponds to a WebAPK.
      */
-    private static ResolveInfo findResolveInfo(Context context, List<ResolveInfo> infos) {
+    private static @Nullable ResolveInfo findWebApkResolveInfo(
+            Context context, List<ResolveInfo> infos) {
         for (ResolveInfo info : infos) {
             if (info.activityInfo != null
                     && isValidWebApk(context, info.activityInfo.packageName)) {
@@ -175,7 +195,7 @@ public class WebApkValidator {
                             + "missing call to WebApkValidator.initWithBrowserHostSignature");
             return false;
         }
-        PackageInfo packageInfo = null;
+        PackageInfo packageInfo;
         try {
             packageInfo = context.getPackageManager().getPackageInfo(webappPackageName,
                     PackageManager.GET_SIGNATURES | PackageManager.GET_META_DATA);
@@ -198,7 +218,7 @@ public class WebApkValidator {
             Log.d(TAG, "Matches Maps Lite");
             return true;
         }
-        return verifyCommentSignedWebApk(packageInfo, webappPackageName);
+        return verifyCommentSignedWebApk(packageInfo);
     }
 
     /** Determine quickly whether this is definitely not a WebAPK */
@@ -227,8 +247,7 @@ public class WebApkValidator {
     }
 
     private static boolean verifyMapsLite(PackageInfo packageInfo, String webappPackageName) {
-        if (packageInfo.signatures == null || webappPackageName == null
-                || !webappPackageName.equals(MAPSLITE_PACKAGE_NAME)) {
+        if (!webappPackageName.equals(MAPSLITE_PACKAGE_NAME)) {
             return false;
         }
         String startUrl = packageInfo.applicationInfo.metaData.getString(START_URL);
@@ -245,8 +264,7 @@ public class WebApkValidator {
     }
 
     /** Verify that the comment signed webapk matches the public key. */
-    private static boolean verifyCommentSignedWebApk(
-            PackageInfo packageInfo, String webappPackageName) {
+    private static boolean verifyCommentSignedWebApk(PackageInfo packageInfo) {
         PublicKey commentSignedPublicKey;
         try {
             commentSignedPublicKey = getCommentSignedPublicKey();

@@ -7,8 +7,10 @@ package org.chromium.chrome.browser.ntp;
 import android.app.Activity;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.IntDef;
 import android.text.TextUtils;
 import android.util.LruCache;
 import android.view.ContextMenu;
@@ -17,6 +19,7 @@ import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
@@ -29,9 +32,15 @@ import org.chromium.chrome.browser.ntp.ForeignSessionHelper.ForeignSessionWindow
 import org.chromium.chrome.browser.signin.PersonalizedSigninPromoView;
 import org.chromium.chrome.browser.signin.SigninAccessPoint;
 import org.chromium.chrome.browser.signin.SyncPromoView;
+import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.util.UrlUtilities;
+import org.chromium.chrome.browser.util.ViewUtils;
+import org.chromium.chrome.browser.widget.RoundedIconGenerator;
 import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.mojom.WindowOpenDisposition;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,28 +51,51 @@ import java.util.List;
 public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
     private static final int MAX_NUM_FAVICONS_TO_CACHE = 256;
 
-    private enum ChildType {
-        NONE,
-        DEFAULT_CONTENT,
-        PERSONALIZED_SIGNIN_PROMO,
-        SYNC_PROMO
+    @IntDef({ChildType.NONE, ChildType.DEFAULT_CONTENT, ChildType.PERSONALIZED_SIGNIN_PROMO,
+            ChildType.SYNC_PROMO})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface ChildType {
+        // Values should be enumerated from 0 and can't have gaps.
+        int NONE = 0;
+        int DEFAULT_CONTENT = 1;
+        int PERSONALIZED_SIGNIN_PROMO = 2;
+        int SYNC_PROMO = 3;
+        /**
+         * Number of entries.
+         */
+        int NUM_ENTRIES = 4;
     }
 
-    private enum GroupType {
-        CONTENT, VISIBLE_SEPARATOR, INVISIBLE_SEPARATOR
+    @IntDef({GroupType.CONTENT, GroupType.VISIBLE_SEPARATOR, GroupType.INVISIBLE_SEPARATOR})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface GroupType {
+        // Values should be enumerated from 0 and can't have gaps.
+        int CONTENT = 0;
+        int VISIBLE_SEPARATOR = 1;
+        int INVISIBLE_SEPARATOR = 2;
+        /**
+         * Number of entries.
+         */
+        int NUM_ENTRIES = 3;
     }
 
     // Values from the OtherSessionsActions enum in histograms.xml; do not change these values or
     // histograms will be broken.
-    private static class OtherSessionsActions {
-        static final int MENU_INITIALIZED = 0;
-        static final int LINK_CLICKED = 2;
-        static final int COLLAPSE_SESSION = 6;
-        static final int EXPAND_SESSION = 7;
-        static final int OPEN_ALL = 8;
-        static final int HAS_FOREIGN_DATA = 9;
-        static final int HIDE_FOR_NOW = 10;
-        static final int LIMIT = 11;
+    @IntDef({OtherSessionsActions.MENU_INITIALIZED, OtherSessionsActions.LINK_CLICKED,
+            OtherSessionsActions.COLLAPSE_SESSION, OtherSessionsActions.EXPAND_SESSION,
+            OtherSessionsActions.OPEN_ALL, OtherSessionsActions.HAS_FOREIGN_DATA,
+            OtherSessionsActions.HIDE_FOR_NOW})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface OtherSessionsActions {
+        int MENU_INITIALIZED = 0;
+        int LINK_CLICKED = 2;
+        int COLLAPSE_SESSION = 6;
+        int EXPAND_SESSION = 7;
+        int OPEN_ALL = 8;
+        int HAS_FOREIGN_DATA = 9;
+        int HIDE_FOR_NOW = 10;
+
+        int NUM_ENTRIES = 11;
     }
 
     private final Activity mActivity;
@@ -76,6 +108,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
     private final FaviconCache mFaviconCache;
     private final int mFaviconSize;
     private boolean mHasForeignDataRecorded;
+    private RoundedIconGenerator mIconGenerator;
 
     /**
      * A generic group of objects to be shown in the RecentTabsRowAdapter, such as the list of
@@ -85,7 +118,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         /**
          * @return The type of group: GroupType.CONTENT or GroupType.SEPARATOR.
          */
-        abstract GroupType getGroupType();
+        abstract @GroupType int getGroupType();
 
         /**
          * @return The number of children in this group.
@@ -95,7 +128,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         /**
          * @return The child type.
          */
-        abstract ChildType getChildType();
+        abstract @ChildType int getChildType();
 
         /**
          * @param childPosition The position for which to return the child.
@@ -123,7 +156,14 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
                 childView = inflater.inflate(R.layout.recent_tabs_list_item, parent, false);
 
                 ViewHolder viewHolder = new ViewHolder();
-                viewHolder.textView = (TextView) childView;
+                viewHolder.textView = (TextView) childView.findViewById(R.id.title_row);
+                viewHolder.domainView = (TextView) childView.findViewById(R.id.domain_row);
+                viewHolder.imageView = (ImageView) childView.findViewById(R.id.recent_tabs_favicon);
+                viewHolder.imageView.setBackgroundResource(R.drawable.list_item_icon_modern_bg);
+                if (!FeatureUtilities.isChromeModernDesignEnabled()) {
+                    viewHolder.imageView.getBackground().setAlpha(0);
+                }
+                viewHolder.itemLayout = childView.findViewById(R.id.recent_tabs_list_item_layout);
                 childView.setTag(viewHolder);
             }
 
@@ -217,7 +257,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         }
 
         @Override
-        public GroupType getGroupType() {
+        public @GroupType int getGroupType() {
             return GroupType.CONTENT;
         }
 
@@ -231,7 +271,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         }
 
         @Override
-        public ChildType getChildType() {
+        public @ChildType int getChildType() {
             return ChildType.DEFAULT_CONTENT;
         }
 
@@ -250,8 +290,16 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         @Override
         public void configureChildView(int childPosition, ViewHolder viewHolder) {
             ForeignSessionTab sessionTab = getChild(childPosition);
-            viewHolder.textView.setText(TextUtils.isEmpty(sessionTab.title) ? sessionTab.url
-                    : sessionTab.title);
+            String text = TextUtils.isEmpty(sessionTab.title) ? sessionTab.url : sessionTab.title;
+            viewHolder.textView.setText(text);
+            String domain = UrlUtilities.getDomainAndRegistry(sessionTab.url, false);
+            if (!TextUtils.isEmpty(domain)) {
+                viewHolder.domainView.setText(domain);
+                viewHolder.domainView.setVisibility(View.VISIBLE);
+            } else {
+                viewHolder.domainView.setText("");
+                viewHolder.domainView.setVisibility(View.GONE);
+            }
             loadSyncedFavicon(viewHolder, sessionTab.url);
         }
 
@@ -264,10 +312,10 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         public void setCollapsed(boolean isCollapsed) {
             if (isCollapsed) {
                 RecordHistogram.recordEnumeratedHistogram("HistoryPage.OtherDevicesMenu",
-                        OtherSessionsActions.COLLAPSE_SESSION, OtherSessionsActions.LIMIT);
+                        OtherSessionsActions.COLLAPSE_SESSION, OtherSessionsActions.NUM_ENTRIES);
             } else {
                 RecordHistogram.recordEnumeratedHistogram("HistoryPage.OtherDevicesMenu",
-                        OtherSessionsActions.EXPAND_SESSION, OtherSessionsActions.LIMIT);
+                        OtherSessionsActions.EXPAND_SESSION, OtherSessionsActions.NUM_ENTRIES);
             }
             mRecentTabsManager.setForeignSessionCollapsed(mForeignSession, isCollapsed);
         }
@@ -280,7 +328,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         @Override
         public boolean onChildClick(int childPosition) {
             RecordHistogram.recordEnumeratedHistogram("HistoryPage.OtherDevicesMenu",
-                    OtherSessionsActions.LINK_CLICKED, OtherSessionsActions.LIMIT);
+                    OtherSessionsActions.LINK_CLICKED, OtherSessionsActions.NUM_ENTRIES);
             ForeignSessionTab foreignSessionTab = getChild(childPosition);
             mRecentTabsManager.openForeignSessionTab(mForeignSession, foreignSessionTab,
                     WindowOpenDisposition.CURRENT_TAB);
@@ -291,13 +339,13 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         public void onCreateContextMenuForGroup(ContextMenu menu, Activity activity) {
             menu.add(R.string.recent_tabs_open_all_menu_option).setOnMenuItemClickListener(item -> {
                 RecordHistogram.recordEnumeratedHistogram("HistoryPage.OtherDevicesMenu",
-                        OtherSessionsActions.OPEN_ALL, OtherSessionsActions.LIMIT);
+                        OtherSessionsActions.OPEN_ALL, OtherSessionsActions.NUM_ENTRIES);
                 openAllTabs();
                 return true;
             });
             menu.add(R.string.recent_tabs_hide_menu_option).setOnMenuItemClickListener(item -> {
                 RecordHistogram.recordEnumeratedHistogram("HistoryPage.OtherDevicesMenu",
-                        OtherSessionsActions.HIDE_FOR_NOW, OtherSessionsActions.LIMIT);
+                        OtherSessionsActions.HIDE_FOR_NOW, OtherSessionsActions.NUM_ENTRIES);
                 mRecentTabsManager.deleteForeignSession(mForeignSession);
                 return true;
             });
@@ -341,7 +389,8 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
      */
     private abstract class PromoGroup extends Group {
         @Override
-        GroupType getGroupType() {
+        @GroupType
+        int getGroupType() {
             return GroupType.CONTENT;
         }
 
@@ -371,7 +420,8 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
      */
     class PersonalizedSigninPromoGroup extends PromoGroup {
         @Override
-        ChildType getChildType() {
+        @ChildType
+        int getChildType() {
             return ChildType.PERSONALIZED_SIGNIN_PROMO;
         }
 
@@ -394,7 +444,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
      */
     class SyncPromoGroup extends PromoGroup {
         @Override
-        public ChildType getChildType() {
+        public @ChildType int getChildType() {
             return ChildType.SYNC_PROMO;
         }
 
@@ -417,7 +467,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         static final int ID_REMOVE_ALL = 2;
 
         @Override
-        public GroupType getGroupType() {
+        public @GroupType int getGroupType() {
             return GroupType.CONTENT;
         }
 
@@ -429,7 +479,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         }
 
         @Override
-        public ChildType getChildType() {
+        public @ChildType int getChildType() {
             return ChildType.DEFAULT_CONTENT;
         }
 
@@ -443,24 +493,42 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
 
         @Override
         public RecentlyClosedTab getChild(int childPosition) {
-            if (isHistoryLink(childPosition)) {
-                return null;
-            }
+            if (isHistoryLink(childPosition)) return null;
             return mRecentTabsManager.getRecentlyClosedTabs().get(childPosition);
         }
 
         @Override
         public void configureChildView(int childPosition, ViewHolder viewHolder) {
+            // Reset the domain view text manually since it does not always reset itself, which can
+            // lead to wrong pairings of domain & title texts.
+            viewHolder.domainView.setText("");
+            viewHolder.domainView.setVisibility(View.GONE);
             if (isHistoryLink(childPosition)) {
                 viewHolder.textView.setText(R.string.show_full_history);
-                ApiCompatibilityUtils.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        viewHolder.textView, R.drawable.history_favicon, 0, 0, 0);
-            } else {
-                RecentlyClosedTab tab = getChild(childPosition);
-                String title = TitleUtil.getTitleForDisplay(tab.title, tab.url);
-                viewHolder.textView.setText(title);
-                loadLocalFavicon(viewHolder, tab.url);
+                Bitmap historyIcon = BitmapFactory.decodeResource(
+                        mActivity.getResources(), R.drawable.ic_watch_later_24dp);
+                Drawable drawable = getRoundedFavicon(historyIcon,
+                        mActivity.getResources().getDimensionPixelSize(
+                                R.dimen.tile_view_icon_size_modern));
+                viewHolder.imageView.setImageDrawable(drawable);
+                viewHolder.itemLayout.getLayoutParams().height =
+                        mActivity.getResources().getDimensionPixelSize(
+                                R.dimen.recent_tabs_show_history_item_size);
+                return;
             }
+            viewHolder.itemLayout.getLayoutParams().height =
+                    mActivity.getResources().getDimensionPixelSize(
+                            R.dimen.recent_tabs_foreign_session_group_item_height);
+            RecentlyClosedTab tab = getChild(childPosition);
+            String title = TitleUtil.getTitleForDisplay(tab.title, tab.url);
+            viewHolder.textView.setText(title);
+
+            String domain = UrlUtilities.getDomainAndRegistry(tab.url, false);
+            if (!TextUtils.isEmpty(domain)) {
+                viewHolder.domainView.setText(domain);
+                viewHolder.domainView.setVisibility(View.VISIBLE);
+            }
+            loadLocalFavicon(viewHolder, tab.url);
         }
 
         @Override
@@ -530,12 +598,12 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         }
 
         @Override
-        public GroupType getGroupType() {
+        public @GroupType int getGroupType() {
             return mIsVisible ? GroupType.VISIBLE_SEPARATOR : GroupType.INVISIBLE_SEPARATOR;
         }
 
         @Override
-        public ChildType getChildType() {
+        public @ChildType int getChildType() {
             return ChildType.NONE;
         }
 
@@ -583,7 +651,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
             return mMemoryCache.get(SYNCED_FAVICON_PREFIX + url);
         }
 
-        public void putSycnedFaviconImage(String url, Drawable image) {
+        public void putSyncedFaviconImage(String url, Drawable image) {
             mMemoryCache.put(SYNCED_FAVICON_PREFIX + url, image);
         }
 
@@ -613,8 +681,11 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         mDefaultFavicon = ApiCompatibilityUtils.getDrawable(resources, R.drawable.default_favicon);
         mFaviconSize = resources.getDimensionPixelSize(R.dimen.default_favicon_size);
 
+        mIconGenerator = ViewUtils.createDefaultRoundedIconGenerator(
+                FeatureUtilities.isChromeModernDesignEnabled());
+
         RecordHistogram.recordEnumeratedHistogram("HistoryPage.OtherDevicesMenu",
-                OtherSessionsActions.MENU_INITIALIZED, OtherSessionsActions.LIMIT);
+                OtherSessionsActions.MENU_INITIALIZED, OtherSessionsActions.NUM_ENTRIES);
     }
 
     /**
@@ -624,24 +695,38 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
      */
     private static class ViewHolder {
         public TextView textView;
+        public TextView domainView;
+        public ImageView imageView;
+        public View itemLayout;
         public FaviconImageCallback imageCallback;
     }
 
-    private Drawable faviconDrawable(Bitmap image) {
-        if (image == null) return null;
-        return new BitmapDrawable(mActivity.getResources(), Bitmap.createScaledBitmap(image,
-                mFaviconSize, mFaviconSize, true));
+    private Drawable faviconDrawable(Bitmap image, String url) {
+        if (url == null) return null;
+        if (image == null) {
+            image = mIconGenerator.generateIconForUrl(url);
+            return new BitmapDrawable(mActivity.getResources(),
+                    Bitmap.createScaledBitmap(image, mFaviconSize, mFaviconSize, true));
+        }
+        return getRoundedFavicon(image, mFaviconSize);
+    }
+
+    private Drawable getRoundedFavicon(Bitmap image, int size) {
+        // TODO(injae): Move shared code between Bookmarks/History/Downloads/here to ViewUtils.java.
+        // Also applies to RoundedIconGenerator. crbug.com/829550
+        return ViewUtils.createRoundedBitmapDrawable(
+                Bitmap.createScaledBitmap(image, size, size, true),
+                ViewUtils.DEFAULT_FAVICON_CORNER_RADIUS);
     }
 
     private void loadSyncedFavicon(final ViewHolder viewHolder, final String url) {
         Drawable image = mFaviconCache.getSyncedFaviconImage(url);
         if (image == null) {
-            image = faviconDrawable(mRecentTabsManager.getSyncedFaviconImageForURL(url));
+            image = faviconDrawable(mRecentTabsManager.getSyncedFaviconImageForURL(url), url);
             image = (image == null) ? mDefaultFavicon : image;
-            mFaviconCache.putSycnedFaviconImage(url, image);
+            mFaviconCache.putSyncedFaviconImage(url, image);
         }
-        ApiCompatibilityUtils.setCompoundDrawablesRelativeWithIntrinsicBounds(viewHolder.textView,
-                image, null, null, null);
+        viewHolder.imageView.setImageDrawable(image);
     }
 
     private void loadLocalFavicon(final ViewHolder viewHolder, final String url) {
@@ -656,11 +741,10 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
                     @Override
                     public void onFaviconAvailable(Bitmap bitmap, String iconUrl) {
                         if (this != viewHolder.imageCallback) return;
-                        Drawable image = faviconDrawable(bitmap);
+                        Drawable image = faviconDrawable(bitmap, url);
                         image = (image == null) ? mDefaultFavicon : image;
                         mFaviconCache.putLocalFaviconImage(url, image);
-                        ApiCompatibilityUtils.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                viewHolder.textView, image, null, null, null);
+                        viewHolder.imageView.setImageDrawable(image);
                     }
                 };
                 viewHolder.imageCallback = imageCallback;
@@ -668,15 +752,14 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
                 image = mDefaultFavicon;
             }
         }
-        ApiCompatibilityUtils.setCompoundDrawablesRelativeWithIntrinsicBounds(viewHolder.textView,
-                image, null, null, null);
+        viewHolder.imageView.setImageDrawable(image);
     }
 
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
             View convertView, ViewGroup parent) {
-        return getGroup(groupPosition).getChildView(childPosition, isLastChild, convertView,
-                parent);
+        return getGroup(groupPosition)
+                .getChildView(childPosition, isLastChild, convertView, parent);
     }
 
     // BaseExpandableListAdapter group related implementations
@@ -730,16 +813,16 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
 
     @Override
     public int getGroupType(int groupPosition) {
-        return getGroup(groupPosition).getGroupType().ordinal();
+        return getGroup(groupPosition).getGroupType();
     }
 
     @Override
     public int getGroupTypeCount() {
-        return GroupType.values().length;
+        return GroupType.NUM_ENTRIES;
     }
 
     private void addGroup(Group group) {
-        if (!DeviceFormFactor.isTablet()) {
+        if (!DeviceFormFactor.isNonMultiDisplayContextOnTablet(mActivity)) {
             mGroups.add(group);
         } else {
             if (mGroups.size() == 0) {
@@ -757,7 +840,7 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
         for (ForeignSession session : mRecentTabsManager.getForeignSessions()) {
             if (!mHasForeignDataRecorded) {
                 RecordHistogram.recordEnumeratedHistogram("HistoryPage.OtherDevicesMenu",
-                        OtherSessionsActions.HAS_FOREIGN_DATA, OtherSessionsActions.LIMIT);
+                        OtherSessionsActions.HAS_FOREIGN_DATA, OtherSessionsActions.NUM_ENTRIES);
                 mHasForeignDataRecorded = true;
             }
             addGroup(new ForeignSessionGroup(session));
@@ -778,12 +861,10 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
 
         // Add separator line after the recently closed tabs group.
         int recentlyClosedIndex = mGroups.indexOf(mRecentlyClosedTabsGroup);
-        if (DeviceFormFactor.isTablet()) {
+        if (DeviceFormFactor.isNonMultiDisplayContextOnTablet(mActivity)) {
             if (recentlyClosedIndex != mGroups.size() - 2) {
                 mGroups.set(recentlyClosedIndex + 1, mVisibleSeparatorGroup);
             }
-        } else if (recentlyClosedIndex != mGroups.size() - 1) {
-            mGroups.add(recentlyClosedIndex + 1, mVisibleSeparatorGroup);
         }
 
         super.notifyDataSetChanged();
@@ -791,11 +872,11 @@ public class RecentTabsRowAdapter extends BaseExpandableListAdapter {
 
     @Override
     public int getChildType(int groupPosition, int childPosition) {
-        return mGroups.get(groupPosition).getChildType().ordinal();
+        return mGroups.get(groupPosition).getChildType();
     }
 
     @Override
     public int getChildTypeCount() {
-        return ChildType.values().length;
+        return ChildType.NUM_ENTRIES;
     }
 }

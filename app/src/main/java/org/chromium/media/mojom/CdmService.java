@@ -25,7 +25,7 @@ public interface CdmService extends org.chromium.mojo.bindings.Interface {
 
 
     void loadCdm(
-org.chromium.mojo.common.mojom.FilePath cdmPath);
+org.chromium.mojo_base.mojom.FilePath cdmPath);
 
 
 

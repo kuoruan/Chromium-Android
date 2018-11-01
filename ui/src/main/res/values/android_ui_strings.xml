@@ -3,4 +3,5 @@
 <string name="low_memory_error">"Unable to complete previous operation due to low memory"</string>
 <string name="opening_file_error">"Failed to open selected file"</string>
 <string name="copy_to_clipboard_failure_message">"Failed to copy to the clipboard"</string>
+<string name="current_detected_ui_locale_name">en-US</string>
 </resources>

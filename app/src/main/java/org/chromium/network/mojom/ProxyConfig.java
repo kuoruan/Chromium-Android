@@ -23,7 +23,6 @@ public final class ProxyConfig extends org.chromium.mojo.bindings.Struct {
     public org.chromium.url.mojom.Url pacUrl;
     public boolean pacMandatory;
     public ProxyRules proxyRules;
-    public int source;
 
     private ProxyConfig(int version) {
         super(STRUCT_SIZE, version);
@@ -43,9 +42,6 @@ public final class ProxyConfig extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static ProxyConfig deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -59,30 +55,27 @@ public final class ProxyConfig extends org.chromium.mojo.bindings.Struct {
         ProxyConfig result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new ProxyConfig(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new ProxyConfig(elementsOrVersion);
+                {
+                    
                 result.autoDetect = decoder0.readBoolean(8, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.pacMandatory = decoder0.readBoolean(8, 1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.source = decoder0.readInt(12);
-                    ProxyConfigSource.validate(result.source);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 result.pacUrl = org.chromium.url.mojom.Url.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                 result.proxyRules = ProxyRules.decode(decoder1);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -98,50 +91,8 @@ public final class ProxyConfig extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.pacMandatory, 8, 1);
         
-        encoder0.encode(this.source, 12);
-        
         encoder0.encode(this.pacUrl, 16, false);
         
         encoder0.encode(this.proxyRules, 24, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        ProxyConfig other = (ProxyConfig) object;
-        if (this.autoDetect!= other.autoDetect)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.pacUrl, other.pacUrl))
-            return false;
-        if (this.pacMandatory!= other.pacMandatory)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.proxyRules, other.proxyRules))
-            return false;
-        if (this.source!= other.source)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.autoDetect);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pacUrl);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pacMandatory);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.proxyRules);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.source);
-        return result;
     }
 }

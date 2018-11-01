@@ -25,12 +25,12 @@ public interface VideoDecodeStatsRecorder extends org.chromium.mojo.bindings.Int
 
 
     void startNewRecord(
-int profile, org.chromium.gfx.mojom.Size videoSize, int framesPerSec);
+PredictionFeatures features);
 
 
 
     void updateRecord(
-int framesDecoded, int framesDropped, int framesDecodedPowerEfficient);
+PredictionTargets targets);
 
 
 }

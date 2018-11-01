@@ -18,28 +18,28 @@ class ScreenOrientation_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<ScreenOrientation, ScreenOrientation.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<ScreenOrientation, ScreenOrientation.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "device::mojom::ScreenOrientation";
+            return "device.mojom.ScreenOrientation";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, ScreenOrientation impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public ScreenOrientation[] buildArray(int size) {
           return new ScreenOrientation[size];
@@ -115,26 +115,26 @@ LockOrientationResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 ScreenOrientation_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case UNLOCK_ORIENTATION_ORDINAL: {
-            
+
                         ScreenOrientationUnlockOrientationParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().unlockOrientation();
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -154,29 +154,29 @@ LockOrientationResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), ScreenOrientation_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case LOCK_ORIENTATION_ORDINAL: {
-            
+
                         ScreenOrientationLockOrientationParams data =
                                 ScreenOrientationLockOrientationParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().lockOrientation(data.orientation, new ScreenOrientationLockOrientationResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -190,37 +190,34 @@ LockOrientationResponse callback) {
 
     
     static final class ScreenOrientationLockOrientationParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int orientation;
-    
+
         private ScreenOrientationLockOrientationParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ScreenOrientationLockOrientationParams() {
             this(0);
         }
-    
+
         public static ScreenOrientationLockOrientationParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ScreenOrientationLockOrientationParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ScreenOrientationLockOrientationParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -230,18 +227,20 @@ LockOrientationResponse callback) {
             ScreenOrientationLockOrientationParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ScreenOrientationLockOrientationParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ScreenOrientationLockOrientationParams(elementsOrVersion);
+                    {
+                        
                     result.orientation = decoder0.readInt(8);
                         ScreenOrientationLockType.validate(result.orientation);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -249,71 +248,40 @@ LockOrientationResponse callback) {
             
             encoder0.encode(this.orientation, 8);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ScreenOrientationLockOrientationParams other = (ScreenOrientationLockOrientationParams) object;
-            if (this.orientation!= other.orientation)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.orientation);
-            return result;
-        }
     }
 
 
 
     
     static final class ScreenOrientationLockOrientationResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int result;
-    
+
         private ScreenOrientationLockOrientationResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ScreenOrientationLockOrientationResponseParams() {
             this(0);
         }
-    
+
         public static ScreenOrientationLockOrientationResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ScreenOrientationLockOrientationResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ScreenOrientationLockOrientationResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -323,52 +291,26 @@ LockOrientationResponse callback) {
             ScreenOrientationLockOrientationResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ScreenOrientationLockOrientationResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ScreenOrientationLockOrientationResponseParams(elementsOrVersion);
+                    {
+                        
                     result.result = decoder0.readInt(8);
                         ScreenOrientationLockResult.validate(result.result);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.result, 8);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ScreenOrientationLockOrientationResponseParams other = (ScreenOrientationLockOrientationResponseParams) object;
-            if (this.result!= other.result)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.result);
-            return result;
         }
     }
 
@@ -437,36 +379,33 @@ LockOrientationResponse callback) {
 
     
     static final class ScreenOrientationUnlockOrientationParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private ScreenOrientationUnlockOrientationParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ScreenOrientationUnlockOrientationParams() {
             this(0);
         }
-    
+
         public static ScreenOrientationUnlockOrientationParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ScreenOrientationUnlockOrientationParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ScreenOrientationUnlockOrientationParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -476,41 +415,19 @@ LockOrientationResponse callback) {
             ScreenOrientationUnlockOrientationParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ScreenOrientationUnlockOrientationParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ScreenOrientationUnlockOrientationParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 

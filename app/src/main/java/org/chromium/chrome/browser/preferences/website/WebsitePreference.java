@@ -39,9 +39,11 @@ class WebsitePreference extends Preference implements FaviconImageCallback {
     private boolean mFaviconFetched;
 
     // Metrics for favicon processing.
-    private static final int FAVICON_CORNER_RADIUS_DP = 2;
+    // Sets the favicon corner radius to 12.5% of favicon size (2dp for a 16dp favicon)
+    private static final float FAVICON_CORNER_RADIUS_FRACTION = 0.125f;
     private static final int FAVICON_PADDING_DP = 4;
-    private static final int FAVICON_TEXT_SIZE_DP = 10;
+    // Sets the favicon text size to 62.5% of favicon size (10dp for a 16dp favicon)
+    private static final float FAVICON_TEXT_SIZE_FRACTION = 0.625f;
     private static final int FAVICON_BACKGROUND_COLOR = 0xff969696;
 
     private int mFaviconSizePx;
@@ -87,9 +89,11 @@ class WebsitePreference extends Preference implements FaviconImageCallback {
             // Invalid favicon, produce a generic one.
             float density = resources.getDisplayMetrics().density;
             int faviconSizeDp = Math.round(mFaviconSizePx / density);
-            RoundedIconGenerator faviconGenerator = new RoundedIconGenerator(resources,
-                    faviconSizeDp, faviconSizeDp, FAVICON_CORNER_RADIUS_DP,
-                    FAVICON_BACKGROUND_COLOR, FAVICON_TEXT_SIZE_DP);
+            RoundedIconGenerator faviconGenerator =
+                    new RoundedIconGenerator(resources, faviconSizeDp, faviconSizeDp,
+                            Math.round(FAVICON_CORNER_RADIUS_FRACTION * faviconSizeDp),
+                            FAVICON_BACKGROUND_COLOR,
+                            Math.round(FAVICON_TEXT_SIZE_FRACTION * faviconSizeDp));
             image = faviconGenerator.generateIconForUrl(faviconUrl());
         }
 
@@ -124,7 +128,7 @@ class WebsitePreference extends Preference implements FaviconImageCallback {
             return super.compareTo(preference);
         }
         WebsitePreference other = (WebsitePreference) preference;
-        if (mCategory.showStorageSites()) {
+        if (mCategory.showSites(SiteSettingsCategory.Type.USE_STORAGE)) {
             return mSite.compareByStorageTo(other.mSite);
         }
 
@@ -137,7 +141,7 @@ class WebsitePreference extends Preference implements FaviconImageCallback {
 
         TextView usageText = (TextView) view.findViewById(R.id.usage_text);
         usageText.setVisibility(View.GONE);
-        if (mCategory.showStorageSites()) {
+        if (mCategory.showSites(SiteSettingsCategory.Type.USE_STORAGE)) {
             long totalUsage = mSite.getTotalUsage();
             if (totalUsage > 0) {
                 usageText.setText(Formatter.formatShortFileSize(getContext(), totalUsage));

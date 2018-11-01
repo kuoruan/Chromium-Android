@@ -18,28 +18,28 @@ class NetworkServiceClient_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<NetworkServiceClient, NetworkServiceClient.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<NetworkServiceClient, NetworkServiceClient.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "network::mojom::NetworkServiceClient";
+            return "network.mojom.NetworkServiceClient";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, NetworkServiceClient impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public NetworkServiceClient[] buildArray(int size) {
           return new NetworkServiceClient[size];
@@ -53,6 +53,16 @@ class NetworkServiceClient_Internal {
 
     private static final int ON_SSL_CERTIFICATE_ERROR_ORDINAL = 2;
 
+    private static final int ON_FILE_UPLOAD_REQUESTED_ORDINAL = 3;
+
+    private static final int ON_COOKIE_CHANGE_ORDINAL = 4;
+
+    private static final int ON_COOKIES_READ_ORDINAL = 5;
+
+    private static final int ON_LOADING_STATE_UPDATE_ORDINAL = 6;
+
+    private static final int ON_CLEAR_SITE_DATA_ORDINAL = 7;
+
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements NetworkServiceClient.Proxy {
 
@@ -64,8 +74,7 @@ class NetworkServiceClient_Internal {
 
         @Override
         public void onAuthRequired(
-int processId, int routingId, org.chromium.url.mojom.Url url, boolean firstAuthAttempt, AuthChallengeInfo authInfo, 
-OnAuthRequiredResponse callback) {
+int processId, int routingId, int requestId, org.chromium.url.mojom.Url url, org.chromium.url.mojom.Url siteForCookies, boolean firstAuthAttempt, AuthChallengeInfo authInfo, int resourceType, UrlResponseHead head, AuthChallengeResponder authChallengeResponder) {
 
             NetworkServiceClientOnAuthRequiredParams _message = new NetworkServiceClientOnAuthRequiredParams();
 
@@ -73,28 +82,34 @@ OnAuthRequiredResponse callback) {
 
             _message.routingId = routingId;
 
+            _message.requestId = requestId;
+
             _message.url = url;
+
+            _message.siteForCookies = siteForCookies;
 
             _message.firstAuthAttempt = firstAuthAttempt;
 
             _message.authInfo = authInfo;
 
+            _message.resourceType = resourceType;
 
-            getProxyHandler().getMessageReceiver().acceptWithResponder(
+            _message.head = head;
+
+            _message.authChallengeResponder = authChallengeResponder;
+
+
+            getProxyHandler().getMessageReceiver().accept(
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(
-                                    ON_AUTH_REQUIRED_ORDINAL,
-                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
-                                    0)),
-                    new NetworkServiceClientOnAuthRequiredResponseParamsForwardToCallback(callback));
+                            new org.chromium.mojo.bindings.MessageHeader(ON_AUTH_REQUIRED_ORDINAL)));
 
         }
 
 
         @Override
         public void onCertificateRequested(
-int processId, int routingId, SslCertRequestInfo certInfo, 
+int processId, int routingId, int requestId, SslCertRequestInfo certInfo, 
 OnCertificateRequestedResponse callback) {
 
             NetworkServiceClientOnCertificateRequestedParams _message = new NetworkServiceClientOnCertificateRequestedParams();
@@ -102,6 +117,8 @@ OnCertificateRequestedResponse callback) {
             _message.processId = processId;
 
             _message.routingId = routingId;
+
+            _message.requestId = requestId;
 
             _message.certInfo = certInfo;
 
@@ -120,18 +137,20 @@ OnCertificateRequestedResponse callback) {
 
         @Override
         public void onSslCertificateError(
-int resourceType, org.chromium.url.mojom.Url url, int processId, int routingId, SslInfo sslInfo, boolean fatal, 
+int processId, int routingId, int requestId, int resourceType, org.chromium.url.mojom.Url url, SslInfo sslInfo, boolean fatal, 
 OnSslCertificateErrorResponse callback) {
 
             NetworkServiceClientOnSslCertificateErrorParams _message = new NetworkServiceClientOnSslCertificateErrorParams();
 
-            _message.resourceType = resourceType;
-
-            _message.url = url;
-
             _message.processId = processId;
 
             _message.routingId = routingId;
+
+            _message.requestId = requestId;
+
+            _message.resourceType = resourceType;
+
+            _message.url = url;
 
             _message.sslInfo = sslInfo;
 
@@ -146,6 +165,138 @@ OnSslCertificateErrorResponse callback) {
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
                                     0)),
                     new NetworkServiceClientOnSslCertificateErrorResponseParamsForwardToCallback(callback));
+
+        }
+
+
+        @Override
+        public void onFileUploadRequested(
+int processId, boolean async, org.chromium.mojo_base.mojom.FilePath[] filePaths, 
+OnFileUploadRequestedResponse callback) {
+
+            NetworkServiceClientOnFileUploadRequestedParams _message = new NetworkServiceClientOnFileUploadRequestedParams();
+
+            _message.processId = processId;
+
+            _message.async = async;
+
+            _message.filePaths = filePaths;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    ON_FILE_UPLOAD_REQUESTED_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new NetworkServiceClientOnFileUploadRequestedResponseParamsForwardToCallback(callback));
+
+        }
+
+
+        @Override
+        public void onCookieChange(
+int processId, int routingId, org.chromium.url.mojom.Url url, org.chromium.url.mojom.Url frameUrl, CanonicalCookie cookie, boolean blockedByPolicy) {
+
+            NetworkServiceClientOnCookieChangeParams _message = new NetworkServiceClientOnCookieChangeParams();
+
+            _message.processId = processId;
+
+            _message.routingId = routingId;
+
+            _message.url = url;
+
+            _message.frameUrl = frameUrl;
+
+            _message.cookie = cookie;
+
+            _message.blockedByPolicy = blockedByPolicy;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(ON_COOKIE_CHANGE_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void onCookiesRead(
+int processId, int routingId, org.chromium.url.mojom.Url url, org.chromium.url.mojom.Url frameUrl, CanonicalCookie[] cookieList, boolean blockedByPolicy) {
+
+            NetworkServiceClientOnCookiesReadParams _message = new NetworkServiceClientOnCookiesReadParams();
+
+            _message.processId = processId;
+
+            _message.routingId = routingId;
+
+            _message.url = url;
+
+            _message.frameUrl = frameUrl;
+
+            _message.cookieList = cookieList;
+
+            _message.blockedByPolicy = blockedByPolicy;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(ON_COOKIES_READ_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void onLoadingStateUpdate(
+LoadInfo[] infos, 
+OnLoadingStateUpdateResponse callback) {
+
+            NetworkServiceClientOnLoadingStateUpdateParams _message = new NetworkServiceClientOnLoadingStateUpdateParams();
+
+            _message.infos = infos;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    ON_LOADING_STATE_UPDATE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new NetworkServiceClientOnLoadingStateUpdateResponseParamsForwardToCallback(callback));
+
+        }
+
+
+        @Override
+        public void onClearSiteData(
+int processId, int routingId, org.chromium.url.mojom.Url url, String headerValue, int loadFlags, 
+OnClearSiteDataResponse callback) {
+
+            NetworkServiceClientOnClearSiteDataParams _message = new NetworkServiceClientOnClearSiteDataParams();
+
+            _message.processId = processId;
+
+            _message.routingId = routingId;
+
+            _message.url = url;
+
+            _message.headerValue = headerValue;
+
+            _message.loadFlags = loadFlags;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    ON_CLEAR_SITE_DATA_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new NetworkServiceClientOnClearSiteDataResponseParamsForwardToCallback(callback));
 
         }
 
@@ -168,18 +319,61 @@ OnSslCertificateErrorResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 NetworkServiceClient_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+                    case ON_AUTH_REQUIRED_ORDINAL: {
+
+                        NetworkServiceClientOnAuthRequiredParams data =
+                                NetworkServiceClientOnAuthRequiredParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().onAuthRequired(data.processId, data.routingId, data.requestId, data.url, data.siteForCookies, data.firstAuthAttempt, data.authInfo, data.resourceType, data.head, data.authChallengeResponder);
+                        return true;
+                    }
+
+
+
+
+
+
+
+
+
+
+
+                    case ON_COOKIE_CHANGE_ORDINAL: {
+
+                        NetworkServiceClientOnCookieChangeParams data =
+                                NetworkServiceClientOnCookieChangeParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().onCookieChange(data.processId, data.routingId, data.url, data.frameUrl, data.cookie, data.blockedByPolicy);
+                        return true;
+                    }
+
+
+
+
+
+                    case ON_COOKIES_READ_ORDINAL: {
+
+                        NetworkServiceClientOnCookiesReadParams data =
+                                NetworkServiceClientOnCookiesReadParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().onCookiesRead(data.processId, data.routingId, data.url, data.frameUrl, data.cookieList, data.blockedByPolicy);
+                        return true;
+                    }
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -199,57 +393,93 @@ OnSslCertificateErrorResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), NetworkServiceClient_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
-                    case ON_AUTH_REQUIRED_ORDINAL: {
-            
-                        NetworkServiceClientOnAuthRequiredParams data =
-                                NetworkServiceClientOnAuthRequiredParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().onAuthRequired(data.processId, data.routingId, data.url, data.firstAuthAttempt, data.authInfo, new NetworkServiceClientOnAuthRequiredResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
-                        return true;
-                    }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
                     case ON_CERTIFICATE_REQUESTED_ORDINAL: {
-            
+
                         NetworkServiceClientOnCertificateRequestedParams data =
                                 NetworkServiceClientOnCertificateRequestedParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().onCertificateRequested(data.processId, data.routingId, data.certInfo, new NetworkServiceClientOnCertificateRequestedResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+
+                        getImpl().onCertificateRequested(data.processId, data.routingId, data.requestId, data.certInfo, new NetworkServiceClientOnCertificateRequestedResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case ON_SSL_CERTIFICATE_ERROR_ORDINAL: {
-            
+
                         NetworkServiceClientOnSslCertificateErrorParams data =
                                 NetworkServiceClientOnSslCertificateErrorParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().onSslCertificateError(data.resourceType, data.url, data.processId, data.routingId, data.sslInfo, data.fatal, new NetworkServiceClientOnSslCertificateErrorResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+
+                        getImpl().onSslCertificateError(data.processId, data.routingId, data.requestId, data.resourceType, data.url, data.sslInfo, data.fatal, new NetworkServiceClientOnSslCertificateErrorResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
+
+
+
+
+
+
+
+                    case ON_FILE_UPLOAD_REQUESTED_ORDINAL: {
+
+                        NetworkServiceClientOnFileUploadRequestedParams data =
+                                NetworkServiceClientOnFileUploadRequestedParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().onFileUploadRequested(data.processId, data.async, data.filePaths, new NetworkServiceClientOnFileUploadRequestedResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
+
+
+
+
+
+
+
+
+
+                    case ON_LOADING_STATE_UPDATE_ORDINAL: {
+
+                        NetworkServiceClientOnLoadingStateUpdateParams data =
+                                NetworkServiceClientOnLoadingStateUpdateParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().onLoadingStateUpdate(data.infos, new NetworkServiceClientOnLoadingStateUpdateResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
+
+
+
+
+
+                    case ON_CLEAR_SITE_DATA_ORDINAL: {
+
+                        NetworkServiceClientOnClearSiteDataParams data =
+                                NetworkServiceClientOnClearSiteDataParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().onClearSiteData(data.processId, data.routingId, data.url, data.headerValue, data.loadFlags, new NetworkServiceClientOnClearSiteDataResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
                     default:
                         return false;
                 }
@@ -263,41 +493,43 @@ OnSslCertificateErrorResponse callback) {
 
     
     static final class NetworkServiceClientOnAuthRequiredParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 40;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
+
+        private static final int STRUCT_SIZE = 72;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(72, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int processId;
         public int routingId;
+        public int requestId;
         public org.chromium.url.mojom.Url url;
+        public org.chromium.url.mojom.Url siteForCookies;
         public boolean firstAuthAttempt;
         public AuthChallengeInfo authInfo;
-    
+        public int resourceType;
+        public UrlResponseHead head;
+        public AuthChallengeResponder authChallengeResponder;
+
         private NetworkServiceClientOnAuthRequiredParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceClientOnAuthRequiredParams() {
             this(0);
         }
-    
+
         public static NetworkServiceClientOnAuthRequiredParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceClientOnAuthRequiredParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceClientOnAuthRequiredParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -307,35 +539,59 @@ OnSslCertificateErrorResponse callback) {
             NetworkServiceClientOnAuthRequiredParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceClientOnAuthRequiredParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnAuthRequiredParams(elementsOrVersion);
+                    {
+                        
                     result.processId = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.routingId = decoder0.readInt(12);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    }
+                    {
+                        
+                    result.requestId = decoder0.readInt(16);
+                    }
+                    {
+                        
+                    result.firstAuthAttempt = decoder0.readBoolean(20, 0);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                     result.url = org.chromium.url.mojom.Url.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.firstAuthAttempt = decoder0.readBoolean(24, 0);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
+                    result.siteForCookies = org.chromium.url.mojom.Url.decode(decoder1);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(40, false);
                     result.authInfo = AuthChallengeInfo.decode(decoder1);
-                }
+                    }
+                    {
+                        
+                    result.resourceType = decoder0.readInt(48);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(56, true);
+                    result.head = UrlResponseHead.decode(decoder1);
+                    }
+                    {
+                        
+                    result.authChallengeResponder = decoder0.readServiceInterface(64, false, AuthChallengeResponder.MANAGER);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -345,205 +601,21 @@ OnSslCertificateErrorResponse callback) {
             
             encoder0.encode(this.routingId, 12);
             
-            encoder0.encode(this.url, 16, false);
+            encoder0.encode(this.requestId, 16);
             
-            encoder0.encode(this.firstAuthAttempt, 24, 0);
+            encoder0.encode(this.firstAuthAttempt, 20, 0);
             
-            encoder0.encode(this.authInfo, 32, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceClientOnAuthRequiredParams other = (NetworkServiceClientOnAuthRequiredParams) object;
-            if (this.processId!= other.processId)
-                return false;
-            if (this.routingId!= other.routingId)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.url, other.url))
-                return false;
-            if (this.firstAuthAttempt!= other.firstAuthAttempt)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.authInfo, other.authInfo))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.processId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.routingId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.url);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.firstAuthAttempt);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.authInfo);
-            return result;
-        }
-    }
-
-
-
-    
-    static final class NetworkServiceClientOnAuthRequiredResponseParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 16;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
-        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public AuthCredentials credentials;
-    
-        private NetworkServiceClientOnAuthRequiredResponseParams(int version) {
-            super(STRUCT_SIZE, version);
-        }
-    
-        public NetworkServiceClientOnAuthRequiredResponseParams() {
-            this(0);
-        }
-    
-        public static NetworkServiceClientOnAuthRequiredResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
-            return decode(new org.chromium.mojo.bindings.Decoder(message));
-        }
-    
-        /**
-         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
-         *
-         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
-         */
-        public static NetworkServiceClientOnAuthRequiredResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
-            return deserialize(new org.chromium.mojo.bindings.Message(
-                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
-        }
-    
-        @SuppressWarnings("unchecked")
-        public static NetworkServiceClientOnAuthRequiredResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
-            if (decoder0 == null) {
-                return null;
-            }
-            decoder0.increaseStackDepth();
-            NetworkServiceClientOnAuthRequiredResponseParams result;
-            try {
-                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceClientOnAuthRequiredResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, true);
-                    result.credentials = AuthCredentials.decode(decoder1);
-                }
-            } finally {
-                decoder0.decreaseStackDepth();
-            }
-            return result;
-        }
-    
-        @SuppressWarnings("unchecked")
-        @Override
-        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
-            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            encoder0.encode(this.url, 24, false);
             
-            encoder0.encode(this.credentials, 8, true);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceClientOnAuthRequiredResponseParams other = (NetworkServiceClientOnAuthRequiredResponseParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.credentials, other.credentials))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.credentials);
-            return result;
-        }
-    }
-
-    static class NetworkServiceClientOnAuthRequiredResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
-            implements org.chromium.mojo.bindings.MessageReceiver {
-        private final NetworkServiceClient.OnAuthRequiredResponse mCallback;
-
-        NetworkServiceClientOnAuthRequiredResponseParamsForwardToCallback(NetworkServiceClient.OnAuthRequiredResponse callback) {
-            this.mCallback = callback;
-        }
-
-        @Override
-        public boolean accept(org.chromium.mojo.bindings.Message message) {
-            try {
-                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
-                        message.asServiceMessage();
-                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
-                if (!header.validateHeader(ON_AUTH_REQUIRED_ORDINAL,
-                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
-                    return false;
-                }
-
-                NetworkServiceClientOnAuthRequiredResponseParams response = NetworkServiceClientOnAuthRequiredResponseParams.deserialize(messageWithHeader.getPayload());
-
-                mCallback.call(response.credentials);
-                return true;
-            } catch (org.chromium.mojo.bindings.DeserializationException e) {
-                return false;
-            }
-        }
-    }
-
-    static class NetworkServiceClientOnAuthRequiredResponseParamsProxyToResponder implements NetworkServiceClient.OnAuthRequiredResponse {
-
-        private final org.chromium.mojo.system.Core mCore;
-        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
-        private final long mRequestId;
-
-        NetworkServiceClientOnAuthRequiredResponseParamsProxyToResponder(
-                org.chromium.mojo.system.Core core,
-                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
-                long requestId) {
-            mCore = core;
-            mMessageReceiver = messageReceiver;
-            mRequestId = requestId;
-        }
-
-        @Override
-        public void call(AuthCredentials credentials) {
-            NetworkServiceClientOnAuthRequiredResponseParams _response = new NetworkServiceClientOnAuthRequiredResponseParams();
-
-            _response.credentials = credentials;
-
-            org.chromium.mojo.bindings.ServiceMessage _message =
-                    _response.serializeWithHeader(
-                            mCore,
-                            new org.chromium.mojo.bindings.MessageHeader(
-                                    ON_AUTH_REQUIRED_ORDINAL,
-                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
-                                    mRequestId));
-            mMessageReceiver.accept(_message);
+            encoder0.encode(this.siteForCookies, 32, false);
+            
+            encoder0.encode(this.authInfo, 40, false);
+            
+            encoder0.encode(this.resourceType, 48);
+            
+            encoder0.encode(this.head, 56, true);
+            
+            encoder0.encode(this.authChallengeResponder, 64, false, AuthChallengeResponder.MANAGER);
         }
     }
 
@@ -551,39 +623,37 @@ OnSslCertificateErrorResponse callback) {
 
     
     static final class NetworkServiceClientOnCertificateRequestedParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+
+        private static final int STRUCT_SIZE = 32;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int processId;
         public int routingId;
+        public int requestId;
         public SslCertRequestInfo certInfo;
-    
+
         private NetworkServiceClientOnCertificateRequestedParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceClientOnCertificateRequestedParams() {
             this(0);
         }
-    
+
         public static NetworkServiceClientOnCertificateRequestedParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceClientOnCertificateRequestedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceClientOnCertificateRequestedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -593,26 +663,32 @@ OnSslCertificateErrorResponse callback) {
             NetworkServiceClientOnCertificateRequestedParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceClientOnCertificateRequestedParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnCertificateRequestedParams(elementsOrVersion);
+                    {
+                        
                     result.processId = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.routingId = decoder0.readInt(12);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    }
+                    {
+                        
+                    result.requestId = decoder0.readInt(16);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                     result.certInfo = SslCertRequestInfo.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -622,41 +698,9 @@ OnSslCertificateErrorResponse callback) {
             
             encoder0.encode(this.routingId, 12);
             
-            encoder0.encode(this.certInfo, 16, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceClientOnCertificateRequestedParams other = (NetworkServiceClientOnCertificateRequestedParams) object;
-            if (this.processId!= other.processId)
-                return false;
-            if (this.routingId!= other.routingId)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.certInfo, other.certInfo))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.processId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.routingId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.certInfo);
-            return result;
+            encoder0.encode(this.requestId, 16);
+            
+            encoder0.encode(this.certInfo, 24, false);
         }
     }
 
@@ -664,7 +708,7 @@ OnSslCertificateErrorResponse callback) {
 
     
     static final class NetworkServiceClientOnCertificateRequestedResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 40;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
@@ -672,32 +716,29 @@ OnSslCertificateErrorResponse callback) {
         public short[] algorithmPreferences;
         public SslPrivateKey sslPrivateKey;
         public boolean cancelCertificateSelection;
-    
+
         private NetworkServiceClientOnCertificateRequestedResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceClientOnCertificateRequestedResponseParams() {
             this(0);
         }
-    
+
         public static NetworkServiceClientOnCertificateRequestedResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceClientOnCertificateRequestedResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceClientOnCertificateRequestedResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -707,30 +748,32 @@ OnSslCertificateErrorResponse callback) {
             NetworkServiceClientOnCertificateRequestedResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceClientOnCertificateRequestedResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnCertificateRequestedResponseParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.x509Certificate = X509Certificate.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.algorithmPreferences = decoder0.readShorts(16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.sslPrivateKey = decoder0.readServiceInterface(24, false, SslPrivateKey.MANAGER);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.cancelCertificateSelection = decoder0.readBoolean(32, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -743,43 +786,6 @@ OnSslCertificateErrorResponse callback) {
             encoder0.encode(this.sslPrivateKey, 24, false, SslPrivateKey.MANAGER);
             
             encoder0.encode(this.cancelCertificateSelection, 32, 0);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceClientOnCertificateRequestedResponseParams other = (NetworkServiceClientOnCertificateRequestedResponseParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.x509Certificate, other.x509Certificate))
-                return false;
-            if (!java.util.Arrays.equals(this.algorithmPreferences, other.algorithmPreferences))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sslPrivateKey, other.sslPrivateKey))
-                return false;
-            if (this.cancelCertificateSelection!= other.cancelCertificateSelection)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.x509Certificate);
-            result = prime * result + java.util.Arrays.hashCode(this.algorithmPreferences);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sslPrivateKey);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cancelCertificateSelection);
-            return result;
         }
     }
 
@@ -854,42 +860,40 @@ OnSslCertificateErrorResponse callback) {
 
     
     static final class NetworkServiceClientOnSslCertificateErrorParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 40;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
+
+        private static final int STRUCT_SIZE = 48;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(48, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public int resourceType;
-        public org.chromium.url.mojom.Url url;
         public int processId;
         public int routingId;
+        public int requestId;
+        public int resourceType;
+        public org.chromium.url.mojom.Url url;
         public SslInfo sslInfo;
         public boolean fatal;
-    
+
         private NetworkServiceClientOnSslCertificateErrorParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceClientOnSslCertificateErrorParams() {
             this(0);
         }
-    
+
         public static NetworkServiceClientOnSslCertificateErrorParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceClientOnSslCertificateErrorParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceClientOnSslCertificateErrorParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -899,98 +903,63 @@ OnSslCertificateErrorResponse callback) {
             NetworkServiceClientOnSslCertificateErrorParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceClientOnSslCertificateErrorParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.resourceType = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.processId = decoder0.readInt(12);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnSslCertificateErrorParams(elementsOrVersion);
+                    {
+                        
+                    result.processId = decoder0.readInt(8);
+                    }
+                    {
+                        
+                    result.routingId = decoder0.readInt(12);
+                    }
+                    {
+                        
+                    result.requestId = decoder0.readInt(16);
+                    }
+                    {
+                        
+                    result.resourceType = decoder0.readInt(20);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                     result.url = org.chromium.url.mojom.Url.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.routingId = decoder0.readInt(24);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.fatal = decoder0.readBoolean(28, 0);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
                     result.sslInfo = SslInfo.decode(decoder1);
-                }
+                    }
+                    {
+                        
+                    result.fatal = decoder0.readBoolean(40, 0);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.resourceType, 8);
+            encoder0.encode(this.processId, 8);
             
-            encoder0.encode(this.processId, 12);
+            encoder0.encode(this.routingId, 12);
             
-            encoder0.encode(this.url, 16, false);
+            encoder0.encode(this.requestId, 16);
             
-            encoder0.encode(this.routingId, 24);
+            encoder0.encode(this.resourceType, 20);
             
-            encoder0.encode(this.fatal, 28, 0);
+            encoder0.encode(this.url, 24, false);
             
             encoder0.encode(this.sslInfo, 32, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceClientOnSslCertificateErrorParams other = (NetworkServiceClientOnSslCertificateErrorParams) object;
-            if (this.resourceType!= other.resourceType)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.url, other.url))
-                return false;
-            if (this.processId!= other.processId)
-                return false;
-            if (this.routingId!= other.routingId)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sslInfo, other.sslInfo))
-                return false;
-            if (this.fatal!= other.fatal)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.resourceType);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.url);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.processId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.routingId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sslInfo);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.fatal);
-            return result;
+            
+            encoder0.encode(this.fatal, 40, 0);
         }
     }
 
@@ -998,37 +967,34 @@ OnSslCertificateErrorResponse callback) {
 
     
     static final class NetworkServiceClientOnSslCertificateErrorResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int netError;
-    
+
         private NetworkServiceClientOnSslCertificateErrorResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceClientOnSslCertificateErrorResponseParams() {
             this(0);
         }
-    
+
         public static NetworkServiceClientOnSslCertificateErrorResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceClientOnSslCertificateErrorResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceClientOnSslCertificateErrorResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1038,51 +1004,25 @@ OnSslCertificateErrorResponse callback) {
             NetworkServiceClientOnSslCertificateErrorResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceClientOnSslCertificateErrorResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnSslCertificateErrorResponseParams(elementsOrVersion);
+                    {
+                        
                     result.netError = decoder0.readInt(8);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.netError, 8);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceClientOnSslCertificateErrorResponseParams other = (NetworkServiceClientOnSslCertificateErrorResponseParams) object;
-            if (this.netError!= other.netError)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.netError);
-            return result;
         }
     }
 
@@ -1141,6 +1081,866 @@ OnSslCertificateErrorResponse callback) {
                             mCore,
                             new org.chromium.mojo.bindings.MessageHeader(
                                     ON_SSL_CERTIFICATE_ERROR_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceClientOnFileUploadRequestedParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int processId;
+        public boolean async;
+        public org.chromium.mojo_base.mojom.FilePath[] filePaths;
+
+        private NetworkServiceClientOnFileUploadRequestedParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceClientOnFileUploadRequestedParams() {
+            this(0);
+        }
+
+        public static NetworkServiceClientOnFileUploadRequestedParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceClientOnFileUploadRequestedParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceClientOnFileUploadRequestedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceClientOnFileUploadRequestedParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnFileUploadRequestedParams(elementsOrVersion);
+                    {
+                        
+                    result.processId = decoder0.readInt(8);
+                    }
+                    {
+                        
+                    result.async = decoder0.readBoolean(12, 0);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    {
+                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                        result.filePaths = new org.chromium.mojo_base.mojom.FilePath[si1.elementsOrVersion];
+                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                            
+                            org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
+                            result.filePaths[i1] = org.chromium.mojo_base.mojom.FilePath.decode(decoder2);
+                        }
+                    }
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.processId, 8);
+            
+            encoder0.encode(this.async, 12, 0);
+            
+            if (this.filePaths == null) {
+                encoder0.encodeNullPointer(16, false);
+            } else {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.filePaths.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.filePaths.length; ++i0) {
+                    
+                    encoder1.encode(this.filePaths[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                }
+            }
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceClientOnFileUploadRequestedResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int netError;
+        public org.chromium.mojo_base.mojom.File[] files;
+
+        private NetworkServiceClientOnFileUploadRequestedResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceClientOnFileUploadRequestedResponseParams() {
+            this(0);
+        }
+
+        public static NetworkServiceClientOnFileUploadRequestedResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceClientOnFileUploadRequestedResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceClientOnFileUploadRequestedResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceClientOnFileUploadRequestedResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnFileUploadRequestedResponseParams(elementsOrVersion);
+                    {
+                        
+                    result.netError = decoder0.readInt(8);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    {
+                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                        result.files = new org.chromium.mojo_base.mojom.File[si1.elementsOrVersion];
+                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                            
+                            org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
+                            result.files[i1] = org.chromium.mojo_base.mojom.File.decode(decoder2);
+                        }
+                    }
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.netError, 8);
+            
+            if (this.files == null) {
+                encoder0.encodeNullPointer(16, false);
+            } else {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.files.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.files.length; ++i0) {
+                    
+                    encoder1.encode(this.files[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                }
+            }
+        }
+    }
+
+    static class NetworkServiceClientOnFileUploadRequestedResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final NetworkServiceClient.OnFileUploadRequestedResponse mCallback;
+
+        NetworkServiceClientOnFileUploadRequestedResponseParamsForwardToCallback(NetworkServiceClient.OnFileUploadRequestedResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(ON_FILE_UPLOAD_REQUESTED_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                NetworkServiceClientOnFileUploadRequestedResponseParams response = NetworkServiceClientOnFileUploadRequestedResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.netError, response.files);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class NetworkServiceClientOnFileUploadRequestedResponseParamsProxyToResponder implements NetworkServiceClient.OnFileUploadRequestedResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        NetworkServiceClientOnFileUploadRequestedResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(Integer netError, org.chromium.mojo_base.mojom.File[] files) {
+            NetworkServiceClientOnFileUploadRequestedResponseParams _response = new NetworkServiceClientOnFileUploadRequestedResponseParams();
+
+            _response.netError = netError;
+
+            _response.files = files;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    ON_FILE_UPLOAD_REQUESTED_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceClientOnCookieChangeParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 48;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(48, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int processId;
+        public int routingId;
+        public org.chromium.url.mojom.Url url;
+        public org.chromium.url.mojom.Url frameUrl;
+        public CanonicalCookie cookie;
+        public boolean blockedByPolicy;
+
+        private NetworkServiceClientOnCookieChangeParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceClientOnCookieChangeParams() {
+            this(0);
+        }
+
+        public static NetworkServiceClientOnCookieChangeParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceClientOnCookieChangeParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceClientOnCookieChangeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceClientOnCookieChangeParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnCookieChangeParams(elementsOrVersion);
+                    {
+                        
+                    result.processId = decoder0.readInt(8);
+                    }
+                    {
+                        
+                    result.routingId = decoder0.readInt(12);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    result.url = org.chromium.url.mojom.Url.decode(decoder1);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
+                    result.frameUrl = org.chromium.url.mojom.Url.decode(decoder1);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
+                    result.cookie = CanonicalCookie.decode(decoder1);
+                    }
+                    {
+                        
+                    result.blockedByPolicy = decoder0.readBoolean(40, 0);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.processId, 8);
+            
+            encoder0.encode(this.routingId, 12);
+            
+            encoder0.encode(this.url, 16, false);
+            
+            encoder0.encode(this.frameUrl, 24, false);
+            
+            encoder0.encode(this.cookie, 32, false);
+            
+            encoder0.encode(this.blockedByPolicy, 40, 0);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceClientOnCookiesReadParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 48;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(48, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int processId;
+        public int routingId;
+        public org.chromium.url.mojom.Url url;
+        public org.chromium.url.mojom.Url frameUrl;
+        public CanonicalCookie[] cookieList;
+        public boolean blockedByPolicy;
+
+        private NetworkServiceClientOnCookiesReadParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceClientOnCookiesReadParams() {
+            this(0);
+        }
+
+        public static NetworkServiceClientOnCookiesReadParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceClientOnCookiesReadParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceClientOnCookiesReadParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceClientOnCookiesReadParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnCookiesReadParams(elementsOrVersion);
+                    {
+                        
+                    result.processId = decoder0.readInt(8);
+                    }
+                    {
+                        
+                    result.routingId = decoder0.readInt(12);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    result.url = org.chromium.url.mojom.Url.decode(decoder1);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
+                    result.frameUrl = org.chromium.url.mojom.Url.decode(decoder1);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
+                    {
+                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                        result.cookieList = new CanonicalCookie[si1.elementsOrVersion];
+                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                            
+                            org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
+                            result.cookieList[i1] = CanonicalCookie.decode(decoder2);
+                        }
+                    }
+                    }
+                    {
+                        
+                    result.blockedByPolicy = decoder0.readBoolean(40, 0);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.processId, 8);
+            
+            encoder0.encode(this.routingId, 12);
+            
+            encoder0.encode(this.url, 16, false);
+            
+            encoder0.encode(this.frameUrl, 24, false);
+            
+            if (this.cookieList == null) {
+                encoder0.encodeNullPointer(32, false);
+            } else {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.cookieList.length, 32, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.cookieList.length; ++i0) {
+                    
+                    encoder1.encode(this.cookieList[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                }
+            }
+            
+            encoder0.encode(this.blockedByPolicy, 40, 0);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceClientOnLoadingStateUpdateParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public LoadInfo[] infos;
+
+        private NetworkServiceClientOnLoadingStateUpdateParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceClientOnLoadingStateUpdateParams() {
+            this(0);
+        }
+
+        public static NetworkServiceClientOnLoadingStateUpdateParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceClientOnLoadingStateUpdateParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceClientOnLoadingStateUpdateParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceClientOnLoadingStateUpdateParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnLoadingStateUpdateParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    {
+                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                        result.infos = new LoadInfo[si1.elementsOrVersion];
+                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                            
+                            org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
+                            result.infos[i1] = LoadInfo.decode(decoder2);
+                        }
+                    }
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            if (this.infos == null) {
+                encoder0.encodeNullPointer(8, false);
+            } else {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.infos.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.infos.length; ++i0) {
+                    
+                    encoder1.encode(this.infos[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                }
+            }
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceClientOnLoadingStateUpdateResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 8;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+
+        private NetworkServiceClientOnLoadingStateUpdateResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceClientOnLoadingStateUpdateResponseParams() {
+            this(0);
+        }
+
+        public static NetworkServiceClientOnLoadingStateUpdateResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceClientOnLoadingStateUpdateResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceClientOnLoadingStateUpdateResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceClientOnLoadingStateUpdateResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnLoadingStateUpdateResponseParams(elementsOrVersion);
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+        }
+    }
+
+    static class NetworkServiceClientOnLoadingStateUpdateResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final NetworkServiceClient.OnLoadingStateUpdateResponse mCallback;
+
+        NetworkServiceClientOnLoadingStateUpdateResponseParamsForwardToCallback(NetworkServiceClient.OnLoadingStateUpdateResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(ON_LOADING_STATE_UPDATE_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                mCallback.call();
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class NetworkServiceClientOnLoadingStateUpdateResponseParamsProxyToResponder implements NetworkServiceClient.OnLoadingStateUpdateResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        NetworkServiceClientOnLoadingStateUpdateResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call() {
+            NetworkServiceClientOnLoadingStateUpdateResponseParams _response = new NetworkServiceClientOnLoadingStateUpdateResponseParams();
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    ON_LOADING_STATE_UPDATE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceClientOnClearSiteDataParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 40;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int processId;
+        public int routingId;
+        public org.chromium.url.mojom.Url url;
+        public String headerValue;
+        public int loadFlags;
+
+        private NetworkServiceClientOnClearSiteDataParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceClientOnClearSiteDataParams() {
+            this(0);
+        }
+
+        public static NetworkServiceClientOnClearSiteDataParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceClientOnClearSiteDataParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceClientOnClearSiteDataParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceClientOnClearSiteDataParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnClearSiteDataParams(elementsOrVersion);
+                    {
+                        
+                    result.processId = decoder0.readInt(8);
+                    }
+                    {
+                        
+                    result.routingId = decoder0.readInt(12);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    result.url = org.chromium.url.mojom.Url.decode(decoder1);
+                    }
+                    {
+                        
+                    result.headerValue = decoder0.readString(24, false);
+                    }
+                    {
+                        
+                    result.loadFlags = decoder0.readInt(32);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.processId, 8);
+            
+            encoder0.encode(this.routingId, 12);
+            
+            encoder0.encode(this.url, 16, false);
+            
+            encoder0.encode(this.headerValue, 24, false);
+            
+            encoder0.encode(this.loadFlags, 32);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceClientOnClearSiteDataResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 8;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+
+        private NetworkServiceClientOnClearSiteDataResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceClientOnClearSiteDataResponseParams() {
+            this(0);
+        }
+
+        public static NetworkServiceClientOnClearSiteDataResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceClientOnClearSiteDataResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceClientOnClearSiteDataResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceClientOnClearSiteDataResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceClientOnClearSiteDataResponseParams(elementsOrVersion);
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+        }
+    }
+
+    static class NetworkServiceClientOnClearSiteDataResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final NetworkServiceClient.OnClearSiteDataResponse mCallback;
+
+        NetworkServiceClientOnClearSiteDataResponseParamsForwardToCallback(NetworkServiceClient.OnClearSiteDataResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(ON_CLEAR_SITE_DATA_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                mCallback.call();
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class NetworkServiceClientOnClearSiteDataResponseParamsProxyToResponder implements NetworkServiceClient.OnClearSiteDataResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        NetworkServiceClientOnClearSiteDataResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call() {
+            NetworkServiceClientOnClearSiteDataResponseParams _response = new NetworkServiceClientOnClearSiteDataResponseParams();
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    ON_CLEAR_SITE_DATA_ORDINAL,
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
                                     mRequestId));
             mMessageReceiver.accept(_message);

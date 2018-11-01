@@ -8,6 +8,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
@@ -50,11 +51,9 @@ import java.util.Set;
 public class SuggestionsRecyclerView extends RecyclerView {
     private static final Interpolator DISMISS_INTERPOLATOR = new FastOutLinearInInterpolator();
     private static final int DISMISS_ANIMATION_TIME_MS = 300;
-    private static final int NEW_CONTENT_HIGHLIGHT_DURATION_MS = 3000;
 
     private final GestureDetector mGestureDetector;
     private final LinearLayoutManager mLayoutManager;
-    private final SuggestionsMetrics.ScrollEventReporter mScrollEventReporter;
 
     // The ScrollToLoadListener triggers loading more content when the user is near the end.
     @Nullable private ScrollToLoadListener mScrollToLoadListener;
@@ -76,7 +75,6 @@ public class SuggestionsRecyclerView extends RecyclerView {
      * Whether the {@link SuggestionsRecyclerView} and its children should react to touch events.
      */
     private boolean mTouchEnabled = true;
-    private boolean mScrollEnabled = true;
 
     /** The ui config for this view. */
     private UiConfig mUiConfig;
@@ -116,8 +114,7 @@ public class SuggestionsRecyclerView extends RecyclerView {
         ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchCallbacks());
         helper.attachToRecyclerView(this);
 
-        mScrollEventReporter = new SuggestionsMetrics.ScrollEventReporter();
-        addOnScrollListener(mScrollEventReporter);
+        addOnScrollListener(new SuggestionsMetrics.ScrollEventReporter());
     }
 
     public boolean isFirstItemVisible() {
@@ -147,24 +144,16 @@ public class SuggestionsRecyclerView extends RecyclerView {
         return super.onInterceptTouchEvent(ev);
     }
 
-    /**
-     * Toggle whether scrolling is enabled.
-     */
-    public void setScrollEnabled(boolean enabled) {
-        mScrollEnabled = enabled;
-    }
-
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (ev.getActionMasked() == MotionEvent.ACTION_DOWN && !mScrollEnabled) {
-            setLayoutFrozen(true);
-        } else if (ev.getActionMasked() == MotionEvent.ACTION_UP
+        if (ev.getActionMasked() == MotionEvent.ACTION_UP
                 || ev.getActionMasked() == MotionEvent.ACTION_CANCEL) {
             setLayoutFrozen(false);
         }
         return super.dispatchTouchEvent(ev);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         if (!getTouchEnabled()) return false;
@@ -204,14 +193,6 @@ public class SuggestionsRecyclerView extends RecyclerView {
 
         // Close the Context Menu as it may have moved (https://crbug.com/642688).
         if (mContextMenuManager != null) mContextMenuManager.closeContextMenu();
-    }
-
-    /** Highlights the current length of the view by temporarily showing the scrollbar. */
-    public void highlightContentLength() {
-        int defaultDelay = getScrollBarDefaultDelayBeforeFade();
-        setScrollBarDefaultDelayBeforeFade(NEW_CONTENT_HIGHLIGHT_DURATION_MS);
-        awakenScrollBars();
-        setScrollBarDefaultDelayBeforeFade(defaultDelay);
     }
 
     @Override
@@ -336,32 +317,6 @@ public class SuggestionsRecyclerView extends RecyclerView {
     }
 
     /**
-     * To be triggered when a snippet is bound to a ViewHolder.
-     */
-    public void onCardBound(CardViewHolder cardViewHolder) {}
-
-    /**
-     * To be triggered when a snippet impression is triggered.
-     */
-    public void onSnippetImpression() {}
-
-    /**
-     * To be triggered when a card is tapped, optionally intercepting the event.
-     * @return {@code true} when the holder should not be notified about the tap.
-     */
-    public boolean interceptCardTapped(CardViewHolder cardViewHolder) {
-        return false;
-    }
-
-    public int getCompensationHeight() {
-        return mCompensationHeight;
-    }
-
-    public SuggestionsMetrics.ScrollEventReporter getScrollEventReporter() {
-        return mScrollEventReporter;
-    }
-
-    /**
      * Resets a card's properties affected by swipe to dismiss. Intended to be used as
      * {@link NewTabPageViewHolder.PartialBindCallback}
      */
@@ -372,7 +327,7 @@ public class SuggestionsRecyclerView extends RecyclerView {
     /**
      * Sets the ScrollToLoadListener for the RecyclerView.
      */
-    public void setScrollToLoadListener(ScrollToLoadListener scrollToLoadListener) {
+    public void setScrollToLoadListener(@Nullable ScrollToLoadListener scrollToLoadListener) {
         mScrollToLoadListener = scrollToLoadListener;
         addOnScrollListener(mScrollToLoadListener);
     }

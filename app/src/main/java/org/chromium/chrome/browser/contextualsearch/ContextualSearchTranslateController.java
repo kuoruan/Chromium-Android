@@ -8,7 +8,7 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
-import org.chromium.chrome.browser.ChromeActivity;
+import org.chromium.base.ContextUtils;
 import org.chromium.ui.UiUtils;
 
 import java.util.ArrayList;
@@ -23,7 +23,6 @@ import java.util.Locale;
 public class ContextualSearchTranslateController  {
     private static final int LOCALE_MIN_LENGTH = 2;
 
-    private final ChromeActivity mActivity;
     private final ContextualSearchPolicy mPolicy;
     private final ContextualSearchTranslateInterface mHost;
 
@@ -31,9 +30,8 @@ public class ContextualSearchTranslateController  {
     private String mTranslateServiceTargetLanguage;
     private String mAcceptLanguages;
 
-    ContextualSearchTranslateController(ChromeActivity activity, ContextualSearchPolicy policy,
-            ContextualSearchTranslateInterface hostInterface) {
-        mActivity = activity;
+    ContextualSearchTranslateController(
+            ContextualSearchPolicy policy, ContextualSearchTranslateInterface hostInterface) {
         mPolicy = policy;
         mHost = hostInterface;
     }
@@ -140,7 +138,7 @@ public class ContextualSearchTranslateController  {
             uniqueLanguages.add(trimLocaleToLanguage(primaryLanguage));
         }
         // Merge in the IME locales, if possible.
-        Context context = mActivity.getApplicationContext();
+        Context context = ContextUtils.getApplicationContext();
         if (context != null) {
             for (String locale : UiUtils.getIMELocales(context)) {
                 if (isValidLocale(locale)) uniqueLanguages.add(trimLocaleToLanguage(locale));

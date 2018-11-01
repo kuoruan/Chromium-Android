@@ -33,6 +33,7 @@ import android.widget.TextView;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.preferences.PreferenceUtils;
 import org.chromium.chrome.browser.sync.ProfileSyncService;
 import org.chromium.chrome.browser.widget.TintedImageButton;
 import org.chromium.components.sync.AndroidSyncSettings;
@@ -48,7 +49,7 @@ public class PasswordEntryEditor extends Fragment {
     // entries must not be overwritten.
     private static final int PASSWORD_ENTRY_ACTION_VIEWED = 0;
     private static final int PASSWORD_ENTRY_ACTION_DELETED = 1;
-    private static final int PASSWORD_ENTRY_ACTION_CANCELLED = 2;
+    // Value 2 used to mean 'cancel' and is now obsolete. See https://crbug.com/807577 for details.
     private static final int PASSWORD_ENTRY_ACTION_VIEWED_AFTER_SEARCH = 3;
     private static final int PASSWORD_ENTRY_ACTION_BOUNDARY = 4;
 
@@ -113,15 +114,20 @@ public class PasswordEntryEditor extends Fragment {
         getActivity().setTitle(R.string.password_entry_editor_title);
         mClipboard = (ClipboardManager) getActivity().getApplicationContext().getSystemService(
                 Context.CLIPBOARD_SERVICE);
-        mView = inflater.inflate(mException ? R.layout.password_entry_exception
+        View inflatedView =
+                inflater.inflate(mException ? R.layout.password_entry_exception
                                             : R.layout.password_entry_editor_interactive,
-                container, false);
+                        container, false);
+        mView = inflatedView.findViewById(R.id.scroll_view);
         getActivity().setTitle(R.string.password_entry_editor_title);
         mClipboard = (ClipboardManager) getActivity().getApplicationContext().getSystemService(
                 Context.CLIPBOARD_SERVICE);
         View urlRowsView = mView.findViewById(R.id.url_row);
         TextView dataView = urlRowsView.findViewById(R.id.password_entry_editor_row_data);
         dataView.setText(url);
+        mView.getViewTreeObserver().addOnScrollChangedListener(
+                PreferenceUtils.getShowShadowOnScrollListener(
+                        mView, inflatedView.findViewById(R.id.shadow)));
 
         hookupCopySiteButton(urlRowsView);
         if (!mException) {
@@ -179,14 +185,14 @@ public class PasswordEntryEditor extends Fragment {
                     "PasswordManager.Android.PasswordExceptionEntry", PASSWORD_ENTRY_ACTION_VIEWED,
                     PASSWORD_ENTRY_ACTION_BOUNDARY);
         }
-        return mView;
+        return inflatedView;
     }
 
     @Override
     public void onResume() {
         super.onResume();
         if (ReauthenticationManager.authenticationStillValid(
-                    ReauthenticationManager.REAUTH_SCOPE_ONE_AT_A_TIME)) {
+                    ReauthenticationManager.ReauthScope.ONE_AT_A_TIME)) {
             if (mViewButtonPressed) displayPassword();
 
             if (mCopyButtonPressed) copyPassword();
@@ -195,8 +201,8 @@ public class PasswordEntryEditor extends Fragment {
 
     private boolean isPasswordSyncingUser() {
         ProfileSyncService syncService = ProfileSyncService.get();
-        return (AndroidSyncSettings.isSyncEnabled(getActivity().getApplicationContext())
-                && syncService.isEngineInitialized() && !syncService.isUsingSecondaryPassphrase());
+        return (AndroidSyncSettings.isSyncEnabled() && syncService.isEngineInitialized()
+                && !syncService.isUsingSecondaryPassphrase());
     }
 
     @Override
@@ -368,14 +374,14 @@ public class PasswordEntryEditor extends Fragment {
                              R.string.password_entry_editor_set_lock_screen, Toast.LENGTH_LONG)
                         .show();
             } else if (ReauthenticationManager.authenticationStillValid(
-                               ReauthenticationManager.REAUTH_SCOPE_ONE_AT_A_TIME)) {
+                               ReauthenticationManager.ReauthScope.ONE_AT_A_TIME)) {
                 copyPassword();
             } else {
                 mCopyButtonPressed = true;
                 ReauthenticationManager.displayReauthenticationFragment(
                         R.string.lockscreen_description_copy,
                         R.id.password_entry_editor_interactive, getFragmentManager(),
-                        ReauthenticationManager.REAUTH_SCOPE_ONE_AT_A_TIME);
+                        ReauthenticationManager.ReauthScope.ONE_AT_A_TIME);
             }
         });
         viewPasswordButton.setOnClickListener(v -> {
@@ -389,14 +395,14 @@ public class PasswordEntryEditor extends Fragment {
                     == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD) {
                 hidePassword();
             } else if (ReauthenticationManager.authenticationStillValid(
-                               ReauthenticationManager.REAUTH_SCOPE_ONE_AT_A_TIME)) {
+                               ReauthenticationManager.ReauthScope.ONE_AT_A_TIME)) {
                 displayPassword();
             } else {
                 mViewButtonPressed = true;
                 ReauthenticationManager.displayReauthenticationFragment(
                         R.string.lockscreen_description_view,
                         R.id.password_entry_editor_interactive, getFragmentManager(),
-                        ReauthenticationManager.REAUTH_SCOPE_ONE_AT_A_TIME);
+                        ReauthenticationManager.ReauthScope.ONE_AT_A_TIME);
             }
         });
     }

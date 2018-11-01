@@ -17,7 +17,8 @@ import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
     TileSource.TOP_SITES, TileSource.SUGGESTIONS_SERVICE, TileSource.POPULAR,
-    TileSource.POPULAR_BAKED_IN, TileSource.WHITELIST, TileSource.HOMEPAGE, TileSource.LAST
+    TileSource.POPULAR_BAKED_IN, TileSource.CUSTOM_LINKS, TileSource.WHITELIST, TileSource.HOMEPAGE,
+    TileSource.LAST
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface TileSource {
@@ -38,12 +39,16 @@ public @interface TileSource {
    */
   int POPULAR_BAKED_IN = 3;
   /**
+   * Tile is a custom link.
+   */
+  int CUSTOM_LINKS = 4;
+  /**
    * Tile is on a custodian-managed whitelist.
    */
-  int WHITELIST = 4;
+  int WHITELIST = 5;
   /**
    * Tile containing the user-set home page is replacing the home page button.
    */
-  int HOMEPAGE = 5;
-  int LAST = 5;
+  int HOMEPAGE = 6;
+  int LAST = 6;
 }

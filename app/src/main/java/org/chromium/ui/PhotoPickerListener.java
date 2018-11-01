@@ -29,5 +29,5 @@ public interface PhotoPickerListener {
      *
      * @param photos The photos that were selected.
      */
-    void onPickerUserAction(Action action, String[] photos);
+    void onPhotoPickerUserAction(Action action, String[] photos);
 }

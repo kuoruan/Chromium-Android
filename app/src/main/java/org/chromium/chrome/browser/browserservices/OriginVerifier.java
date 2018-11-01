@@ -14,17 +14,21 @@ import android.support.customtabs.CustomTabsService.Relation;
 import android.support.v4.util.Pair;
 import android.text.TextUtils;
 
+import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.library_loader.LibraryProcessType;
+import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.profiles.Profile;
-import org.chromium.content.browser.BrowserStartupController;
+import org.chromium.content_public.browser.BrowserStartupController;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -34,6 +38,7 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -57,36 +62,39 @@ public class OriginVerifier {
     private static final String USE_AS_ORIGIN = "delegate_permission/common.use_as_origin";
     private static final String HANDLE_ALL_URLS = "delegate_permission/common.handle_all_urls";
 
-    private static Map<Pair<String, Integer>, Set<Uri>> sPackageToCachedOrigins;
+    private static Map<Pair<String, Integer>, Set<Origin>> sPackageToCachedOrigins;
     private final OriginVerificationListener mListener;
     private final String mPackageName;
     private final String mSignatureFingerprint;
     private final @Relation int mRelation;
     private long mNativeOriginVerifier = 0;
-    private Uri mOrigin;
+    private Origin mOrigin;
 
     /** Small helper class to post a result of origin verification. */
     private class VerifiedCallback implements Runnable {
         private final boolean mResult;
+        private final Boolean mOnline;
 
-        public VerifiedCallback(boolean result) {
-            this.mResult = result;
+        public VerifiedCallback(boolean result, Boolean online) {
+            mResult = result;
+            mOnline = online;
         }
 
         @Override
         public void run() {
-            originVerified(mResult);
+            originVerified(mResult, mOnline);
         }
     }
 
-    static Uri getPostMessageOriginFromVerifiedOrigin(String packageName, Uri verifiedOrigin) {
+    public static Uri getPostMessageUriFromVerifiedOrigin(String packageName,
+            Origin verifiedOrigin) {
         return Uri.parse(IntentHandler.ANDROID_APP_REFERRER_SCHEME + "://"
-                + verifiedOrigin.getHost() + "/" + packageName);
+                + verifiedOrigin.uri().getHost() + "/" + packageName);
     }
 
     /** Clears all known relations. */
     @VisibleForTesting
-    public static void reset() {
+    public static void clearCachedVerificationsForTesting() {
         ThreadUtils.assertOnUiThread();
         if (sPackageToCachedOrigins != null) sPackageToCachedOrigins.clear();
     }
@@ -98,17 +106,20 @@ public class OriginVerifier {
      * @param relation The Digital Asset Links relation verified.
      */
     public static void addVerifiedOriginForPackage(
-            String packageName, Uri origin, @Relation int relation) {
+            String packageName, Origin origin, @Relation int relation) {
+        Log.d(TAG, "Adding: %s for %s", packageName, origin);
         ThreadUtils.assertOnUiThread();
         if (sPackageToCachedOrigins == null) sPackageToCachedOrigins = new HashMap<>();
-        Set<Uri> cachedOrigins =
-                sPackageToCachedOrigins.get(new Pair<String, Integer>(packageName, relation));
+        Set<Origin> cachedOrigins =
+                sPackageToCachedOrigins.get(new Pair<>(packageName, relation));
         if (cachedOrigins == null) {
-            cachedOrigins = new HashSet<Uri>();
-            sPackageToCachedOrigins.put(
-                    new Pair<String, Integer>(packageName, relation), cachedOrigins);
+            cachedOrigins = new HashSet<>();
+            sPackageToCachedOrigins.put(new Pair<>(packageName, relation), cachedOrigins);
         }
         cachedOrigins.add(origin);
+
+        TrustedWebActivityClient.registerClient(ContextUtils.getApplicationContext(),
+                origin, packageName);
     }
 
     /**
@@ -121,11 +132,10 @@ public class OriginVerifier {
      * @param origin The origin to verify
      * @param relation The Digital Asset Links relation to verify for.
      */
-    public static boolean isValidOrigin(String packageName, Uri origin, @Relation int relation) {
+    public static boolean isValidOrigin(String packageName, Origin origin, @Relation int relation) {
         ThreadUtils.assertOnUiThread();
         if (sPackageToCachedOrigins == null) return false;
-        Set<Uri> cachedOrigins =
-                sPackageToCachedOrigins.get(new Pair<String, Integer>(packageName, relation));
+        Set<Origin> cachedOrigins = sPackageToCachedOrigins.get(new Pair<>(packageName, relation));
         if (cachedOrigins == null) return false;
         return cachedOrigins.contains(origin);
     }
@@ -139,13 +149,17 @@ public class OriginVerifier {
          * @param packageName The package name for the origin verification query for this result.
          * @param origin The origin that was declared on the query for this result.
          * @param verified Whether the given origin was verified to correspond to the given package.
+         * @param online Whether the device could connect to the internet to perform verification.
+         *               Will be {@code null} if internet was not required for check (eg
+         *               verification had already been attempted this Chrome lifetime and the
+         *               result was cached or the origin was not https).
          */
-        void onOriginVerified(String packageName, Uri origin, boolean verified);
+        void onOriginVerified(String packageName, Origin origin, boolean verified, Boolean online);
     }
 
     /**
      * Main constructor.
-     * Use {@link OriginVerifier#start(Uri)}
+     * Use {@link OriginVerifier#start(Origin)}
      * @param listener The listener who will get the verification result.
      * @param packageName The package for the Android application for verification.
      * @param relation Digital Asset Links {@link Relation} to use during verification.
@@ -164,19 +178,37 @@ public class OriginVerifier {
      * profile as context.
      * @param origin The postMessage origin the application is claiming to have. Can't be null.
      */
-    public void start(@NonNull Uri origin) {
+    public void start(@NonNull Origin origin) {
         ThreadUtils.assertOnUiThread();
         mOrigin = origin;
-        String scheme = mOrigin.getScheme();
+
+        // Website to app Digital Asset Link verification can be skipped for a specific URL by
+        // passing a command line flag to ease development.
+        String disableDalUrl = CommandLine.getInstance().getSwitchValue(
+                ChromeSwitches.DISABLE_DIGITAL_ASSET_LINK_VERIFICATION);
+        if (!TextUtils.isEmpty(disableDalUrl)
+                && mOrigin.equals(new Origin(disableDalUrl))) {
+            Log.i(TAG, "Verification skipped for %s due to command line flag.", origin);
+            ThreadUtils.runOnUiThread(new VerifiedCallback(true, null));
+            return;
+        }
+
+        String scheme = mOrigin.uri().getScheme();
         if (TextUtils.isEmpty(scheme)
                 || !UrlConstants.HTTPS_SCHEME.equals(scheme.toLowerCase(Locale.US))) {
-            ThreadUtils.runOnUiThread(new VerifiedCallback(false));
+            Log.i(TAG, "Verification failed for %s as not https.", origin);
+            BrowserServicesMetrics.recordVerificationResult(
+                    BrowserServicesMetrics.VerificationResult.HTTPS_FAILURE);
+            ThreadUtils.runOnUiThread(new VerifiedCallback(false, null));
             return;
         }
 
         // If this origin is cached as verified already, use that.
         if (isValidOrigin(mPackageName, origin, mRelation)) {
-            ThreadUtils.runOnUiThread(new VerifiedCallback(true));
+            Log.i(TAG, "Verification succeeded for %s, it was cached.", origin);
+            BrowserServicesMetrics.recordVerificationResult(
+                    BrowserServicesMetrics.VerificationResult.CACHED_SUCCESS);
+            ThreadUtils.runOnUiThread(new VerifiedCallback(true, null));
             return;
         }
         if (mNativeOriginVerifier != 0) cleanUp();
@@ -199,9 +231,14 @@ public class OriginVerifier {
                 assert false;
                 break;
         }
-        boolean success = nativeVerifyOrigin(mNativeOriginVerifier, mPackageName,
+
+        boolean requestSent = nativeVerifyOrigin(mNativeOriginVerifier, mPackageName,
                 mSignatureFingerprint, mOrigin.toString(), relationship);
-        if (!success) ThreadUtils.runOnUiThread(new VerifiedCallback(false));
+        if (!requestSent) {
+            BrowserServicesMetrics.recordVerificationResult(
+                    BrowserServicesMetrics.VerificationResult.REQUEST_FAILURE);
+            ThreadUtils.runOnUiThread(new VerifiedCallback(false, false));
+        }
     }
 
     /**
@@ -270,14 +307,94 @@ public class OriginVerifier {
         return hexString.toString();
     }
 
+    /** Called asynchronously by nativeVerifyOrigin. */
     @CalledByNative
-    private void originVerified(boolean originVerified) {
+    private void onOriginVerificationResult(int result) {
+        switch (result) {
+            case RelationshipCheckResult.SUCCESS:
+                BrowserServicesMetrics.recordVerificationResult(
+                        BrowserServicesMetrics.VerificationResult.ONLINE_SUCCESS);
+                originVerified(true, true);
+                break;
+            case RelationshipCheckResult.FAILURE:
+                BrowserServicesMetrics.recordVerificationResult(
+                        BrowserServicesMetrics.VerificationResult.ONLINE_FAILURE);
+                originVerified(false, true);
+                break;
+            case RelationshipCheckResult.NO_CONNECTION:
+                Log.i(TAG, "Device is offline, checking saved verification result.");
+                checkForSavedResult();
+                break;
+            default:
+                assert false;
+        }
+    }
+
+    /** Deal with the result of an Origin check. Will be called on UI Thread. */
+    private void originVerified(boolean originVerified, Boolean online) {
+        Log.i(TAG, "Verification %s.", (originVerified ? "succeeded" : "failed"));
         if (originVerified) {
             addVerifiedOriginForPackage(mPackageName, mOrigin, mRelation);
-            mOrigin = getPostMessageOriginFromVerifiedOrigin(mPackageName, mOrigin);
         }
-        if (mListener != null) mListener.onOriginVerified(mPackageName, mOrigin, originVerified);
+
+        // We save the result even if there is a failure as a way of overwriting a previously
+        // successfully verified result that fails on a subsequent check.
+        saveVerificationResult(originVerified);
+
+        if (mListener != null) {
+            mListener.onOriginVerified(mPackageName, mOrigin, originVerified, online);
+        }
         cleanUp();
+    }
+
+    /**
+     * Saves the result of a verification to Preferences so we can reuse it when offline.
+     */
+    private void saveVerificationResult(boolean originVerified) {
+        String link = relationshipToString(mPackageName, mOrigin, mRelation);
+        Set<String> savedLinks;
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+            savedLinks = ChromePreferenceManager.getInstance().getVerifiedDigitalAssetLinks();
+        }
+        if (originVerified) {
+            savedLinks.add(link);
+        } else {
+            savedLinks.remove(link);
+        }
+        ChromePreferenceManager.getInstance().setVerifiedDigitalAssetLinks(savedLinks);
+    }
+
+    /**
+     * Checks for a previously saved verification result.
+     */
+    private void checkForSavedResult() {
+        String link = relationshipToString(mPackageName, mOrigin, mRelation);
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+            Set<String> savedLinks =
+                    ChromePreferenceManager.getInstance().getVerifiedDigitalAssetLinks();
+            boolean verified = savedLinks.contains(link);
+
+            BrowserServicesMetrics.recordVerificationResult(verified
+                            ? BrowserServicesMetrics.VerificationResult.OFFLINE_SUCCESS
+                            : BrowserServicesMetrics.VerificationResult.OFFLINE_FAILURE);
+
+            originVerified(verified, false);
+        }
+    }
+
+    private static String relationshipToString(String packageName, Origin origin, int relation) {
+        // Neither package names nor origins contain commas.
+        return packageName + "," + origin + "," + relation;
+    }
+
+    /**
+     * Removes any data about sites visited from static variables and Android Preferences.
+     */
+    @CalledByNative
+    public static void clearBrowsingData() {
+        ThreadUtils.assertOnUiThread();
+        if (sPackageToCachedOrigins != null) sPackageToCachedOrigins.clear();
+        ChromePreferenceManager.getInstance().setVerifiedDigitalAssetLinks(Collections.emptySet());
     }
 
     private native long nativeInit(Profile profile);

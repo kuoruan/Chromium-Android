@@ -20,6 +20,9 @@ package org.chromium.chrome.browser.omnibox.geo;
 option java_outer_classname = "PartnerLocationDescriptor";
 option java_package = "org.chromium.chrome.browser.omnibox.geo";
 
+// TODO(jkrcal): Remove when protobuf 4.0 is out, https://crbug.com/800281.
+option optimize_for = LITE_RUNTIME;
+
 enum LocationRole {
   UNKNOWN_ROLE = 0;
   CURRENT_LOCATION = 1;

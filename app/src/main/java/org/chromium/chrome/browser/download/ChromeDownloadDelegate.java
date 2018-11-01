@@ -9,21 +9,21 @@ import android.app.DownloadManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Pair;
 import android.webkit.MimeTypeMap;
 import android.webkit.URLUtil;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.ui.base.PermissionCallback;
 import org.chromium.ui.base.WindowAndroid;
-import org.chromium.ui.base.WindowAndroid.PermissionCallback;
 
 import java.io.File;
 import java.util.Arrays;
@@ -78,9 +78,9 @@ public class ChromeDownloadDelegate {
         assert !TextUtils.isEmpty(fileName);
         final String newMimeType =
                 remapGenericMimeType(downloadInfo.getMimeType(), downloadInfo.getUrl(), fileName);
-        new AsyncTask<Void, Void, Pair<String, File>>() {
+        new AsyncTask<Pair<String, File>>() {
             @Override
-            protected Pair<String, File> doInBackground(Void... params) {
+            protected Pair<String, File> doInBackground() {
                 // Check to see if we have an SDCard.
                 String status = Environment.getExternalStorageState();
                 File fullDirPath = getDownloadDirectoryFullPath();
@@ -92,7 +92,7 @@ public class ChromeDownloadDelegate {
                 String externalStorageState = result.first;
                 File fullDirPath = result.second;
                 if (!checkExternalStorageAndNotify(
-                        fileName, fullDirPath, externalStorageState)) {
+                            downloadInfo, fullDirPath, externalStorageState)) {
                     return;
                 }
                 String url = sanitizeDownloadUrl(downloadInfo);
@@ -107,7 +107,8 @@ public class ChromeDownloadDelegate {
                 DownloadController.enqueueDownloadManagerRequest(newInfo);
                 DownloadController.closeTabIfBlank(mTab);
             }
-        }.execute();
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**
@@ -161,9 +162,9 @@ public class ChromeDownloadDelegate {
         if (overwrite) {
             // Android DownloadManager does not have an overwriting option.
             // We remove the file here instead.
-            new AsyncTask<Void, Void, Void>() {
+            new AsyncTask<Void>() {
                 @Override
-                public Void doInBackground(Void... params) {
+                public Void doInBackground() {
                     deleteFileForOverwrite(downloadInfo);
                     return null;
                 }
@@ -172,7 +173,8 @@ public class ChromeDownloadDelegate {
                 public void onPostExecute(Void args) {
                     DownloadController.enqueueDownloadManagerRequest(downloadInfo);
                 }
-            }.execute();
+            }
+                    .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         } else {
             DownloadController.enqueueDownloadManagerRequest(downloadInfo);
         }
@@ -187,11 +189,10 @@ public class ChromeDownloadDelegate {
      * @return Whether external storage is ok for downloading.
      */
     private boolean checkExternalStorageAndNotify(
-            String filename, File fullDirPath, String externalStorageStatus) {
+            DownloadInfo downloadInfo, File fullDirPath, String externalStorageStatus) {
         if (fullDirPath == null) {
             Log.e(TAG, "Download failed: no SD card");
-            alertDownloadFailure(
-                    filename, DownloadManager.ERROR_DEVICE_NOT_FOUND);
+            alertDownloadFailure(downloadInfo, DownloadManager.ERROR_DEVICE_NOT_FOUND);
             return false;
         }
         if (!externalStorageStatus.equals(Environment.MEDIA_MOUNTED)) {
@@ -203,7 +204,7 @@ public class ChromeDownloadDelegate {
             } else {
                 Log.e(TAG, "Download failed: no SD card");
             }
-            alertDownloadFailure(filename, reason);
+            alertDownloadFailure(downloadInfo, reason);
             return false;
         }
         return true;
@@ -212,11 +213,12 @@ public class ChromeDownloadDelegate {
     /**
      * Alerts user of download failure.
      *
-     * @param fileName Name of the download file.
+     * @param downloadInfo The associated download.
      * @param reason Reason of failure defined in {@link DownloadManager}
      */
-    private void alertDownloadFailure(String fileName, int reason) {
-        DownloadManagerService.getDownloadManagerService().onDownloadFailed(fileName, reason);
+    private void alertDownloadFailure(DownloadInfo downloadInfo, int reason) {
+        DownloadItem downloadItem = new DownloadItem(false, downloadInfo);
+        DownloadManagerService.getDownloadManagerService().onDownloadFailed(downloadItem, reason);
     }
 
     /**
@@ -282,8 +284,7 @@ public class ChromeDownloadDelegate {
         String path = uri.getPath();
         if (!OMADownloadHandler.isOMAFile(path)) return false;
         if (mTab == null) return true;
-        String fileName = URLUtil.guessFileName(
-                url, null, OMADownloadHandler.OMA_DRM_MESSAGE_MIME);
+        String fileName = URLUtil.guessFileName(url, null, OMADownloadHandler.OMA_DRM_MESSAGE_MIME);
         final DownloadInfo downloadInfo =
                 new DownloadInfo.Builder().setUrl(url).setFileName(fileName).build();
         WindowAndroid window = mTab.getWindowAndroid();

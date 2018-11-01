@@ -31,4 +31,21 @@ public interface GestureListenerManager {
      * @param listener Listener to remove.
      */
     void removeListener(GestureStateListener listener);
+
+    /**
+     * @return Whether a scroll targeting web content is in progress.
+     */
+    boolean isScrollInProgress();
+
+    /**
+     * Enable or disable multi-touch zoom support.
+     * @param supportsMultiTouchZoom {@code true} if the feature is enabled.
+     */
+    void updateMultiTouchZoomSupport(boolean supportsMultiTouchZoom);
+
+    /**
+     * Enable or disable double tap support.
+     * @param supportsDoubleTap {@code true} if the feature is enabled.
+     */
+    void updateDoubleTapSupport(boolean supportsDoubleTap);
 }

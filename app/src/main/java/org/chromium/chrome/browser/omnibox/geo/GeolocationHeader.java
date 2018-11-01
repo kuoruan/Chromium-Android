@@ -14,9 +14,8 @@ import android.os.Process;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.support.annotation.IntDef;
+import android.support.v4.util.ObjectsCompat;
 import android.util.Base64;
-
-import com.google.protobuf.nano.MessageNano;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.CollectionUtil;
@@ -30,7 +29,7 @@ import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.omnibox.geo.VisibleNetworks.VisibleCell;
 import org.chromium.chrome.browser.omnibox.geo.VisibleNetworks.VisibleWifi;
 import org.chromium.chrome.browser.preferences.website.ContentSetting;
-import org.chromium.chrome.browser.preferences.website.GeolocationInfo;
+import org.chromium.chrome.browser.preferences.website.PermissionInfo;
 import org.chromium.chrome.browser.preferences.website.WebsitePreferenceBridge;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.UrlUtilities;
@@ -61,118 +60,126 @@ public class GeolocationHeader {
     public static final int UMA_LOCATION_DISABLED_FOR_CHROME_APP = 5;
     public static final int UMA_MAX = 8;
 
-    // Values for the histogram Geolocation.Header.PermissionState.
-    // These are used to back an UMA histogram and so should be treated as append-only.
-    //
-    // In order to keep the names of these constants from being too long, the following were used:
-    // UMA_PERM to indicate UMA location permission related metrics,
-    // APP_YES (instead of APP_GRANTED) to indicate App permission granted,
-    // DOMAIN_YES (instead of DOMAIN_GRANTED) to indicate Domain permission granted.
-    public static final int UMA_PERM_UNKNOWN = 0;
-    public static final int UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_YES_LOCATION = 1;
-    public static final int UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_YES_NO_LOCATION = 2;
-    public static final int UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_PROMPT_LOCATION = 3;
-    public static final int UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_PROMPT_NO_LOCATION = 4;
-    public static final int UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_BLOCKED = 5;
-    public static final int UMA_PERM_HIGH_ACCURACY_APP_PROMPT_DOMAIN_YES = 6;
-    public static final int UMA_PERM_HIGH_ACCURACY_APP_PROMPT_DOMAIN_PROMPT = 7;
-    public static final int UMA_PERM_HIGH_ACCURACY_APP_PROMPT_DOMAIN_BLOCKED = 8;
-    public static final int UMA_PERM_HIGH_ACCURACY_APP_BLOCKED_DOMAIN_YES = 9;
-    public static final int UMA_PERM_HIGH_ACCURACY_APP_BLOCKED_DOMAIN_PROMPT = 10;
-    public static final int UMA_PERM_HIGH_ACCURACY_APP_BLOCKED_DOMAIN_BLOCKED = 11;
-    public static final int UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_YES_LOCATION = 12;
-    public static final int UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_YES_NO_LOCATION = 13;
-    public static final int UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_PROMPT_LOCATION = 14;
-    public static final int UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_PROMPT_NO_LOCATION = 15;
-    public static final int UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_BLOCKED = 16;
-    public static final int UMA_PERM_BATTERY_SAVING_APP_PROMPT_DOMAIN_YES = 17;
-    public static final int UMA_PERM_BATTERY_SAVING_APP_PROMPT_DOMAIN_PROMPT = 18;
-    public static final int UMA_PERM_BATTERY_SAVING_APP_PROMPT_DOMAIN_BLOCKED = 19;
-    public static final int UMA_PERM_BATTERY_SAVING_APP_BLOCKED_DOMAIN_YES = 20;
-    public static final int UMA_PERM_BATTERY_SAVING_APP_BLOCKED_DOMAIN_PROMPT = 21;
-    public static final int UMA_PERM_BATTERY_SAVING_APP_BLOCKED_DOMAIN_BLOCKED = 22;
-    public static final int UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_YES_LOCATION = 23;
-    public static final int UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_YES_NO_LOCATION = 24;
-    public static final int UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_PROMPT_LOCATION = 25;
-    public static final int UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_PROMPT_NO_LOCATION = 26;
-    public static final int UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_BLOCKED = 27;
-    public static final int UMA_PERM_GPS_ONLY_APP_PROMPT_DOMAIN_YES = 28;
-    public static final int UMA_PERM_GPS_ONLY_APP_PROMPT_DOMAIN_PROMPT = 29;
-    public static final int UMA_PERM_GPS_ONLY_APP_PROMPT_DOMAIN_BLOCKED = 30;
-    public static final int UMA_PERM_GPS_ONLY_APP_BLOCKED_DOMAIN_YES = 31;
-    public static final int UMA_PERM_GPS_ONLY_APP_BLOCKED_DOMAIN_PROMPT = 32;
-    public static final int UMA_PERM_GPS_ONLY_APP_BLOCKED_DOMAIN_BLOCKED = 33;
-    public static final int UMA_PERM_MASTER_OFF_APP_YES_DOMAIN_YES = 34;
-    public static final int UMA_PERM_MASTER_OFF_APP_YES_DOMAIN_PROMPT = 35;
-    public static final int UMA_PERM_MASTER_OFF_APP_YES_DOMAIN_BLOCKED = 36;
-    public static final int UMA_PERM_MASTER_OFF_APP_PROMPT_DOMAIN_YES = 37;
-    public static final int UMA_PERM_MASTER_OFF_APP_PROMPT_DOMAIN_PROMPT = 38;
-    public static final int UMA_PERM_MASTER_OFF_APP_PROMPT_DOMAIN_BLOCKED = 39;
-    public static final int UMA_PERM_MASTER_OFF_APP_BLOCKED_DOMAIN_YES = 40;
-    public static final int UMA_PERM_MASTER_OFF_APP_BLOCKED_DOMAIN_PROMPT = 41;
-    public static final int UMA_PERM_MASTER_OFF_APP_BLOCKED_DOMAIN_BLOCKED = 42;
-    public static final int UMA_PERM_UNSUITABLE_URL = 43;
-    public static final int UMA_PERM_NOT_HTTPS = 44;
-    public static final int UMA_PERM_COUNT = 45;
+    @IntDef({UmaPermission.UNKNOWN, UmaPermission.HIGH_ACCURACY_APP_YES_DOMAIN_YES_LOCATION,
+            UmaPermission.HIGH_ACCURACY_APP_YES_DOMAIN_YES_NO_LOCATION,
+            UmaPermission.HIGH_ACCURACY_APP_YES_DOMAIN_PROMPT_LOCATION,
+            UmaPermission.HIGH_ACCURACY_APP_YES_DOMAIN_PROMPT_NO_LOCATION,
+            UmaPermission.HIGH_ACCURACY_APP_YES_DOMAIN_BLOCKED,
+            UmaPermission.HIGH_ACCURACY_APP_PROMPT_DOMAIN_YES,
+            UmaPermission.HIGH_ACCURACY_APP_PROMPT_DOMAIN_PROMPT,
+            UmaPermission.HIGH_ACCURACY_APP_PROMPT_DOMAIN_BLOCKED,
+            UmaPermission.HIGH_ACCURACY_APP_BLOCKED_DOMAIN_YES,
+            UmaPermission.HIGH_ACCURACY_APP_BLOCKED_DOMAIN_PROMPT,
+            UmaPermission.HIGH_ACCURACY_APP_BLOCKED_DOMAIN_BLOCKED,
+            UmaPermission.BATTERY_SAVING_APP_YES_DOMAIN_YES_LOCATION,
+            UmaPermission.BATTERY_SAVING_APP_YES_DOMAIN_YES_NO_LOCATION,
+            UmaPermission.BATTERY_SAVING_APP_YES_DOMAIN_PROMPT_LOCATION,
+            UmaPermission.BATTERY_SAVING_APP_YES_DOMAIN_PROMPT_NO_LOCATION,
+            UmaPermission.BATTERY_SAVING_APP_YES_DOMAIN_BLOCKED,
+            UmaPermission.BATTERY_SAVING_APP_PROMPT_DOMAIN_YES,
+            UmaPermission.BATTERY_SAVING_APP_PROMPT_DOMAIN_PROMPT,
+            UmaPermission.BATTERY_SAVING_APP_PROMPT_DOMAIN_BLOCKED,
+            UmaPermission.BATTERY_SAVING_APP_BLOCKED_DOMAIN_YES,
+            UmaPermission.BATTERY_SAVING_APP_BLOCKED_DOMAIN_PROMPT,
+            UmaPermission.BATTERY_SAVING_APP_BLOCKED_DOMAIN_BLOCKED,
+            UmaPermission.GPS_ONLY_APP_YES_DOMAIN_YES_LOCATION,
+            UmaPermission.GPS_ONLY_APP_YES_DOMAIN_YES_NO_LOCATION,
+            UmaPermission.GPS_ONLY_APP_YES_DOMAIN_PROMPT_LOCATION,
+            UmaPermission.GPS_ONLY_APP_YES_DOMAIN_PROMPT_NO_LOCATION,
+            UmaPermission.GPS_ONLY_APP_YES_DOMAIN_BLOCKED,
+            UmaPermission.GPS_ONLY_APP_PROMPT_DOMAIN_YES,
+            UmaPermission.GPS_ONLY_APP_PROMPT_DOMAIN_PROMPT,
+            UmaPermission.GPS_ONLY_APP_PROMPT_DOMAIN_BLOCKED,
+            UmaPermission.GPS_ONLY_APP_BLOCKED_DOMAIN_YES,
+            UmaPermission.GPS_ONLY_APP_BLOCKED_DOMAIN_PROMPT,
+            UmaPermission.GPS_ONLY_APP_BLOCKED_DOMAIN_BLOCKED,
+            UmaPermission.MASTER_OFF_APP_YES_DOMAIN_YES,
+            UmaPermission.MASTER_OFF_APP_YES_DOMAIN_PROMPT,
+            UmaPermission.MASTER_OFF_APP_YES_DOMAIN_BLOCKED,
+            UmaPermission.MASTER_OFF_APP_PROMPT_DOMAIN_YES,
+            UmaPermission.MASTER_OFF_APP_PROMPT_DOMAIN_PROMPT,
+            UmaPermission.MASTER_OFF_APP_PROMPT_DOMAIN_BLOCKED,
+            UmaPermission.MASTER_OFF_APP_BLOCKED_DOMAIN_YES,
+            UmaPermission.MASTER_OFF_APP_BLOCKED_DOMAIN_PROMPT,
+            UmaPermission.MASTER_OFF_APP_BLOCKED_DOMAIN_BLOCKED, UmaPermission.UNSUITABLE_URL,
+            UmaPermission.NOT_HTTPS})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({UMA_PERM_UNKNOWN, UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_YES_LOCATION,
-            UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_YES_NO_LOCATION,
-            UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_PROMPT_LOCATION,
-            UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_PROMPT_NO_LOCATION,
-            UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_BLOCKED,
-            UMA_PERM_HIGH_ACCURACY_APP_PROMPT_DOMAIN_YES,
-            UMA_PERM_HIGH_ACCURACY_APP_PROMPT_DOMAIN_PROMPT,
-            UMA_PERM_HIGH_ACCURACY_APP_PROMPT_DOMAIN_BLOCKED,
-            UMA_PERM_HIGH_ACCURACY_APP_BLOCKED_DOMAIN_YES,
-            UMA_PERM_HIGH_ACCURACY_APP_BLOCKED_DOMAIN_PROMPT,
-            UMA_PERM_HIGH_ACCURACY_APP_BLOCKED_DOMAIN_BLOCKED,
-            UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_YES_LOCATION,
-            UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_YES_NO_LOCATION,
-            UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_PROMPT_LOCATION,
-            UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_PROMPT_NO_LOCATION,
-            UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_BLOCKED,
-            UMA_PERM_BATTERY_SAVING_APP_PROMPT_DOMAIN_YES,
-            UMA_PERM_BATTERY_SAVING_APP_PROMPT_DOMAIN_PROMPT,
-            UMA_PERM_BATTERY_SAVING_APP_PROMPT_DOMAIN_BLOCKED,
-            UMA_PERM_BATTERY_SAVING_APP_BLOCKED_DOMAIN_YES,
-            UMA_PERM_BATTERY_SAVING_APP_BLOCKED_DOMAIN_PROMPT,
-            UMA_PERM_BATTERY_SAVING_APP_BLOCKED_DOMAIN_BLOCKED,
-            UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_YES_LOCATION,
-            UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_YES_NO_LOCATION,
-            UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_PROMPT_LOCATION,
-            UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_PROMPT_NO_LOCATION,
-            UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_BLOCKED, UMA_PERM_GPS_ONLY_APP_PROMPT_DOMAIN_YES,
-            UMA_PERM_GPS_ONLY_APP_PROMPT_DOMAIN_PROMPT, UMA_PERM_GPS_ONLY_APP_PROMPT_DOMAIN_BLOCKED,
-            UMA_PERM_GPS_ONLY_APP_BLOCKED_DOMAIN_YES, UMA_PERM_GPS_ONLY_APP_BLOCKED_DOMAIN_PROMPT,
-            UMA_PERM_GPS_ONLY_APP_BLOCKED_DOMAIN_BLOCKED, UMA_PERM_MASTER_OFF_APP_YES_DOMAIN_YES,
-            UMA_PERM_MASTER_OFF_APP_YES_DOMAIN_PROMPT, UMA_PERM_MASTER_OFF_APP_YES_DOMAIN_BLOCKED,
-            UMA_PERM_MASTER_OFF_APP_PROMPT_DOMAIN_YES, UMA_PERM_MASTER_OFF_APP_PROMPT_DOMAIN_PROMPT,
-            UMA_PERM_MASTER_OFF_APP_PROMPT_DOMAIN_BLOCKED,
-            UMA_PERM_MASTER_OFF_APP_BLOCKED_DOMAIN_YES,
-            UMA_PERM_MASTER_OFF_APP_BLOCKED_DOMAIN_PROMPT,
-            UMA_PERM_MASTER_OFF_APP_BLOCKED_DOMAIN_BLOCKED, UMA_PERM_UNSUITABLE_URL,
-            UMA_PERM_NOT_HTTPS})
-    public @interface UmaPermission {}
+    public @interface UmaPermission {
+        // Values for the histogram Geolocation.Header.PermissionState.
+        // These are used to back an UMA histogram and so should be treated as append-only.
+        //
+        // In order to keep the names of constants from being too long, the following were used:
+        // APP_YES (instead of APP_GRANTED) to indicate App permission granted,
+        // DOMAIN_YES (instead of DOMAIN_GRANTED) to indicate Domain permission granted.
+        int UNKNOWN = 0;
+        int HIGH_ACCURACY_APP_YES_DOMAIN_YES_LOCATION = 1;
+        int HIGH_ACCURACY_APP_YES_DOMAIN_YES_NO_LOCATION = 2;
+        int HIGH_ACCURACY_APP_YES_DOMAIN_PROMPT_LOCATION = 3;
+        int HIGH_ACCURACY_APP_YES_DOMAIN_PROMPT_NO_LOCATION = 4;
+        int HIGH_ACCURACY_APP_YES_DOMAIN_BLOCKED = 5;
+        int HIGH_ACCURACY_APP_PROMPT_DOMAIN_YES = 6;
+        int HIGH_ACCURACY_APP_PROMPT_DOMAIN_PROMPT = 7;
+        int HIGH_ACCURACY_APP_PROMPT_DOMAIN_BLOCKED = 8;
+        int HIGH_ACCURACY_APP_BLOCKED_DOMAIN_YES = 9;
+        int HIGH_ACCURACY_APP_BLOCKED_DOMAIN_PROMPT = 10;
+        int HIGH_ACCURACY_APP_BLOCKED_DOMAIN_BLOCKED = 11;
+        int BATTERY_SAVING_APP_YES_DOMAIN_YES_LOCATION = 12;
+        int BATTERY_SAVING_APP_YES_DOMAIN_YES_NO_LOCATION = 13;
+        int BATTERY_SAVING_APP_YES_DOMAIN_PROMPT_LOCATION = 14;
+        int BATTERY_SAVING_APP_YES_DOMAIN_PROMPT_NO_LOCATION = 15;
+        int BATTERY_SAVING_APP_YES_DOMAIN_BLOCKED = 16;
+        int BATTERY_SAVING_APP_PROMPT_DOMAIN_YES = 17;
+        int BATTERY_SAVING_APP_PROMPT_DOMAIN_PROMPT = 18;
+        int BATTERY_SAVING_APP_PROMPT_DOMAIN_BLOCKED = 19;
+        int BATTERY_SAVING_APP_BLOCKED_DOMAIN_YES = 20;
+        int BATTERY_SAVING_APP_BLOCKED_DOMAIN_PROMPT = 21;
+        int BATTERY_SAVING_APP_BLOCKED_DOMAIN_BLOCKED = 22;
+        int GPS_ONLY_APP_YES_DOMAIN_YES_LOCATION = 23;
+        int GPS_ONLY_APP_YES_DOMAIN_YES_NO_LOCATION = 24;
+        int GPS_ONLY_APP_YES_DOMAIN_PROMPT_LOCATION = 25;
+        int GPS_ONLY_APP_YES_DOMAIN_PROMPT_NO_LOCATION = 26;
+        int GPS_ONLY_APP_YES_DOMAIN_BLOCKED = 27;
+        int GPS_ONLY_APP_PROMPT_DOMAIN_YES = 28;
+        int GPS_ONLY_APP_PROMPT_DOMAIN_PROMPT = 29;
+        int GPS_ONLY_APP_PROMPT_DOMAIN_BLOCKED = 30;
+        int GPS_ONLY_APP_BLOCKED_DOMAIN_YES = 31;
+        int GPS_ONLY_APP_BLOCKED_DOMAIN_PROMPT = 32;
+        int GPS_ONLY_APP_BLOCKED_DOMAIN_BLOCKED = 33;
+        int MASTER_OFF_APP_YES_DOMAIN_YES = 34;
+        int MASTER_OFF_APP_YES_DOMAIN_PROMPT = 35;
+        int MASTER_OFF_APP_YES_DOMAIN_BLOCKED = 36;
+        int MASTER_OFF_APP_PROMPT_DOMAIN_YES = 37;
+        int MASTER_OFF_APP_PROMPT_DOMAIN_PROMPT = 38;
+        int MASTER_OFF_APP_PROMPT_DOMAIN_BLOCKED = 39;
+        int MASTER_OFF_APP_BLOCKED_DOMAIN_YES = 40;
+        int MASTER_OFF_APP_BLOCKED_DOMAIN_PROMPT = 41;
+        int MASTER_OFF_APP_BLOCKED_DOMAIN_BLOCKED = 42;
+        int UNSUITABLE_URL = 43;
+        int NOT_HTTPS = 44;
+        int NUM_ENTRIES = 45;
+    }
 
-    @VisibleForTesting
-    static final int LOCATION_SOURCE_HIGH_ACCURACY = 0;
-    @VisibleForTesting
-    static final int LOCATION_SOURCE_BATTERY_SAVING = 1;
-    @VisibleForTesting
-    static final int LOCATION_SOURCE_GPS_ONLY = 2;
-    @VisibleForTesting
-    static final int LOCATION_SOURCE_MASTER_OFF = 3;
+    @IntDef({LocationSource.HIGH_ACCURACY, LocationSource.BATTERY_SAVING, LocationSource.GPS_ONLY,
+            LocationSource.MASTER_OFF})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({LOCATION_SOURCE_HIGH_ACCURACY, LOCATION_SOURCE_BATTERY_SAVING,
-            LOCATION_SOURCE_GPS_ONLY, LOCATION_SOURCE_MASTER_OFF})
-    private @interface LocationSource {}
+    public @interface LocationSource {
+        @VisibleForTesting
+        int HIGH_ACCURACY = 0;
+        @VisibleForTesting
+        int BATTERY_SAVING = 1;
+        @VisibleForTesting
+        int GPS_ONLY = 2;
+        @VisibleForTesting
+        int MASTER_OFF = 3;
+    }
 
-    private static final int PERMISSION_GRANTED = 0;
-    private static final int PERMISSION_PROMPT = 1;
-    private static final int PERMISSION_BLOCKED = 2;
+    @IntDef({Permission.GRANTED, Permission.PROMPT, Permission.BLOCKED})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({PERMISSION_GRANTED, PERMISSION_PROMPT, PERMISSION_BLOCKED})
-    private @interface Permission {}
+    private @interface Permission {
+        int GRANTED = 0;
+        int PROMPT = 1;
+        int BLOCKED = 2;
+    }
 
     /** The maximum value for the GeolocationHeader.TimeListening* histograms. */
     public static final int TIME_LISTENING_HISTOGRAM_MAX_MILLIS = 50 * 60 * 1000; // 50 minutes
@@ -180,14 +187,16 @@ public class GeolocationHeader {
     /** The maximum value for the GeolocationHeader.LocationAge* histograms. */
     public static final int LOCATION_AGE_HISTOGRAM_MAX_SECONDS = 30 * 24 * 60 * 60; // 30 days
 
-    private static final int HEADER_ENABLED = 0;
-    private static final int INCOGNITO = 1;
-    private static final int UNSUITABLE_URL = 2;
-    private static final int NOT_HTTPS = 3;
-    private static final int LOCATION_PERMISSION_BLOCKED = 4;
+    @IntDef({HeaderState.HEADER_ENABLED, HeaderState.INCOGNITO, HeaderState.UNSUITABLE_URL,
+            HeaderState.NOT_HTTPS, HeaderState.LOCATION_PERMISSION_BLOCKED})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({HEADER_ENABLED, INCOGNITO, UNSUITABLE_URL, NOT_HTTPS, LOCATION_PERMISSION_BLOCKED})
-    private @interface HeaderState {}
+    private @interface HeaderState {
+        int HEADER_ENABLED = 0;
+        int INCOGNITO = 1;
+        int UNSUITABLE_URL = 2;
+        int NOT_HTTPS = 3;
+        int LOCATION_PERMISSION_BLOCKED = 4;
+    }
 
     /** The maximum age in milliseconds of a location that we'll send in an X-Geo header. */
     private static final int MAX_LOCATION_AGE = 24 * 60 * 60 * 1000;  // 24 hours
@@ -240,26 +249,26 @@ public class GeolocationHeader {
     @HeaderState
     private static int geoHeaderStateForUrl(String url, boolean isIncognito, boolean recordUma) {
         // Only send X-Geo in normal mode.
-        if (isIncognito) return INCOGNITO;
+        if (isIncognito) return HeaderState.INCOGNITO;
 
         // Only send X-Geo header to Google domains.
-        if (!UrlUtilities.nativeIsGoogleSearchUrl(url)) return UNSUITABLE_URL;
+        if (!UrlUtilities.nativeIsGoogleSearchUrl(url)) return HeaderState.UNSUITABLE_URL;
 
         Uri uri = Uri.parse(url);
-        if (!UrlConstants.HTTPS_SCHEME.equals(uri.getScheme())) return NOT_HTTPS;
+        if (!UrlConstants.HTTPS_SCHEME.equals(uri.getScheme())) return HeaderState.NOT_HTTPS;
 
         if (!hasGeolocationPermission()) {
             if (recordUma) recordHistogram(UMA_LOCATION_DISABLED_FOR_CHROME_APP);
-            return LOCATION_PERMISSION_BLOCKED;
+            return HeaderState.LOCATION_PERMISSION_BLOCKED;
         }
 
         // Only send X-Geo header if the user hasn't disabled geolocation for url.
         if (isLocationDisabledForUrl(uri, isIncognito)) {
             if (recordUma) recordHistogram(UMA_LOCATION_DISABLED_FOR_GOOGLE_DOMAIN);
-            return LOCATION_PERMISSION_BLOCKED;
+            return HeaderState.LOCATION_PERMISSION_BLOCKED;
         }
 
-        return HEADER_ENABLED;
+        return HeaderState.HEADER_ENABLED;
     }
 
     /**
@@ -282,7 +291,7 @@ public class GeolocationHeader {
         VisibleNetworks visibleNetworksToAttach = null;
         long locationAge = Long.MAX_VALUE;
         @HeaderState int headerState = geoHeaderStateForUrl(url, isIncognito, true);
-        if (headerState == HEADER_ENABLED) {
+        if (headerState == HeaderState.HEADER_ENABLED) {
             locationToAttach =
                     GeolocationTracker.getLastKnownLocation(ContextUtils.getApplicationContext());
             if (locationToAttach == null) {
@@ -315,8 +324,8 @@ public class GeolocationHeader {
         recordPermissionHistogram(locationSource, appPermission, domainPermission,
                 locationToAttach != null, headerState);
 
-        if (locationSource != LOCATION_SOURCE_MASTER_OFF && appPermission != PERMISSION_BLOCKED
-                && domainPermission != PERMISSION_BLOCKED && !isIncognito) {
+        if (locationSource != LocationSource.MASTER_OFF && appPermission != Permission.BLOCKED
+                && domainPermission != Permission.BLOCKED && !isIncognito) {
             // Record the Location Age with a histogram.
             recordLocationAgeHistogram(locationSource, locationAge);
             long duration = sFirstLocationTime == Long.MAX_VALUE
@@ -375,13 +384,13 @@ public class GeolocationHeader {
     @Permission
     static int getGeolocationPermission(Tab tab) {
         if (sUseAppPermissionGrantedForTesting) {
-            return sAppPermissionGrantedForTesting ? PERMISSION_GRANTED : PERMISSION_BLOCKED;
+            return sAppPermissionGrantedForTesting ? Permission.GRANTED : Permission.BLOCKED;
         }
-        if (hasGeolocationPermission()) return PERMISSION_GRANTED;
+        if (hasGeolocationPermission()) return Permission.GRANTED;
         return tab.getWindowAndroid().canRequestPermission(
                        Manifest.permission.ACCESS_COARSE_LOCATION)
-                ? PERMISSION_PROMPT
-                : PERMISSION_BLOCKED;
+                ? Permission.PROMPT
+                : Permission.BLOCKED;
     }
 
     /**
@@ -405,9 +414,9 @@ public class GeolocationHeader {
      * geolocation infobar).
      */
     static ContentSetting locationContentSettingForUrl(Uri uri, boolean isIncognito) {
-        GeolocationInfo locationSettings = new GeolocationInfo(uri.toString(), null, isIncognito);
-        ContentSetting locationPermission = locationSettings.getContentSetting();
-        return locationPermission;
+        PermissionInfo locationSettings = new PermissionInfo(
+                PermissionInfo.Type.GEOLOCATION, uri.toString(), null, isIncognito);
+        return locationSettings.getContentSetting();
     }
 
     @VisibleForTesting
@@ -442,16 +451,16 @@ public class GeolocationHeader {
                         Settings.Secure.LOCATION_MODE);
             } catch (Settings.SettingNotFoundException e) {
                 Log.e(TAG, "Error getting the LOCATION_MODE");
-                return LOCATION_SOURCE_MASTER_OFF;
+                return LocationSource.MASTER_OFF;
             }
             if (locationMode == Settings.Secure.LOCATION_MODE_HIGH_ACCURACY) {
-                return LOCATION_SOURCE_HIGH_ACCURACY;
+                return LocationSource.HIGH_ACCURACY;
             } else if (locationMode == Settings.Secure.LOCATION_MODE_SENSORS_ONLY) {
-                return LOCATION_SOURCE_GPS_ONLY;
+                return LocationSource.GPS_ONLY;
             } else if (locationMode == Settings.Secure.LOCATION_MODE_BATTERY_SAVING) {
-                return LOCATION_SOURCE_BATTERY_SAVING;
+                return LocationSource.BATTERY_SAVING;
             } else {
-                return LOCATION_SOURCE_MASTER_OFF;
+                return LocationSource.MASTER_OFF;
             }
         } else {
             String locationProviders = Settings.Secure.getString(
@@ -459,21 +468,21 @@ public class GeolocationHeader {
                     Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
             if (locationProviders.contains(LocationManager.GPS_PROVIDER)
                     && locationProviders.contains(LocationManager.NETWORK_PROVIDER)) {
-                return LOCATION_SOURCE_HIGH_ACCURACY;
+                return LocationSource.HIGH_ACCURACY;
             } else if (locationProviders.contains(LocationManager.GPS_PROVIDER)) {
-                return LOCATION_SOURCE_GPS_ONLY;
+                return LocationSource.GPS_ONLY;
             } else if (locationProviders.contains(LocationManager.NETWORK_PROVIDER)) {
-                return LOCATION_SOURCE_BATTERY_SAVING;
+                return LocationSource.BATTERY_SAVING;
             } else {
-                return LOCATION_SOURCE_MASTER_OFF;
+                return LocationSource.MASTER_OFF;
             }
         }
     }
 
     private static boolean isNetworkLocationEnabled() {
         int locationSource = getLocationSource();
-        return locationSource == LOCATION_SOURCE_HIGH_ACCURACY
-                || locationSource == LOCATION_SOURCE_BATTERY_SAVING;
+        return locationSource == LocationSource.HIGH_ACCURACY
+                || locationSource == LocationSource.BATTERY_SAVING;
     }
 
     private static boolean isLocationFresh(@Nullable Location location) {
@@ -491,151 +500,153 @@ public class GeolocationHeader {
         ContentSetting domainPermission = locationContentSettingForUrl(Uri.parse(url), isIncognito);
         switch (domainPermission) {
             case ALLOW:
-                return PERMISSION_GRANTED;
+                return Permission.GRANTED;
             case ASK:
-                return PERMISSION_PROMPT;
+                return Permission.PROMPT;
             default:
-                return PERMISSION_BLOCKED;
+                return Permission.BLOCKED;
         }
     }
 
     /**
      * Returns the enum to use in the Geolocation.Header.PermissionState histogram.
-     * Unexpected input values return UMA_PERM_UNKNOWN.
+     * Unexpected input values return UmaPermission.UNKNOWN.
      */
     @UmaPermission
     private static int getPermissionHistogramEnum(@LocationSource int locationSource,
             @Permission int appPermission, @Permission int domainPermission,
             boolean locationAttached, @HeaderState int headerState) {
-        if (headerState == UNSUITABLE_URL) return UMA_PERM_UNSUITABLE_URL;
-        if (headerState == NOT_HTTPS) return UMA_PERM_NOT_HTTPS;
-        if (locationSource == LOCATION_SOURCE_HIGH_ACCURACY) {
-            if (appPermission == PERMISSION_GRANTED) {
-                if (domainPermission == PERMISSION_GRANTED) {
-                    return locationAttached ? UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_YES_LOCATION
-                                            : UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_YES_NO_LOCATION;
-                } else if (domainPermission == PERMISSION_PROMPT) {
+        if (headerState == HeaderState.UNSUITABLE_URL) return UmaPermission.UNSUITABLE_URL;
+        if (headerState == HeaderState.NOT_HTTPS) return UmaPermission.NOT_HTTPS;
+        if (locationSource == LocationSource.HIGH_ACCURACY) {
+            if (appPermission == Permission.GRANTED) {
+                if (domainPermission == Permission.GRANTED) {
                     return locationAttached
-                            ? UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_PROMPT_LOCATION
-                            : UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_PROMPT_NO_LOCATION;
-                } else if (domainPermission == PERMISSION_BLOCKED) {
-                    return UMA_PERM_HIGH_ACCURACY_APP_YES_DOMAIN_BLOCKED;
+                            ? UmaPermission.HIGH_ACCURACY_APP_YES_DOMAIN_YES_LOCATION
+                            : UmaPermission.HIGH_ACCURACY_APP_YES_DOMAIN_YES_NO_LOCATION;
+                } else if (domainPermission == Permission.PROMPT) {
+                    return locationAttached
+                            ? UmaPermission.HIGH_ACCURACY_APP_YES_DOMAIN_PROMPT_LOCATION
+                            : UmaPermission.HIGH_ACCURACY_APP_YES_DOMAIN_PROMPT_NO_LOCATION;
+                } else if (domainPermission == Permission.BLOCKED) {
+                    return UmaPermission.HIGH_ACCURACY_APP_YES_DOMAIN_BLOCKED;
                 }
-            } else if (appPermission == PERMISSION_PROMPT) {
-                if (domainPermission == PERMISSION_GRANTED) {
-                    return UMA_PERM_HIGH_ACCURACY_APP_PROMPT_DOMAIN_YES;
-                } else if (domainPermission == PERMISSION_PROMPT) {
-                    return UMA_PERM_HIGH_ACCURACY_APP_PROMPT_DOMAIN_PROMPT;
-                } else if (domainPermission == PERMISSION_BLOCKED) {
-                    return UMA_PERM_HIGH_ACCURACY_APP_PROMPT_DOMAIN_BLOCKED;
+            } else if (appPermission == Permission.PROMPT) {
+                if (domainPermission == Permission.GRANTED) {
+                    return UmaPermission.HIGH_ACCURACY_APP_PROMPT_DOMAIN_YES;
+                } else if (domainPermission == Permission.PROMPT) {
+                    return UmaPermission.HIGH_ACCURACY_APP_PROMPT_DOMAIN_PROMPT;
+                } else if (domainPermission == Permission.BLOCKED) {
+                    return UmaPermission.HIGH_ACCURACY_APP_PROMPT_DOMAIN_BLOCKED;
                 }
-            } else if (appPermission == PERMISSION_BLOCKED) {
-                if (domainPermission == PERMISSION_GRANTED) {
-                    return UMA_PERM_HIGH_ACCURACY_APP_BLOCKED_DOMAIN_YES;
-                } else if (domainPermission == PERMISSION_PROMPT) {
-                    return UMA_PERM_HIGH_ACCURACY_APP_BLOCKED_DOMAIN_PROMPT;
-                } else if (domainPermission == PERMISSION_BLOCKED) {
-                    return UMA_PERM_HIGH_ACCURACY_APP_BLOCKED_DOMAIN_BLOCKED;
+            } else if (appPermission == Permission.BLOCKED) {
+                if (domainPermission == Permission.GRANTED) {
+                    return UmaPermission.HIGH_ACCURACY_APP_BLOCKED_DOMAIN_YES;
+                } else if (domainPermission == Permission.PROMPT) {
+                    return UmaPermission.HIGH_ACCURACY_APP_BLOCKED_DOMAIN_PROMPT;
+                } else if (domainPermission == Permission.BLOCKED) {
+                    return UmaPermission.HIGH_ACCURACY_APP_BLOCKED_DOMAIN_BLOCKED;
                 }
             }
-        } else if (locationSource == LOCATION_SOURCE_BATTERY_SAVING) {
-            if (appPermission == PERMISSION_GRANTED) {
-                if (domainPermission == PERMISSION_GRANTED) {
+        } else if (locationSource == LocationSource.BATTERY_SAVING) {
+            if (appPermission == Permission.GRANTED) {
+                if (domainPermission == Permission.GRANTED) {
                     return locationAttached
-                            ? UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_YES_LOCATION
-                            : UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_YES_NO_LOCATION;
-                } else if (domainPermission == PERMISSION_PROMPT) {
+                            ? UmaPermission.BATTERY_SAVING_APP_YES_DOMAIN_YES_LOCATION
+                            : UmaPermission.BATTERY_SAVING_APP_YES_DOMAIN_YES_NO_LOCATION;
+                } else if (domainPermission == Permission.PROMPT) {
                     return locationAttached
-                            ? UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_PROMPT_LOCATION
-                            : UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_PROMPT_NO_LOCATION;
-                } else if (domainPermission == PERMISSION_BLOCKED) {
-                    return UMA_PERM_BATTERY_SAVING_APP_YES_DOMAIN_BLOCKED;
+                            ? UmaPermission.BATTERY_SAVING_APP_YES_DOMAIN_PROMPT_LOCATION
+                            : UmaPermission.BATTERY_SAVING_APP_YES_DOMAIN_PROMPT_NO_LOCATION;
+                } else if (domainPermission == Permission.BLOCKED) {
+                    return UmaPermission.BATTERY_SAVING_APP_YES_DOMAIN_BLOCKED;
                 }
-            } else if (appPermission == PERMISSION_PROMPT) {
-                if (domainPermission == PERMISSION_GRANTED) {
-                    return UMA_PERM_BATTERY_SAVING_APP_PROMPT_DOMAIN_YES;
-                } else if (domainPermission == PERMISSION_PROMPT) {
-                    return UMA_PERM_BATTERY_SAVING_APP_PROMPT_DOMAIN_PROMPT;
-                } else if (domainPermission == PERMISSION_BLOCKED) {
-                    return UMA_PERM_BATTERY_SAVING_APP_PROMPT_DOMAIN_BLOCKED;
+            } else if (appPermission == Permission.PROMPT) {
+                if (domainPermission == Permission.GRANTED) {
+                    return UmaPermission.BATTERY_SAVING_APP_PROMPT_DOMAIN_YES;
+                } else if (domainPermission == Permission.PROMPT) {
+                    return UmaPermission.BATTERY_SAVING_APP_PROMPT_DOMAIN_PROMPT;
+                } else if (domainPermission == Permission.BLOCKED) {
+                    return UmaPermission.BATTERY_SAVING_APP_PROMPT_DOMAIN_BLOCKED;
                 }
-            } else if (appPermission == PERMISSION_BLOCKED) {
-                if (domainPermission == PERMISSION_GRANTED) {
-                    return UMA_PERM_BATTERY_SAVING_APP_BLOCKED_DOMAIN_YES;
-                } else if (domainPermission == PERMISSION_PROMPT) {
-                    return UMA_PERM_BATTERY_SAVING_APP_BLOCKED_DOMAIN_PROMPT;
-                } else if (domainPermission == PERMISSION_BLOCKED) {
-                    return UMA_PERM_BATTERY_SAVING_APP_BLOCKED_DOMAIN_BLOCKED;
+            } else if (appPermission == Permission.BLOCKED) {
+                if (domainPermission == Permission.GRANTED) {
+                    return UmaPermission.BATTERY_SAVING_APP_BLOCKED_DOMAIN_YES;
+                } else if (domainPermission == Permission.PROMPT) {
+                    return UmaPermission.BATTERY_SAVING_APP_BLOCKED_DOMAIN_PROMPT;
+                } else if (domainPermission == Permission.BLOCKED) {
+                    return UmaPermission.BATTERY_SAVING_APP_BLOCKED_DOMAIN_BLOCKED;
                 }
             }
-        } else if (locationSource == LOCATION_SOURCE_GPS_ONLY) {
-            if (appPermission == PERMISSION_GRANTED) {
-                if (domainPermission == PERMISSION_GRANTED) {
-                    return locationAttached ? UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_YES_LOCATION
-                                            : UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_YES_NO_LOCATION;
-                } else if (domainPermission == PERMISSION_PROMPT) {
-                    return locationAttached ? UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_PROMPT_LOCATION
-                                            : UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_PROMPT_NO_LOCATION;
-                } else if (domainPermission == PERMISSION_BLOCKED) {
-                    return UMA_PERM_GPS_ONLY_APP_YES_DOMAIN_BLOCKED;
+        } else if (locationSource == LocationSource.GPS_ONLY) {
+            if (appPermission == Permission.GRANTED) {
+                if (domainPermission == Permission.GRANTED) {
+                    return locationAttached ? UmaPermission.GPS_ONLY_APP_YES_DOMAIN_YES_LOCATION
+                                            : UmaPermission.GPS_ONLY_APP_YES_DOMAIN_YES_NO_LOCATION;
+                } else if (domainPermission == Permission.PROMPT) {
+                    return locationAttached
+                            ? UmaPermission.GPS_ONLY_APP_YES_DOMAIN_PROMPT_LOCATION
+                            : UmaPermission.GPS_ONLY_APP_YES_DOMAIN_PROMPT_NO_LOCATION;
+                } else if (domainPermission == Permission.BLOCKED) {
+                    return UmaPermission.GPS_ONLY_APP_YES_DOMAIN_BLOCKED;
                 }
-            } else if (appPermission == PERMISSION_PROMPT) {
-                if (domainPermission == PERMISSION_GRANTED) {
-                    return UMA_PERM_GPS_ONLY_APP_PROMPT_DOMAIN_YES;
-                } else if (domainPermission == PERMISSION_PROMPT) {
-                    return UMA_PERM_GPS_ONLY_APP_PROMPT_DOMAIN_PROMPT;
-                } else if (domainPermission == PERMISSION_BLOCKED) {
-                    return UMA_PERM_GPS_ONLY_APP_PROMPT_DOMAIN_BLOCKED;
+            } else if (appPermission == Permission.PROMPT) {
+                if (domainPermission == Permission.GRANTED) {
+                    return UmaPermission.GPS_ONLY_APP_PROMPT_DOMAIN_YES;
+                } else if (domainPermission == Permission.PROMPT) {
+                    return UmaPermission.GPS_ONLY_APP_PROMPT_DOMAIN_PROMPT;
+                } else if (domainPermission == Permission.BLOCKED) {
+                    return UmaPermission.GPS_ONLY_APP_PROMPT_DOMAIN_BLOCKED;
                 }
-            } else if (appPermission == PERMISSION_BLOCKED) {
-                if (domainPermission == PERMISSION_GRANTED) {
-                    return UMA_PERM_GPS_ONLY_APP_BLOCKED_DOMAIN_YES;
-                } else if (domainPermission == PERMISSION_PROMPT) {
-                    return UMA_PERM_GPS_ONLY_APP_BLOCKED_DOMAIN_PROMPT;
-                } else if (domainPermission == PERMISSION_BLOCKED) {
-                    return UMA_PERM_GPS_ONLY_APP_BLOCKED_DOMAIN_BLOCKED;
+            } else if (appPermission == Permission.BLOCKED) {
+                if (domainPermission == Permission.GRANTED) {
+                    return UmaPermission.GPS_ONLY_APP_BLOCKED_DOMAIN_YES;
+                } else if (domainPermission == Permission.PROMPT) {
+                    return UmaPermission.GPS_ONLY_APP_BLOCKED_DOMAIN_PROMPT;
+                } else if (domainPermission == Permission.BLOCKED) {
+                    return UmaPermission.GPS_ONLY_APP_BLOCKED_DOMAIN_BLOCKED;
                 }
             }
-        } else if (locationSource == LOCATION_SOURCE_MASTER_OFF) {
-            if (appPermission == PERMISSION_GRANTED) {
-                if (domainPermission == PERMISSION_GRANTED) {
-                    return UMA_PERM_MASTER_OFF_APP_YES_DOMAIN_YES;
-                } else if (domainPermission == PERMISSION_PROMPT) {
-                    return UMA_PERM_MASTER_OFF_APP_YES_DOMAIN_PROMPT;
-                } else if (domainPermission == PERMISSION_BLOCKED) {
-                    return UMA_PERM_MASTER_OFF_APP_YES_DOMAIN_BLOCKED;
+        } else if (locationSource == LocationSource.MASTER_OFF) {
+            if (appPermission == Permission.GRANTED) {
+                if (domainPermission == Permission.GRANTED) {
+                    return UmaPermission.MASTER_OFF_APP_YES_DOMAIN_YES;
+                } else if (domainPermission == Permission.PROMPT) {
+                    return UmaPermission.MASTER_OFF_APP_YES_DOMAIN_PROMPT;
+                } else if (domainPermission == Permission.BLOCKED) {
+                    return UmaPermission.MASTER_OFF_APP_YES_DOMAIN_BLOCKED;
                 }
-            } else if (appPermission == PERMISSION_PROMPT) {
-                if (domainPermission == PERMISSION_GRANTED) {
-                    return UMA_PERM_MASTER_OFF_APP_PROMPT_DOMAIN_YES;
-                } else if (domainPermission == PERMISSION_PROMPT) {
-                    return UMA_PERM_MASTER_OFF_APP_PROMPT_DOMAIN_PROMPT;
-                } else if (domainPermission == PERMISSION_BLOCKED) {
-                    return UMA_PERM_MASTER_OFF_APP_PROMPT_DOMAIN_BLOCKED;
+            } else if (appPermission == Permission.PROMPT) {
+                if (domainPermission == Permission.GRANTED) {
+                    return UmaPermission.MASTER_OFF_APP_PROMPT_DOMAIN_YES;
+                } else if (domainPermission == Permission.PROMPT) {
+                    return UmaPermission.MASTER_OFF_APP_PROMPT_DOMAIN_PROMPT;
+                } else if (domainPermission == Permission.BLOCKED) {
+                    return UmaPermission.MASTER_OFF_APP_PROMPT_DOMAIN_BLOCKED;
                 }
-            } else if (appPermission == PERMISSION_BLOCKED) {
-                if (domainPermission == PERMISSION_GRANTED) {
-                    return UMA_PERM_MASTER_OFF_APP_BLOCKED_DOMAIN_YES;
-                } else if (domainPermission == PERMISSION_PROMPT) {
-                    return UMA_PERM_MASTER_OFF_APP_BLOCKED_DOMAIN_PROMPT;
-                } else if (domainPermission == PERMISSION_BLOCKED) {
-                    return UMA_PERM_MASTER_OFF_APP_BLOCKED_DOMAIN_BLOCKED;
+            } else if (appPermission == Permission.BLOCKED) {
+                if (domainPermission == Permission.GRANTED) {
+                    return UmaPermission.MASTER_OFF_APP_BLOCKED_DOMAIN_YES;
+                } else if (domainPermission == Permission.PROMPT) {
+                    return UmaPermission.MASTER_OFF_APP_BLOCKED_DOMAIN_PROMPT;
+                } else if (domainPermission == Permission.BLOCKED) {
+                    return UmaPermission.MASTER_OFF_APP_BLOCKED_DOMAIN_BLOCKED;
                 }
             }
         }
-        return UMA_PERM_UNKNOWN;
+        return UmaPermission.UNKNOWN;
     }
 
     /** Records a data point for the Geolocation.Header.PermissionState histogram. */
     private static void recordPermissionHistogram(@LocationSource int locationSource,
             @Permission int appPermission, @Permission int domainPermission,
             boolean locationAttached, @HeaderState int headerState) {
-        if (headerState == INCOGNITO) return;
+        if (headerState == HeaderState.INCOGNITO) return;
         @UmaPermission
         int result = getPermissionHistogramEnum(
                 locationSource, appPermission, domainPermission, locationAttached, headerState);
         RecordHistogram.recordEnumeratedHistogram(
-                "Geolocation.Header.PermissionState", result, UMA_PERM_COUNT);
+                "Geolocation.Header.PermissionState", result, UmaPermission.NUM_ENTRIES);
     }
 
     /**
@@ -645,15 +656,15 @@ public class GeolocationHeader {
     private static String getTimeListeningHistogramEnum(
             int locationSource, boolean locationAttached) {
         switch (locationSource) {
-            case LOCATION_SOURCE_HIGH_ACCURACY:
+            case LocationSource.HIGH_ACCURACY:
                 return locationAttached
                         ? "Geolocation.Header.TimeListening.HighAccuracy.LocationAttached"
                         : "Geolocation.Header.TimeListening.HighAccuracy.LocationNotAttached";
-            case LOCATION_SOURCE_GPS_ONLY:
+            case LocationSource.GPS_ONLY:
                 return locationAttached
                         ? "Geolocation.Header.TimeListening.GpsOnly.LocationAttached"
                         : "Geolocation.Header.TimeListening.GpsOnly.LocationNotAttached";
-            case LOCATION_SOURCE_BATTERY_SAVING:
+            case LocationSource.BATTERY_SAVING:
                 return locationAttached
                         ? "Geolocation.Header.TimeListening.BatterySaving.LocationAttached"
                         : "Geolocation.Header.TimeListening.BatterySaving.LocationNotAttached";
@@ -676,11 +687,11 @@ public class GeolocationHeader {
     /** Records a data point for one of the GeolocationHeader.LocationAge* histograms. */
     private static void recordLocationAgeHistogram(int locationSource, long durationMillis) {
         String name = "";
-        if (locationSource == LOCATION_SOURCE_HIGH_ACCURACY) {
+        if (locationSource == LocationSource.HIGH_ACCURACY) {
             name = "Geolocation.Header.LocationAge.HighAccuracy";
-        } else if (locationSource == LOCATION_SOURCE_GPS_ONLY) {
+        } else if (locationSource == LocationSource.GPS_ONLY) {
             name = "Geolocation.Header.LocationAge.GpsOnly";
-        } else if (locationSource == LOCATION_SOURCE_BATTERY_SAVING) {
+        } else if (locationSource == LocationSource.BATTERY_SAVING) {
             name = "Geolocation.Header.LocationAge.BatterySaving";
         } else {
             Log.e(TAG, "Unexpected locationSource: " + locationSource);
@@ -712,19 +723,21 @@ public class GeolocationHeader {
         int radius = (int) (location.getAccuracy() * 1000);
 
         // Create a LatLng for the coordinates.
-        PartnerLocationDescriptor.LatLng latlng = new PartnerLocationDescriptor.LatLng();
-        latlng.latitudeE7 = latitudeE7;
-        latlng.longitudeE7 = longitudeE7;
+        PartnerLocationDescriptor.LatLng latlng = PartnerLocationDescriptor.LatLng.newBuilder()
+                                                          .setLatitudeE7(latitudeE7)
+                                                          .setLongitudeE7(longitudeE7)
+                                                          .build();
 
         // Populate a LocationDescriptor with the LatLng.
         PartnerLocationDescriptor.LocationDescriptor locationDescriptor =
-                new PartnerLocationDescriptor.LocationDescriptor();
-        locationDescriptor.latlng = latlng;
-        // Include role, producer, timestamp and radius.
-        locationDescriptor.role = PartnerLocationDescriptor.CURRENT_LOCATION;
-        locationDescriptor.producer = PartnerLocationDescriptor.DEVICE_LOCATION;
-        locationDescriptor.timestamp = timestamp;
-        locationDescriptor.radius = (float) radius;
+                PartnerLocationDescriptor.LocationDescriptor.newBuilder()
+                        .setLatlng(latlng)
+                        // Include role, producer, timestamp and radius.
+                        .setRole(PartnerLocationDescriptor.LocationRole.CURRENT_LOCATION)
+                        .setProducer(PartnerLocationDescriptor.LocationProducer.DEVICE_LOCATION)
+                        .setTimestamp(timestamp)
+                        .setRadius((float) radius)
+                        .build();
         return encodeLocationDescriptor(locationDescriptor);
     }
 
@@ -734,7 +747,7 @@ public class GeolocationHeader {
     private static String encodeLocationDescriptor(
             PartnerLocationDescriptor.LocationDescriptor locationDescriptor) {
         return Base64.encodeToString(
-                MessageNano.toByteArray(locationDescriptor), Base64.NO_WRAP | Base64.URL_SAFE);
+                locationDescriptor.toByteArray(), Base64.NO_WRAP | Base64.URL_SAFE);
     }
 
     /**
@@ -744,7 +757,7 @@ public class GeolocationHeader {
     @VisibleForTesting
     static String encodeProtoVisibleNetworks(@Nullable VisibleNetworks visibleNetworks) {
         VisibleNetworks visibleNetworksToEncode = trimVisibleNetworks(visibleNetworks);
-        if (visibleNetworksToEncode == null) {
+        if (visibleNetworksToEncode == null || visibleNetworksToEncode.isEmpty()) {
             // No data to encode.
             return null;
         }
@@ -753,41 +766,29 @@ public class GeolocationHeader {
         Set<VisibleWifi> visibleWifis = visibleNetworksToEncode.allVisibleWifis();
         Set<VisibleCell> visibleCells = visibleNetworksToEncode.allVisibleCells();
 
-        int numVisibleNetworks = (connectedWifi != null ? 1 : 0)
-                + (visibleWifis != null ? visibleWifis.size() : 0) + (connectedCell != null ? 1 : 0)
-                + (visibleCells != null ? visibleCells.size() : 0);
-        if (numVisibleNetworks == 0) {
-            // No data to encode.
-            return null;
-        }
+        PartnerLocationDescriptor.LocationDescriptor.Builder locationDescriptorBuilder =
+                PartnerLocationDescriptor.LocationDescriptor.newBuilder()
+                        .setRole(PartnerLocationDescriptor.LocationRole.CURRENT_LOCATION)
+                        .setProducer(PartnerLocationDescriptor.LocationProducer.DEVICE_LOCATION);
 
-        int i = 0;
-        PartnerLocationDescriptor.VisibleNetwork[] protoNetworks =
-                new PartnerLocationDescriptor.VisibleNetwork[numVisibleNetworks];
         if (connectedWifi != null) {
-            protoNetworks[i++] = connectedWifi.toProto(true);
+            locationDescriptorBuilder.addVisibleNetwork(connectedWifi.toProto(true));
         }
         if (visibleWifis != null) {
             for (VisibleWifi visibleWifi : visibleWifis) {
-                protoNetworks[i++] = visibleWifi.toProto(false);
+                locationDescriptorBuilder.addVisibleNetwork(visibleWifi.toProto(false));
             }
         }
         if (connectedCell != null) {
-            protoNetworks[i++] = connectedCell.toProto(true);
+            locationDescriptorBuilder.addVisibleNetwork(connectedCell.toProto(true));
         }
         if (visibleCells != null) {
             for (VisibleCell visibleCell : visibleCells) {
-                protoNetworks[i++] = visibleCell.toProto(false);
+                locationDescriptorBuilder.addVisibleNetwork(visibleCell.toProto(false));
             }
         }
 
-        PartnerLocationDescriptor.LocationDescriptor locationDescriptor =
-                new PartnerLocationDescriptor.LocationDescriptor();
-        locationDescriptor.role = PartnerLocationDescriptor.CURRENT_LOCATION;
-        locationDescriptor.producer = PartnerLocationDescriptor.DEVICE_LOCATION;
-        locationDescriptor.visibleNetwork = protoNetworks;
-
-        return encodeLocationDescriptor(locationDescriptor);
+        return encodeLocationDescriptor(locationDescriptorBuilder.build());
     }
 
     @Nullable
@@ -811,7 +812,7 @@ public class GeolocationHeader {
         // Select the extra visible cell.
         if (visibleCells != null) {
             for (VisibleCell candidateCell : visibleCells) {
-                if (ApiCompatibilityUtils.objectEquals(connectedCell, candidateCell)) {
+                if (ObjectsCompat.equals(connectedCell, candidateCell)) {
                     // Do not include this candidate cell, since its already the connected one.
                     continue;
                 }
@@ -827,7 +828,7 @@ public class GeolocationHeader {
                     // Do not include this candidate wifi.
                     continue;
                 }
-                if (ApiCompatibilityUtils.objectEquals(connectedWifi, candidateWifi)) {
+                if (ObjectsCompat.equals(connectedWifi, candidateWifi)) {
                     // Replace the connected, since the candidate will have level. This is because
                     // the android APIs exposing connected WIFI do not expose level, while the ones
                     // exposing visible wifis expose level.

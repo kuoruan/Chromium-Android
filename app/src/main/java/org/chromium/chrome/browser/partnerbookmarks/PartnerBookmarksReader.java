@@ -5,10 +5,8 @@
 package org.chromium.chrome.browser.partnerbookmarks;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.os.AsyncTask;
 
-import org.chromium.base.ContextUtils;
+import org.chromium.base.AsyncTask;
 import org.chromium.base.Log;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.metrics.RecordHistogram;
@@ -28,8 +26,6 @@ public class PartnerBookmarksReader {
     private static final String TAG = "PartnerBMReader";
     private static Set<FaviconUpdateObserver> sFaviconUpdateObservers = new HashSet<>();
     private static final float DESIRED_FAVICON_SIZE_DP = 16.0f;
-
-    static final String LAST_EMPTY_READ_PREFS_NAME = "PartnerBookmarksReader.last_empty_read";
 
     private static boolean sInitialized;
     private static boolean sForceDisableEditing;
@@ -128,7 +124,7 @@ public class PartnerBookmarksReader {
             assert false : "readBookmarks called after nativeDestroy.";
             return;
         }
-        new ReadBookmarksTask().execute();
+        new ReadBookmarksTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**
@@ -222,22 +218,11 @@ public class PartnerBookmarksReader {
     }
 
     /** Handles fetching partner bookmarks in a background thread. */
-    private class ReadBookmarksTask extends AsyncTask<Void, Void, Void> {
+    private class ReadBookmarksTask extends AsyncTask<Void> {
         private final Object mRootSync = new Object();
 
-        private void handleZeroBookmark() {
-            SharedPreferences.Editor editor = ContextUtils.getAppSharedPreferences().edit();
-            editor.putLong(LAST_EMPTY_READ_PREFS_NAME, System.currentTimeMillis());
-            editor.apply();
-            recordPartnerBookmarkCount(0);
-
-            Log.w(TAG,
-                    "Obtained zero partner bookmarks. "
-                            + "Will skip reading partner bookmarks for a while.");
-        }
-
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground() {
             if (mFaviconThrottle == null) {
                 // Initialize the throttle here since we need to load shared preferences on the
                 // background thread as well.
@@ -245,12 +230,7 @@ public class PartnerBookmarksReader {
             }
             PartnerBookmark.BookmarkIterator bookmarkIterator =
                     AppHooks.get().getPartnerBookmarkIterator();
-            RecordHistogram.recordBooleanHistogram(
-                    "PartnerBookmark.Null", bookmarkIterator == null);
-            if (bookmarkIterator == null) {
-                handleZeroBookmark();
-                return null;
-            }
+            if (bookmarkIterator == null) return null;
 
             // Get a snapshot of the bookmarks.
             LinkedHashMap<Long, PartnerBookmark> idMap = new LinkedHashMap<Long, PartnerBookmark>();
@@ -284,15 +264,6 @@ public class PartnerBookmarksReader {
             bookmarkIterator.close();
             int count = urlSet.size();
             recordPartnerBookmarkCount(count);
-
-            if (count == 0) {
-                handleZeroBookmark();
-            } else {
-                SharedPreferences pref = ContextUtils.getAppSharedPreferences();
-                if (pref.contains(LAST_EMPTY_READ_PREFS_NAME)) {
-                    pref.edit().remove(LAST_EMPTY_READ_PREFS_NAME).apply();
-                }
-            }
 
             // Recreate the folder hierarchy and read it.
             recreateFolderHierarchy(idMap);

@@ -20,7 +20,9 @@ import org.json.JSONObject;
 
 import org.chromium.base.Log;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.media.router.MediaController;
+import org.chromium.chrome.browser.media.router.CastSessionUtil;
+import org.chromium.chrome.browser.media.router.FlingingController;
+import org.chromium.chrome.browser.media.router.MediaSource;
 import org.chromium.chrome.browser.media.ui.MediaNotificationInfo;
 import org.chromium.chrome.browser.media.ui.MediaNotificationListener;
 import org.chromium.chrome.browser.media.ui.MediaNotificationManager;
@@ -33,14 +35,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 /**
  * A wrapper around the established Cast application session.
  */
 public class CastSessionImpl implements MediaNotificationListener, CastSession {
     private static final String TAG = "MediaRouter";
-
-    // The value is borrowed from the Android Cast SDK code to match their behavior.
-    private static final double MIN_VOLUME_LEVEL_DELTA = 1e-7;
 
     private static class CastMessagingChannel implements Cast.MessageReceivedCallback {
         private final CastSession mSession;
@@ -132,7 +133,7 @@ public class CastSessionImpl implements MediaNotificationListener, CastSession {
         Intent contentIntent = Tab.createBringTabToFrontIntent(tabId);
         if (contentIntent != null) {
             contentIntent.putExtra(MediaNotificationUma.INTENT_EXTRA_NAME,
-                    MediaNotificationUma.SOURCE_PRESENTATION);
+                    MediaNotificationUma.Source.PRESENTATION);
         }
         mNotificationBuilder =
                 new MediaNotificationInfo.Builder()
@@ -402,7 +403,8 @@ public class CastSessionImpl implements MediaNotificationListener, CastSession {
                 double newLevel = volume.getDouble("level");
                 double currentLevel = Cast.CastApi.getVolume(mApiClient);
                 if (!Double.isNaN(currentLevel)
-                        && Math.abs(currentLevel - newLevel) > MIN_VOLUME_LEVEL_DELTA) {
+                        && Math.abs(currentLevel - newLevel)
+                                > CastSessionUtil.MIN_VOLUME_LEVEL_DELTA) {
                     Cast.CastApi.setVolume(mApiClient, newLevel);
                     waitForVolumeChange = true;
                 }
@@ -484,8 +486,9 @@ public class CastSessionImpl implements MediaNotificationListener, CastSession {
     }
 
     @Override
-    public MediaController getMediaController() {
-        // MediaController is not used with the CastSessionImpl.
+    @Nullable
+    public FlingingController getFlingingController() {
+        // FlingingController is not used with the CastSessionImpl.
         return null;
     }
 }

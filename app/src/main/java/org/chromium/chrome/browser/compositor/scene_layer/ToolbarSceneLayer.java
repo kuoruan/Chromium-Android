@@ -76,8 +76,8 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
      */
     private void update(int browserControlsBackgroundColor, float browserControlsUrlBarAlpha,
             ChromeFullscreenManager fullscreenManager, ResourceManager resourceManager,
-            boolean forceHideAndroidBrowserControls, ViewportMode viewportMode, boolean isTablet,
-            float windowHeight) {
+            boolean forceHideAndroidBrowserControls, @ViewportMode int viewportMode,
+            boolean isTablet, float windowHeight) {
         if (!DeviceClassManager.enableFullscreen()) return;
 
         if (fullscreenManager == null) return;
@@ -98,18 +98,23 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
         int textBoxColor = Color.WHITE;
         int textBoxResourceId = R.drawable.card_single;
 
-        boolean isNtp = false;
+        boolean isLocationBarShownInNtp = false;
         boolean useModern = false;
         Tab currentTab = fullscreenManager.getTab();
         if (currentTab != null) {
-            isNtp = currentTab != null ? NewTabPage.isNTPUrl(currentTab.getUrl()) : false;
+            boolean isNtp =
+                    currentTab != null ? currentTab.getNativePage() instanceof NewTabPage : false;
+            if (isNtp) {
+                isLocationBarShownInNtp =
+                        ((NewTabPage) currentTab.getNativePage()).isLocationBarShownInNTP();
+            }
             useModern = currentTab.getActivity().supportsModernDesign()
                     && FeatureUtilities.isChromeModernDesignEnabled();
         }
 
         if (useModern) {
-            textBoxColor = ColorUtils.getTextBoxColorForToolbarBackground(
-                    mContext.getResources(), isNtp, browserControlsBackgroundColor, true);
+            textBoxColor = ColorUtils.getTextBoxColorForToolbarBackground(mContext.getResources(),
+                    isLocationBarShownInNtp, browserControlsBackgroundColor, true);
             textBoxResourceId = R.drawable.modern_location_bar;
         }
 
@@ -160,7 +165,8 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
             LayerTitleCache layerTitleCache, ResourceManager resourceManager, float yOffset) {
         boolean forceHideBrowserControlsAndroidView =
                 mLayoutProvider.getActiveLayout().forceHideBrowserControlsAndroidView();
-        ViewportMode viewportMode = mLayoutProvider.getActiveLayout().getViewportMode();
+        @ViewportMode
+        int viewportMode = mLayoutProvider.getActiveLayout().getViewportMode();
 
         // In Chrome modern design, the url bar is always opaque since it is drawn in the
         // compositor.
@@ -169,8 +175,8 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
 
         update(mRenderHost.getBrowserControlsBackgroundColor(), alpha,
                 mLayoutProvider.getFullscreenManager(), resourceManager,
-                forceHideBrowserControlsAndroidView, viewportMode, DeviceFormFactor.isTablet(),
-                viewport.height());
+                forceHideBrowserControlsAndroidView, viewportMode,
+                DeviceFormFactor.isNonMultiDisplayContextOnTablet(mContext), viewport.height());
 
         return this;
     }
@@ -187,11 +193,7 @@ public class ToolbarSceneLayer extends SceneOverlayLayer implements SceneOverlay
 
     @Override
     public void onSizeChanged(
-            float width, float height, float visibleViewportOffsetY, int orientation) {
-        // If Chrome Home is enabled, a size change means the toolbar is now in a different
-        // location so a render is needed.
-        if (FeatureUtilities.isChromeHomeEnabled()) mRenderHost.requestRender();
-    }
+            float width, float height, float visibleViewportOffsetY, int orientation) {}
 
     @Override
     public void getVirtualViews(List<VirtualView> views) {}

@@ -46,9 +46,6 @@ public final class SerialDeviceInfo extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static SerialDeviceInfo deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -62,31 +59,33 @@ public final class SerialDeviceInfo extends org.chromium.mojo.bindings.Struct {
         SerialDeviceInfo result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new SerialDeviceInfo(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new SerialDeviceInfo(elementsOrVersion);
+                {
+                    
                 result.path = decoder0.readString(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.vendorId = decoder0.readShort(16);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.hasVendorId = decoder0.readBoolean(18, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.hasProductId = decoder0.readBoolean(18, 1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.productId = decoder0.readShort(20);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.displayName = decoder0.readString(24, true);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -109,48 +108,5 @@ public final class SerialDeviceInfo extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.productId, 20);
         
         encoder0.encode(this.displayName, 24, true);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        SerialDeviceInfo other = (SerialDeviceInfo) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.path, other.path))
-            return false;
-        if (this.vendorId!= other.vendorId)
-            return false;
-        if (this.hasVendorId!= other.hasVendorId)
-            return false;
-        if (this.productId!= other.productId)
-            return false;
-        if (this.hasProductId!= other.hasProductId)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.displayName, other.displayName))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.path);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.vendorId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hasVendorId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.productId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hasProductId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.displayName);
-        return result;
     }
 }

@@ -20,10 +20,15 @@ import android.os.Process;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceFragment.OnPreferenceStartFragmentCallback;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ListView;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
@@ -41,10 +46,13 @@ import org.chromium.chrome.browser.profiles.ProfileManagerUtils;
  * through settings, a separate Preferences activity is created for each screen. Thus each fragment
  * may freely modify its activity's action bar or title. This mimics the behavior of
  * android.preference.PreferenceActivity.
+ *
+ * If the preference overrides the root layout (e.g. {@link HomepageEditor}), add the following:
+ * 1) preferences_action_bar_shadow.xml to the custom XML hierarchy and
+ * 2) an OnScrollChangedListener to the main content's view's view tree observer via
+ *    PreferenceUtils.getShowShadowOnScrollListener(...).
  */
-public class Preferences extends AppCompatActivity implements
-        OnPreferenceStartFragmentCallback {
-
+public class Preferences extends AppCompatActivity implements OnPreferenceStartFragmentCallback {
     public static final String EXTRA_SHOW_FRAGMENT = "show_fragment";
     public static final String EXTRA_SHOW_FRAGMENT_ARGUMENTS = "show_fragment_args";
 
@@ -87,6 +95,7 @@ public class Preferences extends AppCompatActivity implements
         Bundle initialArguments = getIntent().getBundleExtra(EXTRA_SHOW_FRAGMENT_ARGUMENTS);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setElevation(0);
 
         // If savedInstanceState is non-null, then the activity is being
         // recreated and super.onCreate() has already recreated the fragment.
@@ -140,13 +149,28 @@ public class Preferences extends AppCompatActivity implements
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
+        Fragment fragment = getFragmentManager().findFragmentById(android.R.id.content);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Fragment fragment = getFragmentManager().findFragmentById(android.R.id.content);
             if (fragment instanceof PreferenceFragment && fragment.getView() != null) {
                 // Set list view padding to 0 so dividers are the full width of the screen.
                 fragment.getView().findViewById(android.R.id.list).setPadding(0, 0, 0, 0);
             }
         }
+        if (fragment == null || fragment.getView() == null
+                || fragment.getView().findViewById(android.R.id.list) == null) {
+            return;
+        }
+        View contentView = fragment.getActivity().findViewById(android.R.id.content);
+        if (contentView == null || !(contentView instanceof FrameLayout)) {
+            return;
+        }
+
+        View inflatedView = View.inflate(getApplicationContext(),
+                R.layout.preferences_action_bar_shadow, (ViewGroup) contentView);
+        ListView listView = fragment.getView().findViewById(android.R.id.list);
+        listView.getViewTreeObserver().addOnScrollChangedListener(
+                PreferenceUtils.getShowShadowOnScrollListener(
+                        listView, inflatedView.findViewById(R.id.shadow)));
     }
 
     @Override
@@ -198,7 +222,8 @@ public class Preferences extends AppCompatActivity implements
         // By default, every screen in Settings shows a "Help & feedback" menu item.
         MenuItem help = menu.add(
                 Menu.NONE, R.id.menu_id_general_help, Menu.CATEGORY_SECONDARY, R.string.menu_help);
-        help.setIcon(R.drawable.ic_help_and_feedback);
+        help.setIcon(VectorDrawableCompat.create(
+                getResources(), R.drawable.ic_help_and_feedback, getTheme()));
         return true;
     }
 
@@ -213,6 +238,8 @@ public class Preferences extends AppCompatActivity implements
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Fragment activeFragment = getFragmentManager().findFragmentById(android.R.id.content);
+        if (activeFragment != null && activeFragment.onOptionsItemSelected(item)) return true;
         if (item.getItemId() == android.R.id.home) {
             finish();
             return true;

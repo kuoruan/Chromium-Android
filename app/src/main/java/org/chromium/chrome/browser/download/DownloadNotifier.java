@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.download;
 
 import org.chromium.components.offline_items_collection.ContentId;
+import org.chromium.components.offline_items_collection.FailState;
 import org.chromium.components.offline_items_collection.PendingState;
 
 /**
@@ -24,8 +25,9 @@ public interface DownloadNotifier {
     /**
      * Add a download failed notification.
      * @param downloadInfo info about the failed download.
+     * @param failState The reason the download failed.
      */
-    void notifyDownloadFailed(DownloadInfo downloadInfo);
+    void notifyDownloadFailed(DownloadInfo downloadInfo, @FailState int failState);
 
     /**
      * Update the download progress notification.

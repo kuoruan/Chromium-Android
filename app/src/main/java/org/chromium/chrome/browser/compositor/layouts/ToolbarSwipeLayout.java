@@ -20,6 +20,7 @@ import org.chromium.chrome.browser.compositor.layouts.eventfilter.BlackHoleEvent
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilter;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.ScrollDirection;
 import org.chromium.chrome.browser.compositor.scene_layer.SceneLayer;
+import org.chromium.chrome.browser.compositor.scene_layer.ScrollingBottomViewSceneLayer;
 import org.chromium.chrome.browser.compositor.scene_layer.TabListSceneLayer;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
 import org.chromium.chrome.browser.tab.Tab;
@@ -68,6 +69,10 @@ public class ToolbarSwipeLayout extends Layout {
 
     private final Interpolator mEdgeInterpolator = new DecelerateInterpolator();
 
+    /** The left and right scene layer responsible for drawing bottom toolbars for each tab. */
+    private ScrollingBottomViewSceneLayer mLeftBottomToolbarSceneLayer;
+    private ScrollingBottomViewSceneLayer mRightBottomToolbarSceneLayer;
+
     /**
      * @param context             The current Android's context.
      * @param updateHost          The {@link LayoutUpdateHost} view for this layout.
@@ -94,7 +99,7 @@ public class ToolbarSwipeLayout extends Layout {
     }
 
     @Override
-    public ViewportMode getViewportMode() {
+    public @ViewportMode int getViewportMode() {
         // This seems counter-intuitive, but if the toolbar moves the android view is not showing.
         // That means the compositor has to draw it and therefore needs the fullscreen viewport.
         // Likewise, when the android view is showing, the compositor controls do not draw and the
@@ -127,7 +132,7 @@ public class ToolbarSwipeLayout extends Layout {
     }
 
     @Override
-    public void swipeStarted(long time, ScrollDirection direction, float x, float y) {
+    public void swipeStarted(long time, @ScrollDirection int direction, float x, float y) {
         if (mTabModelSelector == null || mToTab != null || direction == ScrollDirection.DOWN) {
             return;
         }
@@ -306,13 +311,40 @@ public class ToolbarSwipeLayout extends Layout {
         if (mLeftTab != null) {
             mLeftTab.setX(leftX);
             needUpdate = mLeftTab.updateSnap(dt) || needUpdate;
+            if (mLeftBottomToolbarSceneLayer != null) {
+                mLeftBottomToolbarSceneLayer.setIsVisible(true);
+                mLeftBottomToolbarSceneLayer.setXOffset((int) (mLeftTab.getX() * mDpToPx));
+            }
+        } else if (mLeftBottomToolbarSceneLayer != null) {
+            mLeftBottomToolbarSceneLayer.setIsVisible(false);
         }
 
         if (mRightTab != null) {
             mRightTab.setX(rightX);
             needUpdate = mRightTab.updateSnap(dt) || needUpdate;
+            if (mRightBottomToolbarSceneLayer != null) {
+                mRightBottomToolbarSceneLayer.setIsVisible(true);
+                mRightBottomToolbarSceneLayer.setXOffset((int) (mRightTab.getX() * mDpToPx));
+            }
+        } else if (mRightBottomToolbarSceneLayer != null) {
+            mRightBottomToolbarSceneLayer.setIsVisible(false);
         }
+
         if (needUpdate) requestUpdate();
+    }
+
+    /**
+     * Provide this layout access to two {@link ScrollingBottomViewSceneLayer}s to draw for each tab
+     * in this layout.
+     * @param left The toolbar to draw with the left tab.
+     * @param right The toolbar to draw with the right tab.
+     */
+    public void setBottomToolbarSceneLayers(
+            ScrollingBottomViewSceneLayer left, ScrollingBottomViewSceneLayer right) {
+        mLeftBottomToolbarSceneLayer = left;
+        addSceneOverlay(mLeftBottomToolbarSceneLayer);
+        mRightBottomToolbarSceneLayer = right;
+        addSceneOverlay(mRightBottomToolbarSceneLayer);
     }
 
     /**

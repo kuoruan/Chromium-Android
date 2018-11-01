@@ -11,6 +11,7 @@ import android.os.StrictMode;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.TraceEvent;
 import org.chromium.chrome.browser.LaunchIntentDispatcher;
+import org.chromium.chrome.browser.vr.VrModuleProvider;
 
 /**
  * Dispatches incoming intents to the appropriate activity based on the current configuration and
@@ -24,6 +25,12 @@ public class ChromeLauncherActivity extends Activity {
         TraceEvent.begin("ChromeLauncherActivity.onCreate");
         try {
             super.onCreate(savedInstanceState);
+
+            if (VrModuleProvider.getIntentDelegate().isVrIntent(getIntent())) {
+                // We need to turn VR mode on as early as possible in the intent handling flow to
+                // avoid brightness flickering when handling VR intents.
+                VrModuleProvider.getDelegate().setVrModeEnabled(this, true);
+            }
 
             @LaunchIntentDispatcher.Action
             int dispatchAction = LaunchIntentDispatcher.dispatch(this, getIntent());

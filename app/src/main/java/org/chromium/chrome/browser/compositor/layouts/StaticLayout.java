@@ -82,7 +82,7 @@ public class StaticLayout extends Layout {
     }
 
     @Override
-    public ViewportMode getViewportMode() {
+    public @ViewportMode int getViewportMode() {
         return ViewportMode.DYNAMIC_BROWSER_CONTROLS;
     }
 

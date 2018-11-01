@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2018 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <org.chromium.chrome.browser.signin.SigninScrollView
+        android:id="@+id/signin_scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fadingEdgeLength="48dp"
+        android:requiresFadingEdge="vertical"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/consent_bump_header_image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/signin_header_animation_background"
+                android:scaleType="center"
+                app:srcCompat="@drawable/signin_header_animation"
+                tools:ignore="ContentDescription"
+                tools:src="@drawable/signin_header_animation"/>
+            <TextView
+                android:id="@+id/consent_bump_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/signin_margin_start"
+                android:layout_marginTop="15dp"
+                android:layout_marginEnd="@dimen/signin_margin_end"
+                android:text="@string/consent_bump_more_options_title"
+                android:textAppearance="@style/BlackHeadline1"/>
+            <TextView
+                android:id="@+id/consent_bump_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/signin_margin_start"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="@dimen/signin_margin_end"
+                android:text="@string/consent_bump_description"
+                android:textAppearance="@style/BlackBody"/>
+            <org.chromium.chrome.browser.widget.RadioButtonWithDescription
+                android:id="@+id/consent_bump_no_changes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/signin_margin_start"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="@dimen/signin_margin_end"
+                app:titleText="@string/consent_bump_no_changes_title"/>
+            <org.chromium.chrome.browser.widget.RadioButtonWithDescription
+                android:id="@+id/consent_bump_review_settings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/signin_margin_start"
+                android:layout_marginEnd="@dimen/signin_margin_end"
+                app:titleText="@string/consent_bump_review_settings_title"/>
+            <org.chromium.chrome.browser.widget.RadioButtonWithDescription
+                android:id="@+id/consent_bump_turn_on"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/signin_margin_start"
+                android:layout_marginEnd="@dimen/signin_margin_end"
+                app:titleText="@string/consent_bump_turn_on_title"/>
+        </LinearLayout>
+    </org.chromium.chrome.browser.signin.SigninScrollView>
+    <LinearLayout
+        android:id="@+id/button_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <Button
+            android:id="@+id/back_button"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:paddingStart="@dimen/fre_button_padding"
+            android:paddingEnd="@dimen/fre_button_padding"
+            android:text="@string/back"/>
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:visibility="invisible"/>
+        <org.chromium.ui.widget.ButtonCompat
+            android:id="@+id/ok_button"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:paddingStart="@dimen/fre_button_padding"
+            android:paddingEnd="@dimen/fre_button_padding"
+            android:text="@string/ok"
+            android:textAppearance="@style/WhiteButtonText"
+            app:buttonColor="@color/light_active_color"
+            app:buttonRaised="false"/>
+    </LinearLayout>
+</LinearLayout>

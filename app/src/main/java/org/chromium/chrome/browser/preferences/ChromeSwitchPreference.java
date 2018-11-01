@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.preferences;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.os.Build;
 import android.preference.SwitchPreference;
 import android.support.v7.widget.SwitchCompat;
 import android.text.TextUtils;
@@ -35,6 +36,13 @@ public class ChromeSwitchPreference extends SwitchPreference {
         super(context, attrs);
         setWidgetLayoutResource(R.layout.preference_switch);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Fix animations. Background: setWidgetLayout resource call above disables view
+            // recycling, thus breaking SwitchCompat animations. Views recycling is safe in this
+            // case, as ChromeSwitchPreference doesn't change view types on the fly.
+            setRecycleEnabled(true);
+        }
+
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.ChromeSwitchPreference);
         mDontUseSummaryAsTitle =
                 a.getBoolean(R.styleable.ChromeSwitchPreference_dontUseSummaryAsTitle, false);
@@ -47,7 +55,7 @@ public class ChromeSwitchPreference extends SwitchPreference {
      */
     public void setManagedPreferenceDelegate(ManagedPreferenceDelegate delegate) {
         mManagedPrefDelegate = delegate;
-        if (mManagedPrefDelegate != null) mManagedPrefDelegate.initPreference(this);
+        ManagedPreferencesUtils.initPreference(mManagedPrefDelegate, this);
     }
 
     /**
@@ -90,12 +98,12 @@ public class ChromeSwitchPreference extends SwitchPreference {
             summary.setVisibility(View.GONE);
         }
 
-        if (mManagedPrefDelegate != null) mManagedPrefDelegate.onBindViewToPreference(this, view);
+        ManagedPreferencesUtils.onBindViewToPreference(mManagedPrefDelegate, this, view);
     }
 
     @Override
     protected void onClick() {
-        if (mManagedPrefDelegate != null && mManagedPrefDelegate.onClickPreference(this)) return;
+        if (ManagedPreferencesUtils.onClickPreference(mManagedPrefDelegate, this)) return;
         super.onClick();
     }
 }

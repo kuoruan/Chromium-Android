@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 <string name="infobar_update_permissions_button_text">"Continue"</string>
-<string name="ambient_badge_install">"Add to Home screen"</string>
-<string name="ambient_badge_open">"Open in app"</string>
 <string name="search_or_type_web_address">"Search or type web address"</string>
 <string name="options_homepage_title">"Home page"</string>
 <string name="autofill_from_google_account">"Google Pay"</string>

@@ -11,6 +11,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.ObserverList;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 
 /**
@@ -90,6 +91,14 @@ public class HomepageManager {
     }
 
     /**
+     * @return Whether to close the app when the user has zero tabs.
+     */
+    public static boolean shouldCloseAppWithZeroTabs() {
+        return HomepageManager.isHomepageEnabled()
+                && !NewTabPage.isNTPUrl(HomepageManager.getHomepageUri());
+    }
+
+    /**
      * @return Whether or not homepage setting should be shown.
      */
     public static boolean shouldShowHomepageSetting() {
@@ -139,6 +148,7 @@ public class HomepageManager {
         sharedPreferencesEditor.apply();
         RecordHistogram.recordBooleanHistogram(
                 "Settings.ShowHomeButtonPreferenceStateChanged", enabled);
+        RecordHistogram.recordBooleanHistogram("Settings.ShowHomeButtonPreferenceState", enabled);
         notifyHomepageUpdated();
     }
 
@@ -169,6 +179,7 @@ public class HomepageManager {
      * Sets whether the homepage URL is the default value.
      */
     public void setPrefHomepageUseDefaultUri(boolean useDefaultUri) {
+        RecordHistogram.recordBooleanHistogram("Settings.HomePageIsCustomized", !useDefaultUri);
         SharedPreferences.Editor sharedPreferencesEditor = mSharedPreferences.edit();
         sharedPreferencesEditor.putBoolean(PREF_HOMEPAGE_USE_DEFAULT_URI, useDefaultUri);
         sharedPreferencesEditor.apply();

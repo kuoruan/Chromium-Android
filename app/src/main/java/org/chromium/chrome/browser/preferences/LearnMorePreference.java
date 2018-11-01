@@ -31,7 +31,8 @@ public class LearnMorePreference extends Preference {
         TypedArray a = context.obtainStyledAttributes(attrs,
                 R.styleable.LearnMorePreference, 0, 0);
         mHelpContext = a.getResourceId(R.styleable.LearnMorePreference_helpContext, 0);
-        mColor = ApiCompatibilityUtils.getColor(context.getResources(), R.color.google_blue_700);
+        mColor = ApiCompatibilityUtils.getColor(
+                context.getResources(), R.color.default_text_color_link);
         a.recycle();
         setTitle(R.string.learn_more);
     }

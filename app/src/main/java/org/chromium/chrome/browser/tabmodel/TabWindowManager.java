@@ -151,14 +151,6 @@ public class TabWindowManager implements ActivityStateListener {
     }
 
     /**
-     * @return Whether the incognito profile can be destroyed. It cannot be destroyed if it is
-     *         in use by any live tab model selectors.
-     */
-    public boolean canDestroyIncognitoProfile() {
-        return getIncognitoTabCount() == 0;
-    }
-
-    /**
      * @param tabId The ID of the tab in question.
      * @return Whether the given tab exists in any currently loaded selector.
      */

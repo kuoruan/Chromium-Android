@@ -6,7 +6,7 @@ package org.chromium.chrome.browser.installedapp;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.content.browser.crypto.ByteArrayGenerator;
+import org.chromium.chrome.browser.crypto.ByteArrayGenerator;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;

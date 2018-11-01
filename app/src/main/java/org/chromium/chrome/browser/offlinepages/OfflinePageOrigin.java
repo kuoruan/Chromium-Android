@@ -141,6 +141,25 @@ public class OfflinePageOrigin {
         return mAppName;
     }
 
+    @Override
+    public String toString() {
+        return encodeAsJsonString();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other != null && other instanceof OfflinePageOrigin) {
+            OfflinePageOrigin o = (OfflinePageOrigin) other;
+            return mAppName.equals(o.mAppName) && Arrays.equals(mSignatures, o.mSignatures);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.deepHashCode(new Object[] {mAppName, mSignatures});
+    }
+
     /**
      * @param context The context to look up signatures.
      * @param appName The name of the application to look up.

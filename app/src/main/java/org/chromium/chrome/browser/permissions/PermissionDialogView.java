@@ -50,9 +50,11 @@ public class PermissionDialogView {
         LayoutInflater inflater = LayoutInflater.from(activity);
         View view = inflater.inflate(R.layout.permission_dialog, null);
         TextView messageTextView = (TextView) view.findViewById(R.id.text);
-        messageTextView.setText(prepareMainMessageString(mDialogDelegate));
+        String messageText = mDialogDelegate.getMessageText();
+        assert !TextUtils.isEmpty(messageText);
+        messageTextView.setText(messageText);
         messageTextView.setVisibility(View.VISIBLE);
-        messageTextView.announceForAccessibility(mDialogDelegate.getMessageText());
+        messageTextView.announceForAccessibility(messageText);
         TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(
                 messageTextView, mDialogDelegate.getDrawableId(), 0, 0, 0);
         mDialog.setView(view);
@@ -80,19 +82,5 @@ public class PermissionDialogView {
      */
     public Button getButton(int whichButton) {
         return mDialog.getButton(whichButton);
-    }
-
-    private CharSequence prepareMainMessageString(final PermissionDialogDelegate delegate) {
-        String messageText = delegate.getMessageText();
-        assert !TextUtils.isEmpty(messageText);
-
-        // TODO(timloh): Currently the strings are shared with infobars, so we for now manually
-        // remove the full stop (this code catches most but not all languages). Update the strings
-        // after removing the infobar path.
-        if (messageText.endsWith(".") || messageText.endsWith("。")) {
-            messageText = messageText.substring(0, messageText.length() - 1);
-        }
-
-        return messageText;
     }
 }

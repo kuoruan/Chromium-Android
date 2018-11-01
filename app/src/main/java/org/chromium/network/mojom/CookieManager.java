@@ -48,6 +48,14 @@ SetCanonicalCookieResponse callback);
 
 
 
+    void deleteCanonicalCookie(
+CanonicalCookie cookie, 
+DeleteCanonicalCookieResponse callback);
+
+    interface DeleteCanonicalCookieResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Boolean> { }
+
+
+
     void deleteCookies(
 CookieDeletionFilter filter, 
 DeleteCookiesResponse callback);
@@ -76,6 +84,21 @@ org.chromium.mojo.bindings.InterfaceRequest<CookieManager> newInterface);
 FlushCookieStoreResponse callback);
 
     interface FlushCookieStoreResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
+
+
+
+    void setContentSettings(
+org.chromium.content_settings.mojom.ContentSettingPatternSource[] settings);
+
+
+
+    void setForceKeepSessionState(
+);
+
+
+
+    void blockThirdPartyCookies(
+boolean block);
 
 
 }

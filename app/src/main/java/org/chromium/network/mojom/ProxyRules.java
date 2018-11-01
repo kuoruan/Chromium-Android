@@ -46,9 +46,6 @@ public final class ProxyRules extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static ProxyRules deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -62,46 +59,48 @@ public final class ProxyRules extends org.chromium.mojo.bindings.Struct {
         ProxyRules result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new ProxyRules(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new ProxyRules(elementsOrVersion);
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                 result.bypassRules = ProxyBypassRules.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.reverseBypass = decoder0.readBoolean(16, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.type = decoder0.readInt(20);
                     ProxyRulesType.validate(result.type);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                 result.singleProxies = ProxyList.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
                 result.proxiesForHttp = ProxyList.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(40, false);
                 result.proxiesForHttps = ProxyList.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(48, false);
                 result.proxiesForFtp = ProxyList.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(56, false);
                 result.fallbackProxies = ProxyList.decode(decoder1);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -128,54 +127,5 @@ public final class ProxyRules extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.proxiesForFtp, 48, false);
         
         encoder0.encode(this.fallbackProxies, 56, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        ProxyRules other = (ProxyRules) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.bypassRules, other.bypassRules))
-            return false;
-        if (this.reverseBypass!= other.reverseBypass)
-            return false;
-        if (this.type!= other.type)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.singleProxies, other.singleProxies))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.proxiesForHttp, other.proxiesForHttp))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.proxiesForHttps, other.proxiesForHttps))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.proxiesForFtp, other.proxiesForFtp))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.fallbackProxies, other.fallbackProxies))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bypassRules);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.reverseBypass);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.singleProxies);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.proxiesForHttp);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.proxiesForHttps);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.proxiesForFtp);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.fallbackProxies);
-        return result;
     }
 }

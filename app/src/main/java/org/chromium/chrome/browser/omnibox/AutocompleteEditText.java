@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.omnibox;
 
 import android.content.Context;
 import android.graphics.Rect;
-import android.os.StrictMode;
 import android.provider.Settings;
 import android.support.annotation.CallSuper;
 import android.text.TextUtils;
@@ -20,6 +19,7 @@ import android.view.inputmethod.InputConnection;
 import android.widget.EditText;
 
 import org.chromium.base.Log;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.widget.VerticallyFixedEditText;
@@ -196,18 +196,9 @@ public class AutocompleteEditText
         if (DEBUG) Log.i(TAG, "setText -- text: %s", text);
         mDisableTextScrollingFromAutocomplete = false;
 
-        // Avoid setting the same text as it will mess up the scroll/cursor position.
-        // Setting the text is also quite expensive, so only do it when the text has changed
-        // (since we apply spans when the view is not focused, we only optimize this when the
-        // text is being edited).
-        if (!TextUtils.equals(getEditableText(), text)) {
-            // Certain OEM implementations of setText trigger disk reads. crbug.com/633298
-            StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-            try {
-                super.setText(text, type);
-            } finally {
-                StrictMode.setThreadPolicy(oldPolicy);
-            }
+        // Certain OEM implementations of setText trigger disk reads. https://crbug.com/633298
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+            super.setText(text, type);
         }
         if (mModel != null) mModel.onSetText(text);
     }
@@ -238,11 +229,8 @@ public class AutocompleteEditText
     public void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo info) {
         // Certain OEM implementations of onInitializeAccessibilityNodeInfo trigger disk reads
         // to access the clipboard.  crbug.com/640993
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
-        try {
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
             super.onInitializeAccessibilityNodeInfo(info);
-        } finally {
-            StrictMode.setThreadPolicy(oldPolicy);
         }
     }
 

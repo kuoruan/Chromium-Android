@@ -22,6 +22,11 @@ import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -55,7 +60,7 @@ public class VariationsSeedFetcher {
     private static VariationsSeedFetcher sInstance;
 
     @VisibleForTesting
-    VariationsSeedFetcher() {}
+    public VariationsSeedFetcher() {}
 
     public static VariationsSeedFetcher get() {
         // TODO(aberent) Check not running on UI thread. Doing so however makes Robolectric testing
@@ -118,12 +123,28 @@ public class VariationsSeedFetcher {
      * Object holding the seed data and related fields retrieved from HTTP headers.
      */
     public static class SeedInfo {
+        // If you add fields, see VariationsTestUtils.
         public String signature;
         public String country;
         public String date;
         public boolean isGzipCompressed;
         public byte[] seedData;
+
+        public Date parseDate() throws ParseException {
+            // The date field comes from the HTTP "Date" header, which has this format. (See RFC
+            // 2616, sections 3.3.1 and 14.18.) SimpleDateFormat is weirdly not thread-safe, so
+            // instantiate a new one for each call.
+            return new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US).parse(date);
+        }
+
+        @Override
+        public String toString() {
+            return "SeedInfo{signature=\"" + signature + "\" country=\"" + country
+                    + "\" date=\"" + date + " isGzipCompressed=" + isGzipCompressed
+                    + " seedData=" + Arrays.toString(seedData);
+        }
     }
+
 
     /**
      * Fetch the first run variations seed.

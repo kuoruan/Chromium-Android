@@ -6,7 +6,6 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -31,7 +30,7 @@
             android:layout_weight="1"
             android:ellipsize="end"
             android:textAppearance="@style/BlackTitle1"
-            chrome:leading="22sp" />
+            app:leading="22sp" />
 
         <LinearLayout
             tools:ignore="UseCompoundDrawables"
@@ -59,16 +58,14 @@
                 android:maxLines="1"
                 android:singleLine="true"
                 android:ellipsize="end"
-                android:textSize="12sp"
-                android:textColor="@color/snippets_publisher_name_color"
+                android:textAppearance="@style/BlackCaption"
                 android:textDirection="locale" />
             <TextView
                 android:id="@+id/article_age"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:textSize="12sp"
-                android:textColor="@color/snippets_publisher_name_color"
+                android:textAppearance="@style/BlackCaption"
                 android:textDirection="locale"/>
 
             <!-- We can't add this ImageView as a CompoundDrawable to the TextView because we want to
@@ -83,7 +80,7 @@
                 android:src="@drawable/offline_pin_round"
                 android:contentDescription="@string/accessibility_ntp_offline_badge"
                 android:visibility="gone"
-                chrome:chrometint="#000" />
+                app:chrometint="@android:color/black" />
 
         </LinearLayout>
 
@@ -96,6 +93,7 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:scaleType="centerCrop"
-        android:contentDescription="@null"
-        android:src="@null" />
+        tools:ignore="ContentDescription"
+        android:src="@null"
+        app:chrometint="@color/dark_mode_tint" />
 </RelativeLayout>

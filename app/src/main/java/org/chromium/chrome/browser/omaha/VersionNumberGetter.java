@@ -60,7 +60,7 @@ public class VersionNumberGetter {
      * @return The latest version if we retrieved one from the Omaha server, or "" if we haven't.
      */
     public String getCurrentlyUsedVersion(Context context) {
-        return BuildInfo.getPackageVersionName();
+        return BuildInfo.getInstance().versionName;
     }
 
     /**

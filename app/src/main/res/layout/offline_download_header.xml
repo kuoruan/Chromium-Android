@@ -4,9 +4,11 @@
      found in the LICENSE file. -->
 
 <!-- Represents the suggested offline pages section header in the DownloadHistoryAdapter. -->
-<view class="org.chromium.chrome.browser.download.ui.OfflineGroupHeaderView"
+<view
+    class="org.chromium.chrome.browser.download.ui.OfflineGroupHeaderView"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" >
 
@@ -17,7 +19,8 @@
         <org.chromium.chrome.browser.widget.TintedImageView
             android:id="@+id/icon_view"
             style="@style/DownloadIconView"
-            android:src="@drawable/ic_chrome" />
+            android:src="@drawable/ic_chrome"
+            app:chrometint="@color/dark_mode_tint" />
 
         <RelativeLayout
             android:id="@+id/completed_layout"
@@ -44,15 +47,16 @@
                     android:layout_weight="0"
                     android:visibility="gone" />
 
-                <ImageView
+                <org.chromium.chrome.browser.widget.TintedImageView
                     android:id="@+id/expand_icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="0"
                     android:layout_gravity="center_vertical|end"
                     android:paddingEnd="16dp"
-                    android:contentDescription="@null"
-                    android:src="@drawable/ic_expand_more_black_24dp" />
+                    tools:ignore="ContentDescription"
+                    android:src="@drawable/ic_expand_more_black_24dp"
+                    app:chrometint="@color/dark_mode_tint" />
             </LinearLayout>
 
             <TextView

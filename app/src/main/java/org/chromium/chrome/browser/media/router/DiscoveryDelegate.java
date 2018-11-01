@@ -4,8 +4,6 @@
 
 package org.chromium.chrome.browser.media.router;
 
-import org.chromium.chrome.browser.media.router.cast.MediaSink;
-
 import java.util.List;
 
 /**

@@ -11,6 +11,7 @@ import android.util.LruCache;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.util.ConversionUtils;
 
 /**
  * A Java API for using the C++ LargeIconService.
@@ -18,8 +19,7 @@ import org.chromium.chrome.browser.profiles.Profile;
  * An instance of this class must be created, used, and destroyed on the same thread.
  */
 public class LargeIconBridge {
-
-    private static final int CACHE_ENTRY_MIN_SIZE_BYTES = 1024;
+    private static final int CACHE_ENTRY_MIN_SIZE_BYTES = ConversionUtils.BYTES_PER_KILOBYTE;
     private final Profile mProfile;
     private long mNativeLargeIconBridge;
     private LruCache<String, CachedFavicon> mFaviconCache;

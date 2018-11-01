@@ -6,7 +6,8 @@
 <!-- A site suggestion tile. -->
 <org.chromium.chrome.browser.suggestions.TileView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="@dimen/tile_view_width"
     android:layout_height="wrap_content"
     android:paddingStart="4dp"
@@ -28,7 +29,7 @@
         android:layout_height="@dimen/tile_view_icon_size_modern"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="@dimen/tile_view_icon_margin_top_modern"
-        android:contentDescription="@null" />
+        tools:ignore="ContentDescription" />
 
     <!-- The touch highlight. -->
     <View
@@ -49,7 +50,7 @@
         android:layout_marginEnd="@dimen/tile_view_offline_badge_margin_end_modern"
         android:visibility="gone"
         android:contentDescription="@string/accessibility_ntp_offline_badge"
-        chrome:srcCompat="@drawable/ic_offline_pin_blue_white" />
+        app:srcCompat="@drawable/ic_offline_pin_blue_white" />
 
     <!-- The title. -->
     <TextView
@@ -61,7 +62,6 @@
         android:gravity="center_horizontal"
         android:lines="2"
         android:lineSpacingMultiplier="1.17"
-        android:textColor="@color/tile_view_text"
-        android:textSize="12sp" />
+        android:textAppearance="@style/BlackCaption" />
 
 </org.chromium.chrome.browser.suggestions.TileView>

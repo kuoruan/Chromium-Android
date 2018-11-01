@@ -4,16 +4,22 @@
 
 package org.chromium.content.browser.remoteobjects;
 
+import android.support.annotation.IntDef;
+
 import org.chromium.blink.mojom.RemoteInvocationArgument;
 import org.chromium.blink.mojom.RemoteInvocationError;
 import org.chromium.blink.mojom.RemoteInvocationResult;
+import org.chromium.blink.mojom.RemoteInvocationResultValue;
 import org.chromium.blink.mojom.RemoteObject;
 import org.chromium.blink.mojom.SingletonJavaScriptValue;
 import org.chromium.mojo.system.MojoException;
 import org.chromium.mojo_base.mojom.String16;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -44,6 +50,15 @@ class RemoteObjectImpl implements RemoteObject {
     }
 
     /**
+     * Provides numeric identifier for Java objects to be exposed.
+     * These identifiers must not collide.
+     */
+    interface ObjectIdAllocator {
+        int getObjectId(Object object);
+        Object getObjectById(int id);
+    }
+
+    /**
      * Method which may not be called.
      */
     private static final Method sGetClassMethod;
@@ -65,6 +80,14 @@ class RemoteObjectImpl implements RemoteObject {
     private final WeakReference<Object> mTarget;
 
     /**
+     * Allocates IDs for other Java objects.
+     *
+     * Cannot be held strongly, because it may (via the objects it holds) contain
+     * references which form an uncollectable cycle.
+     */
+    private final WeakReference<ObjectIdAllocator> mObjectIdAllocator;
+
+    /**
      * Receives notification about events for auditing.
      */
     private final Auditor mAuditor;
@@ -74,14 +97,11 @@ class RemoteObjectImpl implements RemoteObject {
      */
     private final SortedMap<String, List<Method>> mMethods = new TreeMap<>();
 
-    public RemoteObjectImpl(Object target, Class<? extends Annotation> safeAnnotationClass) {
-        this(target, safeAnnotationClass, null);
-    }
-
-    public RemoteObjectImpl(
-            Object target, Class<? extends Annotation> safeAnnotationClass, Auditor auditor) {
+    public RemoteObjectImpl(Object target, Class<? extends Annotation> safeAnnotationClass,
+            Auditor auditor, ObjectIdAllocator objectIdAllocator) {
         mTarget = new WeakReference<>(target);
         mAuditor = auditor;
+        mObjectIdAllocator = new WeakReference<>(objectIdAllocator);
 
         for (Method method : target.getClass().getMethods()) {
             if (safeAnnotationClass != null && !method.isAnnotationPresent(safeAnnotationClass)) {
@@ -113,7 +133,8 @@ class RemoteObjectImpl implements RemoteObject {
     public void invokeMethod(
             String name, RemoteInvocationArgument[] arguments, InvokeMethodResponse callback) {
         Object target = mTarget.get();
-        if (target == null) {
+        ObjectIdAllocator objectIdAllocator = mObjectIdAllocator.get();
+        if (target == null || objectIdAllocator == null) {
             // TODO(jbroman): Handle this.
             return;
         }
@@ -131,11 +152,21 @@ class RemoteObjectImpl implements RemoteObject {
             callback.call(makeErrorResult(RemoteInvocationError.OBJECT_GET_CLASS_BLOCKED));
             return;
         }
+        if (method.getReturnType().isArray()) {
+            // LIVECONNECT_COMPLIANCE: Existing behavior is to not call methods that
+            // return arrays. Spec requires calling the method and converting the
+            // result to a JavaScript array.
+            RemoteInvocationResult result = new RemoteInvocationResult();
+            result.value = new RemoteInvocationResultValue();
+            result.value.setSingletonValue(SingletonJavaScriptValue.UNDEFINED);
+            callback.call(result);
+            return;
+        }
 
         Class<?>[] parameterTypes = method.getParameterTypes();
         Object[] args = new Object[numArguments];
         for (int i = 0; i < numArguments; i++) {
-            args[i] = convertArgument(arguments[i], parameterTypes[i]);
+            args[i] = convertArgument(arguments[i], parameterTypes[i], StringCoercionMode.COERCE);
         }
 
         Object result = null;
@@ -151,7 +182,6 @@ class RemoteObjectImpl implements RemoteObject {
             // IllegalArgumentException:
             //   Argument coercion logic is responsible for creating objects of a suitable Java
             //   type.
-            //   TODO(jbroman): Actually write said coercion logic.
             //
             // NullPointerException:
             //   A user of this class is responsible for ensuring that the target is not collected.
@@ -162,13 +192,14 @@ class RemoteObjectImpl implements RemoteObject {
             return;
         }
 
-        RemoteInvocationResult mojoResult = convertResult(result, method.getReturnType());
+        RemoteInvocationResult mojoResult =
+                convertResult(result, method.getReturnType(), objectIdAllocator);
         callback.call(mojoResult);
     }
 
     @Override
     public void close() {
-        // TODO(jbroman): Handle this.
+        mTarget.clear();
     }
 
     @Override
@@ -192,7 +223,20 @@ class RemoteObjectImpl implements RemoteObject {
         return null;
     }
 
-    private Object convertArgument(RemoteInvocationArgument argument, Class<?> parameterType) {
+    @IntDef({StringCoercionMode.DO_NOT_COERCE, StringCoercionMode.COERCE})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface StringCoercionMode {
+        // Do not coerce non-strings to string; instead produce null.
+        // Used when coercing arguments inside arrays.
+        int DO_NOT_COERCE = 0;
+
+        // Coerce into strings more aggressively. Applied when the parameter type is
+        // java.lang.String exactly.
+        int COERCE = 1;
+    }
+
+    private static Object convertArgument(RemoteInvocationArgument argument, Class<?> parameterType,
+            @StringCoercionMode int stringCoercionMode) {
         switch (argument.which()) {
             case RemoteInvocationArgument.Tag.NumberValue:
                 // See http://jdk6.java.net/plugin2/liveconnect/#JS_NUMBER_VALUES.
@@ -225,9 +269,9 @@ class RemoteObjectImpl implements RemoteObject {
                     // requires converting to false for 0 or NaN, true otherwise.
                     return false;
                 } else if (parameterType == String.class) {
-                    // TODO(jbroman): Don't coerce to string if this is inside the conversion of an
-                    // array.
-                    return doubleToString(numberValue);
+                    return stringCoercionMode == StringCoercionMode.COERCE
+                            ? doubleToString(numberValue)
+                            : null;
                 } else if (parameterType.isArray()) {
                     // LIVECONNECT_COMPLIANCE: Existing behavior is to convert to null. Spec
                     // requires raising a JavaScript exception.
@@ -248,7 +292,9 @@ class RemoteObjectImpl implements RemoteObject {
                     // non-boolean primitive types. Spec requires converting to 0 or 1.
                     return getPrimitiveZero(parameterType);
                 } else if (parameterType == String.class) {
-                    return Boolean.toString(booleanValue);
+                    return stringCoercionMode == StringCoercionMode.COERCE
+                            ? Boolean.toString(booleanValue)
+                            : null;
                 } else if (parameterType.isArray()) {
                     return null;
                 } else {
@@ -281,9 +327,8 @@ class RemoteObjectImpl implements RemoteObject {
                 if (parameterType == String.class) {
                     // LIVECONNECT_COMPLIANCE: Existing behavior is to convert undefined to
                     // "undefined". Spec requires converting undefined to NULL.
-                    // TODO(jbroman): Don't coerce undefined to string if this is inside the
-                    // conversion of an array.
-                    return argument.getSingletonValue() == SingletonJavaScriptValue.UNDEFINED
+                    return (argument.getSingletonValue() == SingletonJavaScriptValue.UNDEFINED
+                                   && stringCoercionMode == StringCoercionMode.COERCE)
                             ? "undefined"
                             : null;
                 } else if (parameterType.isPrimitive()) {
@@ -295,14 +340,73 @@ class RemoteObjectImpl implements RemoteObject {
                 } else {
                     return null;
                 }
+            case RemoteInvocationArgument.Tag.ArrayValue:
+                RemoteInvocationArgument[] arrayValue = argument.getArrayValue();
+                if (parameterType.isArray()) {
+                    Class<?> componentType = parameterType.getComponentType();
+
+                    // LIVECONNECT_COMPLIANCE: Existing behavior is to return null for
+                    // multi-dimensional and object arrays. Spec requires handling them.
+                    if (!componentType.isPrimitive() && componentType != String.class) {
+                        return null;
+                    }
+
+                    Object result = Array.newInstance(componentType, arrayValue.length);
+                    for (int i = 0; i < arrayValue.length; i++) {
+                        Object element = convertArgument(
+                                arrayValue[i], componentType, StringCoercionMode.DO_NOT_COERCE);
+                        Array.set(result, i, element);
+                    }
+                    return result;
+                } else if (parameterType == String.class) {
+                    return stringCoercionMode == StringCoercionMode.COERCE ? "undefined" : null;
+                } else if (parameterType.isPrimitive()) {
+                    return getPrimitiveZero(parameterType);
+                } else {
+                    // LIVECONNECT_COMPLIANCE: Existing behavior is to pass null. Spec requires
+                    // converting if the target type is netscape.javascript.JSObject, otherwise
+                    // raising a JavaScript exception.
+                    return null;
+                }
             default:
                 throw new RuntimeException("invalid wire argument type");
         }
     }
 
-    private RemoteInvocationResult convertResult(Object result, Class<?> returnType) {
-        // TODO(jbroman): Convert result.
-        return new RemoteInvocationResult();
+    private static RemoteInvocationResult convertResult(
+            Object result, Class<?> returnType, ObjectIdAllocator objectIdAllocator) {
+        // Methods returning arrays should not be called (for legacy reasons).
+        assert !returnType.isArray();
+
+        // LIVECONNECT_COMPLIANCE: The specification suggests that the conversion should happen
+        // based on the type of the result value. Existing behavior is to rely on the declared
+        // return type of the method. This means, for instance, that a java.lang.String returned
+        // from a method declared as returning java.lang.Object will not be converted to a
+        // JavaScript string.
+        RemoteInvocationResultValue resultValue = new RemoteInvocationResultValue();
+        if (returnType == void.class) {
+            resultValue.setSingletonValue(SingletonJavaScriptValue.UNDEFINED);
+        } else if (returnType == boolean.class) {
+            resultValue.setBooleanValue((Boolean) result);
+        } else if (returnType == char.class) {
+            resultValue.setNumberValue((Character) result);
+        } else if (returnType.isPrimitive()) {
+            resultValue.setNumberValue(((Number) result).doubleValue());
+        } else if (returnType == String.class) {
+            if (result == null) {
+                // LIVECONNECT_COMPLIANCE: Existing behavior is to return undefined.
+                // Spec requires returning a null string.
+                resultValue.setSingletonValue(SingletonJavaScriptValue.UNDEFINED);
+            } else {
+                resultValue.setStringValue(javaStringToMojoString((String) result));
+            }
+        } else {
+            int objectId = objectIdAllocator.getObjectId(result);
+            resultValue.setObjectId(objectId);
+        }
+        RemoteInvocationResult mojoResult = new RemoteInvocationResult();
+        mojoResult.value = resultValue;
+        return mojoResult;
     }
 
     private static RemoteInvocationResult makeErrorResult(int error) {
@@ -381,5 +485,15 @@ class RemoteObjectImpl implements RemoteObject {
             chars[i] = (char) data[i];
         }
         return String.valueOf(chars);
+    }
+
+    private static String16 javaStringToMojoString(String string) {
+        short[] data = new short[string.length()];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = (short) string.charAt(i);
+        }
+        String16 mojoString = new String16();
+        mojoString.data = data;
+        return mojoString;
     }
 }

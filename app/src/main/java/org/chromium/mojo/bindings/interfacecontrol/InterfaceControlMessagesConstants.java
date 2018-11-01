@@ -20,8 +20,10 @@ public final class InterfaceControlMessagesConstants {
     public static final int RUN_MESSAGE_ID = (int) 4294967295L;
 
 
+
     
     public static final int RUN_OR_CLOSE_PIPE_MESSAGE_ID = (int) 4294967294L;
+
 
 
     private InterfaceControlMessagesConstants() {}

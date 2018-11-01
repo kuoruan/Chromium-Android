@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.util.SparseIntArray;
 
 import org.chromium.base.ContextUtils;
@@ -55,15 +56,14 @@ public class MediaCaptureNotificationService extends Service {
     private static final int MEDIATYPE_SCREEN_CAPTURE = 4;
 
     private NotificationManager mNotificationManager;
-    private Context mContext;
     private SharedPreferences mSharedPreferences;
     private final SparseIntArray mNotifications = new SparseIntArray();
 
     @Override
     public void onCreate() {
-        mContext = getApplicationContext();
-        mNotificationManager = (NotificationManager) mContext.getSystemService(
-                Context.NOTIFICATION_SERVICE);
+        mNotificationManager =
+                (NotificationManager) ContextUtils.getApplicationContext().getSystemService(
+                        Context.NOTIFICATION_SERVICE);
         mSharedPreferences = ContextUtils.getAppSharedPreferences();
         super.onCreate();
     }
@@ -164,15 +164,16 @@ public class MediaCaptureNotificationService extends Service {
      */
     private void createNotification(int notificationId, int mediaType, String url) {
         final String channelId = mediaType == MEDIATYPE_SCREEN_CAPTURE
-                ? ChannelDefinitions.CHANNEL_ID_SCREEN_CAPTURE
-                : ChannelDefinitions.CHANNEL_ID_MEDIA;
+                ? ChannelDefinitions.ChannelId.SCREEN_CAPTURE
+                : ChannelDefinitions.ChannelId.MEDIA;
 
         ChromeNotificationBuilder builder =
                 NotificationBuilderFactory
                         .createChromeNotificationBuilder(true /* preferCompat */, channelId)
                         .setAutoCancel(false)
                         .setOngoing(true)
-                        .setContentTitle(mContext.getString(R.string.app_name))
+                        .setContentTitle(
+                                ContextUtils.getApplicationContext().getString(R.string.app_name))
                         .setSmallIcon(getNotificationIconId(mediaType))
                         .setLocalOnly(true);
 
@@ -181,19 +182,21 @@ public class MediaCaptureNotificationService extends Service {
         Intent tabIntent = Tab.createBringTabToFrontIntent(notificationId);
         if (tabIntent != null) {
             PendingIntent contentIntent = PendingIntent.getActivity(
-                    mContext, notificationId, tabIntent, 0);
+                    ContextUtils.getApplicationContext(), notificationId, tabIntent, 0);
             builder.setContentIntent(contentIntent);
             if (mediaType == MEDIATYPE_SCREEN_CAPTURE) {
                 // Add a "Stop" button to the screen capture notification and turn the notification
                 // into a high priority one.
-                builder.setPriority(Notification.PRIORITY_HIGH);
+                builder.setPriorityBeforeO(NotificationCompat.PRIORITY_HIGH);
                 builder.setVibrate(new long[0]);
                 builder.addAction(R.drawable.ic_stop_white_36dp,
-                        mContext.getResources().getString(R.string.accessibility_stop),
+                        ContextUtils.getApplicationContext().getResources().getString(
+                                R.string.accessibility_stop),
                         buildStopCapturePendingIntent(notificationId));
             } else {
-                contentText.append(" ").append(mContext.getResources().getString(
-                        R.string.media_notification_link_text, url));
+                contentText.append(" ").append(
+                        ContextUtils.getApplicationContext().getResources().getString(
+                                R.string.media_notification_link_text, url));
             }
         } else {
             contentText.append(" ").append(url);
@@ -205,7 +208,7 @@ public class MediaCaptureNotificationService extends Service {
         mNotifications.put(notificationId, mediaType);
         updateSharedPreferencesEntry(notificationId, false);
         NotificationUmaTracker.getInstance().onNotificationShown(
-                NotificationUmaTracker.MEDIA_CAPTURE, channelId);
+                NotificationUmaTracker.SystemNotificationType.MEDIA_CAPTURE, notification);
     }
 
     /**
@@ -216,7 +219,7 @@ public class MediaCaptureNotificationService extends Service {
      */
     private String getNotificationContentText(int mediaType, String url) {
         if (mediaType == MEDIATYPE_SCREEN_CAPTURE) {
-            return mContext.getResources().getString(
+            return ContextUtils.getApplicationContext().getResources().getString(
                     R.string.screen_capture_notification_text, url);
         }
 
@@ -229,7 +232,8 @@ public class MediaCaptureNotificationService extends Service {
             notificationContentTextId = R.string.audio_call_notification_text_2;
         }
 
-        return mContext.getResources().getString(notificationContentTextId);
+        return ContextUtils.getApplicationContext().getResources().getString(
+                notificationContentTextId);
     }
 
     /**
@@ -366,7 +370,7 @@ public class MediaCaptureNotificationService extends Service {
         Intent intent = new Intent(this, MediaCaptureNotificationService.class);
         intent.setAction(ACTION_SCREEN_CAPTURE_STOP);
         intent.putExtra(NOTIFICATION_ID_EXTRA, notificationId);
-        return PendingIntent.getService(
-                mContext, notificationId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getService(ContextUtils.getApplicationContext(), notificationId,
+                intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 }

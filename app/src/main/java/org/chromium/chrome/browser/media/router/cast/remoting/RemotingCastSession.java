@@ -14,25 +14,31 @@ import com.google.android.gms.common.api.Status;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.chromium.base.Log;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.media.remote.RemoteMediaPlayerWrapper;
-import org.chromium.chrome.browser.media.router.MediaController;
+import org.chromium.chrome.browser.media.router.CastSessionUtil;
+import org.chromium.chrome.browser.media.router.FlingingController;
+import org.chromium.chrome.browser.media.router.MediaSource;
 import org.chromium.chrome.browser.media.router.cast.CastMessageHandler;
 import org.chromium.chrome.browser.media.router.cast.CastSession;
 import org.chromium.chrome.browser.media.router.cast.CastSessionInfo;
 import org.chromium.chrome.browser.media.router.cast.ChromeCastSessionManager;
-import org.chromium.chrome.browser.media.router.cast.MediaSource;
 import org.chromium.chrome.browser.media.ui.MediaNotificationInfo;
 import org.chromium.chrome.browser.media.ui.MediaNotificationListener;
 import org.chromium.chrome.browser.media.ui.MediaNotificationManager;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * A wrapper around a RemoteMediaPlayer, used in remote playback.
  */
-public class RemotingCastSession implements MediaNotificationListener, CastSession {
+public class RemotingCastSession
+        implements MediaNotificationListener, CastSession, Cast.MessageReceivedCallback {
+    private static final String TAG = "MediaRouter";
+
     private final CastDevice mCastDevice;
     private final MediaSource mSource;
 
@@ -68,10 +74,32 @@ public class RemotingCastSession implements MediaNotificationListener, CastSessi
                         .setId(R.id.presentation_notification)
                         .setListener(this);
 
+        try {
+            Cast.CastApi.setMessageReceivedCallbacks(
+                    mApiClient, CastSessionUtil.MEDIA_NAMESPACE, this);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to register media namespace listener", e);
+        }
+
         mMediaPlayerWrapper =
                 new RemoteMediaPlayerWrapper(mApiClient, mNotificationBuilder, mCastDevice);
 
         mMediaPlayerWrapper.load(((RemotingMediaSource) source).getMediaUrl());
+    }
+
+    /**
+     * Cast.MessageReceivedCallback implementation.
+     */
+    @Override
+    public void onMessageReceived(CastDevice castDevice, String namespace, String message) {
+        if (!CastSessionUtil.MEDIA_NAMESPACE.equals(namespace)) {
+            Log.d(TAG,
+                    "RemotingCastSession received non-media message from Cast device: namespace=\""
+                            + namespace + "\" message=\"" + message + "\"");
+            return;
+        }
+
+        onMediaMessage(message);
     }
 
     @Override
@@ -186,7 +214,7 @@ public class RemotingCastSession implements MediaNotificationListener, CastSessi
     public void onMediaSessionAction(int action) {}
 
     @Override
-    public MediaController getMediaController() {
+    public FlingingController getFlingingController() {
         return mMediaPlayerWrapper;
     }
 }

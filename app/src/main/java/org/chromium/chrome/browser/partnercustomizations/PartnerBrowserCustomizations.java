@@ -9,10 +9,10 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.ProviderInfo;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
@@ -135,7 +135,7 @@ public class PartnerBrowserCustomizations {
      *         this method reads is not initialized until the asynchronous initialization of this
      *         class has been completed.
      */
-    static boolean isHomepageProviderAvailableAndEnabled() {
+    public static boolean isHomepageProviderAvailableAndEnabled() {
         return !TextUtils.isEmpty(getHomePageUrl());
     }
 
@@ -200,8 +200,7 @@ public class PartnerBrowserCustomizations {
         sIsInitialized = false;
         Provider provider = AppHooks.get().getCustomizationProvider();
         // Setup an initializing async task.
-        final AsyncTask<Void, Void, Void> initializeAsyncTask =
-                new AsyncTask<Void, Void, Void>() {
+        final AsyncTask<Void> initializeAsyncTask = new AsyncTask<Void>() {
             private boolean mDisablePartnerBookmarksShim;
             private boolean mHomepageUriChanged;
 
@@ -241,7 +240,7 @@ public class PartnerBrowserCustomizations {
             }
 
             @Override
-            protected Void doInBackground(Void... params) {
+            protected Void doInBackground() {
                 try {
                     boolean systemOrPreStable =
                             (context.getApplicationInfo().flags & ApplicationInfo.FLAG_SYSTEM) == 1

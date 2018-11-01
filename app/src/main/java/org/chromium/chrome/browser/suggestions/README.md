@@ -18,8 +18,8 @@ solution and guidelines for future developments.
 - **Allow for radical UI changes.** The core architecture of the package should
   be structured to allow for flexibility and experimentation in the UI. This
   means it generally shouldn't be tied to any particular UI surface, and
-  specifically that it is flexible enough to accomodate both the NTP and Chrome
-  Home.
+  specifically that it is flexible enough to accomodate both the current NTP and
+  its evolutions.
 
 
 ## Principles
@@ -143,17 +143,6 @@ javadoc and the unit tests for more info.
 - [`SuggestionsMetrics`](SuggestionsMetrics.java)
 - [`SuggestionsRanker`](SuggestionsRanker.java)
 - [`ContextMenuManager.Delegate`](../ntp/ContextMenuManager.java)
-
-
-### BottomSheet vs NewTabPage
-
-The suggestions were initially only displayed on New Tab pages. They had a
-fairly standard lifecycle, like other Native Pages, as an independent page
-created and rendered when the user opens it. When ChromeHome is enabled, the
-suggestions move to the bottom sheet and become part of the Chrome UI.
-
-Lifecycle differences are discussed in a
-[separate document (internal)](https://docs.google.com/document/d/1roFf_B9rNj49PzaEnzh0AljKj63M7m30RlvLZ-oAt08/preview)
 
 
 ## Appendix

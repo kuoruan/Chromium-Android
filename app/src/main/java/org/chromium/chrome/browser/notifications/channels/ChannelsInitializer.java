@@ -10,8 +10,10 @@ import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.content.res.Resources;
 import android.os.Build;
+import android.text.TextUtils;
 
 import org.chromium.chrome.browser.notifications.NotificationManagerProxy;
+import org.chromium.chrome.browser.webapps.WebApkServiceClient;
 
 /**
  * Initializes our notification channels.
@@ -92,5 +94,23 @@ public class ChannelsInitializer {
             channel.setImportance(NotificationManager.IMPORTANCE_NONE);
         }
         mNotificationManager.createNotificationChannel(channel);
+    }
+
+    /**
+     * This calls ensureInitialized after checking this isn't a WebAPK channel ID or null.
+     * @param channelId Id of the channel to be initialized.
+     */
+    public void safeInitialize(String channelId) {
+        // The channelId may be null if the notification will be posted by another app that
+        // does not target O or sets its own channels. E.g. WebAPK notifications.
+        if (channelId == null) {
+            return;
+        }
+        // If the channel ID matches {@link WebApkServiceClient#CHANNEL_ID_WEBAPKS}, we don't create
+        // the channel in Chrome. Instead, the channel will be created in WebAPKs.
+        if (TextUtils.equals(channelId, WebApkServiceClient.CHANNEL_ID_WEBAPKS)) {
+            return;
+        }
+        ensureInitialized(channelId);
     }
 }

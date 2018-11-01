@@ -25,20 +25,23 @@
             android:id="@+id/bottom_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="start|bottom">
+            android:layout_gravity="start|bottom" />
 
-            <HorizontalScrollView
-                android:id="@+id/keyboard_accessory"
-                android:layout_height="@dimen/keyboard_accessory_height"
-                android:layout_width="match_parent"
-                android:layout_gravity="start|bottom"
-                android:background="@drawable/keyboard_accessory_background"
-                android:contentDescription="@string/autofill_keyboard_accessory_content_description"
-                android:fillViewport="true"
-                android:scrollbars="none"
-                android:visibility="gone" />
+        <ViewStub
+            android:id="@+id/keyboard_accessory_stub"
+            android:inflatedId="@+id/keyboard_accessory"
+            android:layout="@layout/keyboard_accessory"
+            android:layout_height="@dimen/keyboard_accessory_height"
+            android:layout_width="match_parent"
+            android:layout_gravity="start|bottom"/>
 
-        </org.chromium.chrome.browser.snackbar.BottomContainer>
+        <ViewStub
+            android:id="@+id/keyboard_accessory_sheet_stub"
+            android:inflatedId="@+id/keyboard_accessory_sheet"
+            android:layout="@layout/keyboard_accessory_sheet"
+            android:layout_height="@dimen/keyboard_accessory_sheet_height"
+            android:layout_width="match_parent"
+            android:layout_gravity="start|bottom"/>
 
         <ViewStub
             android:id="@+id/bottombar_stub"
@@ -62,14 +65,6 @@
             android:layout_width="0dp"
             android:layout_height="0dp" />
 
-        <org.chromium.chrome.browser.widget.FadingBackgroundView
-            android:id="@+id/fading_focus_target"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="@dimen/tab_strip_height"
-            android:background="@color/omnibox_focused_fading_background_color"
-            android:visibility="gone" />
-
         <ViewStub
             android:id="@+id/omnibox_results_container_stub"
             android:layout_width="match_parent"
@@ -86,24 +81,17 @@
             android:visibility="gone" />
 
         <ViewStub
-            android:id="@+id/control_container_stub"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <ViewStub
-            android:id="@+id/bottom_nav_stub"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/bottom_nav_height"
-            android:layout_gravity="bottom"
-            android:inflatedId="@+id/bottom_nav"
-            android:layout="@layout/bottom_sheet_bottom_nav" />
-
-        <FrameLayout
-            android:id="@+id/bottom_sheet_snackbar_container"
+            android:id="@+id/bottom_toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="start|bottom"
-            android:layout_marginBottom="@dimen/bottom_nav_height" />
+            android:inflatedId="@+id/bottom_toolbar"
+            android:layout="@layout/bottom_toolbar" />
+
+        <ViewStub
+            android:id="@+id/control_container_stub"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
         <ViewStub
             android:id="@+id/empty_container_stub"
@@ -120,4 +108,11 @@
         android:layout_height="0px"
         android:layout_gravity="bottom|start"
         />
+
+    <!-- This empty view is used as the anchor for navigation history popup -->
+    <View
+        android:id="@+id/navigation_popup_anchor_stub"
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_gravity="bottom" />
 </merge>

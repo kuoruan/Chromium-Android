@@ -20,36 +20,26 @@ public final class CaLayerContent extends org.chromium.mojo.bindings.Union {
         public static final int CaContextId = 0;
         public static final int IoSurfaceMachPort = 1;
     };
-
-    private int mTag_ = -1;
     private int mCaContextId;
     private org.chromium.mojo.system.UntypedHandle mIoSurfaceMachPort;
 
-    public int which() {
-      return mTag_;
-    }
-
-    public boolean isUnknown() {
-      return mTag_ == -1;
-    }
-
     public void setCaContextId(int caContextId) {
-        this.mTag_ = Tag.CaContextId;
+        this.mTag = Tag.CaContextId;
         this.mCaContextId = caContextId;
     }
 
     public int getCaContextId() {
-        assert this.mTag_ == Tag.CaContextId;
+        assert this.mTag == Tag.CaContextId;
         return this.mCaContextId;
     }
 
     public void setIoSurfaceMachPort(org.chromium.mojo.system.UntypedHandle ioSurfaceMachPort) {
-        this.mTag_ = Tag.IoSurfaceMachPort;
+        this.mTag = Tag.IoSurfaceMachPort;
         this.mIoSurfaceMachPort = ioSurfaceMachPort;
     }
 
     public org.chromium.mojo.system.UntypedHandle getIoSurfaceMachPort() {
-        assert this.mTag_ == Tag.IoSurfaceMachPort;
+        assert this.mTag == Tag.IoSurfaceMachPort;
         return this.mIoSurfaceMachPort;
     }
 
@@ -57,8 +47,8 @@ public final class CaLayerContent extends org.chromium.mojo.bindings.Union {
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder0, int offset) {
         encoder0.encode(org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE, offset);
-        encoder0.encode(this.mTag_, offset + 4);
-        switch (mTag_) {
+        encoder0.encode(this.mTag, offset + 4);
+        switch (mTag) {
             case Tag.CaContextId: {
                 
                 encoder0.encode(this.mCaContextId, offset + 8);
@@ -89,62 +79,13 @@ public final class CaLayerContent extends org.chromium.mojo.bindings.Union {
             case Tag.CaContextId: {
                 
                 result.mCaContextId = decoder0.readInt(offset + org.chromium.mojo.bindings.DataHeader.HEADER_SIZE);
-                result.mTag_ = Tag.CaContextId;
+                result.mTag = Tag.CaContextId;
                 break;
             }
             case Tag.IoSurfaceMachPort: {
                 
                 result.mIoSurfaceMachPort = decoder0.readUntypedHandle(offset + org.chromium.mojo.bindings.DataHeader.HEADER_SIZE, false);
-                result.mTag_ = Tag.IoSurfaceMachPort;
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        CaLayerContent other = (CaLayerContent) object;
-        if (this.mTag_ != other.mTag_)
-            return false;
-        switch (this.mTag_) {
-            case Tag.CaContextId:
-                return this.mCaContextId== other.mCaContextId;
-            case Tag.IoSurfaceMachPort:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mIoSurfaceMachPort, other.mIoSurfaceMachPort);
-            default:
-                break;
-        }
-        return false;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mTag_);
-        switch (this.mTag_) {
-            case Tag.CaContextId: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mCaContextId);
-                break;
-            }
-            case Tag.IoSurfaceMachPort: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mIoSurfaceMachPort);
+                result.mTag = Tag.IoSurfaceMachPort;
                 break;
             }
             default: {

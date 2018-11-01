@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.contextualsearch;
 
+import android.support.annotation.IntDef;
 import android.util.Pair;
 
 import org.chromium.base.metrics.RecordHistogram;
@@ -12,6 +13,8 @@ import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.PanelState;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,208 +29,331 @@ public class ContextualSearchUma {
     private static final boolean TAP = true;
 
     // Constants used to log UMA "enum" histograms about the Contextual Search's preference state.
-    private static final int PREFERENCE_UNINITIALIZED = 0;
-    private static final int PREFERENCE_ENABLED = 1;
-    private static final int PREFERENCE_DISABLED = 2;
-    private static final int PREFERENCE_HISTOGRAM_BOUNDARY = 3;
+    @IntDef({Preference.UNINITIALIZED, Preference.ENABLED, Preference.DISABLED})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface Preference {
+        int UNINITIALIZED = 0;
+        int ENABLED = 1;
+        int DISABLED = 2;
+        int NUM_ENTRIES = 3;
+    }
 
     // Constants used to log UMA "enum" histograms about whether search results were seen.
-    private static final int RESULTS_SEEN = 0;
-    private static final int RESULTS_NOT_SEEN = 1;
-    private static final int RESULTS_SEEN_BOUNDARY = 2;
+    @IntDef({Results.SEEN, Results.NOT_SEEN})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface Results {
+        int SEEN = 0;
+        int NOT_SEEN = 1;
+        int NUM_ENTRIES = 2;
+    }
 
     // Constants used to log UMA "enum" histograms about whether the selection is valid.
-    private static final int SELECTION_VALID = 0;
-    private static final int SELECTION_INVALID = 1;
-    private static final int SELECTION_BOUNDARY = 2;
+    @IntDef({Selection.VALID, Selection.INVALID})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface Selection {
+        int VALID = 0;
+        int INVALID = 1;
+        int NUM_ENTRIES = 2;
+    }
 
     // Constants used to log UMA "enum" histograms about a request's outcome.
-    private static final int REQUEST_NOT_FAILED = 0;
-    private static final int REQUEST_FAILED = 1;
-    private static final int REQUEST_BOUNDARY = 2;
+    @IntDef({Request.NOT_FAILED, Request.FAILED})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface Request {
+        int NOT_FAILED = 0;
+        int FAILED = 1;
+        int NUM_ENTRIES = 2;
+    }
 
     // Constants used to log UMA "enum" histograms about the panel's state transitions.
     // Entry code: first entry into CLOSED.
-    private static final int ENTER_CLOSED_FROM_OTHER = 0;
-    private static final int ENTER_CLOSED_FROM_PEEKED_BACK_PRESS = 1;
-    private static final int ENTER_CLOSED_FROM_PEEKED_BASE_PAGE_SCROLL = 2;
-    private static final int ENTER_CLOSED_FROM_PEEKED_TEXT_SELECT_TAP = 3;
-    private static final int ENTER_CLOSED_FROM_EXPANDED_BACK_PRESS = 4;
-    private static final int ENTER_CLOSED_FROM_EXPANDED_BASE_PAGE_TAP = 5;
-    private static final int ENTER_CLOSED_FROM_EXPANDED_FLING = 6;
-    private static final int ENTER_CLOSED_FROM_MAXIMIZED_BACK_PRESS = 7;
-    private static final int ENTER_CLOSED_FROM_MAXIMIZED_FLING = 8;
-    private static final int ENTER_CLOSED_FROM_MAXIMIZED_TAB_PROMOTION = 9;
-    private static final int ENTER_CLOSED_FROM_MAXIMIZED_SERP_NAVIGATION = 10;
-    private static final int ENTER_CLOSED_FROM_BOUNDARY = 11;
+    @IntDef({EnterClosedFrom.OTHER, EnterClosedFrom.PEEKED_BACK_PRESS,
+            EnterClosedFrom.PEEKED_BASE_PAGE_SCROLL, EnterClosedFrom.PEEKED_TEXT_SELECT_TAP,
+            EnterClosedFrom.EXPANDED_BACK_PRESS, EnterClosedFrom.EXPANDED_BASE_PAGE_TAP,
+            EnterClosedFrom.EXPANDED_FLING, EnterClosedFrom.MAXIMIZED_BACK_PRESS,
+            EnterClosedFrom.MAXIMIZED_FLING, EnterClosedFrom.MAXIMIZED_TAB_PROMOTION,
+            EnterClosedFrom.MAXIMIZED_SERP_NAVIGATION})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface EnterClosedFrom {
+        int OTHER = 0;
+        int PEEKED_BACK_PRESS = 1;
+        int PEEKED_BASE_PAGE_SCROLL = 2;
+        int PEEKED_TEXT_SELECT_TAP = 3;
+        int EXPANDED_BACK_PRESS = 4;
+        int EXPANDED_BASE_PAGE_TAP = 5;
+        int EXPANDED_FLING = 6;
+        int MAXIMIZED_BACK_PRESS = 7;
+        int MAXIMIZED_FLING = 8;
+        int MAXIMIZED_TAB_PROMOTION = 9;
+        int MAXIMIZED_SERP_NAVIGATION = 10;
+        int NUM_ENTRIES = 11;
+    }
 
     // Entry code: first entry into PEEKED.
-    private static final int ENTER_PEEKED_FROM_OTHER = 0;
-    private static final int ENTER_PEEKED_FROM_CLOSED_TEXT_SELECT_TAP = 1;
-    private static final int ENTER_PEEKED_FROM_CLOSED_EXT_SELECT_LONG_PRESS = 2;
-    private static final int ENTER_PEEKED_FROM_PEEKED_TEXT_SELECT_TAP = 3;
-    private static final int ENTER_PEEKED_FROM_PEEKED_TEXT_SELECT_LONG_PRESS = 4;
-    private static final int ENTER_PEEKED_FROM_EXPANDED_SEARCH_BAR_TAP = 5;
-    private static final int ENTER_PEEKED_FROM_EXPANDED_SWIPE = 6;
-    private static final int ENTER_PEEKED_FROM_EXPANDED_FLING = 7;
-    private static final int ENTER_PEEKED_FROM_MAXIMIZED_SWIPE = 8;
-    private static final int ENTER_PEEKED_FROM_MAXIMIZED_FLING = 9;
-    private static final int ENTER_PEEKED_FROM_BOUNDARY = 10;
+    @IntDef({EnterPeekedFrom.OTHER, EnterPeekedFrom.CLOSED_TEXT_SELECT_TAP,
+            EnterPeekedFrom.CLOSED_EXT_SELECT_LONG_PRESS, EnterPeekedFrom.PEEKED_TEXT_SELECT_TAP,
+            EnterPeekedFrom.PEEKED_TEXT_SELECT_LONG_PRESS, EnterPeekedFrom.EXPANDED_SEARCH_BAR_TAP,
+            EnterPeekedFrom.EXPANDED_SWIPE, EnterPeekedFrom.EXPANDED_FLING,
+            EnterPeekedFrom.MAXIMIZED_SWIPE, EnterPeekedFrom.MAXIMIZED_FLING})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface EnterPeekedFrom {
+        int OTHER = 0;
+        int CLOSED_TEXT_SELECT_TAP = 1;
+        int CLOSED_EXT_SELECT_LONG_PRESS = 2;
+        int PEEKED_TEXT_SELECT_TAP = 3;
+        int PEEKED_TEXT_SELECT_LONG_PRESS = 4;
+        int EXPANDED_SEARCH_BAR_TAP = 5;
+        int EXPANDED_SWIPE = 6;
+        int EXPANDED_FLING = 7;
+        int MAXIMIZED_SWIPE = 8;
+        int MAXIMIZED_FLING = 9;
+        int NUM_ENTRIES = 10;
+    }
 
     // Entry code: first entry into EXPANDED.
-    private static final int ENTER_EXPANDED_FROM_OTHER = 0;
-    private static final int ENTER_EXPANDED_FROM_PEEKED_SEARCH_BAR_TAP = 1;
-    private static final int ENTER_EXPANDED_FROM_PEEKED_SWIPE = 2;
-    private static final int ENTER_EXPANDED_FROM_PEEKED_FLING = 3;
-    private static final int ENTER_EXPANDED_FROM_MAXIMIZED_SWIPE = 4;
-    private static final int ENTER_EXPANDED_FROM_MAXIMIZED_FLING = 5;
-    private static final int ENTER_EXPANDED_FROM_BOUNDARY = 6;
+    @IntDef({EnterExpandedFrom.OTHER, EnterExpandedFrom.PEEKED_SEARCH_BAR_TAP,
+            EnterExpandedFrom.PEEKED_SWIPE, EnterExpandedFrom.PEEKED_FLING,
+            EnterExpandedFrom.MAXIMIZED_SWIPE, EnterExpandedFrom.MAXIMIZED_FLING})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface EnterExpandedFrom {
+        int OTHER = 0;
+        int PEEKED_SEARCH_BAR_TAP = 1;
+        int PEEKED_SWIPE = 2;
+        int PEEKED_FLING = 3;
+        int MAXIMIZED_SWIPE = 4;
+        int MAXIMIZED_FLING = 5;
+        int NUM_ENTRIES = 6;
+    }
 
     // Entry code: first entry into MAXIMIZED.
-    private static final int ENTER_MAXIMIZED_FROM_OTHER = 0;
-    private static final int ENTER_MAXIMIZED_FROM_PEEKED_SWIPE = 1;
-    private static final int ENTER_MAXIMIZED_FROM_PEEKED_FLING = 2;
-    private static final int ENTER_MAXIMIZED_FROM_EXPANDED_SWIPE = 3;
-    private static final int ENTER_MAXIMIZED_FROM_EXPANDED_FLING = 4;
-    private static final int ENTER_MAXIMIZED_FROM_EXPANDED_SERP_NAVIGATION = 5;
-    private static final int ENTER_MAXIMIZED_FROM_BOUNDARY = 6;
+    @IntDef({EnterMaximizedFrom.OTHER, EnterMaximizedFrom.PEEKED_SWIPE,
+            EnterMaximizedFrom.PEEKED_FLING, EnterMaximizedFrom.EXPANDED_SWIPE,
+            EnterMaximizedFrom.EXPANDED_FLING, EnterMaximizedFrom.EXPANDED_SERP_NAVIGATION})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface EnterMaximizedFrom {
+        int OTHER = 0;
+        int PEEKED_SWIPE = 1;
+        int PEEKED_FLING = 2;
+        int EXPANDED_SWIPE = 3;
+        int EXPANDED_FLING = 4;
+        int EXPANDED_SERP_NAVIGATION = 5;
+        int NUM_ENTRIES = 6;
+    }
 
     // Exit code: first exit from CLOSED (or UNDEFINED).
-    private static final int EXIT_CLOSED_TO_OTHER = 0;
-    private static final int EXIT_CLOSED_TO_PEEKED_TEXT_SELECT_TAP = 1;
-    private static final int EXIT_CLOSED_TO_PEEKED_TEXT_SELECT_LONG_PRESS = 2;
-    private static final int EXIT_CLOSED_TO_BOUNDARY = 3;
+    @IntDef({ExitClosedTo.OTHER, ExitClosedTo.PEEKED_TEXT_SELECT_TAP,
+            ExitClosedTo.PEEKED_TEXT_SELECT_LONG_PRESS})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface ExitClosedTo {
+        int OTHER = 0;
+        int PEEKED_TEXT_SELECT_TAP = 1;
+        int PEEKED_TEXT_SELECT_LONG_PRESS = 2;
+        int NUM_ENTRIES = 3;
+    }
 
     // Exit code: first exit from PEEKED.
-    private static final int EXIT_PEEKED_TO_OTHER = 0;
-    private static final int EXIT_PEEKED_TO_CLOSED_BACK_PRESS = 1;
-    private static final int EXIT_PEEKED_TO_CLOSED_BASE_PAGE_SCROLL = 2;
-    private static final int EXIT_PEEKED_TO_CLOSED_TEXT_SELECT_TAP = 3;
-    private static final int EXIT_PEEKED_TO_PEEKED_TEXT_SELECT_TAP = 4;
-    private static final int EXIT_PEEKED_TO_PEEKED_TEXT_SELECT_LONG_PRESS = 5;
-    private static final int EXIT_PEEKED_TO_EXPANDED_SEARCH_BAR_TAP = 6;
-    private static final int EXIT_PEEKED_TO_EXPANDED_SWIPE = 7;
-    private static final int EXIT_PEEKED_TO_EXPANDED_FLING = 8;
-    private static final int EXIT_PEEKED_TO_MAXIMIZED_SWIPE = 9;
-    private static final int EXIT_PEEKED_TO_MAXIMIZED_FLING = 10;
-    private static final int EXIT_PEEKED_TO_BOUNDARY = 11;
+    @IntDef({ExitPeekedTo.OTHER, ExitPeekedTo.CLOSED_BACK_PRESS,
+            ExitPeekedTo.CLOSED_BASE_PAGE_SCROLL, ExitPeekedTo.CLOSED_TEXT_SELECT_TAP,
+            ExitPeekedTo.PEEKED_TEXT_SELECT_TAP, ExitPeekedTo.PEEKED_TEXT_SELECT_LONG_PRESS,
+            ExitPeekedTo.EXPANDED_SEARCH_BAR_TAP, ExitPeekedTo.EXPANDED_SWIPE,
+            ExitPeekedTo.EXPANDED_FLING, ExitPeekedTo.MAXIMIZED_SWIPE,
+            ExitPeekedTo.MAXIMIZED_FLING})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface ExitPeekedTo {
+        int OTHER = 0;
+        int CLOSED_BACK_PRESS = 1;
+        int CLOSED_BASE_PAGE_SCROLL = 2;
+        int CLOSED_TEXT_SELECT_TAP = 3;
+        int PEEKED_TEXT_SELECT_TAP = 4;
+        int PEEKED_TEXT_SELECT_LONG_PRESS = 5;
+        int EXPANDED_SEARCH_BAR_TAP = 6;
+        int EXPANDED_SWIPE = 7;
+        int EXPANDED_FLING = 8;
+        int MAXIMIZED_SWIPE = 9;
+        int MAXIMIZED_FLING = 10;
+        int NUM_ENTRIES = 11;
+    }
 
     // Exit code: first exit from EXPANDED.
-    private static final int EXIT_EXPANDED_TO_OTHER = 0;
-    private static final int EXIT_EXPANDED_TO_CLOSED_BACK_PRESS = 1;
-    private static final int EXIT_EXPANDED_TO_CLOSED_BASE_PAGE_TAP = 2;
-    private static final int EXIT_EXPANDED_TO_CLOSED_FLING = 3;
-    private static final int EXIT_EXPANDED_TO_PEEKED_SEARCH_BAR_TAP = 4;
-    private static final int EXIT_EXPANDED_TO_PEEKED_SWIPE = 5;
-    private static final int EXIT_EXPANDED_TO_PEEKED_FLING = 6;
-    private static final int EXIT_EXPANDED_TO_MAXIMIZED_SWIPE = 7;
-    private static final int EXIT_EXPANDED_TO_MAXIMIZED_FLING = 8;
-    private static final int EXIT_EXPANDED_TO_MAXIMIZED_SERP_NAVIGATION = 9;
-    private static final int EXIT_EXPANDED_TO_BOUNDARY = 10;
+    @IntDef({ExitExpandedTo.OTHER, ExitExpandedTo.CLOSED_BACK_PRESS,
+            ExitExpandedTo.CLOSED_BASE_PAGE_TAP, ExitExpandedTo.CLOSED_FLING,
+            ExitExpandedTo.PEEKED_SEARCH_BAR_TAP, ExitExpandedTo.PEEKED_SWIPE,
+            ExitExpandedTo.PEEKED_FLING, ExitExpandedTo.MAXIMIZED_SWIPE,
+            ExitExpandedTo.MAXIMIZED_FLING, ExitExpandedTo.MAXIMIZED_SERP_NAVIGATION})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface ExitExpandedTo {
+        int OTHER = 0;
+        int CLOSED_BACK_PRESS = 1;
+        int CLOSED_BASE_PAGE_TAP = 2;
+        int CLOSED_FLING = 3;
+        int PEEKED_SEARCH_BAR_TAP = 4;
+        int PEEKED_SWIPE = 5;
+        int PEEKED_FLING = 6;
+        int MAXIMIZED_SWIPE = 7;
+        int MAXIMIZED_FLING = 8;
+        int MAXIMIZED_SERP_NAVIGATION = 9;
+        int NUM_ENTRIES = 10;
+    }
 
     // Exit code: first exit from MAXIMIZED.
-    private static final int EXIT_MAXIMIZED_TO_OTHER = 0;
-    private static final int EXIT_MAXIMIZED_TO_CLOSED_BACK_PRESS = 1;
-    private static final int EXIT_MAXIMIZED_TO_CLOSED_FLING = 2;
-    private static final int EXIT_MAXIMIZED_TO_CLOSED_TAB_PROMOTION = 3;
-    private static final int EXIT_MAXIMIZED_TO_CLOSED_SERP_NAVIGATION = 4;
-    private static final int EXIT_MAXIMIZED_TO_PEEKED_SWIPE = 5;
-    private static final int EXIT_MAXIMIZED_TO_PEEKED_FLING = 6;
-    private static final int EXIT_MAXIMIZED_TO_EXPANDED_SWIPE = 7;
-    private static final int EXIT_MAXIMIZED_TO_EXPANDED_FLING = 8;
-    private static final int EXIT_MAXIMIZED_TO_BOUNDARY = 9;
+    @IntDef({ExitMaximizedTo.OTHER, ExitMaximizedTo.CLOSED_BACK_PRESS, ExitMaximizedTo.CLOSED_FLING,
+            ExitMaximizedTo.CLOSED_TAB_PROMOTION, ExitMaximizedTo.CLOSED_SERP_NAVIGATION,
+            ExitMaximizedTo.PEEKED_SWIPE, ExitMaximizedTo.PEEKED_FLING,
+            ExitMaximizedTo.EXPANDED_SWIPE, ExitMaximizedTo.EXPANDED_FLING})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface ExitMaximizedTo {
+        int OTHER = 0;
+        int CLOSED_BACK_PRESS = 1;
+        int CLOSED_FLING = 2;
+        int CLOSED_TAB_PROMOTION = 3;
+        int CLOSED_SERP_NAVIGATION = 4;
+        int PEEKED_SWIPE = 5;
+        int PEEKED_FLING = 6;
+        int EXPANDED_SWIPE = 7;
+        int EXPANDED_FLING = 8;
+        int NUM_ENTRIES = 9;
+    }
 
     // Constants used to log UMA "enum" histograms with details about whether search results
     // were seen, and what the original triggering gesture was.
-    private static final int RESULTS_SEEN_FROM_TAP = 0;
-    private static final int RESULTS_NOT_SEEN_FROM_TAP = 1;
-    private static final int RESULTS_SEEN_FROM_LONG_PRESS = 2;
-    private static final int RESULTS_NOT_SEEN_FROM_LONG_PRESS = 3;
-    private static final int RESULTS_BY_GESTURE_BOUNDARY = 4;
+    @IntDef({ResultsByGesture.SEEN_FROM_TAP, ResultsByGesture.NOT_SEEN_FROM_TAP,
+            ResultsByGesture.SEEN_FROM_LONG_PRESS, ResultsByGesture.NOT_SEEN_FROM_LONG_PRESS})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface ResultsByGesture {
+        int SEEN_FROM_TAP = 0;
+        int NOT_SEEN_FROM_TAP = 1;
+        int SEEN_FROM_LONG_PRESS = 2;
+        int NOT_SEEN_FROM_LONG_PRESS = 3;
+        int NUM_ENTRIES = 4;
+    }
 
     // Constants used to log UMA "enum" histograms with details about whether search results
     // were seen, and whether any existing tap suppression heuristics were satisfied.
-    private static final int RESULTS_SEEN_SUPPRESSION_HEURSTIC_SATISFIED = 0;
-    private static final int RESULTS_NOT_SEEN_SUPPRESSION_HEURSTIC_SATISFIED = 1;
-    private static final int RESULTS_SEEN_SUPPRESSION_HEURSTIC_NOT_SATISFIED = 2;
-    private static final int RESULTS_NOT_SEEN_SUPPRESSION_HEURSTIC_NOT_SATISFIED = 3;
-    private static final int RESULTS_SEEN_SUPPRESSION_BOUNDARY = 4;
+    @IntDef({ResultsBySuppression.SEEN_SUPPRESSION_HEURSTIC_SATISFIED,
+            ResultsBySuppression.NOT_SEEN_SUPPRESSION_HEURSTIC_SATISFIED,
+            ResultsBySuppression.SEEN_SUPPRESSION_HEURSTIC_NOT_SATISFIED,
+            ResultsBySuppression.NOT_SEEN_SUPPRESSION_HEURSTIC_NOT_SATISFIED})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface ResultsBySuppression {
+        int SEEN_SUPPRESSION_HEURSTIC_SATISFIED = 0;
+        int NOT_SEEN_SUPPRESSION_HEURSTIC_SATISFIED = 1;
+        int SEEN_SUPPRESSION_HEURSTIC_NOT_SATISFIED = 2;
+        int NOT_SEEN_SUPPRESSION_HEURSTIC_NOT_SATISFIED = 3;
+        int NUM_ENTRIES = 4;
+    }
 
     // Constants used to log UMA "enum" histograms with details about whether search results
     // were seen, and what the original triggering gesture was.
-    private static final int PROMO_ENABLED_FROM_TAP = 0;
-    private static final int PROMO_DISABLED_FROM_TAP = 1;
-    private static final int PROMO_UNDECIDED_FROM_TAP = 2;
-    private static final int PROMO_ENABLED_FROM_LONG_PRESS = 3;
-    private static final int PROMO_DISABLED_FROM_LONG_PRESS = 4;
-    private static final int PROMO_UNDECIDED_FROM_LONG_PRESS = 5;
-    private static final int PROMO_BY_GESTURE_BOUNDARY = 6;
+    @IntDef({Promo.ENABLED_FROM_TAP, Promo.DISABLED_FROM_TAP, Promo.UNDECIDED_FROM_TAP,
+            Promo.ENABLED_FROM_LONG_PRESS, Promo.DISABLED_FROM_LONG_PRESS,
+            Promo.UNDECIDED_FROM_LONG_PRESS})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface Promo {
+        int ENABLED_FROM_TAP = 0;
+        int DISABLED_FROM_TAP = 1;
+        int UNDECIDED_FROM_TAP = 2;
+        int ENABLED_FROM_LONG_PRESS = 3;
+        int DISABLED_FROM_LONG_PRESS = 4;
+        int UNDECIDED_FROM_LONG_PRESS = 5;
+        int NUM_ENTRIES = 6;
+    }
 
     // Constants used to log UMA "enum" histograms for HTTP / HTTPS.
-    private static final int PROTOCOL_IS_HTTP = 0;
-    private static final int PROTOCOL_NOT_HTTP = 1;
-    private static final int PROTOCOL_BOUNDARY = 2;
+    @IntDef({Protocol.IS_HTTP, Protocol.NOT_HTTP})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface Protocol {
+        int IS_HTTP = 0;
+        int NOT_HTTP = 1;
+        int NUM_ENTRIES = 2;
+    }
 
     // Constants used to log UMA "enum" histograms for single / multi-word.
-    private static final int RESOLVED_SINGLE_WORD = 0;
-    private static final int RESOLVED_MULTI_WORD = 1;
-    private static final int RESOLVED_BOUNDARY = 2;
+    @IntDef({ResolvedGranularity.SINGLE_WORD, ResolvedGranularity.MULTI_WORD})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface ResolvedGranularity {
+        int SINGLE_WORD = 0;
+        int MULTI_WORD = 1;
+        int NUM_ENTRIES = 2;
+    }
 
     // Constants used to log UMA "enum" histograms for triggering the Translate Onebox.
-    private static final int DID_FORCE_TRANSLATE = 0;
-    private static final int WOULD_FORCE_TRANSLATE = 1;
-    private static final int FORCE_TRANSLATE_BOUNDARY = 2;
+    @IntDef({ForceTranslate.DID_FORCE, ForceTranslate.WOULD_FORCE})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface ForceTranslate {
+        int DID_FORCE = 0;
+        int WOULD_FORCE = 1;
+        int NUM_ENTRIES = 2;
+    }
 
     // Constants used to log UMA "enum" histograms for Quick Answers.
-    private static final int QUICK_ANSWER_ACTIVATED_WAS_AN_ANSWER_SEEN = 0;
-    private static final int QUICK_ANSWER_ACTIVATED_WAS_AN_ANSWER_NOT_SEEN = 1;
-    private static final int QUICK_ANSWER_ACTIVATED_NOT_AN_ANSWER_SEEN = 2;
-    private static final int QUICK_ANSWER_ACTIVATED_NOT_AN_ANSWER_NOT_SEEN = 3;
-    private static final int QUICK_ANSWER_NOT_ACTIVATED_SEEN = 4;
-    private static final int QUICK_ANSWER_NOT_ACTIVATED_NOT_SEEN = 5;
-    private static final int QUICK_ANSWER_SEEN_BOUNDARY = 6;
+    @IntDef({QuickAnswerSeen.ACTIVATED_WAS_AN_ANSWER_SEEN,
+            QuickAnswerSeen.ACTIVATED_WAS_AN_ANSWER_NOT_SEEN,
+            QuickAnswerSeen.ACTIVATED_NOT_AN_ANSWER_SEEN,
+            QuickAnswerSeen.ACTIVATED_NOT_AN_ANSWER_NOT_SEEN, QuickAnswerSeen.NOT_ACTIVATED_SEEN,
+            QuickAnswerSeen.NOT_ACTIVATED_NOT_SEEN})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface QuickAnswerSeen {
+        int ACTIVATED_WAS_AN_ANSWER_SEEN = 0;
+        int ACTIVATED_WAS_AN_ANSWER_NOT_SEEN = 1;
+        int ACTIVATED_NOT_AN_ANSWER_SEEN = 2;
+        int ACTIVATED_NOT_AN_ANSWER_NOT_SEEN = 3;
+        int NOT_ACTIVATED_SEEN = 4;
+        int NOT_ACTIVATED_NOT_SEEN = 5;
+        int NUM_ENTRIES = 6;
+    }
 
     // Constants for "Bar Overlap" with triggering gesture, and whether the results were seen.
-    private static final int BAR_OVERLAP_RESULTS_SEEN_FROM_TAP = 0;
-    private static final int BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_TAP = 1;
-    private static final int NO_BAR_OVERLAP_RESULTS_SEEN_FROM_TAP = 2;
-    private static final int NO_BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_TAP = 3;
-    private static final int BAR_OVERLAP_RESULTS_SEEN_FROM_LONG_PRESS = 4;
-    private static final int BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_LONG_PRESS = 5;
-    private static final int NO_BAR_OVERLAP_RESULTS_SEEN_FROM_LONG_PRESS = 6;
-    private static final int NO_BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_LONG_PRESS = 7;
-    private static final int BAR_OVERLAP_RESULTS_BOUNDARY = 8;
+    @IntDef({BarOverlapResults.BAR_OVERLAP_RESULTS_SEEN_FROM_TAP,
+            BarOverlapResults.BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_TAP,
+            BarOverlapResults.NO_BAR_OVERLAP_RESULTS_SEEN_FROM_TAP,
+            BarOverlapResults.NO_BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_TAP,
+            BarOverlapResults.BAR_OVERLAP_RESULTS_SEEN_FROM_LONG_PRESS,
+            BarOverlapResults.BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_LONG_PRESS,
+            BarOverlapResults.NO_BAR_OVERLAP_RESULTS_SEEN_FROM_LONG_PRESS,
+            BarOverlapResults.NO_BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_LONG_PRESS})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface BarOverlapResults {
+        int BAR_OVERLAP_RESULTS_SEEN_FROM_TAP = 0;
+        int BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_TAP = 1;
+        int NO_BAR_OVERLAP_RESULTS_SEEN_FROM_TAP = 2;
+        int NO_BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_TAP = 3;
+        int BAR_OVERLAP_RESULTS_SEEN_FROM_LONG_PRESS = 4;
+        int BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_LONG_PRESS = 5;
+        int NO_BAR_OVERLAP_RESULTS_SEEN_FROM_LONG_PRESS = 6;
+        int NO_BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_LONG_PRESS = 7;
+        int NUM_ENTRIES = 8;
+    }
 
     // Constants for quick action intent resolution histogram.
-    private static final int QUICK_ACTION_RESOLVE_FAILED = 0;
-    private static final int QUICK_ACTION_RESOLVE_SINGLE = 1;
-    private static final int QUICK_ACTION_RESOLVE_MULTIPLE = 2;
-    private static final int QUICK_ACTION_RESOLVE_BOUNDARY = 3;
+    @IntDef({QuickActionResolve.FAILED, QuickActionResolve.SINGLE, QuickActionResolve.MULTIPLE})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface QuickActionResolve {
+        int FAILED = 0;
+        int SINGLE = 1;
+        int MULTIPLE = 2;
+        int NUM_ENTRIES = 3;
+    }
 
     /**
      * Key used in maps from {state, reason} to state entry (exit) logging code.
      */
     static class StateChangeKey {
         final PanelState mState;
-        final StateChangeReason mReason;
+        final @StateChangeReason int mReason;
         final int mHashCode;
 
-        StateChangeKey(PanelState state, StateChangeReason reason) {
+        StateChangeKey(PanelState state, @StateChangeReason int reason) {
             mState = state;
             mReason = reason;
-            mHashCode = 31 * state.hashCode() + reason.hashCode();
+            mHashCode = 31 * state.hashCode() + reason;
         }
 
         @Override
         public boolean equals(Object obj) {
-            if (!(obj instanceof StateChangeKey)) {
-                return false;
-            }
-            if (obj == this) {
-                return true;
-            }
+            if (!(obj instanceof StateChangeKey)) return false;
+            if (obj == this) return true;
             StateChangeKey other = (StateChangeKey) obj;
-            return mState.equals(other.mState) && mReason.equals(other.mReason);
+            return mState.equals(other.mState) && mReason == other.mReason;
         }
 
         @Override
@@ -243,25 +369,25 @@ public class ContextualSearchUma {
     static {
         Map<StateChangeKey, Integer> codes = new HashMap<StateChangeKey, Integer>();
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.BACK_PRESS),
-                ENTER_CLOSED_FROM_PEEKED_BACK_PRESS);
+                EnterClosedFrom.PEEKED_BACK_PRESS);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.BASE_PAGE_SCROLL),
-                ENTER_CLOSED_FROM_PEEKED_BASE_PAGE_SCROLL);
+                EnterClosedFrom.PEEKED_BASE_PAGE_SCROLL);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.TEXT_SELECT_TAP),
-                ENTER_CLOSED_FROM_PEEKED_TEXT_SELECT_TAP);
+                EnterClosedFrom.PEEKED_TEXT_SELECT_TAP);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.BACK_PRESS),
-                ENTER_CLOSED_FROM_EXPANDED_BACK_PRESS);
+                EnterClosedFrom.EXPANDED_BACK_PRESS);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.BASE_PAGE_TAP),
-                ENTER_CLOSED_FROM_EXPANDED_BASE_PAGE_TAP);
+                EnterClosedFrom.EXPANDED_BASE_PAGE_TAP);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.FLING),
-                ENTER_CLOSED_FROM_EXPANDED_FLING);
+                EnterClosedFrom.EXPANDED_FLING);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.BACK_PRESS),
-                ENTER_CLOSED_FROM_MAXIMIZED_BACK_PRESS);
+                EnterClosedFrom.MAXIMIZED_BACK_PRESS);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.FLING),
-                ENTER_CLOSED_FROM_MAXIMIZED_FLING);
+                EnterClosedFrom.MAXIMIZED_FLING);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.TAB_PROMOTION),
-                ENTER_CLOSED_FROM_MAXIMIZED_TAB_PROMOTION);
+                EnterClosedFrom.MAXIMIZED_TAB_PROMOTION);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.SERP_NAVIGATION),
-                ENTER_CLOSED_FROM_MAXIMIZED_SERP_NAVIGATION);
+                EnterClosedFrom.MAXIMIZED_SERP_NAVIGATION);
         ENTER_CLOSED_STATE_CHANGE_CODES = Collections.unmodifiableMap(codes);
     }
 
@@ -271,28 +397,28 @@ public class ContextualSearchUma {
         Map<StateChangeKey, Integer> codes = new HashMap<StateChangeKey, Integer>();
         // Note: we don't distinguish entering PEEKED from UNDEFINED / CLOSED.
         codes.put(new StateChangeKey(PanelState.UNDEFINED, StateChangeReason.TEXT_SELECT_TAP),
-                ENTER_PEEKED_FROM_CLOSED_TEXT_SELECT_TAP);
-        codes.put(new StateChangeKey(PanelState.UNDEFINED,
-                StateChangeReason.TEXT_SELECT_LONG_PRESS),
-                ENTER_PEEKED_FROM_CLOSED_EXT_SELECT_LONG_PRESS);
+                EnterPeekedFrom.CLOSED_TEXT_SELECT_TAP);
+        codes.put(
+                new StateChangeKey(PanelState.UNDEFINED, StateChangeReason.TEXT_SELECT_LONG_PRESS),
+                EnterPeekedFrom.CLOSED_EXT_SELECT_LONG_PRESS);
         codes.put(new StateChangeKey(PanelState.CLOSED, StateChangeReason.TEXT_SELECT_TAP),
-                ENTER_PEEKED_FROM_CLOSED_TEXT_SELECT_TAP);
+                EnterPeekedFrom.CLOSED_TEXT_SELECT_TAP);
         codes.put(new StateChangeKey(PanelState.CLOSED, StateChangeReason.TEXT_SELECT_LONG_PRESS),
-                ENTER_PEEKED_FROM_CLOSED_EXT_SELECT_LONG_PRESS);
+                EnterPeekedFrom.CLOSED_EXT_SELECT_LONG_PRESS);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.TEXT_SELECT_TAP),
-                ENTER_PEEKED_FROM_PEEKED_TEXT_SELECT_TAP);
+                EnterPeekedFrom.PEEKED_TEXT_SELECT_TAP);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.TEXT_SELECT_LONG_PRESS),
-                ENTER_PEEKED_FROM_PEEKED_TEXT_SELECT_LONG_PRESS);
+                EnterPeekedFrom.PEEKED_TEXT_SELECT_LONG_PRESS);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.SEARCH_BAR_TAP),
-                ENTER_PEEKED_FROM_EXPANDED_SEARCH_BAR_TAP);
+                EnterPeekedFrom.EXPANDED_SEARCH_BAR_TAP);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.SWIPE),
-                ENTER_PEEKED_FROM_EXPANDED_SWIPE);
+                EnterPeekedFrom.EXPANDED_SWIPE);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.FLING),
-                ENTER_PEEKED_FROM_EXPANDED_FLING);
+                EnterPeekedFrom.EXPANDED_FLING);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.SWIPE),
-                ENTER_PEEKED_FROM_MAXIMIZED_SWIPE);
+                EnterPeekedFrom.MAXIMIZED_SWIPE);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.FLING),
-                ENTER_PEEKED_FROM_MAXIMIZED_FLING);
+                EnterPeekedFrom.MAXIMIZED_FLING);
         ENTER_PEEKED_STATE_CHANGE_CODES = Collections.unmodifiableMap(codes);
     }
 
@@ -301,15 +427,15 @@ public class ContextualSearchUma {
     static {
         Map<StateChangeKey, Integer> codes = new HashMap<StateChangeKey, Integer>();
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.SEARCH_BAR_TAP),
-                ENTER_EXPANDED_FROM_PEEKED_SEARCH_BAR_TAP);
+                EnterExpandedFrom.PEEKED_SEARCH_BAR_TAP);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.SWIPE),
-                ENTER_EXPANDED_FROM_PEEKED_SWIPE);
+                EnterExpandedFrom.PEEKED_SWIPE);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.FLING),
-                ENTER_EXPANDED_FROM_PEEKED_FLING);
+                EnterExpandedFrom.PEEKED_FLING);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.SWIPE),
-                ENTER_EXPANDED_FROM_MAXIMIZED_SWIPE);
+                EnterExpandedFrom.MAXIMIZED_SWIPE);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.FLING),
-                ENTER_EXPANDED_FROM_MAXIMIZED_FLING);
+                EnterExpandedFrom.MAXIMIZED_FLING);
         ENTER_EXPANDED_STATE_CHANGE_CODES = Collections.unmodifiableMap(codes);
     }
 
@@ -318,15 +444,15 @@ public class ContextualSearchUma {
     static {
         Map<StateChangeKey, Integer> codes = new HashMap<StateChangeKey, Integer>();
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.SWIPE),
-                ENTER_MAXIMIZED_FROM_PEEKED_SWIPE);
+                EnterMaximizedFrom.PEEKED_SWIPE);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.FLING),
-                ENTER_MAXIMIZED_FROM_PEEKED_FLING);
+                EnterMaximizedFrom.PEEKED_FLING);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.SWIPE),
-                ENTER_MAXIMIZED_FROM_EXPANDED_SWIPE);
+                EnterMaximizedFrom.EXPANDED_SWIPE);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.FLING),
-                ENTER_MAXIMIZED_FROM_EXPANDED_FLING);
+                EnterMaximizedFrom.EXPANDED_FLING);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.SERP_NAVIGATION),
-                ENTER_MAXIMIZED_FROM_EXPANDED_SERP_NAVIGATION);
+                EnterMaximizedFrom.EXPANDED_SERP_NAVIGATION);
         ENTER_MAXIMIZED_STATE_CHANGE_CODES = Collections.unmodifiableMap(codes);
     }
 
@@ -335,9 +461,9 @@ public class ContextualSearchUma {
     static {
         Map<StateChangeKey, Integer> codes = new HashMap<StateChangeKey, Integer>();
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.TEXT_SELECT_TAP),
-                EXIT_CLOSED_TO_PEEKED_TEXT_SELECT_TAP);
+                ExitClosedTo.PEEKED_TEXT_SELECT_TAP);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.TEXT_SELECT_LONG_PRESS),
-                EXIT_CLOSED_TO_PEEKED_TEXT_SELECT_LONG_PRESS);
+                ExitClosedTo.PEEKED_TEXT_SELECT_LONG_PRESS);
         EXIT_CLOSED_TO_STATE_CHANGE_CODES = Collections.unmodifiableMap(codes);
     }
 
@@ -346,25 +472,25 @@ public class ContextualSearchUma {
     static {
         Map<StateChangeKey, Integer> codes = new HashMap<StateChangeKey, Integer>();
         codes.put(new StateChangeKey(PanelState.CLOSED, StateChangeReason.BACK_PRESS),
-                EXIT_PEEKED_TO_CLOSED_BACK_PRESS);
+                ExitPeekedTo.CLOSED_BACK_PRESS);
         codes.put(new StateChangeKey(PanelState.CLOSED, StateChangeReason.BASE_PAGE_SCROLL),
-                EXIT_PEEKED_TO_CLOSED_BASE_PAGE_SCROLL);
+                ExitPeekedTo.CLOSED_BASE_PAGE_SCROLL);
         codes.put(new StateChangeKey(PanelState.CLOSED, StateChangeReason.BASE_PAGE_TAP),
-                EXIT_PEEKED_TO_CLOSED_TEXT_SELECT_TAP);
+                ExitPeekedTo.CLOSED_TEXT_SELECT_TAP);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.TEXT_SELECT_TAP),
-                EXIT_PEEKED_TO_PEEKED_TEXT_SELECT_TAP);
+                ExitPeekedTo.PEEKED_TEXT_SELECT_TAP);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.TEXT_SELECT_LONG_PRESS),
-                EXIT_PEEKED_TO_PEEKED_TEXT_SELECT_LONG_PRESS);
+                ExitPeekedTo.PEEKED_TEXT_SELECT_LONG_PRESS);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.SEARCH_BAR_TAP),
-                EXIT_PEEKED_TO_EXPANDED_SEARCH_BAR_TAP);
+                ExitPeekedTo.EXPANDED_SEARCH_BAR_TAP);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.SWIPE),
-                EXIT_PEEKED_TO_EXPANDED_SWIPE);
+                ExitPeekedTo.EXPANDED_SWIPE);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.FLING),
-                EXIT_PEEKED_TO_EXPANDED_FLING);
+                ExitPeekedTo.EXPANDED_FLING);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.SWIPE),
-                EXIT_PEEKED_TO_MAXIMIZED_SWIPE);
+                ExitPeekedTo.MAXIMIZED_SWIPE);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.FLING),
-                EXIT_PEEKED_TO_MAXIMIZED_FLING);
+                ExitPeekedTo.MAXIMIZED_FLING);
         EXIT_PEEKED_TO_STATE_CHANGE_CODES = Collections.unmodifiableMap(codes);
     }
 
@@ -373,23 +499,23 @@ public class ContextualSearchUma {
     static {
         Map<StateChangeKey, Integer> codes = new HashMap<StateChangeKey, Integer>();
         codes.put(new StateChangeKey(PanelState.CLOSED, StateChangeReason.BACK_PRESS),
-                EXIT_EXPANDED_TO_CLOSED_BACK_PRESS);
+                ExitExpandedTo.CLOSED_BACK_PRESS);
         codes.put(new StateChangeKey(PanelState.CLOSED, StateChangeReason.BASE_PAGE_TAP),
-                EXIT_EXPANDED_TO_CLOSED_BASE_PAGE_TAP);
+                ExitExpandedTo.CLOSED_BASE_PAGE_TAP);
         codes.put(new StateChangeKey(PanelState.CLOSED, StateChangeReason.FLING),
-                EXIT_EXPANDED_TO_CLOSED_FLING);
+                ExitExpandedTo.CLOSED_FLING);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.SEARCH_BAR_TAP),
-                EXIT_EXPANDED_TO_PEEKED_SEARCH_BAR_TAP);
+                ExitExpandedTo.PEEKED_SEARCH_BAR_TAP);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.SWIPE),
-                EXIT_EXPANDED_TO_PEEKED_SWIPE);
+                ExitExpandedTo.PEEKED_SWIPE);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.FLING),
-                EXIT_EXPANDED_TO_PEEKED_FLING);
+                ExitExpandedTo.PEEKED_FLING);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.SWIPE),
-                EXIT_EXPANDED_TO_MAXIMIZED_SWIPE);
+                ExitExpandedTo.MAXIMIZED_SWIPE);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.FLING),
-                EXIT_EXPANDED_TO_MAXIMIZED_FLING);
+                ExitExpandedTo.MAXIMIZED_FLING);
         codes.put(new StateChangeKey(PanelState.MAXIMIZED, StateChangeReason.SERP_NAVIGATION),
-                EXIT_EXPANDED_TO_MAXIMIZED_SERP_NAVIGATION);
+                ExitExpandedTo.MAXIMIZED_SERP_NAVIGATION);
         EXIT_EXPANDED_TO_STATE_CHANGE_CODES = Collections.unmodifiableMap(codes);
     }
 
@@ -398,21 +524,21 @@ public class ContextualSearchUma {
     static {
         Map<StateChangeKey, Integer> codes = new HashMap<StateChangeKey, Integer>();
         codes.put(new StateChangeKey(PanelState.CLOSED, StateChangeReason.BACK_PRESS),
-                EXIT_MAXIMIZED_TO_CLOSED_BACK_PRESS);
+                ExitMaximizedTo.CLOSED_BACK_PRESS);
         codes.put(new StateChangeKey(PanelState.CLOSED, StateChangeReason.FLING),
-                EXIT_MAXIMIZED_TO_CLOSED_FLING);
+                ExitMaximizedTo.CLOSED_FLING);
         codes.put(new StateChangeKey(PanelState.CLOSED, StateChangeReason.TAB_PROMOTION),
-                EXIT_MAXIMIZED_TO_CLOSED_TAB_PROMOTION);
+                ExitMaximizedTo.CLOSED_TAB_PROMOTION);
         codes.put(new StateChangeKey(PanelState.CLOSED, StateChangeReason.SERP_NAVIGATION),
-                EXIT_MAXIMIZED_TO_CLOSED_SERP_NAVIGATION);
+                ExitMaximizedTo.CLOSED_SERP_NAVIGATION);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.SWIPE),
-                EXIT_MAXIMIZED_TO_PEEKED_SWIPE);
+                ExitMaximizedTo.PEEKED_SWIPE);
         codes.put(new StateChangeKey(PanelState.PEEKED, StateChangeReason.FLING),
-                EXIT_MAXIMIZED_TO_PEEKED_FLING);
+                ExitMaximizedTo.PEEKED_FLING);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.SWIPE),
-                EXIT_MAXIMIZED_TO_EXPANDED_SWIPE);
+                ExitMaximizedTo.EXPANDED_SWIPE);
         codes.put(new StateChangeKey(PanelState.EXPANDED, StateChangeReason.FLING),
-                EXIT_MAXIMIZED_TO_EXPANDED_FLING);
+                ExitMaximizedTo.EXPANDED_FLING);
         EXIT_MAXIMIZED_TO_STATE_CHANGE_CODES = Collections.unmodifiableMap(codes);
     }
 
@@ -423,10 +549,12 @@ public class ContextualSearchUma {
         final boolean unseen = false;
         final boolean seen = true;
         Map<Pair<Boolean, Boolean>, Integer> codes = new HashMap<Pair<Boolean, Boolean>, Integer>();
-        codes.put(new Pair<Boolean, Boolean>(seen, TAP), RESULTS_SEEN_FROM_TAP);
-        codes.put(new Pair<Boolean, Boolean>(unseen, TAP), RESULTS_NOT_SEEN_FROM_TAP);
-        codes.put(new Pair<Boolean, Boolean>(seen, LONG_PRESS), RESULTS_SEEN_FROM_LONG_PRESS);
-        codes.put(new Pair<Boolean, Boolean>(unseen, LONG_PRESS), RESULTS_NOT_SEEN_FROM_LONG_PRESS);
+        codes.put(new Pair<Boolean, Boolean>(seen, TAP), ResultsByGesture.SEEN_FROM_TAP);
+        codes.put(new Pair<Boolean, Boolean>(unseen, TAP), ResultsByGesture.NOT_SEEN_FROM_TAP);
+        codes.put(new Pair<Boolean, Boolean>(seen, LONG_PRESS),
+                ResultsByGesture.SEEN_FROM_LONG_PRESS);
+        codes.put(new Pair<Boolean, Boolean>(unseen, LONG_PRESS),
+                ResultsByGesture.NOT_SEEN_FROM_LONG_PRESS);
         SEEN_BY_GESTURE_CODES = Collections.unmodifiableMap(codes);
     }
 
@@ -435,16 +563,16 @@ public class ContextualSearchUma {
     static {
         Map<Pair<Integer, Boolean>, Integer> codes =
                 new HashMap<Pair<Integer, Boolean>, Integer>();
-        codes.put(new Pair<Integer, Boolean>(PREFERENCE_ENABLED, TAP), PROMO_ENABLED_FROM_TAP);
-        codes.put(new Pair<Integer, Boolean>(PREFERENCE_DISABLED, TAP), PROMO_DISABLED_FROM_TAP);
-        codes.put(new Pair<Integer, Boolean>(PREFERENCE_UNINITIALIZED, TAP),
-                PROMO_UNDECIDED_FROM_TAP);
-        codes.put(new Pair<Integer, Boolean>(PREFERENCE_ENABLED, LONG_PRESS),
-                PROMO_ENABLED_FROM_LONG_PRESS);
-        codes.put(new Pair<Integer, Boolean>(PREFERENCE_DISABLED, LONG_PRESS),
-                PROMO_DISABLED_FROM_LONG_PRESS);
-        codes.put(new Pair<Integer, Boolean>(PREFERENCE_UNINITIALIZED, LONG_PRESS),
-                PROMO_UNDECIDED_FROM_LONG_PRESS);
+        codes.put(new Pair<Integer, Boolean>(Preference.ENABLED, TAP), Promo.ENABLED_FROM_TAP);
+        codes.put(new Pair<Integer, Boolean>(Preference.DISABLED, TAP), Promo.DISABLED_FROM_TAP);
+        codes.put(new Pair<Integer, Boolean>(Preference.UNINITIALIZED, TAP),
+                Promo.UNDECIDED_FROM_TAP);
+        codes.put(new Pair<Integer, Boolean>(Preference.ENABLED, LONG_PRESS),
+                Promo.ENABLED_FROM_LONG_PRESS);
+        codes.put(new Pair<Integer, Boolean>(Preference.DISABLED, LONG_PRESS),
+                Promo.DISABLED_FROM_LONG_PRESS);
+        codes.put(new Pair<Integer, Boolean>(Preference.UNINITIALIZED, LONG_PRESS),
+                Promo.UNDECIDED_FROM_LONG_PRESS);
         PROMO_BY_GESTURE_CODES = Collections.unmodifiableMap(codes);
     }
 
@@ -455,7 +583,7 @@ public class ContextualSearchUma {
      */
     public static void logPreferenceState() {
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchPreferenceState",
-                getPreferenceValue(), PREFERENCE_HISTOGRAM_BOUNDARY);
+                getPreferenceValue(), Preference.NUM_ENTRIES);
     }
 
     /**
@@ -529,7 +657,8 @@ public class ContextualSearchUma {
      */
     public static void logSearchTermResolvedWords(boolean isSingleWord) {
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchResolvedTermWords",
-                isSingleWord ? RESOLVED_SINGLE_WORD : RESOLVED_MULTI_WORD, RESOLVED_BOUNDARY);
+                isSingleWord ? ResolvedGranularity.SINGLE_WORD : ResolvedGranularity.MULTI_WORD,
+                ResolvedGranularity.NUM_ENTRIES);
     }
 
     /**
@@ -539,7 +668,7 @@ public class ContextualSearchUma {
      */
     public static void logBasePageProtocol(boolean isHttpBasePage) {
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchBasePageProtocol",
-                isHttpBasePage ? PROTOCOL_IS_HTTP : PROTOCOL_NOT_HTTP, PROTOCOL_BOUNDARY);
+                isHttpBasePage ? Protocol.IS_HTTP : Protocol.NOT_HTTP, Protocol.NUM_ENTRIES);
     }
 
     /**
@@ -549,7 +678,7 @@ public class ContextualSearchUma {
      */
     public static void logPreferenceChange(boolean enabled) {
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchPreferenceStateChange",
-                enabled ? PREFERENCE_ENABLED : PREFERENCE_DISABLED, PREFERENCE_HISTOGRAM_BOUNDARY);
+                enabled ? Preference.ENABLED : Preference.DISABLED, Preference.NUM_ENTRIES);
     }
 
     /**
@@ -561,17 +690,17 @@ public class ContextualSearchUma {
     public static void logPromoOutcome(boolean wasTap, boolean wasMandatory) {
         int preferenceCode = getPreferenceValue();
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchFirstRunFlowOutcome",
-                preferenceCode, PREFERENCE_HISTOGRAM_BOUNDARY);
+                preferenceCode, Preference.NUM_ENTRIES);
 
         int preferenceByGestureCode = getPromoByGestureStateCode(preferenceCode, wasTap);
         if (wasMandatory) {
             RecordHistogram.recordEnumeratedHistogram(
                     "Search.ContextualSearchMandatoryPromoOutcomeByGesture",
-                    preferenceByGestureCode, PROMO_BY_GESTURE_BOUNDARY);
+                    preferenceByGestureCode, Promo.NUM_ENTRIES);
         } else {
             RecordHistogram.recordEnumeratedHistogram(
-                    "Search.ContextualSearchPromoOutcomeByGesture",
-                    preferenceByGestureCode, PROMO_BY_GESTURE_BOUNDARY);
+                    "Search.ContextualSearchPromoOutcomeByGesture", preferenceByGestureCode,
+                    Promo.NUM_ENTRIES);
         }
     }
 
@@ -678,7 +807,7 @@ public class ContextualSearchUma {
      */
     public static void logPromoSeen(boolean wasPanelSeen, boolean wasTap) {
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchFirstRunPanelSeen",
-                wasPanelSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
+                wasPanelSeen ? Results.SEEN : Results.NOT_SEEN, Results.NUM_ENTRIES);
         logHistogramByGesture(wasPanelSeen, wasTap, "Search.ContextualSearchPromoSeenByGesture");
     }
 
@@ -690,8 +819,26 @@ public class ContextualSearchUma {
      */
     public static void logResultsSeen(boolean wasPanelSeen, boolean wasTap) {
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchResultsSeen",
-                wasPanelSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
+                wasPanelSeen ? Results.SEEN : Results.NOT_SEEN, Results.NUM_ENTRIES);
         logHistogramByGesture(wasPanelSeen, wasTap, "Search.ContextualSearchResultsSeenByGesture");
+    }
+
+    /**
+     * Logs whether search results were seen for a Tap gesture.  Recorded for all users.
+     * @param wasPanelSeen Whether the panel was seen.
+     */
+    public static void logTapResultsSeen(boolean wasPanelSeen) {
+        RecordHistogram.recordBooleanHistogram(
+                "Search.ContextualSearch.Tap.ResultsSeen", wasPanelSeen);
+    }
+
+    /**
+     * Logs whether search results were seen for all gestures.  Recorded for all users.
+     * @param wasPanelSeen Whether the panel was seen.
+     */
+    public static void logAllResultsSeen(boolean wasPanelSeen) {
+        RecordHistogram.recordBooleanHistogram(
+                "Search.ContextualSearch.All.ResultsSeen", wasPanelSeen);
     }
 
     /**
@@ -706,7 +853,7 @@ public class ContextualSearchUma {
             boolean wasPanelSeen, boolean wasTap, boolean wasBarOverlap) {
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchBarOverlapSeen",
                 getBarOverlapEnum(wasBarOverlap, wasPanelSeen, wasTap),
-                BAR_OVERLAP_RESULTS_BOUNDARY);
+                BarOverlapResults.NUM_ENTRIES);
     }
 
     /**
@@ -716,8 +863,8 @@ public class ContextualSearchUma {
      *        by the user.
      */
     public static void logBarOverlapPeekDuration(boolean wasBarOverlap, long panelPeekDurationMs) {
-        String histogram = wasBarOverlap ? "Search.ContextualSearchBarOverlap.DurationSeen"
-                                         : "Search.ContextualSearchBarNoOverlap.DurationSeen";
+        String histogram = wasBarOverlap ? "Search.ContextualSearchBarOverlap.PeekDuration"
+                                         : "Search.ContextualSearchBarNoOverlap.PeekDuration";
         RecordHistogram.recordMediumTimesHistogram(
                 histogram, panelPeekDurationMs, TimeUnit.MILLISECONDS);
     }
@@ -802,12 +949,12 @@ public class ContextualSearchUma {
     public static void logTapDurationSeen(boolean wasSearchContentViewSeen, boolean isTapShort) {
         if (isTapShort) {
             RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchTapShortDurationSeen",
-                    wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN,
-                    RESULTS_SEEN_BOUNDARY);
+                    wasSearchContentViewSeen ? Results.SEEN : Results.NOT_SEEN,
+                    Results.NUM_ENTRIES);
         } else {
             RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchTapLongDurationSeen",
-                    wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN,
-                    RESULTS_SEEN_BOUNDARY);
+                    wasSearchContentViewSeen ? Results.SEEN : Results.NOT_SEEN,
+                    Results.NUM_ENTRIES);
         }
     }
 
@@ -842,7 +989,7 @@ public class ContextualSearchUma {
 
         // We just record CTR of short words.
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchTapShortWordSeen",
-                wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
+                wasSearchContentViewSeen ? Results.SEEN : Results.NOT_SEEN, Results.NUM_ENTRIES);
     }
 
     /**
@@ -855,7 +1002,7 @@ public class ContextualSearchUma {
         if (!isTapOnLongWord) return;
 
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchTapLongWordSeen",
-                wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
+                wasSearchContentViewSeen ? Results.SEEN : Results.NOT_SEEN, Results.NUM_ENTRIES);
     }
 
     /**
@@ -869,7 +1016,7 @@ public class ContextualSearchUma {
 
         // We just record CTR of words tapped in the "middle".
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchTapOnWordMiddleSeen",
-                wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
+                wasSearchContentViewSeen ? Results.SEEN : Results.NOT_SEEN, Results.NUM_ENTRIES);
     }
 
     /**
@@ -882,8 +1029,8 @@ public class ContextualSearchUma {
         if (isWordAnEntity) {
             // We just record CTR of probable entity words.
             RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchEntitySeen",
-                    wasSearchContentViewSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN,
-                    RESULTS_SEEN_BOUNDARY);
+                    wasSearchContentViewSeen ? Results.SEEN : Results.NOT_SEEN,
+                    Results.NUM_ENTRIES);
         }
     }
 
@@ -897,17 +1044,18 @@ public class ContextualSearchUma {
             boolean wasAnySuppressionHeuristicSatisfied) {
         int code;
         if (wasAnySuppressionHeuristicSatisfied) {
-            code = wasSearchContentViewSeen ? RESULTS_SEEN_SUPPRESSION_HEURSTIC_SATISFIED
-                    : RESULTS_NOT_SEEN_SUPPRESSION_HEURSTIC_SATISFIED;
+            code = wasSearchContentViewSeen
+                    ? ResultsBySuppression.SEEN_SUPPRESSION_HEURSTIC_SATISFIED
+                    : ResultsBySuppression.NOT_SEEN_SUPPRESSION_HEURSTIC_SATISFIED;
         } else {
-            code = wasSearchContentViewSeen ? RESULTS_SEEN_SUPPRESSION_HEURSTIC_NOT_SATISFIED
-                    : RESULTS_NOT_SEEN_SUPPRESSION_HEURSTIC_NOT_SATISFIED;
+            code = wasSearchContentViewSeen
+                    ? ResultsBySuppression.SEEN_SUPPRESSION_HEURSTIC_NOT_SATISFIED
+                    : ResultsBySuppression.NOT_SEEN_SUPPRESSION_HEURSTIC_NOT_SATISFIED;
         }
 
         RecordHistogram.recordEnumeratedHistogram(
-                "Search.ContextualSearchTapSuppressionSeen.AnyHeuristicSatisfied",
-                code,
-                RESULTS_SEEN_SUPPRESSION_BOUNDARY);
+                "Search.ContextualSearchTapSuppressionSeen.AnyHeuristicSatisfied", code,
+                ResultsBySuppression.NUM_ENTRIES);
     }
 
     /**
@@ -916,7 +1064,7 @@ public class ContextualSearchUma {
      */
     public static void logSelectionIsValid(boolean isSelectionValid) {
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchSelectionValid",
-                isSelectionValid ? SELECTION_VALID : SELECTION_INVALID, SELECTION_BOUNDARY);
+                isSelectionValid ? Selection.VALID : Selection.INVALID, Selection.NUM_ENTRIES);
     }
 
     /**
@@ -926,7 +1074,7 @@ public class ContextualSearchUma {
     public static void logNormalPrioritySearchRequestOutcome(boolean isFailure) {
         RecordHistogram.recordEnumeratedHistogram(
                 "Search.ContextualSearchNormalPrioritySearchRequestStatus",
-                isFailure ? REQUEST_FAILED : REQUEST_NOT_FAILED, REQUEST_BOUNDARY);
+                isFailure ? Request.FAILED : Request.NOT_FAILED, Request.NUM_ENTRIES);
     }
 
     /**
@@ -936,7 +1084,7 @@ public class ContextualSearchUma {
     public static void logLowPrioritySearchRequestOutcome(boolean isFailure) {
         RecordHistogram.recordEnumeratedHistogram(
                 "Search.ContextualSearchLowPrioritySearchRequestStatus",
-                isFailure ? REQUEST_FAILED : REQUEST_NOT_FAILED, REQUEST_BOUNDARY);
+                isFailure ? Request.FAILED : Request.NOT_FAILED, Request.NUM_ENTRIES);
     }
 
     /**
@@ -946,7 +1094,7 @@ public class ContextualSearchUma {
     public static void logFallbackSearchRequestOutcome(boolean isFailure) {
         RecordHistogram.recordEnumeratedHistogram(
                 "Search.ContextualSearchFallbackSearchRequestStatus",
-                isFailure ? REQUEST_FAILED : REQUEST_NOT_FAILED, REQUEST_BOUNDARY);
+                isFailure ? Request.FAILED : Request.NOT_FAILED, Request.NUM_ENTRIES);
     }
 
     /**
@@ -989,7 +1137,7 @@ public class ContextualSearchUma {
             boolean wasSearchContentViewSeen, boolean didActivate, boolean didAnswer) {
         RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchQuickAnswerSeen",
                 getQuickAnswerSeenValue(didActivate, didAnswer, wasSearchContentViewSeen),
-                QUICK_ANSWER_SEEN_BOUNDARY);
+                QuickAnswerSeen.NUM_ENTRIES);
     }
 
     /**
@@ -998,37 +1146,33 @@ public class ContextualSearchUma {
      * @param toState The state to transition to.
      * @param reason The reason for the state transition.
      */
-    public static void logFirstStateEntry(PanelState fromState, PanelState toState,
-            StateChangeReason reason) {
+    public static void logFirstStateEntry(
+            PanelState fromState, PanelState toState, @StateChangeReason int reason) {
         int code;
         switch (toState) {
             case CLOSED:
-                code = getStateChangeCode(fromState, reason,
-                        ENTER_CLOSED_STATE_CHANGE_CODES, ENTER_CLOSED_FROM_OTHER);
+                code = getStateChangeCode(
+                        fromState, reason, ENTER_CLOSED_STATE_CHANGE_CODES, EnterClosedFrom.OTHER);
                 RecordHistogram.recordEnumeratedHistogram(
-                        "Search.ContextualSearchEnterClosed",
-                        code, ENTER_CLOSED_FROM_BOUNDARY);
+                        "Search.ContextualSearchEnterClosed", code, EnterClosedFrom.NUM_ENTRIES);
                 break;
             case PEEKED:
-                code = getStateChangeCode(fromState, reason,
-                        ENTER_PEEKED_STATE_CHANGE_CODES, ENTER_PEEKED_FROM_OTHER);
+                code = getStateChangeCode(
+                        fromState, reason, ENTER_PEEKED_STATE_CHANGE_CODES, EnterPeekedFrom.OTHER);
                 RecordHistogram.recordEnumeratedHistogram(
-                        "Search.ContextualSearchEnterPeeked",
-                        code, ENTER_PEEKED_FROM_BOUNDARY);
+                        "Search.ContextualSearchEnterPeeked", code, EnterPeekedFrom.NUM_ENTRIES);
                 break;
             case EXPANDED:
-                code = getStateChangeCode(fromState, reason,
-                        ENTER_EXPANDED_STATE_CHANGE_CODES, ENTER_EXPANDED_FROM_OTHER);
-                RecordHistogram.recordEnumeratedHistogram(
-                        "Search.ContextualSearchEnterExpanded",
-                        code, ENTER_EXPANDED_FROM_BOUNDARY);
+                code = getStateChangeCode(fromState, reason, ENTER_EXPANDED_STATE_CHANGE_CODES,
+                        EnterExpandedFrom.OTHER);
+                RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchEnterExpanded",
+                        code, EnterExpandedFrom.NUM_ENTRIES);
                 break;
             case MAXIMIZED:
-                code = getStateChangeCode(fromState, reason,
-                        ENTER_MAXIMIZED_STATE_CHANGE_CODES, ENTER_MAXIMIZED_FROM_OTHER);
-                RecordHistogram.recordEnumeratedHistogram(
-                        "Search.ContextualSearchEnterMaximized",
-                        code, ENTER_MAXIMIZED_FROM_BOUNDARY);
+                code = getStateChangeCode(fromState, reason, ENTER_MAXIMIZED_STATE_CHANGE_CODES,
+                        EnterMaximizedFrom.OTHER);
+                RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchEnterMaximized",
+                        code, EnterMaximizedFrom.NUM_ENTRIES);
                 break;
             default:
                 break;
@@ -1040,7 +1184,7 @@ public class ContextualSearchUma {
      * @param toState The state to transition to.
      * @param reason The reason for the state transition.
      */
-    public static void logPanelStateUserAction(PanelState toState, StateChangeReason reason) {
+    public static void logPanelStateUserAction(PanelState toState, @StateChangeReason int reason) {
         switch (toState) {
             case CLOSED:
                 if (reason == StateChangeReason.BACK_PRESS) {
@@ -1097,34 +1241,34 @@ public class ContextualSearchUma {
      * @param toState The state to transition to.
      * @param reason The reason for the state transition.
      */
-    public static void logFirstStateExit(PanelState fromState, PanelState toState,
-            StateChangeReason reason) {
+    public static void logFirstStateExit(
+            PanelState fromState, PanelState toState, @StateChangeReason int reason) {
         int code;
         switch (fromState) {
             case UNDEFINED:
             case CLOSED:
-                code = getStateChangeCode(toState, reason,
-                        EXIT_CLOSED_TO_STATE_CHANGE_CODES, EXIT_CLOSED_TO_OTHER);
+                code = getStateChangeCode(
+                        toState, reason, EXIT_CLOSED_TO_STATE_CHANGE_CODES, ExitClosedTo.OTHER);
                 RecordHistogram.recordEnumeratedHistogram(
-                        "Search.ContextualSearchExitClosed", code, EXIT_CLOSED_TO_BOUNDARY);
+                        "Search.ContextualSearchExitClosed", code, ExitClosedTo.NUM_ENTRIES);
                 break;
             case PEEKED:
-                code = getStateChangeCode(toState, reason,
-                        EXIT_PEEKED_TO_STATE_CHANGE_CODES, EXIT_PEEKED_TO_OTHER);
+                code = getStateChangeCode(
+                        toState, reason, EXIT_PEEKED_TO_STATE_CHANGE_CODES, ExitPeekedTo.OTHER);
                 RecordHistogram.recordEnumeratedHistogram(
-                        "Search.ContextualSearchExitPeeked", code, EXIT_PEEKED_TO_BOUNDARY);
+                        "Search.ContextualSearchExitPeeked", code, ExitPeekedTo.NUM_ENTRIES);
                 break;
             case EXPANDED:
-                code = getStateChangeCode(toState, reason,
-                        EXIT_EXPANDED_TO_STATE_CHANGE_CODES, EXIT_EXPANDED_TO_OTHER);
+                code = getStateChangeCode(
+                        toState, reason, EXIT_EXPANDED_TO_STATE_CHANGE_CODES, ExitExpandedTo.OTHER);
                 RecordHistogram.recordEnumeratedHistogram(
-                        "Search.ContextualSearchExitExpanded", code, EXIT_EXPANDED_TO_BOUNDARY);
+                        "Search.ContextualSearchExitExpanded", code, ExitExpandedTo.NUM_ENTRIES);
                 break;
             case MAXIMIZED:
-                code = getStateChangeCode(toState, reason,
-                        EXIT_MAXIMIZED_TO_STATE_CHANGE_CODES, EXIT_MAXIMIZED_TO_OTHER);
+                code = getStateChangeCode(toState, reason, EXIT_MAXIMIZED_TO_STATE_CHANGE_CODES,
+                        ExitMaximizedTo.OTHER);
                 RecordHistogram.recordEnumeratedHistogram(
-                        "Search.ContextualSearchExitMaximized", code, EXIT_MAXIMIZED_TO_BOUNDARY);
+                        "Search.ContextualSearchExitMaximized", code, ExitMaximizedTo.NUM_ENTRIES);
                 break;
             default:
                 break;
@@ -1163,35 +1307,25 @@ public class ContextualSearchUma {
      * @param wasTap Whether the gesture was a Tap.
      * @return The value for the enum histogram.
      */
-    private static int getBarOverlapEnum(
+    private static @BarOverlapResults int getBarOverlapEnum(
             boolean didBarOverlap, boolean wasPanelSeen, boolean wasTap) {
         if (wasTap) {
             if (didBarOverlap) {
-                if (wasPanelSeen) {
-                    return BAR_OVERLAP_RESULTS_SEEN_FROM_TAP;
-                } else {
-                    return BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_TAP;
-                }
+                return wasPanelSeen ? BarOverlapResults.BAR_OVERLAP_RESULTS_SEEN_FROM_TAP
+                                    : BarOverlapResults.BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_TAP;
             } else {
-                if (wasPanelSeen) {
-                    return NO_BAR_OVERLAP_RESULTS_SEEN_FROM_TAP;
-                } else {
-                    return NO_BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_TAP;
-                }
+                return wasPanelSeen ? BarOverlapResults.NO_BAR_OVERLAP_RESULTS_SEEN_FROM_TAP
+                                    : BarOverlapResults.NO_BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_TAP;
             }
         } else {
             if (didBarOverlap) {
-                if (wasPanelSeen) {
-                    return BAR_OVERLAP_RESULTS_SEEN_FROM_LONG_PRESS;
-                } else {
-                    return BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_LONG_PRESS;
-                }
+                return wasPanelSeen
+                        ? BarOverlapResults.BAR_OVERLAP_RESULTS_SEEN_FROM_LONG_PRESS
+                        : BarOverlapResults.BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_LONG_PRESS;
             } else {
-                if (wasPanelSeen) {
-                    return NO_BAR_OVERLAP_RESULTS_SEEN_FROM_LONG_PRESS;
-                } else {
-                    return NO_BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_LONG_PRESS;
-                }
+                return wasPanelSeen
+                        ? BarOverlapResults.NO_BAR_OVERLAP_RESULTS_SEEN_FROM_LONG_PRESS
+                        : BarOverlapResults.NO_BAR_OVERLAP_RESULTS_NOT_SEEN_FROM_LONG_PRESS;
             }
         }
     }
@@ -1202,9 +1336,9 @@ public class ContextualSearchUma {
      * @param didForceTranslate Whether the translation onebox was forced.
      */
     public static void logTranslateOnebox(boolean didForceTranslate) {
-        int code = didForceTranslate ? DID_FORCE_TRANSLATE : WOULD_FORCE_TRANSLATE;
+        int code = didForceTranslate ? ForceTranslate.DID_FORCE : ForceTranslate.WOULD_FORCE;
         RecordHistogram.recordEnumeratedHistogram(
-                "Search.ContextualSearchShouldTranslate", code, FORCE_TRANSLATE_BOUNDARY);
+                "Search.ContextualSearchShouldTranslate", code, ForceTranslate.NUM_ENTRIES);
     }
 
     /**
@@ -1233,7 +1367,7 @@ public class ContextualSearchUma {
     public static void logContextualCardsResultsSeen(boolean wasSeen) {
         RecordHistogram.recordEnumeratedHistogram(
                 "Search.ContextualSearchContextualCardsIntegration.ResultsSeen",
-                wasSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
+                wasSeen ? Results.SEEN : Results.NOT_SEEN, Results.NUM_ENTRIES);
     }
 
     /**
@@ -1243,13 +1377,14 @@ public class ContextualSearchUma {
      */
     public static void logQuickActionIntentResolution(int quickActionCategory,
             int numMatchingAppsApps) {
-        int code = numMatchingAppsApps == 0 ? QUICK_ACTION_RESOLVE_FAILED
-                : numMatchingAppsApps == 1 ? QUICK_ACTION_RESOLVE_SINGLE
-                        : QUICK_ACTION_RESOLVE_MULTIPLE;
+        int code = numMatchingAppsApps == 0
+                ? QuickActionResolve.FAILED
+                : numMatchingAppsApps == 1 ? QuickActionResolve.SINGLE
+                                           : QuickActionResolve.MULTIPLE;
         RecordHistogram.recordEnumeratedHistogram(
                 "Search.ContextualSearchQuickActions.IntentResolution."
                         + getLabelForQuickActionCategory(quickActionCategory),
-                code, QUICK_ACTION_RESOLVE_BOUNDARY);
+                code, QuickActionResolve.NUM_ENTRIES);
     }
 
     /**
@@ -1263,8 +1398,8 @@ public class ContextualSearchUma {
                 "Search.ContextualSearchQuickActions.Shown", quickActionShown);
         if (quickActionShown) {
             RecordHistogram.recordEnumeratedHistogram(
-                    "Search.ContextualSearchQuickActions.Category",
-                    quickActionCategory, QuickActionCategory.BOUNDARY);
+                    "Search.ContextualSearchQuickActions.Category", quickActionCategory,
+                    QuickActionResolve.NUM_ENTRIES);
         }
     }
 
@@ -1274,10 +1409,9 @@ public class ContextualSearchUma {
      * @param quickActionCategory The {@link QuickActionCategory} for the quick action.
      */
     public static void logQuickActionResultsSeen(boolean wasSeen, int quickActionCategory) {
-        RecordHistogram.recordEnumeratedHistogram(
-                "Search.ContextualSearchQuickActions.ResultsSeen."
+        RecordHistogram.recordEnumeratedHistogram("Search.ContextualSearchQuickActions.ResultsSeen."
                         + getLabelForQuickActionCategory(quickActionCategory),
-                wasSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
+                wasSeen ? Results.SEEN : Results.NOT_SEEN, Results.NUM_ENTRIES);
     }
 
     /**
@@ -1304,11 +1438,11 @@ public class ContextualSearchUma {
         if (predictionKind == AssistRankerPrediction.SHOW) {
             RecordHistogram.recordEnumeratedHistogram(
                     "Search.ContextualSearch.Ranker.NotSuppressed.ResultsSeen",
-                    wasPanelSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
+                    wasPanelSeen ? Results.SEEN : Results.NOT_SEEN, Results.NUM_ENTRIES);
         } else if (predictionKind == AssistRankerPrediction.SUPPRESS) {
             RecordHistogram.recordEnumeratedHistogram(
                     "Search.ContextualSearch.Ranker.WouldSuppress.ResultsSeen",
-                    wasPanelSeen ? RESULTS_SEEN : RESULTS_NOT_SEEN, RESULTS_SEEN_BOUNDARY);
+                    wasPanelSeen ? Results.SEEN : Results.NOT_SEEN, Results.NUM_ENTRIES);
         }
     }
 
@@ -1344,6 +1478,48 @@ public class ContextualSearchUma {
     }
 
     /**
+     * Logs that features or outcomes are available to record to Ranker.
+     * This data can be used to correlate with #logRecordedToRanker to validate that everything that
+     * should be recorded is actually being recorded.
+     * @param areOutcomes Whether the features available are outcomes.
+     */
+    static void logRankerFeaturesAvailable(boolean areOutcomes) {
+        RecordHistogram.recordBooleanHistogram(
+                "Search.ContextualSearch.Ranker.FeaturesAvailable", areOutcomes);
+    }
+
+    /**
+     * Logs the previous enabled-state of this user before the feature was turned full-on for
+     * Unified Consent (when integration is enabled).
+     * @param wasPreviouslyUndecided Whether the user was previously undecided.
+     */
+    static void logUnifiedConsentPreviousEnabledState(boolean wasPreviouslyUndecided) {
+        RecordHistogram.recordBooleanHistogram(
+                "Search.ContextualSearch.UnifiedConsent.PreviouslyUndecided",
+                wasPreviouslyUndecided);
+    }
+
+    /**
+     * Logs whether a request will be throttled for Unified Consent integration, for all requests
+     * regardless of whether the integration feature is enabled.  Logged multiple times per request.
+     * @param isRequestThrottled Whether the current request is being throttled.
+     */
+    static void logUnifiedConsentThrottledRequests(boolean isRequestThrottled) {
+        RecordHistogram.recordBooleanHistogram(
+                "Search.ContextualSearch.UnifiedConsent.ThrottledRequests", isRequestThrottled);
+    }
+
+    /**
+     * Logs whether this user was eligible for throttling of requests when Unified Consent
+     * integration is enabled and throttling is in effect.
+     * @param isThrottleEligible Whether this user is eligible to be throttled.
+     */
+    static void logUnifiedConsentThrottleEligible(boolean isThrottleEligible) {
+        RecordHistogram.recordBooleanHistogram(
+                "Search.ContextualSearch.UnifiedConsent.ThrottleEligible", isThrottleEligible);
+    }
+
+    /**
      * Gets the state-change code for the given parameters by doing a lookup in the given map.
      * @param state The panel state.
      * @param reason The reason the state changed.
@@ -1351,13 +1527,10 @@ public class ContextualSearchUma {
      * @param defaultCode The code to return if the given values are not found in the map.
      * @return The code to write into an enum histogram, based on the given map.
      */
-    private static int getStateChangeCode(PanelState state, StateChangeReason reason,
+    private static int getStateChangeCode(PanelState state, @StateChangeReason int reason,
             Map<StateChangeKey, Integer> stateChangeCodes, int defaultCode) {
         Integer code = stateChangeCodes.get(new StateChangeKey(state, reason));
-        if (code != null) {
-            return code;
-        }
-        return defaultCode;
+        return code != null ? code : defaultCode;
     }
 
     /**
@@ -1388,11 +1561,11 @@ public class ContextualSearchUma {
     private static int getPreferenceValue() {
         PrefServiceBridge preferences = PrefServiceBridge.getInstance();
         if (preferences.isContextualSearchUninitialized()) {
-            return PREFERENCE_UNINITIALIZED;
+            return Preference.UNINITIALIZED;
         } else if (preferences.isContextualSearchDisabled()) {
-            return PREFERENCE_DISABLED;
+            return Preference.DISABLED;
         }
-        return PREFERENCE_ENABLED;
+        return Preference.ENABLED;
     }
 
     /**
@@ -1402,27 +1575,21 @@ public class ContextualSearchUma {
      * @param wasSeen Whether the search panel was opened.
      * @return The encoded value.
      */
-    private static int getQuickAnswerSeenValue(
+    private static @QuickAnswerSeen int getQuickAnswerSeenValue(
             boolean didActivate, boolean didAnswer, boolean wasSeen) {
         if (wasSeen) {
             if (didActivate) {
-                if (didAnswer) {
-                    return QUICK_ANSWER_ACTIVATED_WAS_AN_ANSWER_SEEN;
-                } else {
-                    return QUICK_ANSWER_ACTIVATED_NOT_AN_ANSWER_SEEN;
-                }
+                return didAnswer ? QuickAnswerSeen.ACTIVATED_WAS_AN_ANSWER_SEEN
+                                 : QuickAnswerSeen.ACTIVATED_NOT_AN_ANSWER_SEEN;
             } else {
-                return QUICK_ANSWER_NOT_ACTIVATED_SEEN;
+                return QuickAnswerSeen.NOT_ACTIVATED_SEEN;
             }
         } else {
             if (didActivate) {
-                if (didAnswer) {
-                    return QUICK_ANSWER_ACTIVATED_WAS_AN_ANSWER_NOT_SEEN;
-                } else {
-                    return QUICK_ANSWER_ACTIVATED_NOT_AN_ANSWER_NOT_SEEN;
-                }
+                return didAnswer ? QuickAnswerSeen.ACTIVATED_WAS_AN_ANSWER_NOT_SEEN
+                                 : QuickAnswerSeen.ACTIVATED_NOT_AN_ANSWER_NOT_SEEN;
             } else {
-                return QUICK_ANSWER_NOT_ACTIVATED_NOT_SEEN;
+                return QuickAnswerSeen.NOT_ACTIVATED_NOT_SEEN;
             }
         }
     }
@@ -1436,8 +1603,7 @@ public class ContextualSearchUma {
     private static void logHistogramByGesture(boolean wasPanelSeen, boolean wasTap,
             String histogramName) {
         RecordHistogram.recordEnumeratedHistogram(histogramName,
-                getPanelSeenByGestureStateCode(wasPanelSeen, wasTap),
-                RESULTS_BY_GESTURE_BOUNDARY);
+                getPanelSeenByGestureStateCode(wasPanelSeen, wasTap), ResultsByGesture.NUM_ENTRIES);
     }
 
     private static String getLabelForQuickActionCategory(int quickActionCategory) {

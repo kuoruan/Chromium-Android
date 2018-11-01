@@ -16,6 +16,7 @@
     <dimen name="dropdown_item_divider_height">1px</dimen>
     <dimen name="dropdown_item_label_margin">10dp</dimen>
     <dimen name="dropdown_icon_margin">8dp</dimen>
+    <dimen name="button_compat_corner_radius">4dp</dimen>
 
     <!--
          Fallback values if the corresponding com.android.internal.R dimensions

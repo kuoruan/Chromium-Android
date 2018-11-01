@@ -8,6 +8,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceFragment;
 import android.support.annotation.VisibleForTesting;
 
@@ -16,8 +17,9 @@ import org.chromium.base.StrictModeContext;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
-import org.chromium.chrome.browser.payments.ui.EditorObserverForTest;
+import org.chromium.chrome.browser.preferences.ChromeSwitchPreference;
 import org.chromium.chrome.browser.preferences.PreferenceUtils;
+import org.chromium.chrome.browser.widget.prefeditor.EditorObserverForTest;
 
 /**
  * Autofill profiles fragment, which allows the user to edit autofill profiles.
@@ -27,12 +29,15 @@ public class AutofillProfilesFragment
     private static EditorObserverForTest sObserverForTest;
     static final String PREF_NEW_PROFILE = "new_profile";
 
+    private static final String PREF_AUTOFILL_ENABLE_PROFILES_TOGGLE_LABEL =
+            "autofill_enable_profiles_toggle_label";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         PreferenceUtils.addPreferencesFromResource(
                 this, R.xml.autofill_and_payments_preference_fragment_screen);
-        getActivity().setTitle(R.string.autofill_profiles_title);
+        getActivity().setTitle(R.string.autofill_addresses_settings_title);
     }
 
     @Override
@@ -48,6 +53,20 @@ public class AutofillProfilesFragment
     private void rebuildProfileList() {
         getPreferenceScreen().removeAll();
         getPreferenceScreen().setOrderingAsAdded(true);
+
+        ChromeSwitchPreference autofillSwitch = new ChromeSwitchPreference(getActivity(), null);
+        autofillSwitch.setTitle(R.string.autofill_enable_profiles_toggle_label);
+        autofillSwitch.setSummary(R.string.autofill_enable_profiles_toggle_sublabel);
+        autofillSwitch.setKey(PREF_AUTOFILL_ENABLE_PROFILES_TOGGLE_LABEL); // For testing.
+        autofillSwitch.setChecked(PersonalDataManager.isAutofillProfileEnabled());
+        autofillSwitch.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                PersonalDataManager.setAutofillProfileEnabled((boolean) newValue);
+                return true;
+            }
+        });
+        getPreferenceScreen().addPreference(autofillSwitch);
 
         for (AutofillProfile profile : PersonalDataManager.getInstance().getProfilesForSettings()) {
             // Add a preference for the profile.
@@ -83,6 +102,7 @@ public class AutofillProfilesFragment
         pref.setIcon(plusIcon);
         pref.setTitle(R.string.autofill_create_profile);
         pref.setKey(PREF_NEW_PROFILE); // For testing.
+        pref.setEnabled(PersonalDataManager.isAutofillProfileEnabled());
 
         try (StrictModeContext unused = StrictModeContext.allowDiskWrites()) {
             getPreferenceScreen().addPreference(pref);

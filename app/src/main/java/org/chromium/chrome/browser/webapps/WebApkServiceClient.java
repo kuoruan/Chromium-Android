@@ -6,9 +6,6 @@ package org.chromium.chrome.browser.webapps;
 
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -83,21 +80,11 @@ public class WebApkServiceClient {
         final ApiUseCallback connectionCallback = new ApiUseCallback() {
             @Override
             public void useApi(IWebApkApi api) throws RemoteException {
-                int smallIconId = api.getSmallIconId();
-                // Prior to Android M, the small icon had to be from the resources of the app whose
-                // NotificationManager is used in {@link NotificationManager#notify()}. On Android
-                // M+, the small icon has to be from the resources of the app whose context is
-                // passed to the {@link Notification.Builder()} constructor.
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    // Android M+ introduced
-                    // {@link Notification.Builder#setSmallIcon(Bitmap icon)}.
-                    if (!notificationBuilder.hasSmallIconBitmap()) {
-                        notificationBuilder.setSmallIcon(
-                                decodeImageResource(webApkPackage, smallIconId));
-                    }
-                } else {
-                    notificationBuilder.setSmallIcon(smallIconId);
+                if (!notificationBuilder.hasSmallIconBitmap()) {
+                    notificationBuilder.setSmallIconForRemoteApp(
+                            api.getSmallIconId(), webApkPackage);
                 }
+
                 boolean notificationPermissionEnabled = api.notificationPermissionEnabled();
                 if (notificationPermissionEnabled) {
                     String channelName = null;
@@ -136,17 +123,6 @@ public class WebApkServiceClient {
         if (sInstance == null) return;
 
         sInstance.mConnectionManager.disconnectAll(ContextUtils.getApplicationContext());
-    }
-
-    /** Decodes bitmap from WebAPK's resources. */
-    private static Bitmap decodeImageResource(String webApkPackage, int resourceId) {
-        PackageManager packageManager = ContextUtils.getApplicationContext().getPackageManager();
-        try {
-            Resources resources = packageManager.getResourcesForApplication(webApkPackage);
-            return BitmapFactory.decodeResource(resources, resourceId);
-        } catch (PackageManager.NameNotFoundException e) {
-            return null;
-        }
     }
 
     /** Returns whether the WebAPK targets SDK 26+. */

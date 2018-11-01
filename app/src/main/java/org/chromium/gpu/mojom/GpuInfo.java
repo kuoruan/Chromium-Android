@@ -16,17 +16,14 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 192;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(192, 0)};
+    private static final int STRUCT_SIZE = 168;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(168, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    public org.chromium.mojo.common.mojom.TimeDelta initializationTime;
+    public org.chromium.mojo_base.mojom.TimeDelta initializationTime;
     public boolean optimus;
     public boolean amdSwitchable;
     public GpuDevice gpu;
     public GpuDevice[] secondaryGpus;
-    public String driverVendor;
-    public String driverVersion;
-    public String driverDate;
     public String pixelShaderVersion;
     public String vertexShaderVersion;
     public String maxMsaaSamples;
@@ -45,14 +42,13 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
     public boolean sandboxed;
     public boolean inProcessGpu;
     public boolean passthroughCmdDecoder;
-    public boolean directComposition;
-    public boolean supportsOverlays;
     public boolean canSupportThreadedTextureMailbox;
     public VideoDecodeAcceleratorCapabilities videoDecodeAcceleratorCapabilities;
     public VideoEncodeAcceleratorSupportedProfile[] videoEncodeAcceleratorSupportedProfiles;
     public boolean jpegDecodeAcceleratorSupported;
     public long systemVisual;
     public long rgbaVisual;
+    public boolean oopRasterizationSupported;
 
     private GpuInfo(int version) {
         super(STRUCT_SIZE, version);
@@ -72,9 +68,6 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static GpuInfo deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -88,67 +81,64 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
         GpuInfo result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new GpuInfo(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new GpuInfo(elementsOrVersion);
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                result.initializationTime = org.chromium.mojo.common.mojom.TimeDelta.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                result.initializationTime = org.chromium.mojo_base.mojom.TimeDelta.decode(decoder1);
+                }
+                {
+                    
                 result.optimus = decoder0.readBoolean(16, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.amdSwitchable = decoder0.readBoolean(16, 1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.softwareRendering = decoder0.readBoolean(16, 2);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.directRendering = decoder0.readBoolean(16, 3);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.sandboxed = decoder0.readBoolean(16, 4);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.inProcessGpu = decoder0.readBoolean(16, 5);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.passthroughCmdDecoder = decoder0.readBoolean(16, 6);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.directComposition = decoder0.readBoolean(16, 7);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.supportsOverlays = decoder0.readBoolean(17, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.canSupportThreadedTextureMailbox = decoder0.readBoolean(17, 1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.jpegDecodeAcceleratorSupported = decoder0.readBoolean(17, 2);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
+                result.canSupportThreadedTextureMailbox = decoder0.readBoolean(16, 7);
+                }
+                {
+                    
+                result.jpegDecodeAcceleratorSupported = decoder0.readBoolean(17, 0);
+                }
+                {
+                    
+                result.oopRasterizationSupported = decoder0.readBoolean(17, 1);
+                }
+                {
+                    
                 result.glResetNotificationStrategy = decoder0.readInt(20);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                 result.gpu = GpuDevice.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -159,75 +149,63 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
                         result.secondaryGpus[i1] = GpuDevice.decode(decoder2);
                     }
                 }
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.driverVendor = decoder0.readString(40, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.driverVersion = decoder0.readString(48, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.driverDate = decoder0.readString(56, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.pixelShaderVersion = decoder0.readString(64, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.vertexShaderVersion = decoder0.readString(72, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.maxMsaaSamples = decoder0.readString(80, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.machineModelName = decoder0.readString(88, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.machineModelVersion = decoder0.readString(96, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.glVersion = decoder0.readString(104, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.glVendor = decoder0.readString(112, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.glRenderer = decoder0.readString(120, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.glExtensions = decoder0.readString(128, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.glWsVendor = decoder0.readString(136, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.glWsVersion = decoder0.readString(144, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.glWsExtensions = decoder0.readString(152, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(160, false);
+                }
+                {
+                    
+                result.pixelShaderVersion = decoder0.readString(40, false);
+                }
+                {
+                    
+                result.vertexShaderVersion = decoder0.readString(48, false);
+                }
+                {
+                    
+                result.maxMsaaSamples = decoder0.readString(56, false);
+                }
+                {
+                    
+                result.machineModelName = decoder0.readString(64, false);
+                }
+                {
+                    
+                result.machineModelVersion = decoder0.readString(72, false);
+                }
+                {
+                    
+                result.glVersion = decoder0.readString(80, false);
+                }
+                {
+                    
+                result.glVendor = decoder0.readString(88, false);
+                }
+                {
+                    
+                result.glRenderer = decoder0.readString(96, false);
+                }
+                {
+                    
+                result.glExtensions = decoder0.readString(104, false);
+                }
+                {
+                    
+                result.glWsVendor = decoder0.readString(112, false);
+                }
+                {
+                    
+                result.glWsVersion = decoder0.readString(120, false);
+                }
+                {
+                    
+                result.glWsExtensions = decoder0.readString(128, false);
+                }
+                {
+                    
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(136, false);
                 result.videoDecodeAcceleratorCapabilities = VideoDecodeAcceleratorCapabilities.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(168, false);
+                }
+                {
+                    
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(144, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
                     result.videoEncodeAcceleratorSupportedProfiles = new VideoEncodeAcceleratorSupportedProfile[si1.elementsOrVersion];
@@ -237,15 +215,16 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
                         result.videoEncodeAcceleratorSupportedProfiles[i1] = VideoEncodeAcceleratorSupportedProfile.decode(decoder2);
                     }
                 }
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.systemVisual = decoder0.readLong(176);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.rgbaVisual = decoder0.readLong(184);
-            }
+                }
+                {
+                    
+                result.systemVisual = decoder0.readLong(152);
+                }
+                {
+                    
+                result.rgbaVisual = decoder0.readLong(160);
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -273,13 +252,11 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.passthroughCmdDecoder, 16, 6);
         
-        encoder0.encode(this.directComposition, 16, 7);
+        encoder0.encode(this.canSupportThreadedTextureMailbox, 16, 7);
         
-        encoder0.encode(this.supportsOverlays, 17, 0);
+        encoder0.encode(this.jpegDecodeAcceleratorSupported, 17, 0);
         
-        encoder0.encode(this.canSupportThreadedTextureMailbox, 17, 1);
-        
-        encoder0.encode(this.jpegDecodeAcceleratorSupported, 17, 2);
+        encoder0.encode(this.oopRasterizationSupported, 17, 1);
         
         encoder0.encode(this.glResetNotificationStrategy, 20);
         
@@ -295,177 +272,44 @@ public final class GpuInfo extends org.chromium.mojo.bindings.Struct {
             }
         }
         
-        encoder0.encode(this.driverVendor, 40, false);
+        encoder0.encode(this.pixelShaderVersion, 40, false);
         
-        encoder0.encode(this.driverVersion, 48, false);
+        encoder0.encode(this.vertexShaderVersion, 48, false);
         
-        encoder0.encode(this.driverDate, 56, false);
+        encoder0.encode(this.maxMsaaSamples, 56, false);
         
-        encoder0.encode(this.pixelShaderVersion, 64, false);
+        encoder0.encode(this.machineModelName, 64, false);
         
-        encoder0.encode(this.vertexShaderVersion, 72, false);
+        encoder0.encode(this.machineModelVersion, 72, false);
         
-        encoder0.encode(this.maxMsaaSamples, 80, false);
+        encoder0.encode(this.glVersion, 80, false);
         
-        encoder0.encode(this.machineModelName, 88, false);
+        encoder0.encode(this.glVendor, 88, false);
         
-        encoder0.encode(this.machineModelVersion, 96, false);
+        encoder0.encode(this.glRenderer, 96, false);
         
-        encoder0.encode(this.glVersion, 104, false);
+        encoder0.encode(this.glExtensions, 104, false);
         
-        encoder0.encode(this.glVendor, 112, false);
+        encoder0.encode(this.glWsVendor, 112, false);
         
-        encoder0.encode(this.glRenderer, 120, false);
+        encoder0.encode(this.glWsVersion, 120, false);
         
-        encoder0.encode(this.glExtensions, 128, false);
+        encoder0.encode(this.glWsExtensions, 128, false);
         
-        encoder0.encode(this.glWsVendor, 136, false);
-        
-        encoder0.encode(this.glWsVersion, 144, false);
-        
-        encoder0.encode(this.glWsExtensions, 152, false);
-        
-        encoder0.encode(this.videoDecodeAcceleratorCapabilities, 160, false);
+        encoder0.encode(this.videoDecodeAcceleratorCapabilities, 136, false);
         
         if (this.videoEncodeAcceleratorSupportedProfiles == null) {
-            encoder0.encodeNullPointer(168, false);
+            encoder0.encodeNullPointer(144, false);
         } else {
-            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.videoEncodeAcceleratorSupportedProfiles.length, 168, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+            org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.videoEncodeAcceleratorSupportedProfiles.length, 144, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
             for (int i0 = 0; i0 < this.videoEncodeAcceleratorSupportedProfiles.length; ++i0) {
                 
                 encoder1.encode(this.videoEncodeAcceleratorSupportedProfiles[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
         
-        encoder0.encode(this.systemVisual, 176);
+        encoder0.encode(this.systemVisual, 152);
         
-        encoder0.encode(this.rgbaVisual, 184);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        GpuInfo other = (GpuInfo) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.initializationTime, other.initializationTime))
-            return false;
-        if (this.optimus!= other.optimus)
-            return false;
-        if (this.amdSwitchable!= other.amdSwitchable)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.gpu, other.gpu))
-            return false;
-        if (!java.util.Arrays.deepEquals(this.secondaryGpus, other.secondaryGpus))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.driverVendor, other.driverVendor))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.driverVersion, other.driverVersion))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.driverDate, other.driverDate))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.pixelShaderVersion, other.pixelShaderVersion))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.vertexShaderVersion, other.vertexShaderVersion))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.maxMsaaSamples, other.maxMsaaSamples))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.machineModelName, other.machineModelName))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.machineModelVersion, other.machineModelVersion))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.glVersion, other.glVersion))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.glVendor, other.glVendor))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.glRenderer, other.glRenderer))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.glExtensions, other.glExtensions))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.glWsVendor, other.glWsVendor))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.glWsVersion, other.glWsVersion))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.glWsExtensions, other.glWsExtensions))
-            return false;
-        if (this.glResetNotificationStrategy!= other.glResetNotificationStrategy)
-            return false;
-        if (this.softwareRendering!= other.softwareRendering)
-            return false;
-        if (this.directRendering!= other.directRendering)
-            return false;
-        if (this.sandboxed!= other.sandboxed)
-            return false;
-        if (this.inProcessGpu!= other.inProcessGpu)
-            return false;
-        if (this.passthroughCmdDecoder!= other.passthroughCmdDecoder)
-            return false;
-        if (this.directComposition!= other.directComposition)
-            return false;
-        if (this.supportsOverlays!= other.supportsOverlays)
-            return false;
-        if (this.canSupportThreadedTextureMailbox!= other.canSupportThreadedTextureMailbox)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.videoDecodeAcceleratorCapabilities, other.videoDecodeAcceleratorCapabilities))
-            return false;
-        if (!java.util.Arrays.deepEquals(this.videoEncodeAcceleratorSupportedProfiles, other.videoEncodeAcceleratorSupportedProfiles))
-            return false;
-        if (this.jpegDecodeAcceleratorSupported!= other.jpegDecodeAcceleratorSupported)
-            return false;
-        if (this.systemVisual!= other.systemVisual)
-            return false;
-        if (this.rgbaVisual!= other.rgbaVisual)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.initializationTime);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.optimus);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.amdSwitchable);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.gpu);
-        result = prime * result + java.util.Arrays.deepHashCode(this.secondaryGpus);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.driverVendor);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.driverVersion);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.driverDate);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pixelShaderVersion);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.vertexShaderVersion);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxMsaaSamples);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.machineModelName);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.machineModelVersion);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.glVersion);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.glVendor);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.glRenderer);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.glExtensions);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.glWsVendor);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.glWsVersion);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.glWsExtensions);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.glResetNotificationStrategy);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.softwareRendering);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.directRendering);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sandboxed);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inProcessGpu);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.passthroughCmdDecoder);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.directComposition);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.supportsOverlays);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.canSupportThreadedTextureMailbox);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoDecodeAcceleratorCapabilities);
-        result = prime * result + java.util.Arrays.deepHashCode(this.videoEncodeAcceleratorSupportedProfiles);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.jpegDecodeAcceleratorSupported);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.systemVisual);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.rgbaVisual);
-        return result;
+        encoder0.encode(this.rgbaVisual, 160);
     }
 }

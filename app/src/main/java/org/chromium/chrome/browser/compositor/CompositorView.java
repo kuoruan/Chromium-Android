@@ -10,11 +10,13 @@ import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import org.chromium.base.ThreadUtils;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -82,6 +84,21 @@ public class CompositorView
     public CompositorView(Context c, LayoutRenderHost host) {
         super(c);
         mRenderHost = host;
+        initializeIfOnUiThread();
+    }
+
+    /**
+     * The {@link CompositorSurfaceManagerImpl} constructor creates a handler (inside the
+     * SurfaceView constructor on android N and before) and thus can only be called on the UI
+     * thread. If the layout is inflated on a background thread this fails, thus we only initialize
+     * the {@link CompositorSurfaceManager} in the constructor if on the UI thread (or we are
+     * running on android O+), otherwise it is initialized inside the first call to
+     * {@link #setRootView}.
+     */
+    private void initializeIfOnUiThread() {
+        if (!ThreadUtils.runningOnUiThread() && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return;
+        }
 
         mCompositorSurfaceManager = new CompositorSurfaceManagerImpl(this, this);
 
@@ -101,6 +118,12 @@ public class CompositorView
      * @param view The root view of the hierarchy.
      */
     public void setRootView(View view) {
+        // If layout was inflated on a background thread, then the CompositorView should be
+        // initialized now.
+        if (mCompositorSurfaceManager == null) {
+            ThreadUtils.assertOnUiThread();
+            initializeIfOnUiThread();
+        }
         mRootView = view;
     }
 
@@ -147,6 +170,13 @@ public class CompositorView
      */
     public ResourceManager getResourceManager() {
         return mResourceManager;
+    }
+
+    /**
+     * @return The active {@link SurfaceView} of this compositor.
+     */
+    public View getActiveSurfaceView() {
+        return mCompositorSurfaceManager.getActiveSurfaceView();
     }
 
     /**
@@ -311,7 +341,7 @@ public class CompositorView
     }
 
     @CalledByNative
-    private void didSwapBuffers() {
+    private void didSwapBuffers(boolean swappedCurrentSize) {
         // If we're in the middle of a surface swap, then see if we've received a new frame yet for
         // the new surface before hiding the outgoing surface.
         if (mFramesUntilHideBackground > 1) {
@@ -326,7 +356,10 @@ public class CompositorView
             mCompositorSurfaceManager.doneWithUnownedSurface();
         }
 
-        runDrawFinishedCallbacks();
+        // Only run our draw finished callbacks if the frame we swapped was the correct size.
+        if (swappedCurrentSize) {
+            runDrawFinishedCallbacks();
+        }
     }
 
     /**

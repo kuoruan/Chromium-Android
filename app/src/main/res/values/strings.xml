@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (c) 2012 The Chromium Authors. All rights reserved.
-
+<!-- Copyright 2018 The Chromium Authors. All rights reserved.
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file.
 -->
 
-<!-- DO NOT ADD STRINGS HERE.
-
-    Android chrome strings now live in
-    chrome/android/java/strings/android_chrome_strings.grd
-
-    See http://www.chromium.org/developers/design-documents/ui-localization
--->
-
-<resources/>
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+  <string name="product_version" translatable="false" tools:ignore="UnusedResources">70.0.3538.83</string>
+</resources>

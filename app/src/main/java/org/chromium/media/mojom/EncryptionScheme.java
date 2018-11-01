@@ -21,27 +21,27 @@ public final class EncryptionScheme extends org.chromium.mojo.bindings.Struct {
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
 
     public static final class CipherMode {
-    
-    
-    
+
+
+
         private static final boolean IS_EXTENSIBLE = false;
-    
+
         public static boolean isKnownValue(int value) {
             return false;
         }
-    
+
         public static void validate(int value) {
             if (IS_EXTENSIBLE || isKnownValue(value))
                 return;
-    
+
             throw new DeserializationException("Invalid enum value.");
         }
-    
+
         private CipherMode() {}
-    
+
     }
     public int mode;
-    public Pattern pattern;
+    public EncryptionPattern pattern;
 
     private EncryptionScheme(int version) {
         super(STRUCT_SIZE, version);
@@ -61,9 +61,6 @@ public final class EncryptionScheme extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static EncryptionScheme deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -77,17 +74,19 @@ public final class EncryptionScheme extends org.chromium.mojo.bindings.Struct {
         EncryptionScheme result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new EncryptionScheme(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new EncryptionScheme(elementsOrVersion);
+                {
+                    
                 result.mode = decoder0.readInt(8);
                     EncryptionScheme.CipherMode.validate(result.mode);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                result.pattern = Pattern.decode(decoder1);
-            }
+                result.pattern = EncryptionPattern.decode(decoder1);
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -102,36 +101,5 @@ public final class EncryptionScheme extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.mode, 8);
         
         encoder0.encode(this.pattern, 16, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        EncryptionScheme other = (EncryptionScheme) object;
-        if (this.mode!= other.mode)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.pattern, other.pattern))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pattern);
-        return result;
     }
 }

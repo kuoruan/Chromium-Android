@@ -41,9 +41,6 @@ public final class NfcPushOptions extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static NfcPushOptions deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -57,20 +54,22 @@ public final class NfcPushOptions extends org.chromium.mojo.bindings.Struct {
         NfcPushOptions result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new NfcPushOptions(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new NfcPushOptions(elementsOrVersion);
+                {
+                    
                 result.target = decoder0.readInt(8);
                     NfcPushTarget.validate(result.target);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.ignoreRead = decoder0.readBoolean(12, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.timeout = decoder0.readDouble(16);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -87,39 +86,5 @@ public final class NfcPushOptions extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.ignoreRead, 12, 0);
         
         encoder0.encode(this.timeout, 16);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        NfcPushOptions other = (NfcPushOptions) object;
-        if (this.target!= other.target)
-            return false;
-        if (this.timeout!= other.timeout)
-            return false;
-        if (this.ignoreRead!= other.ignoreRead)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.target);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.timeout);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.ignoreRead);
-        return result;
     }
 }

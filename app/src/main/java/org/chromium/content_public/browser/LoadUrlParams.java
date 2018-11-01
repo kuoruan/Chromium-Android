@@ -23,7 +23,7 @@ import java.util.Map;
 @JNINamespace("content")
 public class LoadUrlParams {
     // Fields with counterparts in NavigationController::LoadURLParams.
-    // Package private so that ContentViewCore.loadUrl can pass them down to
+    // Package private so that NavigationController.loadUrl can pass them down to
     // native code. Should not be accessed directly anywhere else outside of
     // this class.
     String mUrl;

@@ -16,18 +16,16 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class PlaybackProperties extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 32;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
+    private static final int STRUCT_SIZE = 16;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    public int audioCodec;
-    public int videoCodec;
     public boolean hasAudio;
     public boolean hasVideo;
     public boolean isBackground;
+    public boolean isMuted;
     public boolean isMse;
     public boolean isEme;
     public boolean isEmbeddedMediaExperience;
-    public org.chromium.gfx.mojom.Size naturalSize;
 
     private PlaybackProperties(int version) {
         super(STRUCT_SIZE, version);
@@ -47,9 +45,6 @@ public final class PlaybackProperties extends org.chromium.mojo.bindings.Struct 
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static PlaybackProperties deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -63,46 +58,37 @@ public final class PlaybackProperties extends org.chromium.mojo.bindings.Struct 
         PlaybackProperties result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new PlaybackProperties(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.audioCodec = decoder0.readInt(8);
-                    AudioCodec.validate(result.audioCodec);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.videoCodec = decoder0.readInt(12);
-                    VideoCodec.validate(result.videoCodec);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.hasAudio = decoder0.readBoolean(16, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.hasVideo = decoder0.readBoolean(16, 1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.isBackground = decoder0.readBoolean(16, 2);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.isMse = decoder0.readBoolean(16, 3);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.isEme = decoder0.readBoolean(16, 4);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.isEmbeddedMediaExperience = decoder0.readBoolean(16, 5);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
-                result.naturalSize = org.chromium.gfx.mojom.Size.decode(decoder1);
-            }
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new PlaybackProperties(elementsOrVersion);
+                {
+                    
+                result.hasAudio = decoder0.readBoolean(8, 0);
+                }
+                {
+                    
+                result.hasVideo = decoder0.readBoolean(8, 1);
+                }
+                {
+                    
+                result.isBackground = decoder0.readBoolean(8, 2);
+                }
+                {
+                    
+                result.isMuted = decoder0.readBoolean(8, 3);
+                }
+                {
+                    
+                result.isMse = decoder0.readBoolean(8, 4);
+                }
+                {
+                    
+                result.isEme = decoder0.readBoolean(8, 5);
+                }
+                {
+                    
+                result.isEmbeddedMediaExperience = decoder0.readBoolean(8, 6);
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -114,74 +100,18 @@ public final class PlaybackProperties extends org.chromium.mojo.bindings.Struct 
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(this.audioCodec, 8);
+        encoder0.encode(this.hasAudio, 8, 0);
         
-        encoder0.encode(this.videoCodec, 12);
+        encoder0.encode(this.hasVideo, 8, 1);
         
-        encoder0.encode(this.hasAudio, 16, 0);
+        encoder0.encode(this.isBackground, 8, 2);
         
-        encoder0.encode(this.hasVideo, 16, 1);
+        encoder0.encode(this.isMuted, 8, 3);
         
-        encoder0.encode(this.isBackground, 16, 2);
+        encoder0.encode(this.isMse, 8, 4);
         
-        encoder0.encode(this.isMse, 16, 3);
+        encoder0.encode(this.isEme, 8, 5);
         
-        encoder0.encode(this.isEme, 16, 4);
-        
-        encoder0.encode(this.isEmbeddedMediaExperience, 16, 5);
-        
-        encoder0.encode(this.naturalSize, 24, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        PlaybackProperties other = (PlaybackProperties) object;
-        if (this.audioCodec!= other.audioCodec)
-            return false;
-        if (this.videoCodec!= other.videoCodec)
-            return false;
-        if (this.hasAudio!= other.hasAudio)
-            return false;
-        if (this.hasVideo!= other.hasVideo)
-            return false;
-        if (this.isBackground!= other.isBackground)
-            return false;
-        if (this.isMse!= other.isMse)
-            return false;
-        if (this.isEme!= other.isEme)
-            return false;
-        if (this.isEmbeddedMediaExperience!= other.isEmbeddedMediaExperience)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.naturalSize, other.naturalSize))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.audioCodec);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoCodec);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hasAudio);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hasVideo);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isBackground);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isMse);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isEme);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isEmbeddedMediaExperience);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.naturalSize);
-        return result;
+        encoder0.encode(this.isEmbeddedMediaExperience, 8, 6);
     }
 }

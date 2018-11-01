@@ -18,28 +18,28 @@ class ContentDecryptionModuleClient_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<ContentDecryptionModuleClient, ContentDecryptionModuleClient.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<ContentDecryptionModuleClient, ContentDecryptionModuleClient.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::ContentDecryptionModuleClient";
+            return "media.mojom.ContentDecryptionModuleClient";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, ContentDecryptionModuleClient impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public ContentDecryptionModuleClient[] buildArray(int size) {
           return new ContentDecryptionModuleClient[size];
@@ -160,64 +160,64 @@ String sessionId, double newExpiryTimeSec) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 ContentDecryptionModuleClient_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_SESSION_MESSAGE_ORDINAL: {
-            
+
                         ContentDecryptionModuleClientOnSessionMessageParams data =
                                 ContentDecryptionModuleClientOnSessionMessageParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onSessionMessage(data.sessionId, data.messageType, data.message);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_SESSION_CLOSED_ORDINAL: {
-            
+
                         ContentDecryptionModuleClientOnSessionClosedParams data =
                                 ContentDecryptionModuleClientOnSessionClosedParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onSessionClosed(data.sessionId);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_SESSION_KEYS_CHANGE_ORDINAL: {
-            
+
                         ContentDecryptionModuleClientOnSessionKeysChangeParams data =
                                 ContentDecryptionModuleClientOnSessionKeysChangeParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onSessionKeysChange(data.sessionId, data.hasAdditionalUsableKey, data.keysInfo);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_SESSION_EXPIRATION_UPDATE_ORDINAL: {
-            
+
                         ContentDecryptionModuleClientOnSessionExpirationUpdateParams data =
                                 ContentDecryptionModuleClientOnSessionExpirationUpdateParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onSessionExpirationUpdate(data.sessionId, data.newExpiryTimeSec);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -237,20 +237,20 @@ String sessionId, double newExpiryTimeSec) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), ContentDecryptionModuleClient_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -264,39 +264,36 @@ String sessionId, double newExpiryTimeSec) {
 
     
     static final class ContentDecryptionModuleClientOnSessionMessageParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public String sessionId;
         public int messageType;
         public byte[] message;
-    
+
         private ContentDecryptionModuleClientOnSessionMessageParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ContentDecryptionModuleClientOnSessionMessageParams() {
             this(0);
         }
-    
+
         public static ContentDecryptionModuleClientOnSessionMessageParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ContentDecryptionModuleClientOnSessionMessageParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ContentDecryptionModuleClientOnSessionMessageParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -306,26 +303,28 @@ String sessionId, double newExpiryTimeSec) {
             ContentDecryptionModuleClientOnSessionMessageParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ContentDecryptionModuleClientOnSessionMessageParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ContentDecryptionModuleClientOnSessionMessageParams(elementsOrVersion);
+                    {
+                        
                     result.sessionId = decoder0.readString(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.messageType = decoder0.readInt(16);
                         CdmMessageType.validate(result.messageType);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.message = decoder0.readBytes(24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -337,77 +336,40 @@ String sessionId, double newExpiryTimeSec) {
             
             encoder0.encode(this.message, 24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ContentDecryptionModuleClientOnSessionMessageParams other = (ContentDecryptionModuleClientOnSessionMessageParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionId, other.sessionId))
-                return false;
-            if (this.messageType!= other.messageType)
-                return false;
-            if (!java.util.Arrays.equals(this.message, other.message))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.messageType);
-            result = prime * result + java.util.Arrays.hashCode(this.message);
-            return result;
-        }
     }
 
 
 
     
     static final class ContentDecryptionModuleClientOnSessionClosedParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public String sessionId;
-    
+
         private ContentDecryptionModuleClientOnSessionClosedParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ContentDecryptionModuleClientOnSessionClosedParams() {
             this(0);
         }
-    
+
         public static ContentDecryptionModuleClientOnSessionClosedParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ContentDecryptionModuleClientOnSessionClosedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ContentDecryptionModuleClientOnSessionClosedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -417,17 +379,19 @@ String sessionId, double newExpiryTimeSec) {
             ContentDecryptionModuleClientOnSessionClosedParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ContentDecryptionModuleClientOnSessionClosedParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ContentDecryptionModuleClientOnSessionClosedParams(elementsOrVersion);
+                    {
+                        
                     result.sessionId = decoder0.readString(8, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -435,73 +399,42 @@ String sessionId, double newExpiryTimeSec) {
             
             encoder0.encode(this.sessionId, 8, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ContentDecryptionModuleClientOnSessionClosedParams other = (ContentDecryptionModuleClientOnSessionClosedParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionId, other.sessionId))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
-            return result;
-        }
     }
 
 
 
     
     static final class ContentDecryptionModuleClientOnSessionKeysChangeParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public String sessionId;
         public boolean hasAdditionalUsableKey;
         public CdmKeyInformation[] keysInfo;
-    
+
         private ContentDecryptionModuleClientOnSessionKeysChangeParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ContentDecryptionModuleClientOnSessionKeysChangeParams() {
             this(0);
         }
-    
+
         public static ContentDecryptionModuleClientOnSessionKeysChangeParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ContentDecryptionModuleClientOnSessionKeysChangeParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ContentDecryptionModuleClientOnSessionKeysChangeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -511,17 +444,18 @@ String sessionId, double newExpiryTimeSec) {
             ContentDecryptionModuleClientOnSessionKeysChangeParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ContentDecryptionModuleClientOnSessionKeysChangeParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ContentDecryptionModuleClientOnSessionKeysChangeParams(elementsOrVersion);
+                    {
+                        
                     result.sessionId = decoder0.readString(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.hasAdditionalUsableKey = decoder0.readBoolean(16, 0);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                     {
                         org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -532,13 +466,14 @@ String sessionId, double newExpiryTimeSec) {
                             result.keysInfo[i1] = CdmKeyInformation.decode(decoder2);
                         }
                     }
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -558,78 +493,41 @@ String sessionId, double newExpiryTimeSec) {
                 }
             }
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ContentDecryptionModuleClientOnSessionKeysChangeParams other = (ContentDecryptionModuleClientOnSessionKeysChangeParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionId, other.sessionId))
-                return false;
-            if (this.hasAdditionalUsableKey!= other.hasAdditionalUsableKey)
-                return false;
-            if (!java.util.Arrays.deepEquals(this.keysInfo, other.keysInfo))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hasAdditionalUsableKey);
-            result = prime * result + java.util.Arrays.deepHashCode(this.keysInfo);
-            return result;
-        }
     }
 
 
 
     
     static final class ContentDecryptionModuleClientOnSessionExpirationUpdateParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public String sessionId;
         public double newExpiryTimeSec;
-    
+
         private ContentDecryptionModuleClientOnSessionExpirationUpdateParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ContentDecryptionModuleClientOnSessionExpirationUpdateParams() {
             this(0);
         }
-    
+
         public static ContentDecryptionModuleClientOnSessionExpirationUpdateParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ContentDecryptionModuleClientOnSessionExpirationUpdateParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ContentDecryptionModuleClientOnSessionExpirationUpdateParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -639,21 +537,23 @@ String sessionId, double newExpiryTimeSec) {
             ContentDecryptionModuleClientOnSessionExpirationUpdateParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ContentDecryptionModuleClientOnSessionExpirationUpdateParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ContentDecryptionModuleClientOnSessionExpirationUpdateParams(elementsOrVersion);
+                    {
+                        
                     result.sessionId = decoder0.readString(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.newExpiryTimeSec = decoder0.readDouble(16);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -662,37 +562,6 @@ String sessionId, double newExpiryTimeSec) {
             encoder0.encode(this.sessionId, 8, false);
             
             encoder0.encode(this.newExpiryTimeSec, 16);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ContentDecryptionModuleClientOnSessionExpirationUpdateParams other = (ContentDecryptionModuleClientOnSessionExpirationUpdateParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionId, other.sessionId))
-                return false;
-            if (this.newExpiryTimeSec!= other.newExpiryTimeSec)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.newExpiryTimeSec);
-            return result;
         }
     }
 

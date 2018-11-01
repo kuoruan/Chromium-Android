@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.graphics.drawable.VectorDrawableCompat;
+import android.support.v4.view.ViewCompat;
+import android.support.v7.content.res.AppCompatResources;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -19,7 +21,6 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.SynchronousInitializationActivity;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
@@ -370,13 +371,13 @@ public class BookmarkFolderSelectActivity extends SynchronousInitializationActiv
 
             Drawable iconDrawable;
             if (entry.mType == FolderListEntry.TYPE_NORMAL) {
-                iconDrawable = BookmarkUtils.getFolderIcon(view.getResources());
+                iconDrawable = BookmarkUtils.getFolderIcon(view.getContext());
             } else {
                 // For new folder, start_icon is different.
                 VectorDrawableCompat vectorDrawable = VectorDrawableCompat.create(
                         view.getResources(), R.drawable.ic_add, view.getContext().getTheme());
-                vectorDrawable.setTintList(ApiCompatibilityUtils.getColorStateList(
-                        view.getResources(), R.color.dark_mode_tint));
+                vectorDrawable.setTintList(AppCompatResources.getColorStateList(
+                        view.getContext(), R.color.dark_mode_tint));
                 iconDrawable = vectorDrawable;
             }
 
@@ -397,7 +398,7 @@ public class BookmarkFolderSelectActivity extends SynchronousInitializationActiv
             int paddingStart = mBasePadding + Math.min(entry.mDepth, MAX_FOLDER_DEPTH)
                     * mPaddingIncrement;
             View endIcon = view.findViewById(R.id.selected_view);
-            ApiCompatibilityUtils.setPaddingRelative(view, paddingStart, view.getPaddingTop(),
+            ViewCompat.setPaddingRelative(view, paddingStart, view.getPaddingTop(),
                     (endIcon.getVisibility() == View.VISIBLE) ? 0 : mBasePadding,
                     view.getPaddingBottom());
         }

@@ -53,8 +53,8 @@ public class SingleTabModelSelector extends TabModelSelectorBase {
     }
 
     @Override
-    public Tab openNewTab(LoadUrlParams loadUrlParams, TabLaunchType type, Tab parent,
-            boolean incognito) {
+    public Tab openNewTab(
+            LoadUrlParams loadUrlParams, @TabLaunchType int type, Tab parent, boolean incognito) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(loadUrlParams.getUrl()));
         intent.setPackage(mApplicationContext.getPackageName());
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

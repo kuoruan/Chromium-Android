@@ -10,7 +10,7 @@ public class NativeLibraries {
     public static final String[] LIBRARIES =
       {"chrome"};
     static String sVersionNumber =
-      "66.0.3359.155";
+      "70.0.3538.83";
     public static int sCpuFamily =
         CPU_FAMILY_ARM;
 }

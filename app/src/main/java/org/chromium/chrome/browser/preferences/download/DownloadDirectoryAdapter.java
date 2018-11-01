@@ -5,67 +5,85 @@
 package org.chromium.chrome.browser.preferences.download;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.widget.TextViewCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.ListView;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.download.DownloadLocationDialogBridge;
+import org.chromium.chrome.browser.download.DirectoryOption;
+import org.chromium.chrome.browser.download.DownloadDirectoryProvider;
+import org.chromium.chrome.browser.download.DownloadUtils;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
-import org.chromium.chrome.browser.util.FeatureUtilities;
-import org.chromium.chrome.browser.widget.TintedImageButton;
 import org.chromium.chrome.browser.widget.TintedImageView;
-import org.chromium.chrome.browser.widget.selection.SelectableItemView;
 
-import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Custom adapter that populates the list of which directories the user can choose as their default
  * download location.
  */
-public class DownloadDirectoryAdapter extends BaseAdapter implements View.OnClickListener {
+public class DownloadDirectoryAdapter extends ArrayAdapter<Object> {
+    /**
+     * Delegate to handle directory options results and observe data changes.
+     */
+    public interface Delegate {
+        /**
+         * Called when available download directories are changed, like SD card removal. App level
+         * UI logic should update to match the new backend data.
+         */
+        void onDirectoryOptionsUpdated();
+
+        /**
+         * Called after the user selected another download directory option.
+         */
+        void onDirectorySelectionChanged();
+    }
+
+    public static int NO_SELECTED_ITEM_ID = -1;
+    public static int SELECTED_ITEM_NOT_INITIALIZED = -2;
+
+    protected int mSelectedPosition = SELECTED_ITEM_NOT_INITIALIZED;
+
     private Context mContext;
     private LayoutInflater mLayoutInflater;
-    private DownloadDirectoryList mDownloadDirectoryUtil;
+    protected Delegate mDelegate;
 
-    private int mSelectedView;
+    private List<DirectoryOption> mCanonicalOptions = new ArrayList<>();
+    private List<DirectoryOption> mAdditionalOptions = new ArrayList<>();
+    private List<DirectoryOption> mErrorOptions = new ArrayList<>();
 
-    DownloadDirectoryAdapter(Context context) {
+    public DownloadDirectoryAdapter(@NonNull Context context, Delegate delegate) {
+        super(context, android.R.layout.simple_spinner_item);
+
         mContext = context;
-        mLayoutInflater = LayoutInflater.from(mContext);
-        mDownloadDirectoryUtil = new DownloadDirectoryList(context);
-    }
-
-    /**
-     * Start the adapter to gather the available directories.
-     */
-    public void start() {
-        refreshData();
-    }
-
-    /**
-     * Stop the adapter and reset lists of directories.
-     */
-    public void stop() {
-        mDownloadDirectoryUtil.clearData();
-    }
-
-    private void refreshData() {
-        mDownloadDirectoryUtil.refreshData();
+        mDelegate = delegate;
+        mLayoutInflater = LayoutInflater.from(context);
     }
 
     @Override
     public int getCount() {
-        return mDownloadDirectoryUtil.getCount();
+        return mCanonicalOptions.size() + mAdditionalOptions.size() + mErrorOptions.size();
     }
 
+    @Nullable
     @Override
     public Object getItem(int position) {
-        return mDownloadDirectoryUtil.getDirectoryOption(position);
+        if (!mErrorOptions.isEmpty()) {
+            assert position == 0;
+            assert getCount() == 1;
+            return mErrorOptions.get(position);
+        }
+
+        return position < mCanonicalOptions.size()
+                ? mCanonicalOptions.get(position)
+                : mAdditionalOptions.get(position - mCanonicalOptions.size());
     }
 
     @Override
@@ -73,76 +91,185 @@ public class DownloadDirectoryAdapter extends BaseAdapter implements View.OnClic
         return position;
     }
 
+    @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup viewGroup) {
-        View view = convertView;
-        if (view == null) {
-            view = mLayoutInflater.inflate(R.xml.download_directory, null);
-        }
+    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        View view = convertView != null
+                ? convertView
+                : mLayoutInflater.inflate(R.layout.download_location_spinner_item, null);
 
-        view.setClickable(true);
-        view.setOnClickListener(this);
         view.setTag(position);
 
-        DownloadDirectoryList.Option directoryOption =
-                (DownloadDirectoryList.Option) getItem(position);
+        DirectoryOption directoryOption = (DirectoryOption) getItem(position);
+        if (directoryOption == null) return view;
 
-        TextView directoryName = (TextView) view.findViewById(R.id.title);
-        directoryName.setText(directoryOption.mName);
+        TextView titleText = (TextView) view.findViewById(R.id.text);
+        titleText.setText(directoryOption.name);
 
-        TextView spaceAvailable = (TextView) view.findViewById(R.id.description);
-        spaceAvailable.setText(directoryOption.mAvailableSpace);
-
-        if (directoryOption.mLocation.getAbsolutePath().equals(
-                    PrefServiceBridge.getInstance().getDownloadDefaultDirectory())) {
-            styleViewSelectionAndIcons(view, true);
-            mSelectedView = position;
-        } else {
-            styleViewSelectionAndIcons(view, false);
+        // ModalDialogView may do a measure pass on the view hierarchy to limit the layout inside
+        // certain area, where LayoutParams cannot be null.
+        if (view.getLayoutParams() == null) {
+            view.setLayoutParams(
+                    new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         }
+        return view;
+    }
+
+    @Override
+    public View getDropDownView(
+            int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        View view = convertView != null
+                ? convertView
+                : mLayoutInflater.inflate(R.layout.download_location_spinner_dropdown_item, null);
+
+        view.setTag(position);
+
+        DirectoryOption directoryOption = (DirectoryOption) getItem(position);
+        if (directoryOption == null) return view;
+
+        TextView titleText = (TextView) view.findViewById(R.id.title);
+        titleText.setText(directoryOption.name);
+
+        TextView summaryText = (TextView) view.findViewById(R.id.description);
+        if (isEnabled(position)) {
+            TextViewCompat.setTextAppearance(titleText, R.style.BlackTitle1);
+            TextViewCompat.setTextAppearance(summaryText, R.style.BlackBody);
+            summaryText.setText(DownloadUtils.getStringForAvailableBytes(
+                    mContext, directoryOption.availableSpace));
+        } else {
+            TextViewCompat.setTextAppearance(titleText, R.style.BlackDisabledText1);
+            TextViewCompat.setTextAppearance(summaryText, R.style.BlackDisabledText3);
+            if (mErrorOptions.isEmpty()) {
+                summaryText.setText(mContext.getText(R.string.download_location_not_enough_space));
+            } else {
+                summaryText.setVisibility(View.GONE);
+            }
+        }
+
+        TintedImageView imageView = (TintedImageView) view.findViewById(R.id.icon_view);
+        imageView.setVisibility(View.GONE);
 
         return view;
     }
 
-    private void styleViewSelectionAndIcons(View view, boolean isSelected) {
-        TintedImageView startIcon = view.findViewById(R.id.icon_view);
-        TintedImageButton endIcon = view.findViewById(R.id.selected_view);
-
-        Drawable defaultIcon = ((DownloadDirectoryList.Option) getItem((int) view.getTag())).mIcon;
-        if (FeatureUtilities.isChromeModernDesignEnabled()) {
-            // In Modern Design, the default icon is replaced with a check mark if selected.
-            SelectableItemView.applyModernIconStyle(startIcon, defaultIcon, isSelected);
-            endIcon.setVisibility(View.GONE);
-        } else {
-            // Otherwise, the selected entry has a blue check mark as the end_icon.
-            startIcon.setImageDrawable(defaultIcon);
-            endIcon.setVisibility(isSelected ? View.VISIBLE : View.GONE);
-        }
-    }
-
     @Override
-    public void onClick(View view) {
-        int clickedViewPosition = (int) view.getTag();
-        DownloadDirectoryList.Option directoryOption =
-                (DownloadDirectoryList.Option) getItem(clickedViewPosition);
-        PrefServiceBridge.getInstance().setDownloadAndSaveFileDefaultDirectory(
-                directoryOption.mLocation.getAbsolutePath());
-        updateSelectedView(view);
-        updateAlertDialog(directoryOption.mLocation);
+    public boolean isEnabled(int position) {
+        DirectoryOption directoryOption = (DirectoryOption) getItem(position);
+        return directoryOption != null && directoryOption.availableSpace != 0;
     }
 
-    private void updateSelectedView(View newSelectedView) {
-        ListView parentListView = (ListView) newSelectedView.getParent();
-        View oldSelectedView = parentListView.getChildAt(mSelectedView);
-        styleViewSelectionAndIcons(oldSelectedView, false);
-
-        styleViewSelectionAndIcons(newSelectedView, true);
-        mSelectedView = (int) newSelectedView.getTag();
+    /**
+     * @return  ID of the directory option that matches the default download location.
+     */
+    public int getSelectedItemId() {
+        return mSelectedPosition;
     }
 
-    private void updateAlertDialog(File location) {
-        DownloadLocationDialogBridge bridge = DownloadLocationDialogBridge.getInstance();
-        if (bridge == null) return;
-        bridge.updateFileLocation(location);
+    private void initSelectedIdFromPref() {
+        if (!mErrorOptions.isEmpty()) return;
+
+        int selectedId = NO_SELECTED_ITEM_ID;
+
+        String defaultLocation = PrefServiceBridge.getInstance().getDownloadDefaultDirectory();
+        for (int i = 0; i < getCount(); i++) {
+            DirectoryOption option = (DirectoryOption) getItem(i);
+            if (option == null) continue;
+            if (defaultLocation.equals(option.location)) {
+                selectedId = i;
+                break;
+            }
+        }
+        mSelectedPosition = selectedId;
+    }
+
+    /**
+     * In the case that there is no selected item ID/the selected item ID is invalid (ie. there is
+     * not enough space), select either the default or the next valid item ID. Set the default to be
+     * this item and return the ID.
+     *
+     * @return  ID of the first valid, selectable item and the new default location.
+     */
+    public int useFirstValidSelectableItemId() {
+        for (int i = 0; i < getCount(); i++) {
+            DirectoryOption option = (DirectoryOption) getItem(i);
+            if (option == null) continue;
+            if (option.availableSpace > 0) {
+                PrefServiceBridge.getInstance().setDownloadAndSaveFileDefaultDirectory(
+                        option.location);
+                mSelectedPosition = i;
+                return i;
+            }
+        }
+
+        // Display an option that says there are no available download locations.
+        adjustErrorDirectoryOption();
+        return 0;
+    }
+
+    boolean hasAvailableLocations() {
+        return mErrorOptions.isEmpty();
+    }
+
+    /**
+     * Update the list of items.
+     */
+    public void update() {
+        mCanonicalOptions.clear();
+        mAdditionalOptions.clear();
+        mErrorOptions.clear();
+
+        // Retrieve all download directories.
+        DownloadDirectoryProvider.getInstance().getAllDirectoriesOptions(
+                (ArrayList<DirectoryOption> dirs) -> { onDirectoryOptionsRetrieved(dirs); });
+    }
+
+    private void onDirectoryOptionsRetrieved(ArrayList<DirectoryOption> dirs) {
+        int numOtherAdditionalDirectories = 0;
+        for (DirectoryOption dir : dirs) {
+            DirectoryOption directory = (DirectoryOption) dir.clone();
+            switch (directory.type) {
+                case DirectoryOption.DownloadLocationDirectoryType.DEFAULT:
+                    directory.name = mContext.getString(R.string.menu_downloads);
+                    mCanonicalOptions.add(directory);
+                    break;
+                case DirectoryOption.DownloadLocationDirectoryType.ADDITIONAL:
+                    String directoryName = (numOtherAdditionalDirectories > 0)
+                            ? mContext.getString(org.chromium.chrome.R.string
+                                                         .downloads_location_sd_card_number,
+                                      numOtherAdditionalDirectories + 1)
+                            : mContext.getString(
+                                      org.chromium.chrome.R.string.downloads_location_sd_card);
+                    directory.name = directoryName;
+                    mAdditionalOptions.add(directory);
+                    numOtherAdditionalDirectories++;
+                    break;
+                case DirectoryOption.DownloadLocationDirectoryType.ERROR:
+                    directory.name =
+                            mContext.getString(R.string.download_location_no_available_locations);
+                    mErrorOptions.add(directory);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // Setup the selection.
+        initSelectedIdFromPref();
+
+        // Update lower Android level UI widgets.
+        notifyDataSetChanged();
+
+        // Update higher app level UI logic.
+        if (mDelegate != null) mDelegate.onDirectoryOptionsUpdated();
+    }
+
+    private void adjustErrorDirectoryOption() {
+        if ((mCanonicalOptions.size() + mAdditionalOptions.size()) > 0) {
+            mErrorOptions.clear();
+        } else {
+            mErrorOptions.add(new DirectoryOption(
+                    mContext.getString(R.string.download_location_no_available_locations), null, 0,
+                    0, DirectoryOption.DownloadLocationDirectoryType.ERROR));
+        }
     }
 }

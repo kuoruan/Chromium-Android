@@ -57,6 +57,14 @@ public final class CollectionUtil {
         return map;
     }
 
+    public static boolean[] booleanListToBooleanArray(@NonNull List<Boolean> list) {
+        boolean[] array = new boolean[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            array[i] = list.get(i);
+        }
+        return array;
+    }
+
     public static int[] integerListToIntArray(@NonNull List<Integer> list) {
         int[] array = new int[list.size()];
         for (int i = 0; i < list.size(); i++) {

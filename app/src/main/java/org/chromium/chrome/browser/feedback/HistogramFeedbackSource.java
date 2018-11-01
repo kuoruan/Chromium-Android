@@ -10,6 +10,7 @@ import org.chromium.base.SysUtils;
 import org.chromium.base.metrics.JSONVerbosityLevel;
 import org.chromium.base.metrics.StatisticsRecorderAndroid;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.util.ConversionUtils;
 
 /** Grabs feedback about the UMA histograms. */
 // TODO(dtrainor): Make this class protected and HISTOGRAMS_KEY private once grabbing specific log
@@ -19,7 +20,8 @@ public class HistogramFeedbackSource implements FeedbackSource {
 
     // Minimum physical memory (in KB) required on the device to get a dump of the buckets.
     // Currently, it is required that the physical memory be more than 2 GB.
-    private static final int MIN_PHYSICAL_MEMORY_KB = 2 * 1024 * 1024 + 1;
+    private static final int MIN_PHYSICAL_MEMORY_KB =
+            2 * ConversionUtils.KILOBYTES_PER_GIGABYTE + 1;
 
     private final boolean mIsOffTheRecord;
 

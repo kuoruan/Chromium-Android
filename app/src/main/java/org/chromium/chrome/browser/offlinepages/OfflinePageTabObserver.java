@@ -325,6 +325,9 @@ public class OfflinePageTabObserver
                 RecordUserAction.record("OfflinePages.ReloadButtonClicked");
                 Tab foundTab = tabModelSelector.getTabById(tabId);
                 if (foundTab == null) return;
+                if (!OfflinePageUtils.isShowingTrustedOfflinePage(foundTab)) {
+                    RecordUserAction.record("OfflinePages.ReloadButtonClickedViewingUntrustedPage");
+                }
                 // Delegates to Tab to reload the page. Tab will send the correct header in order to
                 // load the right page.
                 foundTab.reload();

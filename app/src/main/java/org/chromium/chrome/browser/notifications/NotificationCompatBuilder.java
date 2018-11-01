@@ -9,10 +9,13 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Icon;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.widget.RemoteViews;
+
+import org.chromium.chrome.browser.notifications.channels.ChannelsInitializer;
 
 /**
  * Wraps a NotificationCompat.Builder object.
@@ -20,8 +23,12 @@ import android.widget.RemoteViews;
 public class NotificationCompatBuilder implements ChromeNotificationBuilder {
     private final NotificationCompat.Builder mBuilder;
 
-    public NotificationCompatBuilder(Context context) {
-        mBuilder = new NotificationCompat.Builder(context);
+    NotificationCompatBuilder(
+            Context context, String channelId, ChannelsInitializer channelsInitializer) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            channelsInitializer.safeInitialize(channelId);
+        }
+        mBuilder = new NotificationCompat.Builder(context, channelId);
     }
 
     @Override
@@ -126,7 +133,7 @@ public class NotificationCompatBuilder implements ChromeNotificationBuilder {
     }
 
     @Override
-    public ChromeNotificationBuilder setPriority(int pri) {
+    public ChromeNotificationBuilder setPriorityBeforeO(int pri) {
         mBuilder.setPriority(pri);
         return this;
     }

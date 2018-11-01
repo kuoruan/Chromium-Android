@@ -43,7 +43,7 @@ public class ContactDetailsSection extends SectionInformation {
     public ContactDetailsSection(Context context, Collection<AutofillProfile> unmodifiableProfiles,
             ContactEditor contactEditor, JourneyLogger journeyLogger) {
         // Initially no items are selected, but they are updated later in the constructor.
-        super(PaymentRequestUI.TYPE_CONTACT_DETAILS, null);
+        super(PaymentRequestUI.DataType.CONTACT_DETAILS, null);
 
         mContext = context;
         mContactEditor = contactEditor;

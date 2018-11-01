@@ -20,11 +20,12 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
 import android.util.SparseArray;
+import android.util.TypedValue;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.accessibility.AccessibilityManager;
 
+import org.chromium.base.ActivityState;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
@@ -46,7 +47,7 @@ import java.util.HashSet;
  * The window base class that has the minimum functionality.
  */
 @JNINamespace("ui")
-public class WindowAndroid {
+public class WindowAndroid implements AndroidPermissionDelegate {
     private static final String TAG = "WindowAndroid";
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
@@ -84,7 +85,6 @@ public class WindowAndroid {
     // Error code returned when an Intent fails to start an Activity.
     public static final int START_INTENT_FAILURE = -1;
 
-    protected Context mApplicationContext;
     protected SparseArray<IntentCallback> mOutstandingIntents;
     // We use a weak reference here to prevent this from leaking in WebView.
     private WeakReference<Context> mContextRef;
@@ -98,7 +98,6 @@ public class WindowAndroid {
     private HashSet<Animator> mAnimationsOverContent = new HashSet<>();
     private View mAnimationPlaceholderView;
 
-    private ViewGroup mKeyboardAccessoryView;
 
     protected boolean mIsKeyboardShowing;
 
@@ -135,6 +134,30 @@ public class WindowAndroid {
          * Called when a context menu has been closed.
          */
         void onContextMenuClosed();
+    }
+
+    /**
+     * An interface to notify listeners of the changes in activity state.
+     */
+    public interface ActivityStateObserver {
+        /**
+         * Called when the activity goes into paused state.
+         */
+
+        void onActivityPaused();
+        /**
+         * Called when the activity goes into resumed state.
+         */
+        void onActivityResumed();
+    }
+
+    private ObserverList<ActivityStateObserver> mActivityStateObservers = new ObserverList<>();
+
+    /**
+     * Gets the view for readback.
+     */
+    public View getReadbackView() {
+        return null;
     }
 
     private final ObserverList<OnCloseContextMenuListener> mContextMenuCloseListeners =
@@ -202,7 +225,6 @@ public class WindowAndroid {
      */
     @SuppressLint("UseSparseArrays")
     protected WindowAndroid(Context context, DisplayAndroid display) {
-        mApplicationContext = context.getApplicationContext();
         // context does not have the same lifetime guarantees as an application context so we can't
         // hold a strong reference to it.
         mContextRef = new WeakReference<>(context);
@@ -211,8 +233,9 @@ public class WindowAndroid {
         // Temporary solution for flaky tests, see https://crbug.com/767624 for context
         try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
             mVSyncMonitor = new VSyncMonitor(context, mVSyncListener);
-            mAccessibilityManager = (AccessibilityManager) mApplicationContext.getSystemService(
-                    Context.ACCESSIBILITY_SERVICE);
+            mAccessibilityManager =
+                    (AccessibilityManager) ContextUtils.getApplicationContext().getSystemService(
+                            Context.ACCESSIBILITY_SERVICE);
         }
         mDisplayAndroid = display;
         // Configuration.isDisplayServerWideColorGamut must be queried from the window's context.
@@ -346,11 +369,12 @@ public class WindowAndroid {
      * @return Whether access to the permission is granted.
      */
     @CalledByNative
+    @Override
     public final boolean hasPermission(String permission) {
         if (mPermissionDelegate != null) return mPermissionDelegate.hasPermission(permission);
 
-        return ApiCompatibilityUtils.checkPermission(
-                mApplicationContext, permission, Process.myPid(), Process.myUid())
+        return ApiCompatibilityUtils.checkPermission(ContextUtils.getApplicationContext(),
+                       permission, Process.myPid(), Process.myUid())
                 == PackageManager.PERMISSION_GRANTED;
     }
 
@@ -367,6 +391,7 @@ public class WindowAndroid {
      * @return Whether the requesting the permission is allowed.
      */
     @CalledByNative
+    @Override
     public final boolean canRequestPermission(String permission) {
         if (mPermissionDelegate != null) {
             return mPermissionDelegate.canRequestPermission(permission);
@@ -385,6 +410,7 @@ public class WindowAndroid {
      * @param permission The permission name.
      * @return Whether the permission is revoked by policy and the user has no ability to change it.
      */
+    @Override
     public final boolean isPermissionRevokedByPolicy(String permission) {
         if (mPermissionDelegate != null) {
             return mPermissionDelegate.isPermissionRevokedByPolicy(permission);
@@ -402,6 +428,7 @@ public class WindowAndroid {
      * @param permissions The list of permissions to request access to.
      * @param callback The callback to be notified whether the permissions were granted.
      */
+    @Override
     public final void requestPermissions(String[] permissions, PermissionCallback callback) {
         if (mPermissionDelegate != null) {
             mPermissionDelegate.requestPermissions(permissions, callback);
@@ -412,13 +439,23 @@ public class WindowAndroid {
         assert false : "Failed to request permissions using a WindowAndroid without an Activity";
     }
 
+    @Override
+    public boolean handlePermissionResult(
+            int requestCode, String[] permissions, int[] grantResults) {
+        if (mPermissionDelegate != null) {
+            return mPermissionDelegate.handlePermissionResult(
+                    requestCode, permissions, grantResults);
+        }
+        return false;
+    }
+
     /**
      * Displays an error message with a provided error message string.
      * @param error The error message string to be displayed.
      */
     public void showError(String error) {
         if (error != null) {
-            Toast.makeText(mApplicationContext, error, Toast.LENGTH_SHORT).show();
+            Toast.makeText(ContextUtils.getApplicationContext(), error, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -427,7 +464,7 @@ public class WindowAndroid {
      * @param resId The error message string's resource id.
      */
     public void showError(int resId) {
-        showError(mApplicationContext.getString(resId));
+        showError(ContextUtils.getApplicationContext().getString(resId));
     }
 
     /**
@@ -442,7 +479,7 @@ public class WindowAndroid {
      * Broadcasts the given intent to all interested BroadcastReceivers.
      */
     public void sendBroadcast(Intent intent) {
-        mApplicationContext.sendBroadcast(intent);
+        ContextUtils.getApplicationContext().sendBroadcast(intent);
     }
 
     /**
@@ -465,7 +502,7 @@ public class WindowAndroid {
      * @return The application context for this activity.
      */
     public Context getApplicationContext() {
-        return mApplicationContext;
+        return ContextUtils.getApplicationContext();
     }
 
     /**
@@ -521,6 +558,39 @@ public class WindowAndroid {
         nativeOnActivityStarted(mNativeWindowAndroid);
     }
 
+    protected void onActivityPaused() {
+        for (ActivityStateObserver observer : mActivityStateObservers) observer.onActivityPaused();
+    }
+
+    protected void onActivityResumed() {
+        for (ActivityStateObserver observer : mActivityStateObservers) observer.onActivityResumed();
+    }
+
+    /**
+     * Adds a new {@link ActivityStateObserver} instance.
+     */
+    public void addActivityStateObserver(ActivityStateObserver observer) {
+        assert !mActivityStateObservers.hasObserver(observer);
+        mActivityStateObservers.addObserver(observer);
+    }
+
+    /**
+     * Removes a new {@link ActivityStateObserver} instance.
+     */
+    public void removeActivityStateObserver(ActivityStateObserver observer) {
+        assert mActivityStateObservers.hasObserver(observer);
+        mActivityStateObservers.removeObserver(observer);
+    }
+
+    /**
+     * @return Current state of the associated {@link Activity}. Can be overriden
+     *         to return the correct state. {@code ActivityState.DESTROYED} by default.
+     */
+    @ActivityState
+    public int getActivityState() {
+        return ActivityState.DESTROYED;
+    }
+
     @CalledByNative
     private void requestVSyncUpdate() {
         if (mVSyncPaused) {
@@ -544,25 +614,17 @@ public class WindowAndroid {
     }
 
     /**
-     * Callback for permission requests.
-     */
-    public interface PermissionCallback {
-        /**
-         * Called upon completing a permission request.
-         * @param permissions The list of permissions in the result.
-         * @param grantResults Whether the permissions were granted.
-         */
-        void onRequestPermissionsResult(String[] permissions, int[] grantResults);
-    }
-
-    /**
      * Tests that an activity is available to handle the passed in intent.
      * @param  intent The intent to check.
      * @return True if an activity is available to process this intent when started, meaning that
      *         Context.startActivity will not throw ActivityNotFoundException.
      */
     public boolean canResolveActivity(Intent intent) {
-        return mApplicationContext.getPackageManager().queryIntentActivities(intent, 0).size() > 0;
+        return ContextUtils.getApplicationContext()
+                       .getPackageManager()
+                       .queryIntentActivities(intent, 0)
+                       .size()
+                > 0;
     }
 
     /**
@@ -587,10 +649,28 @@ public class WindowAndroid {
     @CalledByNative
     private long getNativePointer() {
         if (mNativeWindowAndroid == 0) {
-            mNativeWindowAndroid = nativeInit(mDisplayAndroid.getDisplayId());
+            mNativeWindowAndroid =
+                    nativeInit(mDisplayAndroid.getDisplayId(), getMouseWheelScrollFactor());
             nativeSetVSyncPaused(mNativeWindowAndroid, mVSyncPaused);
         }
         return mNativeWindowAndroid;
+    }
+
+    /**
+     * Returns current wheel scroll factor (physical pixels per mouse scroll click).
+     * @return wheel scroll factor or zero if attr retrieval fails.
+     */
+    private float getMouseWheelScrollFactor() {
+        TypedValue outValue = new TypedValue();
+        Context context = getContext().get();
+        if (context != null
+                && context.getTheme().resolveAttribute(
+                           android.R.attr.listPreferredItemHeight, outValue, true)) {
+            // This is the same attribute used by Android Views to scale wheel
+            // event motion into scroll deltas.
+            return outValue.getDimension(context.getResources().getDisplayMetrics());
+        }
+        return 0;
     }
 
     /**
@@ -608,22 +688,6 @@ public class WindowAndroid {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             mTouchExplorationMonitor = new TouchExplorationMonitor();
         }
-    }
-
-    /**
-     * Sets the keyboard accessory view.
-     * @param view This view sits at the bottom of the content area and pushes the content up rather
-     *             than overlaying it. Currently used as a container for Autofill suggestions.
-     */
-    public void setKeyboardAccessoryView(ViewGroup view) {
-        mKeyboardAccessoryView = view;
-    }
-
-    /**
-     * @see #setKeyboardAccessoryView(ViewGroup)
-     */
-    public ViewGroup getKeyboardAccessoryView() {
-        return mKeyboardAccessoryView;
     }
 
     protected void registerKeyboardVisibilityCallbacks() {
@@ -778,7 +842,7 @@ public class WindowAndroid {
         if (mNativeWindowAndroid != 0) nativeSetVSyncPaused(mNativeWindowAndroid, paused);
     }
 
-    private native long nativeInit(int displayId);
+    private native long nativeInit(int displayId, float scrollFactor);
     private native void nativeOnVSync(long nativeWindowAndroid,
                                       long vsyncTimeMicros,
                                       long vsyncPeriodMicros);

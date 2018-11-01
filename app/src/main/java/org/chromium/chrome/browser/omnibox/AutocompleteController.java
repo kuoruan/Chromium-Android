@@ -204,9 +204,9 @@ public class AutocompleteController {
      * Deletes an omnibox suggestion, if possible.
      * @param position The position at which the suggestion is located.
      */
-    public void deleteSuggestion(int position) {
+    public void deleteSuggestion(int position, int hashCode) {
         if (mNativeAutocompleteControllerAndroid != 0) {
-            nativeDeleteSuggestion(mNativeAutocompleteControllerAndroid, position);
+            nativeDeleteSuggestion(mNativeAutocompleteControllerAndroid, position, hashCode);
         }
     }
 
@@ -260,13 +260,13 @@ public class AutocompleteController {
      * @param completedLength The length of the default match's inline autocompletion if any.
      * @param webContents The web contents for the tab where the selected suggestion will be shown.
      */
-    public void onSuggestionSelected(int selectedIndex, int type,
+    public void onSuggestionSelected(int selectedIndex, int hashCode, int type,
             String currentPageUrl, boolean focusedFromFakebox, long elapsedTimeSinceModified,
             int completedLength, WebContents webContents) {
         assert mNativeAutocompleteControllerAndroid != 0;
         // Don't natively log voice suggestion results as we add them in Java.
         if (type == OmniboxSuggestionType.VOICE_SUGGEST) return;
-        nativeOnSuggestionSelected(mNativeAutocompleteControllerAndroid, selectedIndex,
+        nativeOnSuggestionSelected(mNativeAutocompleteControllerAndroid, selectedIndex, hashCode,
                 currentPageUrl, focusedFromFakebox, elapsedTimeSinceModified, completedLength,
                 webContents);
     }
@@ -323,6 +323,17 @@ public class AutocompleteController {
     }
 
     /**
+     * Verifies whether the given OmniboxSuggestion object has the same hashCode as another
+     * suggestion. This is used to validate that the native AutocompleteMatch object is in sync
+     * with the Java version.
+     */
+    @CalledByNative
+    private static boolean isEquivalentOmniboxSuggestion(
+            OmniboxSuggestion suggestion, int hashCode) {
+        return suggestion.hashCode() == hashCode;
+    }
+
+    /**
      * Updates aqs parameters on the selected match that we will navigate to and returns the
      * updated URL. |selected_index| is the position of the selected match and
      * |elapsed_time_since_input_change| is the time in ms between the first typed input and match
@@ -335,10 +346,11 @@ public class AutocompleteController {
      * @return The url to navigate to for this match with aqs parameter updated, if we are
      *         making a Google search query.
      */
-    public String updateMatchDestinationUrlWithQueryFormulationTime(int selectedIndex,
-            long elapsedTimeSinceInputChange) {
+    public String updateMatchDestinationUrlWithQueryFormulationTime(
+            int selectedIndex, int hashCode, long elapsedTimeSinceInputChange) {
         return nativeUpdateMatchDestinationURLWithQueryFormulationTime(
-                mNativeAutocompleteControllerAndroid, selectedIndex, elapsedTimeSinceInputChange);
+                mNativeAutocompleteControllerAndroid, selectedIndex, hashCode,
+                elapsedTimeSinceInputChange);
     }
 
     @VisibleForTesting
@@ -353,15 +365,14 @@ public class AutocompleteController {
     private native void nativeStop(long nativeAutocompleteControllerAndroid, boolean clearResults);
     private native void nativeResetSession(long nativeAutocompleteControllerAndroid);
     private native void nativeOnSuggestionSelected(long nativeAutocompleteControllerAndroid,
-            int selectedIndex, String currentPageUrl,
-            boolean focusedFromFakebox, long elapsedTimeSinceModified,
-            int completedLength, WebContents webContents);
+            int selectedIndex, int hashCode, String currentPageUrl, boolean focusedFromFakebox,
+            long elapsedTimeSinceModified, int completedLength, WebContents webContents);
     private native void nativeOnOmniboxFocused(long nativeAutocompleteControllerAndroid,
             String omniboxText, String currentUrl, String currentTitle, boolean focusedFromFakebox);
-    private native void nativeDeleteSuggestion(long nativeAutocompleteControllerAndroid,
-            int selectedIndex);
+    private native void nativeDeleteSuggestion(
+            long nativeAutocompleteControllerAndroid, int selectedIndex, int hashCode);
     private native String nativeUpdateMatchDestinationURLWithQueryFormulationTime(
-            long nativeAutocompleteControllerAndroid, int selectedIndex,
+            long nativeAutocompleteControllerAndroid, int selectedIndex, int hashCode,
             long elapsedTimeSinceInputChange);
 
     /**

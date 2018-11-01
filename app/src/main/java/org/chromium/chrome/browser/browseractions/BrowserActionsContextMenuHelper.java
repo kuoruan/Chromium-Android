@@ -84,18 +84,22 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
      * Note: these values must match the BrowserActionsMenuOption enum in enums.xml.
      * And the values are persisted to logs so they cannot be renumbered or reused.
      */
-    @IntDef({ACTION_OPEN_IN_NEW_CHROME_TAB, ACTION_OPEN_IN_INCOGNITO_TAB, ACTION_DOWNLOAD_PAGE,
-            ACTION_COPY_LINK, ACTION_SHARE, ACTION_APP_PROVIDED})
+    @IntDef({BrowserActionsActionId.OPEN_IN_NEW_CHROME_TAB,
+            BrowserActionsActionId.OPEN_IN_INCOGNITO_TAB, BrowserActionsActionId.DOWNLOAD_PAGE,
+            BrowserActionsActionId.COPY_LINK, BrowserActionsActionId.SHARE,
+            BrowserActionsActionId.APP_PROVIDED})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface BrowserActionsActionId {}
-    private static final int ACTION_OPEN_IN_NEW_CHROME_TAB = 0;
-    private static final int ACTION_OPEN_IN_INCOGNITO_TAB = 1;
-    private static final int ACTION_DOWNLOAD_PAGE = 2;
-    private static final int ACTION_COPY_LINK = 3;
-    private static final int ACTION_SHARE = 4;
-    // Actions for selecting custom items.
-    private static final int ACTION_APP_PROVIDED = 5;
-    private static final int NUM_ACTIONS = 6;
+    private @interface BrowserActionsActionId {
+        int OPEN_IN_NEW_CHROME_TAB = 0;
+        int OPEN_IN_INCOGNITO_TAB = 1;
+        int DOWNLOAD_PAGE = 2;
+        int COPY_LINK = 3;
+        int SHARE = 4;
+        // Actions for selecting custom items.
+        int APP_PROVIDED = 5;
+
+        int NUM_ENTRIES = 6;
+    }
 
     static final List<Integer> CUSTOM_BROWSER_ACTIONS_ID_GROUP =
             Arrays.asList(R.id.browser_actions_custom_item_one,
@@ -172,20 +176,27 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
                 R.string.browser_actions_share, R.id.browser_actions_share, true);
         shareItem.setCreatorPackageName(sourcePackageName);
         if (FirstRunStatus.getFirstRunFlowComplete()) {
-            mBrowserActionsLinkGroup =
-                    Arrays.asList(ChromeContextMenuItem.BROWSER_ACTIONS_OPEN_IN_BACKGROUND,
-                            ChromeContextMenuItem.BROWSER_ACTIONS_OPEN_IN_INCOGNITO_TAB,
-                            ChromeContextMenuItem.BROWSER_ACTION_SAVE_LINK_AS,
-                            ChromeContextMenuItem.BROWSER_ACTIONS_COPY_ADDRESS, shareItem);
+            mBrowserActionsLinkGroup = Arrays.asList(
+                    new ChromeContextMenuItem(
+                            ChromeContextMenuItem.Item.BROWSER_ACTIONS_OPEN_IN_BACKGROUND),
+                    new ChromeContextMenuItem(
+                            ChromeContextMenuItem.Item.BROWSER_ACTIONS_OPEN_IN_INCOGNITO_TAB),
+                    new ChromeContextMenuItem(
+                            ChromeContextMenuItem.Item.BROWSER_ACTION_SAVE_LINK_AS),
+                    new ChromeContextMenuItem(
+                            ChromeContextMenuItem.Item.BROWSER_ACTIONS_COPY_ADDRESS),
+                    shareItem);
         } else {
             mBrowserActionsLinkGroup =
-                    Arrays.asList(ChromeContextMenuItem.BROWSER_ACTIONS_COPY_ADDRESS, shareItem);
+                    Arrays.asList(new ChromeContextMenuItem(
+                                          ChromeContextMenuItem.Item.BROWSER_ACTIONS_COPY_ADDRESS),
+                            shareItem);
         }
         mMenuItemDelegate = new BrowserActionsContextMenuItemDelegate(mActivity, sourcePackageName);
         mOnBrowserActionSelectedCallback = onBrowserActionSelectedCallback;
         mProgressDialog = new ProgressDialog(mActivity);
-        mActionHistogram =
-                new EnumeratedHistogramSample("BrowserActions.SelectedOption", NUM_ACTIONS);
+        mActionHistogram = new EnumeratedHistogramSample(
+                "BrowserActions.SelectedOption", BrowserActionsActionId.NUM_ENTRIES);
 
         mItems = buildContextMenuItems(customItems, sourcePackageName);
     }
@@ -295,17 +306,17 @@ public class BrowserActionsContextMenuHelper implements OnCreateContextMenuListe
         @BrowserActionsActionId
         final int actionId;
         if (itemId == R.id.browser_actions_open_in_background) {
-            actionId = ACTION_OPEN_IN_NEW_CHROME_TAB;
+            actionId = BrowserActionsActionId.OPEN_IN_NEW_CHROME_TAB;
         } else if (itemId == R.id.browser_actions_open_in_incognito_tab) {
-            actionId = ACTION_OPEN_IN_INCOGNITO_TAB;
+            actionId = BrowserActionsActionId.OPEN_IN_INCOGNITO_TAB;
         } else if (itemId == R.id.browser_actions_save_link_as) {
-            actionId = ACTION_DOWNLOAD_PAGE;
+            actionId = BrowserActionsActionId.DOWNLOAD_PAGE;
         } else if (itemId == R.id.browser_actions_copy_address) {
-            actionId = ACTION_COPY_LINK;
+            actionId = BrowserActionsActionId.COPY_LINK;
         } else if (itemId == R.id.browser_actions_share) {
-            actionId = ACTION_SHARE;
+            actionId = BrowserActionsActionId.SHARE;
         } else {
-            actionId = ACTION_APP_PROVIDED;
+            actionId = BrowserActionsActionId.APP_PROVIDED;
         }
         mActionHistogram.record(actionId);
     }

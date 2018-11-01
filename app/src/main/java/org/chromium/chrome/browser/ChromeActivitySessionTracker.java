@@ -34,7 +34,6 @@ import org.chromium.chrome.browser.profiles.ProfileManagerUtils;
 import org.chromium.chrome.browser.share.ShareHelper;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.util.FeatureUtilities;
-import org.chromium.content.browser.ChildProcessLauncherHelper;
 
 import java.lang.ref.WeakReference;
 
@@ -134,7 +133,6 @@ public class ChromeActivitySessionTracker {
      */
     private void onForegroundSessionStart() {
         UmaUtils.recordForegroundStartTime();
-        ChildProcessLauncherHelper.onBroughtToForeground();
         updatePasswordEchoState();
         FontSizePrefs.getInstance(mApplication).onSystemFontScaleChanged();
         updateAcceptLanguages();
@@ -161,7 +159,6 @@ public class ChromeActivitySessionTracker {
         mIsStarted = false;
         mPowerBroadcastReceiver.onForegroundSessionEnd();
 
-        ChildProcessLauncherHelper.onSentToBackground();
         IntentHandler.clearPendingReferrer();
         IntentHandler.clearPendingIncognitoUrl();
 

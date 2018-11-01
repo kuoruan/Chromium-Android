@@ -7,4 +7,7 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
     <item type="id" name="dropdown_popup_window" />
+    <!-- Whether the device is a phone, tablet or large tablet. Used to determine which resources
+         the OS loaded. -->
+    <integer name="min_screen_width_bucket">1</integer>
 </resources>

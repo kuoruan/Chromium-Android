@@ -29,7 +29,7 @@
             android:layout_width="match_parent"
             android:layout_height="8dp" />
 
-        <View style="@style/Divider" />
+        <View style="@style/HorizontalDivider" />
 
     </LinearLayout>
 </LinearLayout>

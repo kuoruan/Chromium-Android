@@ -4,8 +4,8 @@
 
 package org.chromium.chrome.browser.firstrun;
 
-import android.app.Activity;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 
 /**
  * This interface is implemented by FRE fragments.
@@ -26,7 +26,7 @@ public interface FirstRunFragment {
     /**
      * @see Fragment#getActivity().
      */
-    Activity getActivity();
+    FragmentActivity getActivity();
 
     /**
      * Convenience method to get {@link FirstRunPageDelegate}.

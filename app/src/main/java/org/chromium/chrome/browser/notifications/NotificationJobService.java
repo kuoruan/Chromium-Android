@@ -27,6 +27,8 @@ public class NotificationJobService extends JobService {
                 intent.getStringExtra(NotificationConstants.EXTRA_NOTIFICATION_ID));
         bundle.putString(NotificationConstants.EXTRA_NOTIFICATION_INFO_ORIGIN,
                 intent.getStringExtra(NotificationConstants.EXTRA_NOTIFICATION_INFO_ORIGIN));
+        bundle.putString(NotificationConstants.EXTRA_NOTIFICATION_INFO_SCOPE,
+                intent.getStringExtra(NotificationConstants.EXTRA_NOTIFICATION_INFO_SCOPE));
         bundle.putString(NotificationConstants.EXTRA_NOTIFICATION_INFO_PROFILE_ID,
                 intent.getStringExtra(NotificationConstants.EXTRA_NOTIFICATION_INFO_PROFILE_ID));
         bundle.putBoolean(NotificationConstants.EXTRA_NOTIFICATION_INFO_PROFILE_INCOGNITO,

@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.ntp.cards;
 import android.support.annotation.CallSuper;
 
 import org.chromium.base.Callback;
+import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder.PartialBindCallback;
 
 import java.util.Collections;
 import java.util.Set;
@@ -19,7 +20,8 @@ import java.util.Set;
  *
  * For a non optional leaf, see {@link Leaf}. They have similar interfaces.
  */
-public abstract class OptionalLeaf extends ChildNode {
+public abstract class OptionalLeaf
+        extends ChildNode<NewTabPageViewHolder, PartialBindCallback> implements PartiallyBindable {
     private boolean mVisible;
 
     @Override
@@ -52,9 +54,12 @@ public abstract class OptionalLeaf extends ChildNode {
     }
 
     @Override
-    public final void visitItems(NodeVisitor visitor) {
-        if (mVisible) visitOptionalItem(visitor);
+    public String describeItemForTesting(int position) {
+        checkIndex(position);
+        return describeForTesting();
     }
+
+    protected abstract String describeForTesting();
 
     /** @return Whether the optional item is currently visible. */
     public final boolean isVisible() {
@@ -110,10 +115,4 @@ public abstract class OptionalLeaf extends ChildNode {
     protected void dismiss(Callback<String> itemRemovedCallback) {
         assert false;
     }
-
-    /**
-     * Visits this item. This method is called iff the optional item is currently visible.
-     * @param visitor The visitor with which to visit this item.
-     */
-    protected abstract void visitOptionalItem(NodeVisitor visitor);
 }

@@ -1,8 +1,6 @@
 package org.chromium.base;
 public class BuildConfig {
-    public static boolean isMultidexEnabled() {
-        return true;
-    }
+    public static boolean IS_MULTIDEX_ENABLED = false;
     public static String FIREBASE_APP_ID = "";
     public static boolean DCHECK_IS_ON = false;
     public static boolean IS_UBSAN = false;
@@ -16,4 +14,5 @@ public class BuildConfig {
     public static String[] UNCOMPRESSED_LOCALES = {
             // "en-US","zh-CN", "zh-TW"
     };
+    public static int R_STRING_PRODUCT_VERSION = 0;
 }

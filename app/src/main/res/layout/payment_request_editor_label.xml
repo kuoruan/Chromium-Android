@@ -7,8 +7,8 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/payments_section_large_spacing"
-        android:layout_marginBottom="@dimen/payments_section_large_spacing"
+        android:layout_marginTop="@dimen/editor_dialog_section_large_spacing"
+        android:layout_marginBottom="@dimen/editor_dialog_section_large_spacing"
         android:layout_marginStart="@dimen/pref_autofill_field_horizontal_padding"
         android:layout_marginEnd="@dimen/pref_autofill_field_horizontal_padding">
 
@@ -45,6 +45,6 @@
             android:layout_below="@id/mid_label"
             android:layout_toStartOf="@id/icon"
             android:layout_alignParentStart="true"
-            android:textAppearance="@style/PreferenceFloatLabelTextAppearance" />
+            android:textAppearance="@style/BlackCaption" />
 
 </RelativeLayout>

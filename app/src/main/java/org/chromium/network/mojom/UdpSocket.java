@@ -48,6 +48,22 @@ SetBroadcastResponse callback);
 
 
 
+    void setSendBufferSize(
+int sendBufferSize, 
+SetSendBufferSizeResponse callback);
+
+    interface SetSendBufferSizeResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Integer> { }
+
+
+
+    void setReceiveBufferSize(
+int receiveBufferSize, 
+SetReceiveBufferSizeResponse callback);
+
+    interface SetReceiveBufferSizeResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Integer> { }
+
+
+
     void joinGroup(
 org.chromium.net.interfaces.IpAddress groupAddress, 
 JoinGroupResponse callback);
@@ -75,7 +91,7 @@ int numAdditionalDatagrams, int bufferSize);
 
 
     void sendTo(
-org.chromium.net.interfaces.IpEndPoint destAddr, org.chromium.mojo.common.mojom.ReadOnlyBuffer data, MutableNetworkTrafficAnnotationTag trafficAnnotation, 
+org.chromium.net.interfaces.IpEndPoint destAddr, org.chromium.mojo_base.mojom.ReadOnlyBuffer data, MutableNetworkTrafficAnnotationTag trafficAnnotation, 
 SendToResponse callback);
 
     interface SendToResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Integer> { }
@@ -83,7 +99,7 @@ SendToResponse callback);
 
 
     void send(
-org.chromium.mojo.common.mojom.ReadOnlyBuffer data, MutableNetworkTrafficAnnotationTag trafficAnnotation, 
+org.chromium.mojo_base.mojom.ReadOnlyBuffer data, MutableNetworkTrafficAnnotationTag trafficAnnotation, 
 SendResponse callback);
 
     interface SendResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Integer> { }

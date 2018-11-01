@@ -159,7 +159,7 @@ class PlatformNetworksManager {
             CellInfo cellInfo = cellInfos.get(i);
             VisibleCell visibleCell =
                     getVisibleCellPostJellyBeanMr1(cellInfo, elapsedTime, currentTime);
-            if (visibleCell.radioType() != VisibleCell.UNKNOWN_RADIO_TYPE) {
+            if (visibleCell.radioType() != VisibleCell.RadioType.UNKNOWN) {
                 visibleCells.add(visibleCell);
             }
         }
@@ -195,7 +195,7 @@ class PlatformNetworksManager {
         long cellTimestamp = currentTime - cellInfoAge;
         if (cellInfo instanceof CellInfoCdma) {
             CellIdentityCdma cellIdentityCdma = ((CellInfoCdma) cellInfo).getCellIdentity();
-            return VisibleCell.builder(VisibleCell.CDMA_RADIO_TYPE)
+            return VisibleCell.builder(VisibleCell.RadioType.CDMA)
                     .setCellId(cellIdentityCdma.getBasestationId())
                     .setLocationAreaCode(cellIdentityCdma.getNetworkId())
                     .setMobileNetworkCode(cellIdentityCdma.getSystemId())
@@ -204,7 +204,7 @@ class PlatformNetworksManager {
         }
         if (cellInfo instanceof CellInfoGsm) {
             CellIdentityGsm cellIdentityGsm = ((CellInfoGsm) cellInfo).getCellIdentity();
-            return VisibleCell.builder(VisibleCell.GSM_RADIO_TYPE)
+            return VisibleCell.builder(VisibleCell.RadioType.GSM)
                     .setCellId(cellIdentityGsm.getCid())
                     .setLocationAreaCode(cellIdentityGsm.getLac())
                     .setMobileCountryCode(cellIdentityGsm.getMcc())
@@ -214,7 +214,7 @@ class PlatformNetworksManager {
         }
         if (cellInfo instanceof CellInfoLte) {
             CellIdentityLte cellIdLte = ((CellInfoLte) cellInfo).getCellIdentity();
-            return VisibleCell.builder(VisibleCell.LTE_RADIO_TYPE)
+            return VisibleCell.builder(VisibleCell.RadioType.LTE)
                     .setCellId(cellIdLte.getCi())
                     .setMobileCountryCode(cellIdLte.getMcc())
                     .setMobileNetworkCode(cellIdLte.getMnc())
@@ -227,7 +227,7 @@ class PlatformNetworksManager {
                 && cellInfo instanceof CellInfoWcdma) {
             // CellInfoWcdma is only usable JB MR2 upwards.
             CellIdentityWcdma cellIdentityWcdma = ((CellInfoWcdma) cellInfo).getCellIdentity();
-            return VisibleCell.builder(VisibleCell.WCDMA_RADIO_TYPE)
+            return VisibleCell.builder(VisibleCell.RadioType.WCDMA)
                     .setCellId(cellIdentityWcdma.getCid())
                     .setLocationAreaCode(cellIdentityWcdma.getLac())
                     .setMobileCountryCode(cellIdentityWcdma.getMcc())
@@ -297,9 +297,9 @@ class PlatformNetworksManager {
         }
         connectedCell = getConnectedCell(context, telephonyManager);
         if (connectedCell != null
-                && (connectedCell.radioType() == VisibleCell.UNKNOWN_RADIO_TYPE
+                && (connectedCell.radioType() == VisibleCell.RadioType.UNKNOWN
                            || connectedCell.radioType()
-                                   == VisibleCell.UNKNOWN_MISSING_LOCATION_PERMISSION_RADIO_TYPE)) {
+                                   == VisibleCell.RadioType.UNKNOWN_MISSING_LOCATION_PERMISSION)) {
             // If the radio type is unknown, do not use it.
             connectedCell = null;
         }

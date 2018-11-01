@@ -13,6 +13,9 @@ import android.media.MediaCrypto;
 import android.media.MediaFormat;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
 import android.view.Surface;
 
 import org.chromium.base.Log;
@@ -21,6 +24,8 @@ import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.MainDex;
 
 import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * A MediaCodec wrapper for adapting the API and catching exceptions.
@@ -56,6 +61,29 @@ class MediaCodecBridge {
     private boolean mFlushed;
     private long mLastPresentationTimeUs;
     private BitrateAdjuster mBitrateAdjuster;
+
+    // To support both the synchronous and asynchronous version of MediaCodec
+    // (since we need to work on <M devices), we implement async support as a
+    // layer under synchronous API calls and provide a callback signal for when
+    // work (new input, new output, errors, or format changes) is available.
+    //
+    // Once the callback has been set on MediaCodec, these variables must only
+    // be accessed from synchronized(this) blocks since MediaCodecCallback may
+    // execute on an arbitrary thread.
+    private boolean mUseAsyncApi;
+    private Queue<GetOutputFormatResult> mPendingFormat;
+    private GetOutputFormatResult mCurrentFormat;
+    private boolean mPendingError;
+    private boolean mPendingStart;
+    private long mNativeMediaCodecBridge;
+    private int mSequenceCounter;
+    private Queue<DequeueInputResult> mPendingInputBuffers;
+    private Queue<DequeueOutputResult> mPendingOutputBuffers;
+
+    // Set by tests which don't have a Java MessagePump to ensure the MediaCodec
+    // callbacks are actually delivered. Always null in production.
+    private static HandlerThread sCallbackHandlerThread;
+    private static Handler sCallbackHandler;
 
     @MainDex
     private static class DequeueInputResult {
@@ -175,16 +203,150 @@ class MediaCodecBridge {
         }
     }
 
-    MediaCodecBridge(MediaCodec mediaCodec, BitrateAdjuster bitrateAdjuster) {
+    // Warning: This class may execute on an arbitrary thread for the lifetime
+    // of the MediaCodec. The MediaCodecBridge methods it calls are synchronized
+    // to avoid race conditions.
+    @MainDex
+    @TargetApi(Build.VERSION_CODES.M)
+    class MediaCodecCallback extends MediaCodec.Callback {
+        private MediaCodecBridge mMediaCodecBridge;
+        MediaCodecCallback(MediaCodecBridge bridge) {
+            mMediaCodecBridge = bridge;
+        }
+
+        @Override
+        public void onError(MediaCodec codec, MediaCodec.CodecException e) {
+            // TODO(dalecurtis): We may want to drop transient errors here.
+            Log.e(TAG, "MediaCodec.onError: " + e.getDiagnosticInfo());
+            mMediaCodecBridge.onError(e);
+        }
+
+        @Override
+        public void onInputBufferAvailable(MediaCodec codec, int index) {
+            mMediaCodecBridge.onInputBufferAvailable(index);
+        }
+
+        @Override
+        public void onOutputBufferAvailable(
+                MediaCodec codec, int index, MediaCodec.BufferInfo info) {
+            mMediaCodecBridge.onOutputBufferAvailable(index, info);
+        }
+
+        @Override
+        public void onOutputFormatChanged(MediaCodec codec, MediaFormat format) {
+            mMediaCodecBridge.onOutputFormatChanged(format);
+        }
+    };
+
+    MediaCodecBridge(MediaCodec mediaCodec, BitrateAdjuster bitrateAdjuster, boolean useAsyncApi) {
         assert mediaCodec != null;
         mMediaCodec = mediaCodec;
         mLastPresentationTimeUs = 0;
         mFlushed = true;
         mBitrateAdjuster = bitrateAdjuster;
+        mUseAsyncApi = useAsyncApi;
+
+        if (!mUseAsyncApi) return;
+
+        enableAsyncApi();
+        prepareAsyncApiForRestart();
+    }
+
+    // There's a Lollipop version of the setCallback() API, so we could enable
+    // it there, but since it's likely to be more stable in later SDK versions
+    // and our tests require their own Handler to pump the callbacks, we limit
+    // support to Marshmallow only.
+    @TargetApi(Build.VERSION_CODES.M)
+    private void enableAsyncApi() {
+        mPendingError = false;
+        mPendingFormat = new LinkedList<GetOutputFormatResult>();
+        mPendingInputBuffers = new LinkedList<DequeueInputResult>();
+        mPendingOutputBuffers = new LinkedList<DequeueOutputResult>();
+        mMediaCodec.setCallback(new MediaCodecCallback(this), sCallbackHandler);
+    }
+
+    // The methods below are all synchronized because we may receive callbacks
+    // from the MediaCodecCallback on a different thread; especially in the
+    // testing case where we create a separate HandlerThread.
+
+    private synchronized void prepareAsyncApiForRestart() {
+        mPendingFormat.clear();
+        mPendingInputBuffers.clear();
+        mPendingOutputBuffers.clear();
+        mPendingStart = true;
+        mCurrentFormat = null;
+        ++mSequenceCounter;
+    }
+
+    @CalledByNative
+    private synchronized void setBuffersAvailableListener(long nativeMediaCodecBridge) {
+        mNativeMediaCodecBridge = nativeMediaCodecBridge;
+
+        // If any buffers or errors occurred before this, trigger the callback now.
+        if (!mPendingInputBuffers.isEmpty() || !mPendingOutputBuffers.isEmpty() || mPendingError)
+            notifyBuffersAvailable();
+    }
+
+    private synchronized void notifyBuffersAvailable() {
+        if (mNativeMediaCodecBridge != 0) nativeOnBuffersAvailable(mNativeMediaCodecBridge);
+    }
+
+    public synchronized void onError(MediaCodec.CodecException e) {
+        mPendingError = true;
+        mPendingInputBuffers.clear();
+        mPendingOutputBuffers.clear();
+        notifyBuffersAvailable();
+    }
+
+    public synchronized void onInputBufferAvailable(int index) {
+        if (mPendingStart) return;
+
+        mPendingInputBuffers.add(new DequeueInputResult(MediaCodecStatus.OK, index));
+        notifyBuffersAvailable();
+    }
+
+    public synchronized void onOutputBufferAvailable(int index, MediaCodec.BufferInfo info) {
+        // Drop buffers that come in during a flush.
+        if (mPendingStart) return;
+
+        updateLastPresentationTime(info);
+        mPendingOutputBuffers.add(new DequeueOutputResult(MediaCodecStatus.OK, index, info.flags,
+                info.offset, info.presentationTimeUs, info.size));
+        notifyBuffersAvailable();
+    }
+
+    public synchronized void onOutputFormatChanged(MediaFormat format) {
+        mPendingOutputBuffers.add(
+                new DequeueOutputResult(MediaCodecStatus.OUTPUT_FORMAT_CHANGED, -1, 0, 0, 0, 0));
+        mPendingFormat.add(new GetOutputFormatResult(MediaCodecStatus.OK, format));
+        notifyBuffersAvailable();
+    }
+
+    public synchronized void onPendingStartComplete(int sequenceCounter) {
+        // Ignore events from the past.
+        if (mSequenceCounter != sequenceCounter) return;
+        mPendingStart = false;
+    }
+
+    void updateLastPresentationTime(MediaCodec.BufferInfo info) {
+        if (info.presentationTimeUs < mLastPresentationTimeUs) {
+            // TODO(qinmin): return a special code through DequeueOutputResult
+            // to notify the native code the the frame has a wrong presentation
+            // timestamp and should be skipped.
+            info.presentationTimeUs = mLastPresentationTimeUs;
+        }
+        mLastPresentationTimeUs = info.presentationTimeUs;
     }
 
     @CalledByNative
     void release() {
+        if (mUseAsyncApi) {
+            // Disconnect from the native code to ensure we don't issue calls
+            // into it after its destruction.
+            synchronized (this) {
+                mNativeMediaCodecBridge = 0;
+            }
+        }
         try {
             String codecName = "unknown";
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
@@ -206,6 +368,31 @@ class MediaCodecBridge {
     @SuppressWarnings("deprecation")
     boolean start() {
         try {
+            if (mUseAsyncApi) {
+                synchronized (this) {
+                    if (mPendingError) return false;
+
+                    class CompletePendingStartTask implements Runnable {
+                        private int mThisSequence;
+                        CompletePendingStartTask(int sequence) {
+                            mThisSequence = sequence;
+                        }
+
+                        @Override
+                        public void run() {
+                            onPendingStartComplete(mThisSequence);
+                        }
+                    };
+
+                    // Ensure any pending indices are ignored until after start
+                    // by trampolining through the handler/looper that the
+                    // notifications are coming from.
+                    Handler h = sCallbackHandler == null ? new Handler(Looper.getMainLooper())
+                                                         : sCallbackHandler;
+                    h.post(new CompletePendingStartTask(mSequenceCounter));
+                }
+            }
+
             mMediaCodec.start();
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
                 mInputBuffers = mMediaCodec.getInputBuffers();
@@ -223,6 +410,15 @@ class MediaCodecBridge {
 
     @CalledByNative
     private DequeueInputResult dequeueInputBuffer(long timeoutUs) {
+        if (mUseAsyncApi) {
+            synchronized (this) {
+                if (mPendingError) return new DequeueInputResult(MediaCodecStatus.ERROR, -1);
+                if (mPendingStart || mPendingInputBuffers.isEmpty())
+                    return new DequeueInputResult(MediaCodecStatus.TRY_AGAIN_LATER, -1);
+                return mPendingInputBuffers.remove();
+            }
+        }
+
         int status = MediaCodecStatus.ERROR;
         int index = -1;
         try {
@@ -247,6 +443,16 @@ class MediaCodecBridge {
         try {
             mFlushed = true;
             mMediaCodec.flush();
+
+            // MediaCodec.flush() invalidates all returned indices, but there
+            // may be some unhandled callbacks when using the async API. When
+            // we call prepareAsyncApiForRestart() it will set mPendingStart,
+            // start() will then post a task through the callback handler which
+            // clears mPendingStart to start accepting new buffers.
+            if (mUseAsyncApi) {
+                prepareAsyncApiForRestart();
+                if (!start()) return MediaCodecStatus.ERROR;
+            }
         } catch (Exception e) {
             Log.e(TAG, "Failed to flush MediaCodec", e);
             return MediaCodecStatus.ERROR;
@@ -258,6 +464,9 @@ class MediaCodecBridge {
     private void stop() {
         try {
             mMediaCodec.stop();
+
+            // MediaCodec.stop() invalidates all returned indices.
+            if (mUseAsyncApi) prepareAsyncApiForRestart();
         } catch (IllegalStateException e) {
             Log.e(TAG, "Failed to stop MediaCodec", e);
         }
@@ -277,6 +486,8 @@ class MediaCodecBridge {
 
     @CalledByNative
     private GetOutputFormatResult getOutputFormat() {
+        if (mUseAsyncApi && mCurrentFormat != null) return mCurrentFormat;
+
         MediaFormat format = null;
         int status = MediaCodecStatus.OK;
         try {
@@ -438,18 +649,29 @@ class MediaCodecBridge {
     @SuppressWarnings("deprecation")
     @CalledByNative
     private DequeueOutputResult dequeueOutputBuffer(long timeoutUs) {
+        if (mUseAsyncApi) {
+            synchronized (this) {
+                if (mPendingError)
+                    return new DequeueOutputResult(MediaCodecStatus.ERROR, -1, 0, 0, 0, 0);
+                if (mPendingOutputBuffers.isEmpty()) {
+                    return new DequeueOutputResult(
+                            MediaCodecStatus.TRY_AGAIN_LATER, -1, 0, 0, 0, 0);
+                }
+                if (mPendingOutputBuffers.peek().status()
+                        == MediaCodecStatus.OUTPUT_FORMAT_CHANGED) {
+                    assert !mPendingFormat.isEmpty();
+                    mCurrentFormat = mPendingFormat.remove();
+                }
+                return mPendingOutputBuffers.remove();
+            }
+        }
+
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
         int status = MediaCodecStatus.ERROR;
         int index = -1;
         try {
             int indexOrStatus = dequeueOutputBufferInternal(info, timeoutUs);
-            if (info.presentationTimeUs < mLastPresentationTimeUs) {
-                // TODO(qinmin): return a special code through DequeueOutputResult
-                // to notify the native code the the frame has a wrong presentation
-                // timestamp and should be skipped.
-                info.presentationTimeUs = mLastPresentationTimeUs;
-            }
-            mLastPresentationTimeUs = info.presentationTimeUs;
+            updateLastPresentationTime(info);
 
             if (indexOrStatus >= 0) { // index!
                 status = MediaCodecStatus.OK;
@@ -554,4 +776,15 @@ class MediaCodecBridge {
                 return AudioFormat.CHANNEL_OUT_DEFAULT;
         }
     }
+
+    @CalledByNative
+    private static void createCallbackHandlerForTesting() {
+        if (sCallbackHandlerThread != null) return;
+
+        sCallbackHandlerThread = new HandlerThread("TestCallbackThread");
+        sCallbackHandlerThread.start();
+        sCallbackHandler = new Handler(sCallbackHandlerThread.getLooper());
+    }
+
+    private native void nativeOnBuffersAvailable(long nativeMediaCodecBridge);
 }

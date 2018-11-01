@@ -5,18 +5,16 @@
 
 <org.chromium.chrome.browser.ntp.IncognitoNewTabPageViewMD
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/ntp_content"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingTop="@dimen/tab_strip_height" >
+    android:layout_height="match_parent" >
 
     <org.chromium.chrome.browser.ntp.NewTabPageScrollView
         android:id="@+id/ntp_scrollview"
         android:background="@color/ntp_bg_incognito"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingTop="@dimen/toolbar_height_no_shadow"
         android:fadingEdgeLength="9dp"
         android:fillViewport="false"
         android:focusable="true"
@@ -36,7 +34,7 @@
                 android:id="@+id/new_tab_incognito_icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:contentDescription="@null"
+                tools:ignore="ContentDescription"
                 android:src="@drawable/incognito_splash" />
 
             <TextView
@@ -44,14 +42,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/new_tab_otr_title"
-                android:textColor="@color/incognito_header" />
+                android:textAppearance="@style/WhiteHeadlineIncognito" />
 
             <TextView
                 android:id="@+id/new_tab_incognito_subtitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/new_tab_otr_subtitle"
-                android:textColor="@color/incognito_header"
+                android:textAppearance="@style/WhiteBodyIncognito"
                 android:lineSpacingExtra="@dimen/md_incognito_ntp_line_spacing" />
 
             <LinearLayout
@@ -65,14 +62,14 @@
                   android:id="@+id/new_tab_incognito_features"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:textColor="@color/incognito_text"
+                  android:textAppearance="@style/WhiteBodyIncognito"
                   android:lineSpacingExtra="@dimen/md_incognito_ntp_line_spacing" />
 
               <TextView
                   android:id="@+id/new_tab_incognito_warning"
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
-                  android:textColor="@color/incognito_text"
+                  android:textAppearance="@style/WhiteBodyIncognito"
                   android:lineSpacingExtra="@dimen/md_incognito_ntp_line_spacing" />
 
             </LinearLayout>
@@ -84,7 +81,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:text="@string/learn_more"
-                android:textColor="@color/google_blue_300"
+                android:textAppearance="@style/TextAppearance.IncognitoNewTabLearnMoreLinkModern"
                 android:lineSpacingExtra="@dimen/md_incognito_ntp_line_spacing" />
 
         </LinearLayout>

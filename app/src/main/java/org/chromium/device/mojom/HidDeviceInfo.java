@@ -51,9 +51,6 @@ public final class HidDeviceInfo extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static HidDeviceInfo deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -67,38 +64,39 @@ public final class HidDeviceInfo extends org.chromium.mojo.bindings.Struct {
         HidDeviceInfo result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new HidDeviceInfo(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new HidDeviceInfo(elementsOrVersion);
+                {
+                    
                 result.guid = decoder0.readString(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.vendorId = decoder0.readShort(16);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.productId = decoder0.readShort(18);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.busType = decoder0.readInt(20);
                     HidBusType.validate(result.busType);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.productName = decoder0.readString(24, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.serialNumber = decoder0.readString(32, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.reportDescriptor = decoder0.readBytes(40, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(48, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -109,27 +107,28 @@ public final class HidDeviceInfo extends org.chromium.mojo.bindings.Struct {
                         result.collections[i1] = HidCollectionInfo.decode(decoder2);
                     }
                 }
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.hasReportId = decoder0.readBoolean(56, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.maxInputReportSize = decoder0.readLong(64);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.maxOutputReportSize = decoder0.readLong(72);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.maxFeatureReportSize = decoder0.readLong(80);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.deviceNode = decoder0.readString(88, false);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -174,69 +173,5 @@ public final class HidDeviceInfo extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.maxFeatureReportSize, 80);
         
         encoder0.encode(this.deviceNode, 88, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        HidDeviceInfo other = (HidDeviceInfo) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.guid, other.guid))
-            return false;
-        if (this.vendorId!= other.vendorId)
-            return false;
-        if (this.productId!= other.productId)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.productName, other.productName))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.serialNumber, other.serialNumber))
-            return false;
-        if (this.busType!= other.busType)
-            return false;
-        if (!java.util.Arrays.equals(this.reportDescriptor, other.reportDescriptor))
-            return false;
-        if (!java.util.Arrays.deepEquals(this.collections, other.collections))
-            return false;
-        if (this.hasReportId!= other.hasReportId)
-            return false;
-        if (this.maxInputReportSize!= other.maxInputReportSize)
-            return false;
-        if (this.maxOutputReportSize!= other.maxOutputReportSize)
-            return false;
-        if (this.maxFeatureReportSize!= other.maxFeatureReportSize)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.deviceNode, other.deviceNode))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.guid);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.vendorId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.productId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.productName);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.serialNumber);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.busType);
-        result = prime * result + java.util.Arrays.hashCode(this.reportDescriptor);
-        result = prime * result + java.util.Arrays.deepHashCode(this.collections);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hasReportId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxInputReportSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxOutputReportSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maxFeatureReportSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.deviceNode);
-        return result;
     }
 }

@@ -4,7 +4,7 @@
      found in the LICENSE file. -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:chrome="http://schemas.android.com/apk/res-auto" >
+                  xmlns:app="http://schemas.android.com/apk/res-auto" >
 
     <org.chromium.chrome.browser.preferences.TextMessagePreference
         android:title="@string/data_reduction_description" />
@@ -14,5 +14,5 @@
         android:title="@string/data_reduction_caveats_description" />
     <org.chromium.chrome.browser.preferences.LearnMorePreference
         android:key="data_reduction_learn_more"
-        chrome:helpContext="@string/help_context_data_reduction" />
+        app:helpContext="@string/help_context_data_reduction" />
 </PreferenceScreen>

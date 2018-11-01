@@ -15,6 +15,7 @@ import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
 import android.support.annotation.ColorInt;
+import android.support.annotation.NonNull;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.view.animation.PathInterpolatorCompat;
 import android.view.animation.Interpolator;
@@ -22,13 +23,12 @@ import android.view.animation.Interpolator;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.MathUtils;
 
 /**
  * A custom {@link Drawable} that will animate a pulse using the {@link PulseInterpolator}.  Meant
- * to be created with a {@link PulseDrawable#Painter} that does the actual drawing work based on
- * the pulse interpolation value.
+ * to be created with a {@link Painter} that does the actual drawing work based on the pulse
+ * interpolation value.
  */
 public class PulseDrawable extends Drawable implements Animatable {
     private static final long PULSE_DURATION_MS = 2500;
@@ -89,9 +89,7 @@ public class PulseDrawable extends Drawable implements Animatable {
      */
     public static PulseDrawable createCircle(Context context) {
         final int startingPulseRadiusPx =
-                context.getResources().getDimensionPixelSize(FeatureUtilities.isChromeHomeEnabled()
-                                ? R.dimen.iph_pulse_chrome_home_baseline_radius
-                                : R.dimen.iph_pulse_baseline_radius);
+                context.getResources().getDimensionPixelSize(R.dimen.iph_pulse_baseline_radius);
 
         PulseDrawable.Painter painter = new PulseDrawable.Painter() {
             @Override
@@ -155,8 +153,8 @@ public class PulseDrawable extends Drawable implements Animatable {
         Resources resources = ContextUtils.getApplicationContext().getResources();
 
         @ColorInt
-        int color = ApiCompatibilityUtils.getColor(
-                resources, useLightPulseColor ? R.color.google_grey_100 : R.color.google_blue_500);
+        int color = ApiCompatibilityUtils.getColor(resources,
+                useLightPulseColor ? R.color.modern_grey_100 : R.color.default_icon_color_blue);
         if (mState.color == color) return;
 
         int alpha = getAlpha();
@@ -208,7 +206,7 @@ public class PulseDrawable extends Drawable implements Animatable {
     }
 
     @Override
-    public void draw(Canvas canvas) {
+    public void draw(@NonNull Canvas canvas) {
         mPaint.setColor(mState.drawColor);
         mState.painter.draw(this, mPaint, canvas, mState.progress);
     }
@@ -253,6 +251,7 @@ public class PulseDrawable extends Drawable implements Animatable {
     }
 
     @Override
+    @NonNull
     public Drawable mutate() {
         if (!mMutated && super.mutate() == this) {
             mState = new PulseState(mState);
@@ -286,7 +285,7 @@ public class PulseDrawable extends Drawable implements Animatable {
         public int color;
 
         // Current Animation State
-        /** The time from {@link SystemClock#updateMillis()} that this animation started at. */
+        /** The time from {@link SystemClock#uptimeMillis} that this animation started at. */
         public long startTime;
 
         /** The current progress from 0 to 1 of the pulse. */

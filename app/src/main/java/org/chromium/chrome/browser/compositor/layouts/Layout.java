@@ -9,6 +9,7 @@ import static org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Ani
 import android.content.Context;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.support.annotation.IntDef;
 import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
@@ -33,6 +34,8 @@ import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelUtils;
 import org.chromium.ui.resources.ResourceManager;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,25 +49,26 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     /**
      * The orientation of the device.
      */
-    public interface Orientation {
-        public static final int UNSET = 0;
-        public static final int PORTRAIT = 1;
-        public static final int LANDSCAPE = 2;
+    public @interface Orientation {
+        int UNSET = 0;
+        int PORTRAIT = 1;
+        int LANDSCAPE = 2;
     }
 
     /** The possible variations of the visible viewport that different layouts may need. */
-    public enum ViewportMode {
+    @IntDef({ViewportMode.ALWAYS_FULLSCREEN, ViewportMode.ALWAYS_SHOWING_BROWSER_CONTROLS,
+            ViewportMode.DYNAMIC_BROWSER_CONTROLS,
+            ViewportMode.USE_PREVIOUS_BROWSER_CONTROLS_STATE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ViewportMode {
         /** The viewport is assumed to be always fullscreen. */
-        ALWAYS_FULLSCREEN,
-
+        int ALWAYS_FULLSCREEN = 0;
         /** The viewport is assuming that browser controls are permenantly shown. */
-        ALWAYS_SHOWING_BROWSER_CONTROLS,
-
+        int ALWAYS_SHOWING_BROWSER_CONTROLS = 1;
         /** The viewport will account for animating browser controls (both shown and hidden). */
-        DYNAMIC_BROWSER_CONTROLS,
-
+        int DYNAMIC_BROWSER_CONTROLS = 2;
         /** Use a viewport that accounts for the browser controls state in the previous layout. */
-        USE_PREVIOUS_BROWSER_CONTROLS_STATE
+        int USE_PREVIOUS_BROWSER_CONTROLS_STATE = 3;
     }
 
     // Defines to make the code easier to read.
@@ -79,7 +83,8 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     // Drawing area properties.
     private float mWidthDp;
     private float mHeightDp;
-    private float mHeightMinusBrowserControlsDp;
+    private float mTopBrowserControlsHeightDp;
+    private float mBottomBrowserControlsHeightDp;
 
     /** A {@link Context} instance. */
     private Context mContext;
@@ -91,7 +96,7 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     protected TabModelSelector mTabModelSelector;
     protected TabContentManager mTabContentManager;
 
-    private ChromeAnimation<Animatable<?>> mLayoutAnimations;
+    private ChromeAnimation<Animatable> mLayoutAnimations;
 
     // Tablet tab strip managers.
     private final List<SceneOverlay> mSceneOverlays = new ArrayList<SceneOverlay>();
@@ -108,7 +113,7 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     private boolean mIsHiding;
 
     // The next id to show when the layout is hidden, or TabBase#INVALID_TAB_ID if no change.
-    private int mNextTabId = Tab.INVALID_TAB_ID;
+    protected int mNextTabId = Tab.INVALID_TAB_ID;
 
     // The ratio of dp to px.
     protected final float mDpToPx;
@@ -128,7 +133,8 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
         // Invalid sizes
         mWidthDp = -1;
         mHeightDp = -1;
-        mHeightMinusBrowserControlsDp = -1;
+        mTopBrowserControlsHeightDp = -1;
+        mBottomBrowserControlsHeightDp = -1;
 
         mCurrentOrientation = Orientation.UNSET;
         mDpToPx = context.getResources().getDisplayMetrics().density;
@@ -139,6 +145,16 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
      */
     public CompositorAnimationHandler getAnimationHandler() {
         return mUpdateHost.getAnimationHandler();
+    }
+
+    /**
+     * Adds a {@link SceneOverlay} that can be shown in this layout to the first position in the
+     * scene overlay list, meaning it will be drawn behind all other overlays.
+     * @param overlay The {@link SceneOverlay} to be added.
+     */
+    void addSceneOverlayToBack(SceneOverlay overlay) {
+        assert !mSceneOverlays.contains(overlay);
+        mSceneOverlays.add(0, overlay);
     }
 
     /**
@@ -299,22 +315,26 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
      *                               {@link Orientation}.
      */
     public final void sizeChanged(RectF visibleViewportPx, RectF screenViewportPx,
-            float heightMinusBrowserControlsPx, int orientation) {
+            float topBrowserControlsHeightPx, float bottomBrowserControlsHeightPx,
+            int orientation) {
         // 1. Pull out this Layout's width and height properties based on the viewport.
         float width = screenViewportPx.width() / mDpToPx;
         float height = screenViewportPx.height() / mDpToPx;
-        float heightMinusBrowserControlsDp = heightMinusBrowserControlsPx / mDpToPx;
+        float topBrowserControlsHeightDp = topBrowserControlsHeightPx / mDpToPx;
+        float bottomBrowserControlsHeightDp = bottomBrowserControlsHeightPx / mDpToPx;
 
         // 2. Check if any Layout-specific properties have changed.
         boolean layoutPropertiesChanged = Float.compare(mWidthDp, width) != 0
                 || Float.compare(mHeightDp, height) != 0
-                || Float.compare(mHeightMinusBrowserControlsDp, heightMinusBrowserControlsDp) != 0
+                || Float.compare(mTopBrowserControlsHeightDp, topBrowserControlsHeightDp) != 0
+                || Float.compare(mBottomBrowserControlsHeightDp, bottomBrowserControlsHeightDp) != 0
                 || mCurrentOrientation != orientation;
 
         // 3. Update the internal sizing properties.
         mWidthDp = width;
         mHeightDp = height;
-        mHeightMinusBrowserControlsDp = heightMinusBrowserControlsDp;
+        mTopBrowserControlsHeightDp = topBrowserControlsHeightDp;
+        mBottomBrowserControlsHeightDp = bottomBrowserControlsHeightDp;
         mCurrentOrientation = orientation;
 
         // 4. Notify the actual Layout if necessary.
@@ -366,7 +386,7 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     /**
      * @return The sizing mode for the layout.
      */
-    public ViewportMode getViewportMode() {
+    public @ViewportMode int getViewportMode() {
         return ViewportMode.ALWAYS_SHOWING_BROWSER_CONTROLS;
     }
 
@@ -479,7 +499,7 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
      * @param x         The horizontal coordinate the swipe started at in dp.
      * @param y         The vertical coordinate the swipe started at in dp.
      */
-    public void swipeStarted(long time, ScrollDirection direction, float x, float y) { }
+    public void swipeStarted(long time, @ScrollDirection int direction, float x, float y) {}
 
     /**
      * Updates a swipe gesture.
@@ -547,10 +567,24 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
     }
 
     /**
+     * @return The height of the top browser controls in dp.
+     */
+    public float getTopBrowserControlsHeight() {
+        return mTopBrowserControlsHeightDp;
+    }
+
+    /**
+     * @return The height of the bottom browser controls in dp.
+     */
+    public float getBottomBrowserControlsHeight() {
+        return mBottomBrowserControlsHeightDp;
+    }
+
+    /**
      * @return The height of the drawing area minus the browser controls in dp.
      */
     public float getHeightMinusBrowserControls() {
-        return mHeightMinusBrowserControlsDp;
+        return getHeight() - (getTopBrowserControlsHeight() + getBottomBrowserControlsHeight());
     }
 
     /**
@@ -857,8 +891,8 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
      * .AnimatableAnimation} and adds it to the animation.
      * Automatically sets the start value at the beginning of the animation.
      */
-    protected <T extends Enum<?>> void addToAnimation(Animatable<T> object, T prop, float start,
-            float end, long duration, long startTime) {
+    protected void addToAnimation(
+            Animatable object, int prop, float start, float end, long duration, long startTime) {
         addToAnimation(object, prop, start, end, duration, startTime, false);
     }
 
@@ -866,8 +900,8 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
      * Creates an {@link org.chromium.chrome.browser.compositor.layouts.ChromeAnimation
      * .AnimatableAnimation} and it to the animation. Uses a deceleration interpolator by default.
      */
-    protected <T extends Enum<?>> void addToAnimation(Animatable<T> object, T prop, float start,
-            float end, long duration, long startTime, boolean setStartValueAfterDelay) {
+    protected void addToAnimation(Animatable object, int prop, float start, float end,
+            long duration, long startTime, boolean setStartValueAfterDelay) {
         addToAnimation(object, prop, start, end, duration, startTime, setStartValueAfterDelay,
                 ChromeAnimation.getDecelerateInterpolator());
     }
@@ -887,11 +921,11 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
      * @param setStartValueAfterDelay See {@link Animation#setStartValueAfterStartDelay(boolean)}
      * @param interpolator            The interpolator to use for the animation
      */
-    protected <T extends Enum<?>> void addToAnimation(Animatable<T> object, T prop, float start,
-            float end, long duration, long startTime, boolean setStartValueAfterDelay,
+    protected void addToAnimation(Animatable object, int prop, float start, float end,
+            long duration, long startTime, boolean setStartValueAfterDelay,
             Interpolator interpolator) {
-        ChromeAnimation.Animation<Animatable<?>> component = createAnimation(object, prop, start,
-                end, duration, startTime, setStartValueAfterDelay, interpolator);
+        ChromeAnimation.Animation<Animatable> component = createAnimation(object, prop, start, end,
+                duration, startTime, setStartValueAfterDelay, interpolator);
         addToAnimation(component);
     }
 
@@ -899,10 +933,10 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
      * Appends an Animation to the current animation set and starts it immediately.  If the set is
      * already finished or doesn't exist, the animation set is also started.
      */
-    protected void addToAnimation(ChromeAnimation.Animation<Animatable<?>> component) {
+    protected void addToAnimation(ChromeAnimation.Animation<Animatable> component) {
         if (mLayoutAnimations == null || mLayoutAnimations.finished()) {
             onAnimationStarted();
-            mLayoutAnimations = new ChromeAnimation<Animatable<?>>();
+            mLayoutAnimations = new ChromeAnimation<Animatable>();
             mLayoutAnimations.start();
         }
         component.start();
@@ -915,10 +949,8 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
      * @param object The object being animated.
      * @param prop   The property to search for.
      */
-    protected <T extends Enum<?>> void cancelAnimation(Animatable<T> object, T prop) {
-        if (mLayoutAnimations != null) {
-            mLayoutAnimations.cancel(object, prop);
-        }
+    protected void cancelAnimation(Animatable object, int prop) {
+        if (mLayoutAnimations != null) mLayoutAnimations.cancel(object, prop);
     }
 
     /**
@@ -969,6 +1001,14 @@ public abstract class Layout implements TabContentManager.ThumbnailChangeListene
      */
     public boolean handlesCloseAll() {
         return false;
+    }
+
+    /**
+     * Whether or not the toolbar IncognitoToggleButton (if present) should be enabled. E.g., it can
+     * be disabled while animating a tab selection to avoid odd behavior.
+     */
+    public boolean shouldAllowIncognitoSwitching() {
+        return true;
     }
 
     /**

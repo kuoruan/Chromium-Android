@@ -26,6 +26,7 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
 import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentActivity;
 import android.widget.ListView;
 
 import org.chromium.base.ApiCompatibilityUtils;
@@ -33,8 +34,8 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.AppHooks;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.preferences.ChromeBasePreference;
-import org.chromium.chrome.browser.preferences.ManagedPreferenceDelegate;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.Preferences;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
@@ -46,7 +47,6 @@ import org.chromium.chrome.browser.signin.SigninManager.SignInStateObserver;
 import org.chromium.chrome.browser.sync.ProfileSyncService;
 import org.chromium.chrome.browser.sync.ProfileSyncService.SyncStateChangedListener;
 import org.chromium.chrome.browser.sync.ui.SyncCustomizationFragment;
-import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ChromeSigninController;
 
@@ -88,12 +88,12 @@ public class AccountManagementFragment extends PreferenceFragment
     public static final String PREF_CHILD_CONTENT = "child_content";
     public static final String PREF_CHILD_CONTENT_DIVIDER = "child_content_divider";
     public static final String PREF_GOOGLE_ACTIVITY_CONTROLS = "google_activity_controls";
+    public static final String PREF_GOOGLE_ACTIVITY_CONTROLS_DIVIDER =
+            "google_activity_controls_divider";
     public static final String PREF_SYNC_SETTINGS = "sync_settings";
+    public static final String PREF_SYNC_SETTINGS_DIVIDER = "sync_settings_divider";
     public static final String PREF_SIGN_OUT = "sign_out";
     public static final String PREF_SIGN_OUT_DIVIDER = "sign_out_divider";
-
-    private static final String ACCOUNT_SETTINGS_ACTION = "android.settings.ACCOUNT_SYNC_SETTINGS";
-    private static final String ACCOUNT_SETTINGS_ACCOUNT_KEY = "account";
 
     private int mGaiaServiceType;
 
@@ -225,6 +225,10 @@ public class AccountManagementFragment extends PreferenceFragment
             getPreferenceScreen().removePreference(signOutSwitch);
             getPreferenceScreen().removePreference(findPreference(PREF_SIGN_OUT_DIVIDER));
         } else {
+            signOutSwitch.setTitle(ChromeFeatureList.isEnabled(ChromeFeatureList.UNIFIED_CONSENT)
+                            ? R.string.sign_out_and_turn_off_sync
+                            : R.string.account_management_sign_out);
+
             signOutSwitch.setEnabled(getSignOutAllowedPreferenceValue());
             signOutSwitch.setOnPreferenceClickListener(preference -> {
                 if (!isVisible() || !isResumed()) return false;
@@ -236,9 +240,14 @@ public class AccountManagementFragment extends PreferenceFragment
                     String managementDomain = SigninManager.get().getManagementDomain();
                     if (managementDomain != null) {
                         // Show the 'You are signing out of a managed account' dialog.
+
+                        // TODO(https://crbug.com/710657): Migrate to AccountManagementFragment to
+                        // extend android.support.v7.preference.Preference and remove this cast.
+                        FragmentActivity fragmentActivity = (FragmentActivity) getActivity();
                         ConfirmManagedSyncDataDialog.showSignOutFromManagedAccountDialog(
-                                AccountManagementFragment.this, getFragmentManager(),
-                                getResources(), managementDomain);
+                                AccountManagementFragment.this,
+                                fragmentActivity.getSupportFragmentManager(), getResources(),
+                                managementDomain);
                     } else {
                         // Show the 'You are signing out' dialog.
                         SignOutDialogFragment signOutFragment = new SignOutDialogFragment();
@@ -259,22 +268,31 @@ public class AccountManagementFragment extends PreferenceFragment
     }
 
     private void configureSyncSettings() {
+        Preference syncSettings = findPreference(PREF_SYNC_SETTINGS);
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.UNIFIED_CONSENT)) {
+            getPreferenceScreen().removePreference(syncSettings);
+            getPreferenceScreen().removePreference(findPreference(PREF_SYNC_SETTINGS_DIVIDER));
+            return;
+        }
         final Preferences preferences = (Preferences) getActivity();
-        findPreference(PREF_SYNC_SETTINGS).setOnPreferenceClickListener(preference -> {
+        syncSettings.setOnPreferenceClickListener(preference -> {
             if (!isVisible() || !isResumed()) return false;
 
             if (ProfileSyncService.get() == null) return true;
 
-            Bundle args = new Bundle();
-            args.putString(SyncCustomizationFragment.ARGUMENT_ACCOUNT, mSignedInAccountName);
-            preferences.startFragment(SyncCustomizationFragment.class.getName(), args);
-
+            preferences.startFragment(SyncCustomizationFragment.class.getName(), new Bundle());
             return true;
         });
     }
 
     private void configureGoogleActivityControls() {
         Preference pref = findPreference(PREF_GOOGLE_ACTIVITY_CONTROLS);
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.UNIFIED_CONSENT)) {
+            getPreferenceScreen().removePreference(pref);
+            getPreferenceScreen().removePreference(
+                    findPreference(PREF_GOOGLE_ACTIVITY_CONTROLS_DIVIDER));
+            return;
+        }
         if (mProfile.isChild()) {
             pref.setSummary(R.string.sign_in_google_activity_controls_message_child_account);
         }
@@ -308,7 +326,6 @@ public class AccountManagementFragment extends PreferenceFragment
                 parentText = res.getString(R.string.account_management_no_parental_data);
             }
             parentAccounts.setSummary(parentText);
-            parentAccounts.setSelectable(false);
 
             final int childContentSummary;
             int defaultBehavior = prefService.getDefaultSupervisedUserFilteringBehavior();
@@ -320,12 +337,11 @@ public class AccountManagementFragment extends PreferenceFragment
                 childContentSummary = R.string.account_management_child_content_all;
             }
             childContent.setSummary(childContentSummary);
-            childContent.setSelectable(false);
 
             Drawable newIcon = ApiCompatibilityUtils.getDrawable(
                     getResources(), R.drawable.ic_drive_site_white_24dp);
             newIcon.mutate().setColorFilter(
-                    ApiCompatibilityUtils.getColor(getResources(), R.color.google_grey_600),
+                    ApiCompatibilityUtils.getColor(getResources(), R.color.default_icon_color),
                     PorterDuff.Mode.SRC_IN);
             childContent.setIcon(newIcon);
         } else {
@@ -351,11 +367,8 @@ public class AccountManagementFragment extends PreferenceFragment
             pref.setTitle(account.name);
             pref.setIcon(mProfileDataCache.getProfileDataOrDefault(account.name).getImage());
 
-            pref.setOnPreferenceClickListener(preference -> {
-                Intent intent = new Intent(ACCOUNT_SETTINGS_ACTION);
-                intent.putExtra(ACCOUNT_SETTINGS_ACCOUNT_KEY, account);
-                return IntentUtils.safeStartActivity(getActivity(), intent);
-            });
+            pref.setOnPreferenceClickListener(
+                    preference -> SigninUtils.openAccountSettingsPage(getActivity(), account));
 
             accountsCategory.addPreference(pref);
         }
@@ -385,12 +398,7 @@ public class AccountManagementFragment extends PreferenceFragment
 
             return true;
         });
-        addAccountPreference.setManagedPreferenceDelegate(new ManagedPreferenceDelegate() {
-            @Override
-            public boolean isPreferenceControlledByPolicy(Preference preference) {
-                return !canAddAccounts();
-            }
-        });
+        addAccountPreference.setManagedPreferenceDelegate(preference -> !canAddAccounts());
         return addAccountPreference;
     }
 

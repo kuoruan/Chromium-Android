@@ -106,8 +106,8 @@ public class WebApkUpdateManager implements WebApkUpdateDataFetcher.Observer {
         @WebApkUpdateReason
         int updateReason = needsUpdate(mInfo, fetchedInfo, primaryIconUrl, badgeIconUrl);
         boolean needsUpgrade = (updateReason != WebApkUpdateReason.NONE);
-        Log.v(TAG, "Got Manifest: " + gotManifest);
-        Log.v(TAG, "WebAPK upgrade needed: " + needsUpgrade);
+        Log.i(TAG, "Got Manifest: " + gotManifest);
+        Log.i(TAG, "WebAPK upgrade needed: " + needsUpgrade);
 
         // If the Web Manifest was not found and an upgrade is requested, stop fetching Web
         // Manifests as the user navigates to avoid sending multiple WebAPK update requests. In
@@ -190,13 +190,13 @@ public class WebApkUpdateManager implements WebApkUpdateDataFetcher.Observer {
 
     /** Sends update request to the WebAPK Server. Should be called when WebAPK is not running. */
     public void updateWhileNotRunning(final Runnable callback) {
-        Log.v(TAG, "Update now");
+        Log.i(TAG, "Update now");
         WebApkUpdateCallback callbackRunner = (result, relaxUpdates) -> {
             onFinishedUpdate(result, relaxUpdates);
             callback.run();
         };
 
-        WebApkUma.recordUpdateRequestSent(WebApkUma.UPDATE_REQUEST_SENT_WHILE_WEBAPK_CLOSED);
+        WebApkUma.recordUpdateRequestSent(WebApkUma.UpdateRequestSent.WHILE_WEBAPK_CLOSED);
         updateWebApkFromFile(mStorage.getPendingUpdateRequestPath(), callbackRunner);
     }
 
@@ -204,10 +204,10 @@ public class WebApkUpdateManager implements WebApkUpdateDataFetcher.Observer {
      * Destroys {@link mFetcher}. In a separate function for the sake of tests.
      */
     protected void destroyFetcher() {
-        if (mFetcher == null) return;
-
-        mFetcher.destroy();
-        mFetcher = null;
+        if (mFetcher != null) {
+            mFetcher.destroy();
+            mFetcher = null;
+        }
     }
 
     /**
@@ -239,18 +239,14 @@ public class WebApkUpdateManager implements WebApkUpdateDataFetcher.Observer {
      * True if there has not been any update attempts.
      */
     private boolean shouldCheckIfWebManifestUpdated(WebApkInfo info) {
-        if (!sUpdatesEnabled) {
-            return false;
-        }
+        if (!sUpdatesEnabled) return false;
 
         if (CommandLine.getInstance().hasSwitch(
                     ChromeSwitches.CHECK_FOR_WEB_MANIFEST_UPDATE_ON_STARTUP)) {
             return true;
         }
 
-        if (!info.apkPackageName().startsWith(WEBAPK_PACKAGE_PREFIX)) {
-            return false;
-        }
+        if (!info.apkPackageName().startsWith(WEBAPK_PACKAGE_PREFIX)) return false;
 
         if (isShellApkVersionOutOfDate(info)
                 && WebApkVersion.CURRENT_SHELL_APK_VERSION
@@ -296,13 +292,8 @@ public class WebApkUpdateManager implements WebApkUpdateDataFetcher.Observer {
      */
     private static @WebApkUpdateReason int needsUpdate(WebApkInfo oldInfo, WebApkInfo fetchedInfo,
             String primaryIconUrl, String badgeIconUrl) {
-        if (isShellApkVersionOutOfDate(oldInfo)) {
-            return WebApkUpdateReason.OLD_SHELL_APK;
-        }
-
-        if (fetchedInfo == null) {
-            return WebApkUpdateReason.NONE;
-        }
+        if (isShellApkVersionOutOfDate(oldInfo)) return WebApkUpdateReason.OLD_SHELL_APK;
+        if (fetchedInfo == null) return WebApkUpdateReason.NONE;
 
         // We should have computed the Murmur2 hashes for the bitmaps at the primary icon URL and
         // the badge icon for {@link fetchedInfo} (but not the other icon URLs.)

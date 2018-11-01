@@ -45,6 +45,7 @@ public class ButtonCompat extends Button {
     private static final float PRE_L_PRESSED_BRIGHTNESS = 0.85f;
     private static final int DISABLED_COLOR = 0x424F4F4F;
 
+    private final int mCornerRadius;
     private int mColor;
 
     /**
@@ -76,6 +77,8 @@ public class ButtonCompat extends Button {
         // ButtonCompatThemeOverlay, which simply sets the buttonStyle to @style/ButtonCompat.
         super(new ContextThemeWrapper(context, R.style.ButtonCompatOverlay), attrs);
 
+        mCornerRadius =
+                context.getResources().getDimensionPixelSize(R.dimen.button_compat_corner_radius);
         getBackground().mutate();
         setButtonColor(buttonColor);
         setRaised(buttonRaised);
@@ -144,11 +147,13 @@ public class ButtonCompat extends Button {
         GradientDrawable shape = (GradientDrawable)
                 ((RippleDrawable) getBackground()).getDrawable(0);
         shape.mutate();
+        shape.setCornerRadius(mCornerRadius);
         shape.setColor(csl);
     }
 
     private void updateButtonBackgroundPreL() {
         GradientDrawable background = (GradientDrawable) getBackground();
+        background.setCornerRadius(mCornerRadius);
         background.setColor(getBackgroundColorPreL());
     }
 

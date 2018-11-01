@@ -3,7 +3,7 @@
 set -e
 
 PRO_DIR="$(pwd)/Chromium"
-BASE_DIR="/root/build/src"
+BASE_DIR="/root/chromium/src"
 RELEASE_DIR="${BASE_DIR}/out/Release"
 APP_DIR="${PRO_DIR}/app"
 MODULES_DIR="${PRO_DIR}"
@@ -20,22 +20,23 @@ sync_ui() {
 }
 
 sync_components() {
-	mkdir -p ${MODULES_DIR}/components/{autofill,components_base,web_contents_delegate}/src/main/res
+	mkdir -p ${MODULES_DIR}/components/{autofill,components_base,embedder_support}/src/main/res
 
 	local components="${BASE_DIR}/components"
 	cp -r ${components}/autofill/android/java/src/* \
 		${components}/background_task_scheduler/android/java/src/* \
 		${components}/bookmarks/common/android/java/src/* \
-		${components}/content_view/java/src/* \
 		${components}/crash/android/java/src/* \
 		${components}/dom_distiller/content/browser/android/java/src/* \
 		${components}/dom_distiller/core/android/java/src/* \
 		${components}/download/internal/background_service/android/java/src/* \
+		${components}/embedder_support/android/java/src/* \
 		${components}/feature_engagement/internal/android/java/src/* \
 		${components}/feature_engagement/public/android/java/src/* \
 		${components}/gcm_driver/android/java/src/* \
 		${components}/gcm_driver/instance_id/android/java/src/* \
 		${components}/invalidation/impl/android/java/src/* \
+		${components}/language/android/java/src/* \
 		${components}/location/android/java/src/* \
 		${components}/minidump_uploader/android/java/src/* \
 		${components}/navigation_interception/android/java/src/* \
@@ -49,7 +50,7 @@ sync_components() {
 		${components}/url_formatter/android/java/src/* \
 		${components}/variations/android/java/src/* \
 		${components}/version_info/android/java/src/* \
-		${components}/web_contents_delegate_android/java/src/* \
+		${components}/viz/service/java/src/* \
 		${components}/web_restrictions/browser/java/src/* \
 		"${APP_DIR}/src/main/java"
 
@@ -57,11 +58,11 @@ sync_components() {
 		${RELEASE_DIR}/gen/components/autofill/android/autofill_strings_grd_grit_output/* \
 		"${MODULES_DIR}/components/autofill/src/main/res"
 
-	cp -r ${components}/web_contents_delegate_android/java/res/* \
-		${RELEASE_DIR}/gen/components/web_contents_delegate_android/web_contents_delegate_android_strings_grd_grit_output/* \
-		"${MODULES_DIR}/components/web_contents_delegate/src/main/res"
+	cp -r ${components}/embedder_support/android/java/res/* \
+		${RELEASE_DIR}/gen/components/embedder_support/android/web_contents_delegate_strings_grd_grit_output/* \
+		"${MODULES_DIR}/components/embedder_support/src/main/res"
 
-	cp -f ${RELEASE_DIR}/gen/components/strings/java/res/* \
+	cp -r ${RELEASE_DIR}/gen/components/strings/java/res/* \
 		"${MODULES_DIR}/components/components_base/src/main/res"
 }
 
@@ -108,13 +109,13 @@ sync_media() {
 }
 
 sync_customtabs() {
-	mkdir -p ${MODULES_DIR}/browseractions/src/main/res
+	mkdir -p ${MODULES_DIR}/customtabs/src/main/res
 
 	cp -r ${BASE_DIR}/third_party/custom_tabs_client/src/customtabs/src/* \
 		"${APP_DIR}/src/main/java"
 
 	cp -r ${BASE_DIR}/third_party/custom_tabs_client/src/customtabs/res/* \
-		"${MODULES_DIR}/browseractions/src/main/res"
+		"${MODULES_DIR}/customtabs/src/main/res"
 
 	local custom_tabs_aidl="${APP_DIR}/src/main/aidl/android/support/customtabs"
 	mkdir -p "$custom_tabs_aidl"
@@ -129,23 +130,20 @@ sync_chrome() {
 
 	cp -r ${BASE_DIR}/base/android/java/src/* \
 		${BASE_DIR}/build/android/buildhooks/java/* \
+		${BASE_DIR}/chrome/android/feed/dummy/java/src/* \
 		${BASE_DIR}/chrome/android/java/src/* \
 		${BASE_DIR}/chrome/android/third_party/compositor_animator/java/src/* \
-		${BASE_DIR}/chrome/android/third_party/widget_bottomsheet_base/java/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/client/src/* \
 		${BASE_DIR}/chrome/android/webapk/libs/common/src/* \
-		${BASE_DIR}/chrome/android/webapk/libs/runtime_library/src/* \
 		${BASE_DIR}/device/bluetooth/android/java/src/* \
 		${BASE_DIR}/device/gamepad/android/java/src/* \
-		${BASE_DIR}/device/geolocation/android/java/src/* \
-		${BASE_DIR}/device/sensors/android/java/src/* \
 		${BASE_DIR}/device/usb/android/java/src/* \
 		${BASE_DIR}/device/vr/android/java/src/* \
 		${BASE_DIR}/media/base/android/java/src/* \
 		${BASE_DIR}/media/capture/content/android/java/src/* \
 		${BASE_DIR}/media/capture/video/android/java/src/* \
 		${BASE_DIR}/media/midi/java/src/* \
-		${BASE_DIR}/mojo/android/system/src/* \
+		${BASE_DIR}/mojo/public/java/base/src/* \
 		${BASE_DIR}/mojo/public/java/bindings/src/* \
 		${BASE_DIR}/mojo/public/java/system/src/* \
 		${BASE_DIR}/net/android/java/src/* \
@@ -154,6 +152,7 @@ sync_chrome() {
 		${BASE_DIR}/services/device/android/java/src/* \
 		${BASE_DIR}/services/device/battery/android/java/src/* \
 		${BASE_DIR}/services/device/generic_sensor/android/java/src/* \
+		${BASE_DIR}/services/device/geolocation/android/java/src/* \
 		${BASE_DIR}/services/device/nfc/android/java/src/* \
 		${BASE_DIR}/services/device/public/java/src/* \
 		${BASE_DIR}/services/device/screen_orientation/android/java/src/* \
@@ -162,11 +161,13 @@ sync_chrome() {
 		${BASE_DIR}/services/device/wake_lock/power_save_blocker/android/java/src/* \
 		${BASE_DIR}/services/service_manager/public/java/src/* \
 		${BASE_DIR}/services/shape_detection/android/java/src/* \
+		${BASE_DIR}/third_party/android_async_task/java/src/* \
 		${BASE_DIR}/third_party/android_protobuf/src/java/src/device/main/java/* \
 		${BASE_DIR}/third_party/android_protobuf/src/java/src/main/java/* \
 		${BASE_DIR}/third_party/android_swipe_refresh/java/src/* \
 		${BASE_DIR}/third_party/cacheinvalidation/src/java/* \
 		${BASE_DIR}/third_party/gif_player/src/* \
+		${BASE_DIR}/third_party/protobuf/java/core/src/main/java/* \
 		"$src_dir"
 
 	cp -r ${RELEASE_DIR}/gradle/chrome/android/chrome_public_apk/extracted-srcjars/* \
@@ -181,6 +182,7 @@ sync_chrome() {
 	cp -r ${BASE_DIR}/chrome/android/java/res_vr/* "$res_dir"
 
 	cp -r ${RELEASE_DIR}/gen/chrome/java/res/* \
+		${RELEASE_DIR}/gen/chrome/android/templates/chrome_version_xml/res/* \
 		${RELEASE_DIR}/gen/chrome/android/chrome_strings_grd_grit_output/* \
 		${RELEASE_DIR}/gradle/chrome/android/chrome_public_apk/extracted-res/xml \
 		"$res_dir"
@@ -200,12 +202,16 @@ sync_chrome() {
 sync_assets() {
 	local asset_dir="${APP_DIR}/src/main/assets"
 	mkdir -p "$asset_dir"
+	mkdir -p "${asset_dir}/locales"
 
 	cp ${RELEASE_DIR}/*.pak \
 		${RELEASE_DIR}/*.dat \
 		${RELEASE_DIR}/natives_blob.bin \
-		${RELEASE_DIR}/locales/{en-US,zh-CN,zh-TW}.pak \
+		${RELEASE_DIR}/gen/chrome/android/chrome_public_apk_unwind_assets/* \
 		"$asset_dir"
+
+	cp ${RELEASE_DIR}/locales/{en-US,zh-CN,zh-TW}.pak \
+		"${asset_dir}/locales"
 	cp ${RELEASE_DIR}/snapshot_blob.bin "$asset_dir"/snapshot_blob_32.bin
 }
 
@@ -213,7 +219,7 @@ sync_libs() {
 	local lib="${APP_DIR}/libs"
 	mkdir -p "${lib}"
 
-	cp ${RELEASE_DIR}/lib.java/third_party/android_tools/support/gcm.jar "$lib"
+	cp ${RELEASE_DIR}/lib.java/third_party/android_tools/gcm.jar "$lib"
 }
 
 sync_jniLibs() {
@@ -224,7 +230,11 @@ sync_jniLibs() {
 
 clean_project() {
 	rm -rf ${APP_DIR}/src/main/java/org/org \
-		${APP_DIR}/src/main/java/{test,templates}
+		${APP_DIR}/src/main/java/org/src \
+		${APP_DIR}/src/main/java/org/com \
+		${APP_DIR}/src/main/java/com/google/protobuf \
+		${APP_DIR}/src/main/java/org/chromium/chrome/browser/MonochromeApplication.java \
+		${APP_DIR}/src/main/java/{src,test,templates}
 
 	local del_files="README|OWNERS|COPYING|.*\.template|R\.java|.*\.stamp|.*stamp\.d|.*\.py"
 	find "$PRO_DIR" -regextype "posix-egrep" -regex ".*/(${del_files})" -type f -print0 | \

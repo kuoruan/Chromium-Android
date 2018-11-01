@@ -4,8 +4,6 @@
 
 package org.chromium.ui.base;
 
-import org.chromium.ui.base.WindowAndroid.PermissionCallback;
-
 /**
  * Contains the functionality for interacting with the android permissions system.
  */
@@ -45,4 +43,13 @@ public interface AndroidPermissionDelegate {
      * @param callback The callback to be notified whether the permissions were granted.
      */
     void requestPermissions(String[] permissions, PermissionCallback callback);
+
+    /**
+     * Handle the result from requesting permissions.
+     * @param requestCode The request code passed in requestPermissions.
+     * @param permissions The list of requested permissions.
+     * @param grantResults The grant results for the corresponding permissions.
+     * @return True if the result was handled.
+     */
+    boolean handlePermissionResult(int requestCode, String[] permissions, int[] grantResults);
 }

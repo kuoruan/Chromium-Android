@@ -5,6 +5,7 @@
 package org.chromium.ui.widget;
 
 import android.graphics.Rect;
+import android.support.v4.view.ViewCompat;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
@@ -110,8 +111,8 @@ public class ViewRectProvider extends RectProvider
         int previousPositionY = mCachedWindowCoordinates[1];
         mView.getLocationInWindow(mCachedWindowCoordinates);
 
-        // Return if the window position is invalid.
-        if (mCachedWindowCoordinates[0] < 0 || mCachedWindowCoordinates[1] < 0) return;
+        mCachedWindowCoordinates[0] = Math.max(mCachedWindowCoordinates[0], 0);
+        mCachedWindowCoordinates[1] = Math.max(mCachedWindowCoordinates[1], 0);
 
         // Return if the window coordinates haven't changed.
         if (mCachedWindowCoordinates[0] == previousPositionX
@@ -132,10 +133,10 @@ public class ViewRectProvider extends RectProvider
         // Account for the padding.
         if (!mIncludePadding) {
             boolean isRtl = ApiCompatibilityUtils.isLayoutRtl(mView);
-            mRect.left += isRtl ? ApiCompatibilityUtils.getPaddingEnd(mView)
-                                : ApiCompatibilityUtils.getPaddingStart(mView);
-            mRect.right -= isRtl ? ApiCompatibilityUtils.getPaddingStart(mView)
-                                 : ApiCompatibilityUtils.getPaddingEnd(mView);
+            mRect.left +=
+                    isRtl ? ViewCompat.getPaddingEnd(mView) : ViewCompat.getPaddingStart(mView);
+            mRect.right -=
+                    isRtl ? ViewCompat.getPaddingStart(mView) : ViewCompat.getPaddingEnd(mView);
             mRect.top += mView.getPaddingTop();
             mRect.bottom -= mView.getPaddingBottom();
         }
@@ -143,6 +144,9 @@ public class ViewRectProvider extends RectProvider
         // Make sure we still have a valid Rect after applying the inset.
         mRect.right = Math.max(mRect.left, mRect.right);
         mRect.bottom = Math.max(mRect.top, mRect.bottom);
+
+        mRect.right = Math.min(mRect.right, mView.getRootView().getWidth());
+        mRect.bottom = Math.min(mRect.bottom, mView.getRootView().getHeight());
 
         notifyRectChanged();
     }

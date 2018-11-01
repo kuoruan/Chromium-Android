@@ -18,28 +18,28 @@ class SslPrivateKey_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<SslPrivateKey, SslPrivateKey.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<SslPrivateKey, SslPrivateKey.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "network::mojom::SSLPrivateKey";
+            return "network.mojom.SSLPrivateKey";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, SslPrivateKey impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public SslPrivateKey[] buildArray(int size) {
           return new SslPrivateKey[size];
@@ -100,14 +100,14 @@ SignResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 SslPrivateKey_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -127,27 +127,27 @@ SignResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), SslPrivateKey_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case SIGN_ORDINAL: {
-            
+
                         SslPrivateKeySignParams data =
                                 SslPrivateKeySignParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().sign(data.algorithm, data.input, new SslPrivateKeySignResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -161,38 +161,35 @@ SignResponse callback) {
 
     
     static final class SslPrivateKeySignParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public short algorithm;
         public byte[] input;
-    
+
         private SslPrivateKeySignParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public SslPrivateKeySignParams() {
             this(0);
         }
-    
+
         public static SslPrivateKeySignParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static SslPrivateKeySignParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static SslPrivateKeySignParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -202,21 +199,23 @@ SignResponse callback) {
             SslPrivateKeySignParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new SslPrivateKeySignParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new SslPrivateKeySignParams(elementsOrVersion);
+                    {
+                        
                     result.algorithm = decoder0.readShort(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.input = decoder0.readBytes(16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -226,75 +225,41 @@ SignResponse callback) {
             
             encoder0.encode(this.input, 16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            SslPrivateKeySignParams other = (SslPrivateKeySignParams) object;
-            if (this.algorithm!= other.algorithm)
-                return false;
-            if (!java.util.Arrays.equals(this.input, other.input))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.algorithm);
-            result = prime * result + java.util.Arrays.hashCode(this.input);
-            return result;
-        }
     }
 
 
 
     
     static final class SslPrivateKeySignResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int netError;
         public byte[] signature;
-    
+
         private SslPrivateKeySignResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public SslPrivateKeySignResponseParams() {
             this(0);
         }
-    
+
         public static SslPrivateKeySignResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static SslPrivateKeySignResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static SslPrivateKeySignResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -304,21 +269,23 @@ SignResponse callback) {
             SslPrivateKeySignResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new SslPrivateKeySignResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new SslPrivateKeySignResponseParams(elementsOrVersion);
+                    {
+                        
                     result.netError = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.signature = decoder0.readBytes(16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -327,37 +294,6 @@ SignResponse callback) {
             encoder0.encode(this.netError, 8);
             
             encoder0.encode(this.signature, 16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            SslPrivateKeySignResponseParams other = (SslPrivateKeySignResponseParams) object;
-            if (this.netError!= other.netError)
-                return false;
-            if (!java.util.Arrays.equals(this.signature, other.signature))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.netError);
-            result = prime * result + java.util.Arrays.hashCode(this.signature);
-            return result;
         }
     }
 

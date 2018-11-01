@@ -4,8 +4,10 @@
 
 package org.chromium.chrome.browser.download.ui;
 
+import android.content.res.Resources;
 import android.support.annotation.LayoutRes;
 import android.support.graphics.drawable.VectorDrawableCompat;
+import android.support.v4.graphics.drawable.DrawableCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,13 +17,20 @@ import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.download.ui.DownloadManagerUi.DownloadUiObserver;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 
 /** An adapter that allows selecting an item from a dropdown spinner. */
-class FilterAdapter
-        extends BaseAdapter implements AdapterView.OnItemSelectedListener, DownloadUiObserver {
+class FilterAdapter extends BaseAdapter implements AdapterView.OnItemSelectedListener {
+    private final int mIconColor;
     private DownloadManagerUi mManagerUi;
+
+    /**
+     * @param resources The {@link Resources} used to retrieve resources.
+     */
+    FilterAdapter(Resources resources) {
+        super();
+        mIconColor = ApiCompatibilityUtils.getColor(resources, R.color.default_icon_color);
+    }
 
     @Override
     public int getCount() {
@@ -47,8 +56,7 @@ class FilterAdapter
         VectorDrawableCompat iconDrawable =
                 VectorDrawableCompat.create(mManagerUi.getActivity().getResources(), iconId,
                         mManagerUi.getActivity().getTheme());
-        iconDrawable.setTintList(ApiCompatibilityUtils.getColorStateList(
-                mManagerUi.getActivity().getResources(), R.color.dark_mode_tint));
+        DrawableCompat.setTint(iconDrawable, mIconColor);
         labelView.setCompoundDrawablesWithIntrinsicBounds(iconDrawable, null, null, null);
 
         return labelView;
@@ -58,8 +66,12 @@ class FilterAdapter
     public View getView(int position, View convertView, ViewGroup parent) {
         TextView labelView =
                 getTextViewFromResource(convertView, R.layout.download_manager_spinner);
-        labelView.setText(position == 0 ? R.string.menu_downloads
-                                        : DownloadFilter.getStringIdForFilter(position));
+
+        CharSequence title = mManagerUi.getActivity().getResources().getText(position == 0
+                        ? R.string.menu_downloads
+                        : DownloadFilter.getStringIdForFilter(position));
+        labelView.setText(title);
+
         if (!FeatureUtilities.isChromeModernDesignEnabled()) {
             ApiCompatibilityUtils.setTextAppearance(labelView, R.style.BlackHeadline2);
         }
@@ -87,11 +99,8 @@ class FilterAdapter
         mManagerUi = manager;
     }
 
-    @Override
-    public void onFilterChanged(int filter) {}
-
-    @Override
-    public void onManagerDestroyed() {
+    /** Called when this object should be destroyed. */
+    public void destroy() {
         mManagerUi = null;
     }
 

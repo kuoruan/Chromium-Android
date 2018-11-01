@@ -18,10 +18,16 @@
 <string name="autofill_card_unmask_prompt_error_try_again_expiration_year">"請檢查信用卡到期年份，然後再試一次"</string>
 <string name="autofill_card_unmask_prompt_storage_checkbox">"在這個裝置上保留這張信用卡的複本"</string>
 <string name="autofill_card_unmask_prompt_storage_tooltip">"勾選後，Chromium 會將您的信用卡資料儲存在這個裝置上，以加快表單填寫速度。"</string>
-<string name="autofill_card_unmask_verification_in_progress">"正在驗證信用卡"</string>
+<string name="autofill_card_unmask_verification_in_progress">"正在驗證信用卡…"</string>
 <string name="autofill_card_unmask_verification_success">"您的信用卡已通過驗證"</string>
 <string name="autofill_card_unmask_expiration_date_separator">"/"</string>
-<string name="autofill_card_unmask_new_card_link">"新信用卡？"</string>
+<string name="autofill_card_unmask_new_card_link">"更新信用卡"</string>
+<string name="autofill_enable_profiles_toggle_sublabel">"包括電話號碼、電子郵件地址和運送地址等資訊"</string>
+<string name="autofill_enable_credit_cards_toggle_sublabel">"加快線上付款流程"</string>
+<string name="autofill_addresses_settings_title">"地址和其他資訊"</string>
+<string name="autofill_payment_methods">"付款方式"</string>
+<string name="autofill_enable_profiles_toggle_label">"儲存及填入地址"</string>
+<string name="autofill_enable_credit_cards_toggle_label">"儲存及填入付款方式"</string>
 <string name="autofill_wallet_management_link_text">"編輯"</string>
 <string name="autofill_from_google_account_long">"來自 Google Pay"</string>
 <string name="http_post_warning">"你尋找的網頁使用了你輸入的資料。返回該頁會重複你剛才的行動。你確定要繼續嗎？"</string>
@@ -37,10 +43,12 @@
 <string name="sad_tab_reload_title">"無法開啟這個網頁"</string>
 <string name="sad_tab_reload_try">"嘗試按照下列提示操作："</string>
 <string name="sad_tab_reload_incognito">"在新的無痕式分頁中開啟網頁"</string>
+<string name="sad_tab_reload_private">"在新的私密分頁中開啟網頁"</string>
 <string name="sad_tab_reload_restart_browser">"重新啟動 Chromium"</string>
 <string name="sad_tab_reload_restart_device">"重新啟動裝置"</string>
 <string name="sad_tab_reload_learn_more">"瞭解詳情"</string>
 <string name="new_tab_otr_title">"你已進入無痕模式"</string>
+<string name="new_tab_private_title">"你已啟用私密模式"</string>
 <string name="new_tab_otr_subtitle">"現在，你可以進行私密瀏覽了。共用這部裝置的其他使用者不會看到你的活動，不過，你下載的內容和新增的書籤仍會保留在裝置上。"</string>
 <string name="new_tab_otr_not_saved">"Chrome &lt;em&gt;不會儲存&lt;/em&gt;下列資訊：
         &lt;ul&gt;
@@ -55,6 +63,7 @@
           &lt;li&gt;你的網際網路服務供應商
         &lt;/ul&gt;"</string>
 <string name="ntp_title_no_suggestions">"暫無內容"</string>
+<string name="ntp_article_suggestions_section_header">"為您推薦的文章"</string>
 <string name="page_info_permission_ads_subtitle">"網站經常顯示侵入式廣告"</string>
 <string name="payments_method_of_payment_label">"付款方式"</string>
 <string name="payments_contact_details_label">"聯絡資訊"</string>
@@ -109,6 +118,7 @@
 <string name="payments_card_and_address_settings">"你可以在BEGIN_LINK設定END_LINK中管理信用卡和地址資訊。"</string>
 <string name="payments_card_and_address_settings_signed_in">"信用卡和地址資訊皆來自 Chrome 和你的 Google 帳戶 (%1$s)。你可以在BEGIN_LINK設定END_LINK頁面管理這些資訊。"</string>
 <string name="payments_card_and_address_settings_signed_out">"信用卡和地址資訊皆來自 Chrome。你可以在BEGIN_LINK設定END_LINK頁面管理這些資訊。"</string>
+<string name="settings_can_make_payment_toggle_label">"允許網站檢查付款方式是否已成功儲存"</string>
 <string name="payments_required_field_message">"* 這是必填欄位"</string>
 <string name="payments_phone_invalid_validation_message">"請輸入有效的電話號碼"</string>
 <string name="payments_email_invalid_validation_message">"請輸入有效的電子郵件地址"</string>
@@ -122,7 +132,7 @@
 <string name="payments_recipient_required">"請輸入名稱"</string>
 <string name="payments_email_required">"請輸入電子郵件地址"</string>
 <string name="payments_name_required">"請輸入名稱"</string>
-<string name="payments_field_required_validation_message">"必填欄位"</string>
+<string name="pref_edit_dialog_field_required_validation_message">"必填欄位"</string>
 <string name="payments_select_shipping_address_for_shipping_methods">"如要查看運送方式和相關規定，請選取一個地址"</string>
 <string name="payments_unsupported_shipping_address">"無法運送到這個地址，請改用其他地址。"</string>
 <string name="payments_select_delivery_address_for_delivery_methods">"如要查看快遞方式和相關規定，請選取一個地址"</string>
@@ -131,5 +141,6 @@
 <string name="payments_unsupported_pickup_address">"無法在這個地址取件，請改用其他地址。"</string>
 <string name="payments_android_app_error">"無法開啟付款應用程式"</string>
 <string name="external_payment_app_leave_incognito_warning">"即將離開無痕模式，改為使用外部應用程式付款，要繼續嗎？"</string>
+<string name="external_payment_app_leave_private_warning">"即將離開私密模式，改為使用外部應用程式付款，要繼續嗎？"</string>
 <string name="choose">"選擇"</string>
 </resources>

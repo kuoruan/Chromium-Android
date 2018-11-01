@@ -4,7 +4,7 @@
 
 package org.chromium.chrome.browser.payments;
 
-import android.graphics.drawable.Drawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
 import android.text.TextUtils;
 
@@ -36,6 +36,7 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
     private final WebContents mWebContents;
     private final long mRegistrationId;
     private final Set<String> mMethodNames;
+    private final boolean mExplicitlyVerified;
     private final Capabilities[] mCapabilities;
     private final boolean mCanPreselect;
     private final Set<String> mPreferredRelatedApplicationIds;
@@ -107,6 +108,10 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
      * @param icon                           The drawable icon of the payment app.
      * @param methodNames                    A set of payment method names supported by the payment
      *                                       app.
+     * @param explicitlyVerified             A flag indicates whether this app has explicitly
+     *                                       verified payment methods, like listed as default
+     *                                       application or supported origin in the payment methods'
+     *                                       manifest.
      * @param capabilities                   A set of capabilities of the payment instruments in
      *                                       this payment app (only valid for basic-card payment
      *                                       method for now).
@@ -114,8 +119,8 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
      */
     public ServiceWorkerPaymentApp(WebContents webContents, long registrationId, URI scope,
             @Nullable String name, @Nullable String userHint, String origin,
-            @Nullable Drawable icon, String[] methodNames, Capabilities[] capabilities,
-            String[] preferredRelatedApplicationIds) {
+            @Nullable BitmapDrawable icon, String[] methodNames, boolean explicitlyVerified,
+            Capabilities[] capabilities, String[] preferredRelatedApplicationIds) {
         // Do not display duplicate information.
         super(scope.toString(), TextUtils.isEmpty(name) ? origin : name, userHint,
                 TextUtils.isEmpty(name) ? null : origin, icon);
@@ -130,6 +135,8 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
         for (int i = 0; i < methodNames.length; i++) {
             mMethodNames.add(methodNames[i]);
         }
+
+        mExplicitlyVerified = explicitlyVerified;
 
         mCapabilities = Arrays.copyOf(capabilities, capabilities.length);
 
@@ -161,7 +168,8 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
      * @param methodName  The supported method name.
      */
     public ServiceWorkerPaymentApp(WebContents webContents, @Nullable String name, String origin,
-            URI swUri, URI scope, boolean useCache, @Nullable Drawable icon, String methodName) {
+            URI swUri, URI scope, boolean useCache, @Nullable BitmapDrawable icon,
+            String methodName) {
         // Do not display duplicate information.
         super(scope.toString(), TextUtils.isEmpty(name) ? origin : name, null,
                 TextUtils.isEmpty(name) ? null : origin, icon);
@@ -174,6 +182,8 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
         mCanPreselect = !TextUtils.isEmpty(name) && icon != null;
         mMethodNames = new HashSet<>();
         mMethodNames.add(methodName);
+        // Installable payment apps must be default application of a payment method.
+        mExplicitlyVerified = true;
         mCapabilities = new Capabilities[0];
         mPreferredRelatedApplicationIds = new HashSet<>();
 
@@ -193,8 +203,10 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
             String iframeOrigin, byte[][] unusedCertificateChain,
             Map<String, PaymentDetailsModifier> modifiers, final InstrumentsCallback callback) {
         // Do not send canMakePayment event when in incognito mode or basic-card is the only
-        // supported payment method or this app needs installation for the payment request.
-        if (mIsIncognito || isOnlySupportBasiccard(methodDataMap) || mNeedsInstallation) {
+        // supported payment method or this app needs installation for the payment request or this
+        // app has not been explicitly verified.
+        if (mIsIncognito || isOnlySupportBasiccard(methodDataMap) || mNeedsInstallation
+                || !mExplicitlyVerified) {
             new Handler().post(() -> {
                 List<PaymentInstrument> instruments =
                         Collections.singletonList(ServiceWorkerPaymentApp.this);
@@ -322,10 +334,12 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
             PaymentItem total, List<PaymentItem> displayItems,
             Map<String, PaymentDetailsModifier> modifiers, InstrumentDetailsCallback callback) {
         if (mNeedsInstallation) {
+            BitmapDrawable icon = (BitmapDrawable) getDrawableIcon();
             ServiceWorkerPaymentAppBridge.installAndInvokePaymentApp(mWebContents, origin,
                     iframeOrigin, id, new HashSet<>(methodData.values()), total,
-                    new HashSet<>(modifiers.values()), callback, mAppName, mSwUri, mScope,
-                    mUseCache, mMethodNames);
+                    new HashSet<>(modifiers.values()), callback, mAppName,
+                    icon == null ? null : icon.getBitmap(), mSwUri, mScope, mUseCache,
+                    mMethodNames.toArray(new String[0])[0]);
         } else {
             ServiceWorkerPaymentAppBridge.invokePaymentApp(mWebContents, mRegistrationId, origin,
                     iframeOrigin, id, new HashSet<>(methodData.values()), total,
@@ -340,12 +354,6 @@ public class ServiceWorkerPaymentApp extends PaymentInstrument implements Paymen
 
     @Override
     public void dismissInstrument() {}
-
-    @Override
-    public boolean canMakePayment() {
-        // Return false for PaymentRequest.canMakePayment() if installation is needed.
-        return !mNeedsInstallation;
-    }
 
     @Override
     public boolean canPreselect() {

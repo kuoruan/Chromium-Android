@@ -64,18 +64,18 @@ abstract class ContextualSearchHeuristic {
     }
 
     /**
-     * Logs the heuristic to UMA through Ranker logging for the purpose of Tap Suppression.
-     * @param logger A logger to log to.
+     * Logs the heuristic to UMA and UKM through Ranker logging for the purpose of Tap Suppression.
+     * @param recorder A logger to log to.
      */
-    protected void logRankerTapSuppression(ContextualSearchRankerLogger logger) {
+    protected void logRankerTapSuppression(ContextualSearchInteractionRecorder recorder) {
         // Default is to not log.
     }
 
     /**
      * Logs a Ranker outcome using the heuristic for the purpose of Ranker Tap Suppression.
-     * @param logger A logger to log to.
+     * @param recorder A logger to log to.
      */
-    protected void logRankerTapSuppressionOutcome(ContextualSearchRankerLogger logger) {
+    protected void logRankerTapSuppressionOutcome(ContextualSearchInteractionRecorder recorder) {
         // Default is to not log.
     }
 
@@ -84,5 +84,14 @@ abstract class ContextualSearchHeuristic {
      */
     protected boolean shouldOverrideMlTapSuppression() {
         return false;
+    }
+
+    /**
+     * Clamps an input value into a range of 1-10 inclusive.
+     * @param value The value to limit.
+     * @return A value that's at least 1 and at most 10.
+     */
+    protected int clamp(int value) {
+        return Math.max(1, Math.min(10, value));
     }
 }

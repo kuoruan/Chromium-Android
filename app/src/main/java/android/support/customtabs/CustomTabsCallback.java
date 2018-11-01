@@ -57,6 +57,13 @@ public class CustomTabsCallback {
     public static final int TAB_HIDDEN = 6;
 
     /**
+     * Key for the extra included in {@link #onRelationshipValidationResult} {@code extras}
+     * containing whether the verification was performed while the device was online. This may be
+     * missing in cases verification was short cut.
+     */
+    public static final String ONLINE_EXTRAS_KEY = "online";
+
+    /**
      * To be called when a navigation event happens.
      *
      * @param navigationEvent The code corresponding to the navigation event.
@@ -76,7 +83,7 @@ public class CustomTabsCallback {
      * purposes.
      *
      * @param callbackName Name of the extra callback.
-     * @param args Arguments for the calback
+     * @param args Arguments for the callback
      */
     public void extraCallback(String callbackName, Bundle args) {}
 

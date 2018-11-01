@@ -15,7 +15,6 @@ import java.util.List;
  * Implementation of {@link MessagePipeHandle}.
  */
 class MessagePipeHandleImpl extends HandleBase implements MessagePipeHandle {
-
     /**
      * @see HandleBase#HandleBase(CoreImpl, int)
      */
@@ -53,5 +52,4 @@ class MessagePipeHandleImpl extends HandleBase implements MessagePipeHandle {
     public ResultAnd<ReadMessageResult> readMessage(ReadFlags flags) {
         return mCore.readMessage(this, flags);
     }
-
 }

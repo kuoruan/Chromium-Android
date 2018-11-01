@@ -6,21 +6,30 @@
 <!-- Base layout for Autofill editors.
      Editor fields are expected to be added to the LinearLayout inside of the ScrollView.
 -->
-<org.chromium.chrome.browser.widget.FadingEdgeScrollView
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/scroll_view"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fillViewport="true" >
+    android:layout_height="match_parent" >
 
-    <!-- All fields go into this LinearLayout. Note that some horizontal margins are set, but the
-         embedded views are responsible for their top margins. -->
-    <LinearLayout
-        android:id="@+id/content"
+    <org.chromium.chrome.browser.widget.FadingEdgeScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingStart="@dimen/pref_autofill_content_spacing"
-        android:paddingEnd="@dimen/pref_autofill_content_spacing"
-        android:orientation="vertical" />
+        android:layout_height="match_parent"
+        android:fillViewport="true" >
 
-</org.chromium.chrome.browser.widget.FadingEdgeScrollView>
+        <!-- All fields go into this LinearLayout. Note that some horizontal margins are set, but
+             the embedded views are responsible for their top margins. -->
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/pref_autofill_content_spacing"
+            android:paddingEnd="@dimen/pref_autofill_content_spacing"
+            android:orientation="vertical" />
+
+    </org.chromium.chrome.browser.widget.FadingEdgeScrollView>
+
+    <include layout="@layout/preferences_action_bar_shadow"/>
+
+</FrameLayout>

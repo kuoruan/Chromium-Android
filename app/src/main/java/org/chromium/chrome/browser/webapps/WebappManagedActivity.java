@@ -21,9 +21,7 @@ public abstract class WebappManagedActivity extends WebappActivity {
     public void onStartWithNative() {
         super.onStartWithNative();
 
-        if (!isFinishing()) {
-            markActivityUsed();
-        }
+        if (!isFinishing()) markActivityUsed();
     }
 
     @Override
@@ -35,7 +33,7 @@ public abstract class WebappManagedActivity extends WebappActivity {
      * Marks that this WebappActivity is recently used to prevent other webapps from using it.
      */
     private void markActivityUsed() {
-        ActivityAssigner.instance(ActivityAssigner.WEBAPP_NAMESPACE)
+        ActivityAssigner.instance(ActivityAssigner.ActivityAssignerNamespace.WEBAPP_NAMESPACE)
                 .markActivityUsed(mActivityIndex, getWebappInfo().id());
     }
 

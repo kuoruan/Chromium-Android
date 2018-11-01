@@ -31,7 +31,8 @@ import org.chromium.content_public.browser.LoadUrlParams;
  * created by one Activity but need to be loaded in another Tab.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class DocumentTabModelSelector extends TabModelSelectorBase implements TabCreatorManager {
+public class DocumentTabModelSelector extends TabModelSelectorBase
+        implements TabCreatorManager, DocumentTabModelImpl.TabModelDelegate {
     public static final String PREF_PACKAGE = "com.google.android.apps.chrome.document";
     public static final String PREF_IS_INCOGNITO_SELECTED = "is_incognito_selected";
 
@@ -91,13 +92,13 @@ public class DocumentTabModelSelector extends TabModelSelectorBase implements Ta
 
         final Context context = ContextUtils.getApplicationContext();
         mRegularTabModel = new DocumentTabModelImpl(
-                mActivityDelegate, mStorageDelegate, this, false, sPrioritizedTabId, context);
+                mActivityDelegate, mStorageDelegate, this, false, sPrioritizedTabId, context, this);
         mIncognitoTabModel = new IncognitoDocumentTabModel(new IncognitoTabModelDelegate() {
             @Override
             public TabModel createTabModel() {
                 DocumentTabModel incognitoModel = new DocumentTabModelImpl(mActivityDelegate,
                         mStorageDelegate, DocumentTabModelSelector.this, true, sPrioritizedTabId,
-                        context);
+                        context, DocumentTabModelSelector.this);
                 return incognitoModel;
             }
 
@@ -151,8 +152,8 @@ public class DocumentTabModelSelector extends TabModelSelectorBase implements Ta
     }
 
     @Override
-    public Tab openNewTab(LoadUrlParams loadUrlParams, TabLaunchType type, Tab parent,
-            boolean incognito) {
+    public Tab openNewTab(
+            LoadUrlParams loadUrlParams, @TabLaunchType int type, Tab parent, boolean incognito) {
         TabDelegate delegate = getTabCreator(incognito);
         delegate.createNewTab(loadUrlParams, type, parent);
         return null;
@@ -177,6 +178,11 @@ public class DocumentTabModelSelector extends TabModelSelectorBase implements Ta
     @Override
     public DocumentTabModel getModelForTabId(int id) {
         return (DocumentTabModel) super.getModelForTabId(id);
+    }
+
+    @Override
+    public boolean isCurrentModel(TabModel model) {
+        return isIncognitoSelected() == model.isIncognito();
     }
 
     /**

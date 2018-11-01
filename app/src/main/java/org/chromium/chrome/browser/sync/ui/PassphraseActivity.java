@@ -138,7 +138,7 @@ public class PassphraseActivity extends FragmentActivity implements
     @Override
     public void onPassphraseCanceled() {
         // Re add the notification.
-        SyncController.get(this).getSyncNotificationController().syncStateChanged();
+        SyncController.get().getSyncNotificationController().syncStateChanged();
         finish();
     }
 

@@ -18,28 +18,28 @@ class AndroidOverlayProvider_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<AndroidOverlayProvider, AndroidOverlayProvider.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<AndroidOverlayProvider, AndroidOverlayProvider.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::AndroidOverlayProvider";
+            return "media.mojom.AndroidOverlayProvider";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, AndroidOverlayProvider impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public AndroidOverlayProvider[] buildArray(int size) {
           return new AndroidOverlayProvider[size];
@@ -97,25 +97,25 @@ org.chromium.mojo.bindings.InterfaceRequest<AndroidOverlay> overlay, AndroidOver
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 AndroidOverlayProvider_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case CREATE_OVERLAY_ORDINAL: {
-            
+
                         AndroidOverlayProviderCreateOverlayParams data =
                                 AndroidOverlayProviderCreateOverlayParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().createOverlay(data.overlay, data.client, data.config);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -135,14 +135,14 @@ org.chromium.mojo.bindings.InterfaceRequest<AndroidOverlay> overlay, AndroidOver
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), AndroidOverlayProvider_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -156,39 +156,36 @@ org.chromium.mojo.bindings.InterfaceRequest<AndroidOverlay> overlay, AndroidOver
 
     
     static final class AndroidOverlayProviderCreateOverlayParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.InterfaceRequest<AndroidOverlay> overlay;
         public AndroidOverlayClient client;
         public AndroidOverlayConfig config;
-    
+
         private AndroidOverlayProviderCreateOverlayParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public AndroidOverlayProviderCreateOverlayParams() {
             this(0);
         }
-    
+
         public static AndroidOverlayProviderCreateOverlayParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static AndroidOverlayProviderCreateOverlayParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static AndroidOverlayProviderCreateOverlayParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -198,26 +195,28 @@ org.chromium.mojo.bindings.InterfaceRequest<AndroidOverlay> overlay, AndroidOver
             AndroidOverlayProviderCreateOverlayParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new AndroidOverlayProviderCreateOverlayParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new AndroidOverlayProviderCreateOverlayParams(elementsOrVersion);
+                    {
+                        
                     result.overlay = decoder0.readInterfaceRequest(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.client = decoder0.readServiceInterface(12, false, AndroidOverlayClient.MANAGER);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                     result.config = AndroidOverlayConfig.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -228,40 +227,6 @@ org.chromium.mojo.bindings.InterfaceRequest<AndroidOverlay> overlay, AndroidOver
             encoder0.encode(this.client, 12, false, AndroidOverlayClient.MANAGER);
             
             encoder0.encode(this.config, 24, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            AndroidOverlayProviderCreateOverlayParams other = (AndroidOverlayProviderCreateOverlayParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.overlay, other.overlay))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.client, other.client))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.config, other.config))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.overlay);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.config);
-            return result;
         }
     }
 

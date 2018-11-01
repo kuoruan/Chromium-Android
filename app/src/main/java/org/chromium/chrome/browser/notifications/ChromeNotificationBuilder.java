@@ -14,8 +14,6 @@ import android.widget.RemoteViews;
 
 /**
  * Abstraction over Notification.Builder and NotificationCompat.Builder interfaces.
- *
- * TODO(awdf) Remove this once we've updated to revision 26 of the support library.
  */
 public interface ChromeNotificationBuilder {
     ChromeNotificationBuilder setAutoCancel(boolean autoCancel);
@@ -52,7 +50,11 @@ public interface ChromeNotificationBuilder {
 
     ChromeNotificationBuilder setDeleteIntent(PendingIntent intent);
 
-    ChromeNotificationBuilder setPriority(int pri);
+    /**
+     * Sets the priority of single notification on Android versions prior to Oreo.
+     * (From Oreo onwards, priority is instead determined by channel importance.)
+     */
+    ChromeNotificationBuilder setPriorityBeforeO(int pri);
 
     ChromeNotificationBuilder setProgress(int max, int percentage, boolean indeterminate);
 

@@ -6,14 +6,13 @@ package org.chromium.chrome.browser.preferences.privacy;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.support.annotation.Nullable;
-import android.support.graphics.drawable.VectorDrawableCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +34,6 @@ import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.PreferenceUtils;
 import org.chromium.chrome.browser.preferences.SpinnerPreference;
 import org.chromium.chrome.browser.preferences.privacy.BrowsingDataCounterBridge.BrowsingDataCounterCallback;
-import org.chromium.chrome.browser.widget.TintedDrawable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,11 +61,8 @@ public abstract class ClearBrowsingDataPreferences extends PreferenceFragment
         private BrowsingDataCounterBridge mCounter;
         private boolean mShouldAnnounceCounterResult;
 
-        public Item(ClearBrowsingDataPreferences parent,
-                    DialogOption option,
-                    ClearBrowsingDataCheckBoxPreference checkbox,
-                    boolean selected,
-                    boolean enabled) {
+        public Item(Context context, ClearBrowsingDataPreferences parent, DialogOption option,
+                ClearBrowsingDataCheckBoxPreference checkbox, boolean selected, boolean enabled) {
             super();
             mParent = parent;
             mOption = option;
@@ -81,15 +76,7 @@ public abstract class ClearBrowsingDataPreferences extends PreferenceFragment
 
             int dp = mParent.getResources().getConfiguration().smallestScreenWidthDp;
             if (dp >= MIN_DP_FOR_ICON) {
-                if (option.iconIsBitmap()) {
-                    Drawable icon = TintedDrawable.constructTintedDrawable(
-                            mParent.getResources(), option.getIcon(), R.color.google_grey_600);
-                    mCheckbox.setIcon(icon);
-                } else {
-                    Drawable icon = VectorDrawableCompat.create(mParent.getResources(),
-                            option.getIcon(), mParent.getActivity().getTheme());
-                    mCheckbox.setIcon(icon);
-                }
+                mCheckbox.setIcon(PreferenceUtils.getTintedIcon(context, option.getIcon()));
             }
         }
 
@@ -173,28 +160,25 @@ public abstract class ClearBrowsingDataPreferences extends PreferenceFragment
      * The various data types that can be cleared via this screen.
      */
     public enum DialogOption {
-        CLEAR_HISTORY(BrowsingDataType.HISTORY, PREF_HISTORY, R.drawable.ic_watch_later_24dp, true),
+        CLEAR_HISTORY(BrowsingDataType.HISTORY, PREF_HISTORY, R.drawable.ic_watch_later_24dp),
         CLEAR_COOKIES_AND_SITE_DATA(
-                BrowsingDataType.COOKIES, PREF_COOKIES, R.drawable.permission_cookie, true),
-        CLEAR_CACHE(BrowsingDataType.CACHE, PREF_CACHE, R.drawable.ic_collections_grey, false),
-        CLEAR_PASSWORDS(
-                BrowsingDataType.PASSWORDS, PREF_PASSWORDS, R.drawable.ic_vpn_key_grey, false),
-        CLEAR_FORM_DATA(BrowsingDataType.FORM_DATA, PREF_FORM_DATA, R.drawable.ic_edit_24dp, true),
+                BrowsingDataType.COOKIES, PREF_COOKIES, R.drawable.permission_cookie),
+        CLEAR_CACHE(BrowsingDataType.CACHE, PREF_CACHE, R.drawable.ic_collections_grey),
+        CLEAR_PASSWORDS(BrowsingDataType.PASSWORDS, PREF_PASSWORDS, R.drawable.ic_vpn_key_grey),
+        CLEAR_FORM_DATA(BrowsingDataType.FORM_DATA, PREF_FORM_DATA, R.drawable.ic_edit_24dp),
         CLEAR_SITE_SETTINGS(BrowsingDataType.SITE_SETTINGS, PREF_SITE_SETTINGS,
-                R.drawable.ic_tv_options_input_settings_rotated_grey, false),
+                R.drawable.ic_tv_options_input_settings_rotated_grey),
         CLEAR_MEDIA_LICENSES(BrowsingDataType.MEDIA_LICENSES, PREF_MEDIA_LICENSES,
-                R.drawable.permission_protected_media, true);
+                R.drawable.permission_protected_media);
 
         private final int mDataType;
         private final String mPreferenceKey;
         private final int mIcon;
-        private final boolean mIsBitmap;
 
-        DialogOption(int dataType, String preferenceKey, int icon, boolean isBitmap) {
+        DialogOption(int dataType, String preferenceKey, int icon) {
             mDataType = dataType;
             mPreferenceKey = preferenceKey;
             mIcon = icon;
-            mIsBitmap = isBitmap;
         }
 
         /**
@@ -216,13 +200,6 @@ public abstract class ClearBrowsingDataPreferences extends PreferenceFragment
          */
         public int getIcon() {
             return mIcon;
-        }
-
-        /**
-         * @return Whether the icon is a bitmap. Otherwise it's a vector.
-         */
-        public boolean iconIsBitmap() {
-            return mIsBitmap;
         }
     }
 
@@ -256,6 +233,8 @@ public abstract class ClearBrowsingDataPreferences extends PreferenceFragment
             return mTitle;
         }
     }
+
+    public static final String CLEAR_BROWSING_DATA_FETCHER = "clearBrowsingDataFetcher";
 
     private OtherFormsOfHistoryDialogFragment mDialogAboutOtherFormsOfBrowsingHistory;
 
@@ -294,6 +273,21 @@ public abstract class ClearBrowsingDataPreferences extends PreferenceFragment
     }
 
     /**
+     * Determine the array of data types to be deleted.
+     * @param options The set of selected DialogOptions.
+     * @return int[] An array of data types that should be deleted
+     */
+    protected int[] getDataTypesFromOptions(EnumSet<DialogOption> options) {
+        int[] dataTypes = new int[options.size()];
+        int i = 0;
+        for (DialogOption option : options) {
+            dataTypes[i] = option.getDataType();
+            ++i;
+        }
+        return dataTypes;
+    }
+
+    /**
      * Notifies subclasses that browsing data is about to be cleared.
      */
     protected void onClearBrowsingData() {}
@@ -311,12 +305,7 @@ public abstract class ClearBrowsingDataPreferences extends PreferenceFragment
         RecordHistogram.recordMediumTimesHistogram("History.ClearBrowsingData.TimeSpentInDialog",
                 SystemClock.elapsedRealtime() - mDialogOpened, TimeUnit.MILLISECONDS);
 
-        int[] dataTypes = new int[options.size()];
-        int i = 0;
-        for (DialogOption option : options) {
-            dataTypes[i] = option.getDataType();
-            ++i;
-        }
+        int[] dataTypes = getDataTypesFromOptions(options);
 
         Object spinnerSelection =
                 ((SpinnerPreference) findPreference(PREF_TIME_RANGE)).getSelectedOption();
@@ -391,7 +380,7 @@ public abstract class ClearBrowsingDataPreferences extends PreferenceFragment
 
     /**
      * Called when clearing browsing data completes.
-     * Implements the ChromePreferences.OnClearBrowsingDataListener interface.
+     * Implements the BrowsingDataBridge.OnClearBrowsingDataListener interface.
      */
     @Override
     public void onBrowsingDataCleared() {
@@ -428,7 +417,6 @@ public abstract class ClearBrowsingDataPreferences extends PreferenceFragment
      * </ol>
      */
     private boolean shouldShowImportantSitesDialog() {
-        if (!ChromeFeatureList.isEnabled(ChromeFeatureList.IMPORTANT_SITES_IN_CBD)) return false;
         EnumSet<DialogOption> selectedOptions = getSelectedOptions();
         if (!selectedOptions.contains(DialogOption.CLEAR_CACHE)
                 && !selectedOptions.contains(DialogOption.CLEAR_COOKIES_AND_SITE_DATA)) {
@@ -499,7 +487,9 @@ public abstract class ClearBrowsingDataPreferences extends PreferenceFragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        if (savedInstanceState != null) {
+            mFetcher = savedInstanceState.getParcelable(CLEAR_BROWSING_DATA_FETCHER);
+        }
         mDialogOpened = SystemClock.elapsedRealtime();
         getActivity().setTitle(R.string.clear_browsing_data_title);
         PreferenceUtils.addPreferencesFromResource(this, getPreferenceXmlId());
@@ -521,12 +511,10 @@ public abstract class ClearBrowsingDataPreferences extends PreferenceFragment
                         false);
             }
 
-            mItems[i] = new Item(
-                this,
-                options[i],
-                (ClearBrowsingDataCheckBoxPreference) findPreference(options[i].getPreferenceKey()),
-                isOptionSelectedByDefault(options[i]),
-                enabled);
+            mItems[i] = new Item(getActivity(), this, options[i],
+                    (ClearBrowsingDataCheckBoxPreference) findPreference(
+                            options[i].getPreferenceKey()),
+                    isOptionSelectedByDefault(options[i]), enabled);
         }
 
         // Not all checkboxes defined in the layout are necessarily handled by this class
@@ -552,6 +540,14 @@ public abstract class ClearBrowsingDataPreferences extends PreferenceFragment
         assert spinnerOptionIndex != -1;
         spinner.setOptions(spinnerOptions, spinnerOptionIndex);
         spinner.setOnPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // mFetcher acts as a cache for important sites and history data. If the activity gets
+        // suspended, we can save the cached data and reuse it when we are activated again.
+        outState.putParcelable(CLEAR_BROWSING_DATA_FETCHER, mFetcher);
     }
 
     @Override

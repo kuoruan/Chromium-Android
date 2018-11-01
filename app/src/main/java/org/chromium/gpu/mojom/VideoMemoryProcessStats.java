@@ -40,9 +40,6 @@ public final class VideoMemoryProcessStats extends org.chromium.mojo.bindings.St
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static VideoMemoryProcessStats deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,15 +53,17 @@ public final class VideoMemoryProcessStats extends org.chromium.mojo.bindings.St
         VideoMemoryProcessStats result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new VideoMemoryProcessStats(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new VideoMemoryProcessStats(elementsOrVersion);
+                {
+                    
                 result.videoMemoryBytes = decoder0.readLong(8);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.hasDuplicates = decoder0.readBoolean(16, 0);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -79,36 +78,5 @@ public final class VideoMemoryProcessStats extends org.chromium.mojo.bindings.St
         encoder0.encode(this.videoMemoryBytes, 8);
         
         encoder0.encode(this.hasDuplicates, 16, 0);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        VideoMemoryProcessStats other = (VideoMemoryProcessStats) object;
-        if (this.videoMemoryBytes!= other.videoMemoryBytes)
-            return false;
-        if (this.hasDuplicates!= other.hasDuplicates)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoMemoryBytes);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hasDuplicates);
-        return result;
     }
 }

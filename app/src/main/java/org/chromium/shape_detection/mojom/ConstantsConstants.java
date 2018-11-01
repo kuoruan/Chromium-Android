@@ -20,6 +20,7 @@ public final class ConstantsConstants {
     public static final String SERVICE_NAME = (String) "shape_detection";
 
 
+
     private ConstantsConstants() {}
 
 }

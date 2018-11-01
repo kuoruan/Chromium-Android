@@ -104,7 +104,10 @@ public class BrowserSessionDataProvider {
 
     /**
      * Checks whether or not the Intent is from Chrome or other trusted first party.
+     *
+     * @deprecated This method is not reliable, see https://crbug.com/832124
      */
+    @Deprecated
     public boolean isTrustedIntent() {
         return mIsTrustedIntent;
     }

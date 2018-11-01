@@ -4,13 +4,14 @@
 
 package org.chromium.base;
 
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
-import android.os.MessageQueue;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.base.annotations.MainDex;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 
@@ -18,6 +19,7 @@ import java.lang.Thread.UncaughtExceptionHandler;
  * Thread in Java with an Android Handler. This class is not thread safe.
  */
 @JNINamespace("base::android")
+@MainDex
 public class JavaHandlerThread {
     private final HandlerThread mThread;
 
@@ -27,13 +29,13 @@ public class JavaHandlerThread {
      * Construct a java-only instance. Can be connected with native side later.
      * Useful for cases where a java thread is needed before native library is loaded.
      */
-    public JavaHandlerThread(String name) {
-        mThread = new HandlerThread(name);
+    public JavaHandlerThread(String name, int priority) {
+        mThread = new HandlerThread(name, priority);
     }
 
     @CalledByNative
-    private static JavaHandlerThread create(String name) {
-        return new JavaHandlerThread(name);
+    private static JavaHandlerThread create(String name, int priority) {
+        return new JavaHandlerThread(name, priority);
     }
 
     public Looper getLooper() {
@@ -58,28 +60,19 @@ public class JavaHandlerThread {
     }
 
     @CalledByNative
-    private void stopOnThread(final long nativeThread) {
-        nativeStopThread(nativeThread);
-        MessageQueue queue = Looper.myQueue();
-        // Add an idle handler so that the thread cleanup code can run after the message loop has
-        // detected an idle state and quit properly.
-        // This matches the behavior of base::Thread in that it will keep running non-delayed posted
-        // tasks indefinitely (until an idle state is reached). HandlerThread#quit() and
-        // HandlerThread#quitSafely() aren't sufficient because they prevent new tasks from being
-        // added to the queue, and don't allow us to wait for the Runloop to quit properly before
-        // stopping the thread.
-        queue.addIdleHandler(new MessageQueue.IdleHandler() {
+    private void quitThreadSafely(final long nativeThread) {
+        // Allow pending java tasks to run, but don't run any delayed or newly queued up tasks.
+        new Handler(mThread.getLooper()).post(new Runnable() {
             @Override
-            public boolean queueIdle() {
-                // The MessageQueue may not be empty, but only delayed tasks remain. To
-                // match the behavior of other platforms, we should quit now. Calling quit
-                // here is equivalent to calling quitSafely(), but doesn't require target
-                // API guards.
-                mThread.getLooper().quit();
+            public void run() {
+                mThread.quit();
                 nativeOnLooperStopped(nativeThread);
-                return false;
             }
         });
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            // When we can, signal that new tasks queued up won't be run.
+            mThread.getLooper().quitSafely();
+        }
     }
 
     @CalledByNative
@@ -92,21 +85,6 @@ public class JavaHandlerThread {
             } catch (InterruptedException e) {
             }
         }
-    }
-
-    @CalledByNative
-    private void stop(final long nativeThread) {
-        assert hasStarted();
-        // Looper may be null if the thread crashed.
-        Looper looper = mThread.getLooper();
-        if (!isAlive() || looper == null) return;
-        new Handler(looper).post(new Runnable() {
-            @Override
-            public void run() {
-                stopOnThread(nativeThread);
-            }
-        });
-        joinThread();
     }
 
     private boolean hasStarted() {
@@ -137,6 +115,5 @@ public class JavaHandlerThread {
     }
 
     private native void nativeInitializeThread(long nativeJavaHandlerThread, long nativeEvent);
-    private native void nativeStopThread(long nativeJavaHandlerThread);
     private native void nativeOnLooperStopped(long nativeJavaHandlerThread);
 }

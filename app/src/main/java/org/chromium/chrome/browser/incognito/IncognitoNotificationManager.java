@@ -10,6 +10,7 @@ import android.content.Context;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.notifications.ChromeNotificationBuilder;
 import org.chromium.chrome.browser.notifications.NotificationBuilderFactory;
 import org.chromium.chrome.browser.notifications.NotificationConstants;
@@ -28,14 +29,16 @@ public class IncognitoNotificationManager {
      */
     public static void showIncognitoNotification() {
         Context context = ContextUtils.getApplicationContext();
-        String actionMessage =
-                context.getResources().getString(R.string.close_all_incognito_notification);
+        String actionMessage = context.getResources().getString(
+                ChromeFeatureList.isEnabled(ChromeFeatureList.INCOGNITO_STRINGS)
+                        ? R.string.close_all_private_notification
+                        : R.string.close_all_incognito_notification);
         String title = context.getResources().getString(R.string.app_name);
 
         ChromeNotificationBuilder builder =
                 NotificationBuilderFactory
                         .createChromeNotificationBuilder(
-                                true /* preferCompat */, ChannelDefinitions.CHANNEL_ID_INCOGNITO)
+                                true /* preferCompat */, ChannelDefinitions.ChannelId.INCOGNITO)
                         .setContentTitle(title)
                         .setContentIntent(
                                 IncognitoNotificationService.getRemoveAllIncognitoTabsIntent(
@@ -49,9 +52,10 @@ public class IncognitoNotificationManager {
                         .setGroup(NotificationConstants.GROUP_INCOGNITO);
         NotificationManager nm =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        nm.notify(INCOGNITO_TABS_OPEN_TAG, INCOGNITO_TABS_OPEN_ID, builder.build());
+        Notification notification = builder.build();
+        nm.notify(INCOGNITO_TABS_OPEN_TAG, INCOGNITO_TABS_OPEN_ID, notification);
         NotificationUmaTracker.getInstance().onNotificationShown(
-                NotificationUmaTracker.CLOSE_INCOGNITO, ChannelDefinitions.CHANNEL_ID_INCOGNITO);
+                NotificationUmaTracker.SystemNotificationType.CLOSE_INCOGNITO, notification);
     }
 
     /**

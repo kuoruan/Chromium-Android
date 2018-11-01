@@ -24,14 +24,14 @@ public final class ConsentAuditorBridge {
      * @param consentDescription The resource IDs of the text the user read before consenting.
      * @param consentConfirmation The resource ID of the text the user clicked when consenting.
      */
-    public void recordConsent(@ConsentAuditorFeature int feature, List<Integer> consentDescription,
-            @StringRes int consentConfirmation) {
+    public void recordConsent(String accountId, @ConsentAuditorFeature int feature,
+            List<Integer> consentDescription, @StringRes int consentConfirmation) {
         int[] consentDescriptionArray = new int[consentDescription.size()];
         for (int i = 0; i < consentDescription.size(); ++i) {
             consentDescriptionArray[i] = consentDescription.get(i);
         }
-        nativeRecordConsent(Profile.getLastUsedProfile(), feature, consentDescriptionArray,
-                consentConfirmation);
+        nativeRecordConsent(Profile.getLastUsedProfile(), accountId, feature,
+                consentDescriptionArray, consentConfirmation);
     }
 
     private ConsentAuditorBridge() {}
@@ -45,6 +45,6 @@ public final class ConsentAuditorBridge {
         return sInstance;
     }
 
-    private native void nativeRecordConsent(
-            Profile profile, int feature, int[] consentDescription, int consentConfirmation);
+    private native void nativeRecordConsent(Profile profile, String accountId, int feature,
+            int[] consentDescription, int consentConfirmation);
 }

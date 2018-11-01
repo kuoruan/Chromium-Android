@@ -7,7 +7,7 @@
 <!-- Layout used to present a set of default search engines to the user. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/signin_body_background"
@@ -46,7 +46,7 @@
                     android:textAppearance="@style/BlackHeadline1"
                     android:text="@string/search_engine_dialog_title" />
 
-                <View style="@style/Divider" />
+                <View style="@style/HorizontalDivider" />
 
                 <org.chromium.chrome.browser.widget.RadioButtonLayout
                     android:id="@+id/default_search_engine_dialog_options"
@@ -63,8 +63,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/search_engine_dialog_footer"
-        android:textColor="@color/descriptive_text_color"
-        android:textSize="@dimen/text_size_medium"
+        android:textAppearance="@style/BlackBody"
         android:padding="@dimen/signin_chooser_padding" />
 
     <!--suppress ButtonStyle -->
@@ -79,10 +78,8 @@
         android:paddingStart="@dimen/fre_button_padding"
         android:paddingEnd="@dimen/fre_button_padding"
         android:text="@string/ok"
-        android:textAllCaps="true"
-        android:textColor="@android:color/white"
-        android:textSize="14sp"
-        chrome:buttonColor="@color/light_active_color"
-        chrome:buttonRaised="false" />
+        android:textAppearance="@style/WhiteButtonText"
+        app:buttonColor="@color/light_active_color"
+        app:buttonRaised="false" />
 
 </LinearLayout>

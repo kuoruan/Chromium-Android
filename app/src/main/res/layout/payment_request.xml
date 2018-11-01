@@ -8,11 +8,12 @@
 -->
 <org.chromium.chrome.browser.widget.BoundedLinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/payment_request"
     android:orientation="vertical"
     android:gravity="center"
-    chrome:maxWidth="@dimen/payments_ui_max_dialog_width"
+    app:maxWidthLandscape="@dimen/payments_ui_max_dialog_width"
+    app:maxWidthPortrait="@dimen/payments_ui_max_dialog_width"
     android:background="@android:color/white" >
 
     <include layout="@layout/payment_request_header" />

@@ -8,10 +8,16 @@ import com.google.android.gms.cast.CastDevice;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaStatus;
 import com.google.android.gms.cast.RemoteMediaPlayer;
+import com.google.android.gms.cast.RemoteMediaPlayer.MediaChannelResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 
+import org.chromium.base.Log;
+import org.chromium.chrome.browser.media.router.CastSessionUtil;
+import org.chromium.chrome.browser.media.router.FlingingController;
 import org.chromium.chrome.browser.media.router.MediaController;
-import org.chromium.chrome.browser.media.router.cast.CastSessionUtil;
+import org.chromium.chrome.browser.media.router.MediaStatusBridge;
+import org.chromium.chrome.browser.media.router.MediaStatusObserver;
 import org.chromium.chrome.browser.media.ui.MediaNotificationInfo;
 import org.chromium.chrome.browser.media.ui.MediaNotificationManager;
 
@@ -21,12 +27,16 @@ import org.chromium.chrome.browser.media.ui.MediaNotificationManager;
  */
 public class RemoteMediaPlayerWrapper implements RemoteMediaPlayer.OnMetadataUpdatedListener,
                                                  RemoteMediaPlayer.OnStatusUpdatedListener,
-                                                 MediaController {
+                                                 ResultCallback<MediaChannelResult>,
+                                                 MediaController, FlingingController {
+    private static final String TAG = "MediaRemoting";
+
     private final CastDevice mCastDevice;
 
     private GoogleApiClient mApiClient;
     private RemoteMediaPlayer mMediaPlayer;
     private MediaNotificationInfo.Builder mNotificationBuilder;
+    private MediaStatusObserver mMediaStatusObserver;
 
     public RemoteMediaPlayerWrapper(GoogleApiClient apiClient,
             MediaNotificationInfo.Builder notificationBuilder, CastDevice castDevice) {
@@ -56,6 +66,10 @@ public class RemoteMediaPlayerWrapper implements RemoteMediaPlayer.OnMetadataUpd
         MediaStatus mediaStatus = mMediaPlayer.getMediaStatus();
         if (mediaStatus == null) return;
 
+        if (mMediaStatusObserver != null) {
+            mMediaStatusObserver.onMediaStatusUpdate(new MediaStatusBridge(mediaStatus));
+        }
+
         int playerState = mediaStatus.getPlayerState();
         if (playerState == MediaStatus.PLAYER_STATE_PAUSED
                 || playerState == MediaStatus.PLAYER_STATE_PLAYING) {
@@ -78,8 +92,14 @@ public class RemoteMediaPlayerWrapper implements RemoteMediaPlayer.OnMetadataUpd
      * Forwards the message to the underlying RemoteMediaPlayer.
      */
     public void onMediaMessage(String message) {
-        if (mMediaPlayer != null)
+        if (mMediaPlayer == null) return;
+
+        try {
             mMediaPlayer.onMessageReceived(mCastDevice, CastSessionUtil.MEDIA_NAMESPACE, message);
+        } catch (IllegalStateException e) {
+            // GMS throws with "Result already set" when receiving responses from multiple API calls
+            // in a short amount of time, before results can be read. See https://crbug.com/853923.
+        }
     }
 
     /**
@@ -92,7 +112,8 @@ public class RemoteMediaPlayerWrapper implements RemoteMediaPlayer.OnMetadataUpd
                 new MediaInfo.Builder(mediaUrl).setContentType("*/*").setStreamType(
                         MediaInfo.STREAM_TYPE_BUFFERED);
 
-        mMediaPlayer.load(mApiClient, mediaInfoBuilder.build(), /* autoplay */ false);
+        mMediaPlayer.load(mApiClient, mediaInfoBuilder.build(), /* autoplay */ true)
+                .setResultCallback(this);
     }
 
     /**
@@ -103,7 +124,12 @@ public class RemoteMediaPlayerWrapper implements RemoteMediaPlayer.OnMetadataUpd
     public void play() {
         if (!canSendCommand()) return;
 
-        mMediaPlayer.play(mApiClient);
+        try {
+            mMediaPlayer.play(mApiClient).setResultCallback(this);
+        } catch (IllegalStateException e) {
+            // GMS throws with message "Result already set" when making multiple API calls
+            // in a short amount of time, before results can be read. See https://crbug.com/853923.
+        }
     }
 
     /**
@@ -114,7 +140,12 @@ public class RemoteMediaPlayerWrapper implements RemoteMediaPlayer.OnMetadataUpd
     public void pause() {
         if (!canSendCommand()) return;
 
-        mMediaPlayer.pause(mApiClient);
+        try {
+            mMediaPlayer.pause(mApiClient).setResultCallback(this);
+        } catch (IllegalStateException e) {
+            // GMS throws with message "Result already set" when making multiple API calls
+            // in a short amount of time, before results can be read. See https://crbug.com/853923.
+        }
     }
 
     /**
@@ -125,7 +156,12 @@ public class RemoteMediaPlayerWrapper implements RemoteMediaPlayer.OnMetadataUpd
     public void setMute(boolean mute) {
         if (!canSendCommand()) return;
 
-        mMediaPlayer.setStreamMute(mApiClient, mute);
+        try {
+            mMediaPlayer.setStreamMute(mApiClient, mute).setResultCallback(this);
+        } catch (IllegalStateException e) {
+            // GMS throws with message "Result already set" when making multiple API calls
+            // in a short amount of time, before results can be read. See https://crbug.com/853923.
+        }
     }
 
     /**
@@ -136,7 +172,12 @@ public class RemoteMediaPlayerWrapper implements RemoteMediaPlayer.OnMetadataUpd
     public void setVolume(double volume) {
         if (!canSendCommand()) return;
 
-        mMediaPlayer.setStreamVolume(mApiClient, volume);
+        try {
+            mMediaPlayer.setStreamVolume(mApiClient, volume).setResultCallback(this);
+        } catch (IllegalStateException e) {
+            // GMS throws with message "Result already set" when making multiple API calls
+            // in a short amount of time, before results can be read. See https://crbug.com/853923.
+        }
     }
 
     /**
@@ -147,7 +188,12 @@ public class RemoteMediaPlayerWrapper implements RemoteMediaPlayer.OnMetadataUpd
     public void seek(long position) {
         if (!canSendCommand()) return;
 
-        mMediaPlayer.seek(mApiClient, position);
+        try {
+            mMediaPlayer.seek(mApiClient, position).setResultCallback(this);
+        } catch (IllegalStateException e) {
+            // GMS throws with message "Result already set" when making multiple API calls
+            // in a short amount of time, before results can be read. See https://crbug.com/853923.
+        }
     }
 
     /**
@@ -155,5 +201,42 @@ public class RemoteMediaPlayerWrapper implements RemoteMediaPlayer.OnMetadataUpd
      */
     public void clearApiClient() {
         mApiClient = null;
+    }
+
+    // ResultCallback<MediaChannelResult> implementation
+    @Override
+    public void onResult(MediaChannelResult result) {
+        // When multiple API calls are made in quick succession, "Results have already been set"
+        // IllegalStateExceptions might be thrown from GMS code. We prefer to catch the exception
+        // and noop it, than to crash. This might lead to some API calls never getting their
+        // onResult() called, so we should not rely on onResult() being called for every API call.
+        // See https://crbug.com/853923.
+        if (!result.getStatus().isSuccess()) {
+            Log.e(TAG, "Error when sending command. Status code: %d",
+                    result.getStatus().getStatusCode());
+        }
+    }
+
+    // FlingingController implementation
+    @Override
+    public MediaController getMediaController() {
+        return this;
+    }
+
+    @Override
+    public long getApproximateCurrentTime() {
+        return mMediaPlayer.getApproximateStreamPosition();
+    }
+
+    @Override
+    public void setMediaStatusObserver(MediaStatusObserver observer) {
+        assert mMediaStatusObserver == null;
+        mMediaStatusObserver = observer;
+    }
+
+    @Override
+    public void clearMediaStatusObserver() {
+        assert mMediaStatusObserver != null;
+        mMediaStatusObserver = null;
     }
 }

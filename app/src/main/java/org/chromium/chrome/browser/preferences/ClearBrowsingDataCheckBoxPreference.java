@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.preferences;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.support.v4.view.ViewCompat;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ClickableSpan;
@@ -16,7 +17,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.util.AccessibilityUtil;
@@ -98,7 +98,7 @@ public class ClearBrowsingDataCheckBoxPreference extends ChromeBaseCheckBoxPrefe
         // Adjust icon padding.
         int padding = getContext().getResources().getDimensionPixelSize(R.dimen.pref_icon_padding);
         ImageView icon = (ImageView) view.findViewById(android.R.id.icon);
-        ApiCompatibilityUtils.setPaddingRelative(
+        ViewCompat.setPaddingRelative(
                 icon, padding, icon.getPaddingTop(), 0, icon.getPaddingBottom());
     }
 
@@ -123,12 +123,10 @@ public class ClearBrowsingDataCheckBoxPreference extends ChromeBaseCheckBoxPrefe
         }
         // Linkify <link></link> span.
         final SpannableString summaryWithLink = SpanApplier.applySpans(summaryString,
-                new SpanApplier.SpanInfo("<link>", "</link>", new NoUnderlineClickableSpan() {
-                    @Override
-                    public void onClick(View widget) {
-                        if (mLinkClickDelegate != null) mLinkClickDelegate.run();
-                    }
-                }));
+                new SpanApplier.SpanInfo(
+                        "<link>", "</link>", new NoUnderlineClickableSpan((widget) -> {
+                            if (mLinkClickDelegate != null) mLinkClickDelegate.run();
+                        })));
 
         mHasClickableSpans = true;
         super.setSummary(summaryWithLink);

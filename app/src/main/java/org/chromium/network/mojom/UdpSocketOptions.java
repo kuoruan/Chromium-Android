@@ -20,6 +20,7 @@ public final class UdpSocketOptions extends org.chromium.mojo.bindings.Struct {
     private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public boolean allowAddressReuse;
+    public boolean allowBroadcast;
     public int multicastInterface;
     public int multicastTimeToLive;
     public boolean multicastLoopbackMode;
@@ -29,6 +30,7 @@ public final class UdpSocketOptions extends org.chromium.mojo.bindings.Struct {
     private UdpSocketOptions(int version) {
         super(STRUCT_SIZE, version);
         this.allowAddressReuse = (boolean) false;
+        this.allowBroadcast = (boolean) false;
         this.multicastInterface = (int) 0L;
         this.multicastTimeToLive = (int) 1L;
         this.multicastLoopbackMode = (boolean) true;
@@ -50,9 +52,6 @@ public final class UdpSocketOptions extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static UdpSocketOptions deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -66,31 +65,37 @@ public final class UdpSocketOptions extends org.chromium.mojo.bindings.Struct {
         UdpSocketOptions result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new UdpSocketOptions(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new UdpSocketOptions(elementsOrVersion);
+                {
+                    
                 result.allowAddressReuse = decoder0.readBoolean(8, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.multicastLoopbackMode = decoder0.readBoolean(8, 1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
+                result.allowBroadcast = decoder0.readBoolean(8, 1);
+                }
+                {
+                    
+                result.multicastLoopbackMode = decoder0.readBoolean(8, 2);
+                }
+                {
+                    
                 result.multicastInterface = decoder0.readInt(12);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.multicastTimeToLive = decoder0.readInt(16);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.sendBufferSize = decoder0.readInt(20);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.receiveBufferSize = decoder0.readInt(24);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -104,7 +109,9 @@ public final class UdpSocketOptions extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.allowAddressReuse, 8, 0);
         
-        encoder0.encode(this.multicastLoopbackMode, 8, 1);
+        encoder0.encode(this.allowBroadcast, 8, 1);
+        
+        encoder0.encode(this.multicastLoopbackMode, 8, 2);
         
         encoder0.encode(this.multicastInterface, 12);
         
@@ -113,48 +120,5 @@ public final class UdpSocketOptions extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.sendBufferSize, 20);
         
         encoder0.encode(this.receiveBufferSize, 24);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        UdpSocketOptions other = (UdpSocketOptions) object;
-        if (this.allowAddressReuse!= other.allowAddressReuse)
-            return false;
-        if (this.multicastInterface!= other.multicastInterface)
-            return false;
-        if (this.multicastTimeToLive!= other.multicastTimeToLive)
-            return false;
-        if (this.multicastLoopbackMode!= other.multicastLoopbackMode)
-            return false;
-        if (this.sendBufferSize!= other.sendBufferSize)
-            return false;
-        if (this.receiveBufferSize!= other.receiveBufferSize)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.allowAddressReuse);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.multicastInterface);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.multicastTimeToLive);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.multicastLoopbackMode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sendBufferSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.receiveBufferSize);
-        return result;
     }
 }

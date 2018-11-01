@@ -6,5 +6,5 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:color="@android:color/white" android:state_selected="true"/>
     <item android:color="@color/primary_text_disabled_material_light" android:state_enabled="false"/>
-    <item android:color="@color/google_grey_600"/>
+    <item android:color="@color/default_icon_color"/>
 </selector>

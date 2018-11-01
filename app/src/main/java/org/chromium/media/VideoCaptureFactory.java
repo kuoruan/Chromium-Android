@@ -69,10 +69,10 @@ class VideoCaptureFactory {
     // Factory methods.
     @CalledByNative
     static VideoCapture createVideoCapture(int id, long nativeVideoCaptureDeviceAndroid) {
-        if (isLReleaseOrLater() && !VideoCaptureCamera2.isLegacyDevice(id)) {
-            return new VideoCaptureCamera2(id, nativeVideoCaptureDeviceAndroid);
+        if (isLegacyOrDeprecatedDevice(id)) {
+            return new VideoCaptureCamera(id, nativeVideoCaptureDeviceAndroid);
         }
-        return new VideoCaptureCamera(id, nativeVideoCaptureDeviceAndroid);
+        return new VideoCaptureCamera2(id, nativeVideoCaptureDeviceAndroid);
     }
 
     @CalledByNative
@@ -82,26 +82,34 @@ class VideoCaptureFactory {
 
     @CalledByNative
     static int getCaptureApiType(int id) {
-        if (isLReleaseOrLater()) {
-            return VideoCaptureCamera2.getCaptureApiType(id);
+        if (isLegacyOrDeprecatedDevice(id)) {
+            return VideoCaptureCamera.getCaptureApiType(id);
         }
-        return VideoCaptureCamera.getCaptureApiType(id);
+        return VideoCaptureCamera2.getCaptureApiType(id);
+    }
+
+    @CalledByNative
+    static int getFacingMode(int id) {
+        if (isLegacyOrDeprecatedDevice(id)) {
+            return VideoCaptureCamera.getFacingMode(id);
+        }
+        return VideoCaptureCamera2.getFacingMode(id);
     }
 
     @CalledByNative
     static String getDeviceName(int id) {
-        if (isLReleaseOrLater() && !VideoCaptureCamera2.isLegacyDevice(id)) {
-            return VideoCaptureCamera2.getName(id);
+        if (isLegacyOrDeprecatedDevice(id)) {
+            return VideoCaptureCamera.getName(id);
         }
-        return VideoCaptureCamera.getName(id);
+        return VideoCaptureCamera2.getName(id);
     }
 
     @CalledByNative
     static VideoCaptureFormat[] getDeviceSupportedFormats(int id) {
-        if (isLReleaseOrLater() && !VideoCaptureCamera2.isLegacyDevice(id)) {
-            return VideoCaptureCamera2.getDeviceSupportedFormats(id);
+        if (isLegacyOrDeprecatedDevice(id)) {
+            return VideoCaptureCamera.getDeviceSupportedFormats(id);
         }
-        return VideoCaptureCamera.getDeviceSupportedFormats(id);
+        return VideoCaptureCamera2.getDeviceSupportedFormats(id);
     }
 
     @CalledByNative

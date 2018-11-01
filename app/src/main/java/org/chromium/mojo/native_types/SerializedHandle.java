@@ -21,21 +21,21 @@ public final class SerializedHandle extends org.chromium.mojo.bindings.Struct {
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
 
     public static final class Type {
-    
-    
+
+
         public static final int MOJO_HANDLE = 0;
-    
+
         public static final int PLATFORM_FILE = MOJO_HANDLE + 1;
-    
+
         public static final int WIN_HANDLE = PLATFORM_FILE + 1;
-    
+
         public static final int MACH_PORT = WIN_HANDLE + 1;
-    
+
         public static final int FUCHSIA_HANDLE = MACH_PORT + 1;
-    
-    
+
+
         private static final boolean IS_EXTENSIBLE = false;
-    
+
         public static boolean isKnownValue(int value) {
             switch (value) {
                 case 0:
@@ -47,16 +47,16 @@ public final class SerializedHandle extends org.chromium.mojo.bindings.Struct {
             }
             return false;
         }
-    
+
         public static void validate(int value) {
             if (IS_EXTENSIBLE || isKnownValue(value))
                 return;
-    
+
             throw new DeserializationException("Invalid enum value.");
         }
-    
+
         private Type() {}
-    
+
     }
     public org.chromium.mojo.system.UntypedHandle theHandle;
     public int type;
@@ -80,9 +80,6 @@ public final class SerializedHandle extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static SerializedHandle deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -96,16 +93,18 @@ public final class SerializedHandle extends org.chromium.mojo.bindings.Struct {
         SerializedHandle result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new SerializedHandle(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new SerializedHandle(elementsOrVersion);
+                {
+                    
                 result.theHandle = decoder0.readUntypedHandle(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.type = decoder0.readInt(12);
                     SerializedHandle.Type.validate(result.type);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -120,36 +119,5 @@ public final class SerializedHandle extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.theHandle, 8, false);
         
         encoder0.encode(this.type, 12);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        SerializedHandle other = (SerializedHandle) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.theHandle, other.theHandle))
-            return false;
-        if (this.type!= other.type)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.theHandle);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
-        return result;
     }
 }

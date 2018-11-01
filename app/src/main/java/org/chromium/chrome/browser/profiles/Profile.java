@@ -4,14 +4,11 @@
 
 package org.chromium.chrome.browser.profiles;
 
-import android.content.Context;
-
-import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.chrome.browser.cookies.CookiesFetcher;
-import org.chromium.content.browser.BrowserStartupController;
+import org.chromium.content_public.browser.BrowserStartupController;
 
 /**
  * Wrapper that allows passing a Profile reference around in the Java layer.
@@ -88,8 +85,7 @@ public class Profile {
         mNativeProfileAndroid = 0;
 
         if (mIsOffTheRecord) {
-            Context context = ContextUtils.getApplicationContext();
-            CookiesFetcher.deleteCookiesIfNecessary(context);
+            CookiesFetcher.deleteCookiesIfNecessary();
         }
     }
 

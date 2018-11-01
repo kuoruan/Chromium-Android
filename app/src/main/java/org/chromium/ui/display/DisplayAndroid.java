@@ -26,16 +26,16 @@ public class DisplayAndroid {
         /**
          * Called whenever the screen orientation changes.
          *
-         * @param orientation One of Surface.ROTATION_* values.
+         * @param rotation One of Surface.ROTATION_* values.
          */
-        void onRotationChanged(int rotation);
+        default void onRotationChanged(int rotation) {}
 
         /**
          * Called whenever the screen density changes.
          *
-         * @param screen density, aka Density Independent Pixel scale.
+         * @param dipScale Density Independent Pixel scale.
          */
-        void onDIPScaleChanged(float dipScale);
+        default void onDIPScaleChanged(float dipScale) {}
     }
 
     private static final DisplayAndroidObserver[] EMPTY_OBSERVER_ARRAY =
@@ -85,6 +85,8 @@ public class DisplayAndroid {
     }
 
     /**
+     * Note: For JB pre-MR1, this can sometimes return values smaller than the actual screen.
+     * https://crbug.com/829318
      * @return Display height in physical pixels.
      */
     public int getDisplayHeight() {
@@ -92,6 +94,7 @@ public class DisplayAndroid {
     }
 
     /**
+     * Note: For JB pre-MR1, this can sometimes return values smaller than the actual screen.
      * @return Display width in physical pixels.
      */
     public int getDisplayWidth() {

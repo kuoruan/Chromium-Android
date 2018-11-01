@@ -29,7 +29,7 @@ public interface OfflineContentProvider {
     }
 
     /** See OfflineContentProvider::OpenItem(...). */
-    void openItem(ContentId id);
+    void openItem(@LaunchLocation int location, ContentId id);
 
     /** See OfflineContentProvider::RemoveItem(...). */
     void removeItem(ContentId id);
@@ -51,6 +51,9 @@ public interface OfflineContentProvider {
 
     /** See OfflineContentProvider::GetVisualsForItem(...). */
     void getVisualsForItem(ContentId id, VisualsCallback callback);
+
+    /** See OfflineContentProvider::GetShareInfoForItem(...). */
+    void getShareInfoForItem(ContentId id, ShareCallback callback);
 
     /** See OfflineContentProvider::AddObserver(...). */
     void addObserver(Observer observer);

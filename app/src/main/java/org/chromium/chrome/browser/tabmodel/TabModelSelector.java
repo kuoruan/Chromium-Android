@@ -101,7 +101,8 @@ public interface TabModelSelector {
      * @param incognito Whether to open the new tab in incognito mode.
      * @return The newly opened tab.
      */
-    Tab openNewTab(LoadUrlParams loadUrlParams, TabLaunchType type, Tab parent, boolean incognito);
+    Tab openNewTab(
+            LoadUrlParams loadUrlParams, @TabLaunchType int type, Tab parent, boolean incognito);
 
     /**
      * Searches through all children models for the specified Tab and closes the tab if it exists.

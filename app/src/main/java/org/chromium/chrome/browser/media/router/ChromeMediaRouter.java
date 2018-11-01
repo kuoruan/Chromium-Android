@@ -6,6 +6,9 @@ package org.chromium.chrome.browser.media.router;
 
 import android.support.v7.media.MediaRouter;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.StrictModeContext;
@@ -13,9 +16,10 @@ import org.chromium.base.SysUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.chrome.browser.AppHooks;
+import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.browser.media.router.caf.CafMediaRouteProvider;
 import org.chromium.chrome.browser.media.router.cast.CastMediaRouteProvider;
-import org.chromium.chrome.browser.media.router.cast.MediaSink;
-import org.chromium.chrome.browser.media.router.cast.MediaSource;
 import org.chromium.chrome.browser.media.router.cast.remoting.RemotingMediaRouteProvider;
 
 import java.util.ArrayList;
@@ -33,17 +37,36 @@ import javax.annotation.Nullable;
 public class ChromeMediaRouter implements MediaRouteManager {
 
     private static final String TAG = "MediaRouter";
+    private static final int MIN_GOOGLE_PLAY_SERVICES_APK_VERSION = 12600000;
 
     private static MediaRouteProvider.Factory sRouteProviderFactory =
             new MediaRouteProvider.Factory() {
                 @Override
                 public void addProviders(MediaRouteManager manager) {
-                    MediaRouteProvider castProvider = CastMediaRouteProvider.create(manager);
-                    manager.addMediaRouteProvider(castProvider);
+                    // Bypass feature check in tests as ChromeFeatureList might not be initialized
+                    // yet.
+                    if (ChromeFeatureList.isInitialized()
+                            && ChromeFeatureList.isEnabled(
+                                       ChromeFeatureList.CAF_MEDIA_ROUTER_IMPL)) {
+                        int googleApiAvailabilityResult =
+                                AppHooks.get().isGoogleApiAvailableWithMinApkVersion(
+                                        MIN_GOOGLE_PLAY_SERVICES_APK_VERSION);
+                        if (googleApiAvailabilityResult != ConnectionResult.SUCCESS) {
+                            GoogleApiAvailability.getInstance().showErrorNotification(
+                                    ContextUtils.getApplicationContext(),
+                                    googleApiAvailabilityResult);
+                            return;
+                        }
+                        MediaRouteProvider cafProvider = CafMediaRouteProvider.create(manager);
+                        manager.addMediaRouteProvider(cafProvider);
+                    } else {
+                        MediaRouteProvider castProvider = CastMediaRouteProvider.create(manager);
+                        manager.addMediaRouteProvider(castProvider);
 
-                    MediaRouteProvider remotingProvider =
-                            RemotingMediaRouteProvider.create(manager);
-                    manager.addMediaRouteProvider(remotingProvider);
+                        MediaRouteProvider remotingProvider =
+                                RemotingMediaRouteProvider.create(manager);
+                        manager.addMediaRouteProvider(remotingProvider);
+                    }
                 }
             };
 
@@ -358,6 +381,23 @@ public class ChromeMediaRouter implements MediaRouteManager {
         }
 
         provider.sendStringMessage(routeId, message, callbackId);
+    }
+
+    /**
+     * Gets a media controller to be used by native.
+     * @param routeId The route ID tied to the CastSession for which we want a media controller.
+     * @return A MediaControllerBridge if it can be obtained from |routeId|, null otherwise.
+     */
+    @Nullable
+    @CalledByNative
+    public FlingingControllerBridge getFlingingControllerBridge(String routeId) {
+        MediaRouteProvider provider = mRouteIdsToProviders.get(routeId);
+        if (provider == null) return null;
+
+        FlingingController controller = provider.getFlingingController(routeId);
+        if (controller == null) return null;
+
+        return new FlingingControllerBridge(controller);
     }
 
     @VisibleForTesting

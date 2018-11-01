@@ -5,14 +5,20 @@
 
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:title="@string/all_sites">
-    <!-- A global toggle, only shown for specific categories that allow turning default values
-         for that category on/off.-->
+
+    <!-- A common binary toggle, only shown for specific categories that allow
+         turning default values for that category on/off.-->
     <org.chromium.chrome.browser.preferences.ChromeSwitchPreference
-        android:key="read_write_toggle"
-        android:defaultValue="true"
-        chrome:drawDivider="true" />
+        android:key="binary_toggle"
+        android:defaultValue="true" />
+    <!-- A common Allow/Ask/Block 3-state toggle (radio group). Only shown when
+         the category requires these 3 states. Mutual exclusive with the
+         "binary_toggle" above. -->
+    <org.chromium.chrome.browser.preferences.website.TriStateSiteSettingsPreference
+        android:key="tri_state_toggle" />
+
     <!-- A toggle for allowing third-party cookies, only shown for the Cookies category. -->
     <org.chromium.chrome.browser.preferences.ChromeBaseCheckBoxPreference
         android:key="third_party_cookies"
@@ -30,7 +36,8 @@
     <org.chromium.chrome.browser.preferences.LearnMorePreference
         android:key="protected_content_learn_more"
         android:background="?android:attr/listDivider"
-        chrome:helpContext="@string/help_context_protected_content"/>
+        app:helpContext="@string/help_context_protected_content"/>
+
     <!-- Collapsible headers for sorting preferences. -->
     <org.chromium.chrome.browser.preferences.ExpandablePreferenceGroup
         android:key="blocked_group" />

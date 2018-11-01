@@ -10,8 +10,9 @@ import android.text.TextUtils;
 import org.chromium.base.Log;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.UrlConstants;
-import org.chromium.chrome.browser.preferences.download.DownloadDirectoryList;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Locale;
 
 /**
@@ -21,18 +22,18 @@ import java.util.Locale;
 public class DownloadFilter {
     // These statics are used for UMA logging. Please update the AndroidDownloadFilterType enum in
     // histograms.xml if these change.
-    @IntDef({FILTER_ALL, FILTER_PAGE, FILTER_VIDEO, FILTER_AUDIO, FILTER_IMAGE, FILTER_DOCUMENT,
-            FILTER_OTHER, FILTER_BOUNDARY})
-    public @interface Type {}
-
-    public static final int FILTER_ALL = 0;
-    public static final int FILTER_PAGE = 1;
-    public static final int FILTER_VIDEO = 2;
-    public static final int FILTER_AUDIO = 3;
-    public static final int FILTER_IMAGE = 4;
-    public static final int FILTER_DOCUMENT = 5;
-    public static final int FILTER_OTHER = 6;
-    public static final int FILTER_BOUNDARY = 7;
+    @IntDef({Type.ALL, Type.PAGE, Type.VIDEO, Type.AUDIO, Type.IMAGE, Type.DOCUMENT, Type.OTHER})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Type {
+        int ALL = 0;
+        int PAGE = 1;
+        int VIDEO = 2;
+        int AUDIO = 3;
+        int IMAGE = 4;
+        int DOCUMENT = 5;
+        int OTHER = 6;
+        int NUM_ENTRIES = 7;
+    }
 
     private static final String MIMETYPE_VIDEO = "video";
     private static final String MIMETYPE_AUDIO = "audio";
@@ -82,18 +83,17 @@ public class DownloadFilter {
      * @return The URL representing the filter.
      */
     public static String getUrlForFilter(@Type int filter) {
-        if (filter == FILTER_ALL) {
-            return UrlConstants.DOWNLOADS_URL;
-        }
-        return UrlConstants.DOWNLOADS_FILTER_URL + filter;
+        return filter == Type.ALL ? UrlConstants.DOWNLOADS_URL
+                                  : UrlConstants.DOWNLOADS_FILTER_URL + filter;
     }
 
     /**
      * @return The filter that the given URL represents.
      */
     public static @Type int getFilterFromUrl(String url) {
-        if (TextUtils.isEmpty(url) || UrlConstants.DOWNLOADS_HOST.equals(url)) return FILTER_ALL;
-        int result = FILTER_ALL;
+        if (TextUtils.isEmpty(url) || UrlConstants.DOWNLOADS_HOST.equals(url)) return Type.ALL;
+        @Type
+        int result = Type.ALL;
         if (url.startsWith(UrlConstants.DOWNLOADS_FILTER_URL)) {
             try {
                 result = Integer
@@ -107,21 +107,21 @@ public class DownloadFilter {
 
     /** Identifies the type of file represented by the given MIME type string. */
     public static @Type int fromMimeType(String mimeType) {
-        if (TextUtils.isEmpty(mimeType)) return DownloadFilter.FILTER_OTHER;
+        if (TextUtils.isEmpty(mimeType)) return Type.OTHER;
 
         String[] pieces = mimeType.toLowerCase(Locale.getDefault()).split("/");
-        if (pieces.length != 2) return DownloadFilter.FILTER_OTHER;
+        if (pieces.length != 2) return Type.OTHER;
 
         if (MIMETYPE_VIDEO.equals(pieces[0])) {
-            return DownloadFilter.FILTER_VIDEO;
+            return Type.VIDEO;
         } else if (MIMETYPE_AUDIO.equals(pieces[0])) {
-            return DownloadFilter.FILTER_AUDIO;
+            return Type.AUDIO;
         } else if (MIMETYPE_IMAGE.equals(pieces[0])) {
-            return DownloadFilter.FILTER_IMAGE;
+            return Type.IMAGE;
         } else if (MIMETYPE_DOCUMENT.equals(pieces[0])) {
-            return DownloadFilter.FILTER_DOCUMENT;
+            return Type.DOCUMENT;
         } else {
-            return DownloadFilter.FILTER_OTHER;
+            return Type.OTHER;
         }
     }
 }

@@ -5,15 +5,19 @@
 package org.chromium.chrome.browser.media.remote;
 
 import android.net.Uri;
-import android.os.AsyncTask;
+import android.support.annotation.IntDef;
 import android.text.TextUtils;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
 
 import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.util.Arrays;
@@ -25,22 +29,26 @@ import java.util.Map;
  * Resolves the final URL if it's a redirect. Works asynchronously, uses HTTP
  * HEAD request to determine if the URL is redirected.
  */
-public class MediaUrlResolver extends AsyncTask<Void, Void, MediaUrlResolver.Result> {
-
+public class MediaUrlResolver extends AsyncTask<MediaUrlResolver.Result> {
     // Cast.Sender.UrlResolveResult UMA histogram values; must match values of
     // RemotePlaybackUrlResolveResult in histograms.xml. Do not change these values, as they are
     // being used in UMA.
-    private static final int RESOLVE_RESULT_SUCCESS = 0;
-    private static final int RESOLVE_RESULT_MALFORMED_URL = 1;
-    private static final int RESOLVE_RESULT_NO_CORS = 2;
-    private static final int RESOLVE_RESULT_INCOMPATIBLE_CORS = 3;
-    private static final int RESOLVE_RESULT_SERVER_ERROR = 4;
-    private static final int RESOLVE_RESULT_NETWORK_ERROR = 5;
-    private static final int RESOLVE_RESULT_UNSUPPORTED_MEDIA = 6;
-    private static final int RESOLVE_RESULT_HUC_EXCEPTION = 7;
-
-    // Range of histogram.
-    private static final int HISTOGRAM_RESULT_COUNT = 8;
+    @IntDef({ResolveResult.SUCCESS, ResolveResult.MALFORMED_URL, ResolveResult.NO_CORS,
+            ResolveResult.INCOMPATIBLE_CORS, ResolveResult.SERVER_ERROR,
+            ResolveResult.NETWORK_ERROR, ResolveResult.UNSUPPORTED_MEDIA,
+            ResolveResult.HUC_EXCEPTION})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ResolveResult {
+        int SUCCESS = 0;
+        int MALFORMED_URL = 1;
+        int NO_CORS = 2;
+        int INCOMPATIBLE_CORS = 3;
+        int SERVER_ERROR = 4;
+        int NETWORK_ERROR = 5;
+        int UNSUPPORTED_MEDIA = 6;
+        int HUC_EXCEPTION = 7;
+        int NUM_ENTRIES = 8;
+    }
 
     // Acceptal response codes for URL resolving request.
     private static final Integer[] SUCCESS_RESPONSE_CODES = {
@@ -109,16 +117,21 @@ public class MediaUrlResolver extends AsyncTask<Void, Void, MediaUrlResolver.Res
     // media/base/container_names.h for the actual enum where these are defined.
     // See https://developers.google.com/cast/docs/media#media-container-formats for the formats
     // supported by Cast devices.
-    private static final int MEDIA_TYPE_UNKNOWN = 0;
-    private static final int MEDIA_TYPE_AAC = 1;
-    private static final int MEDIA_TYPE_HLS = 22;
-    private static final int MEDIA_TYPE_MP3 = 26;
-    private static final int MEDIA_TYPE_MPEG4 = 29;
-    private static final int MEDIA_TYPE_OGG = 30;
-    private static final int MEDIA_TYPE_WAV = 35;
-    private static final int MEDIA_TYPE_WEBM = 36;
-    private static final int MEDIA_TYPE_DASH = 38;
-    private static final int MEDIA_TYPE_SMOOTHSTREAM = 39;
+    @IntDef({MediaType.UNKNOWN, MediaType.AAC, MediaType.HLS, MediaType.MP3, MediaType.MPEG4,
+            MediaType.OGG, MediaType.WAV, MediaType.WEBM, MediaType.DASH, MediaType.SMOOTHSTREAM})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface MediaType {
+        int UNKNOWN = 0;
+        int AAC = 1;
+        int HLS = 22;
+        int MP3 = 26;
+        int MPEG4 = 29;
+        int OGG = 30;
+        int WAV = 35;
+        int WEBM = 36;
+        int DASH = 38;
+        int SMOOTHSTREAM = 39;
+    }
 
     // We don't want to necessarily fetch the whole video but we don't want to miss the CORS header.
     // Assume that 64k should be more than enough to keep all the headers.
@@ -146,7 +159,7 @@ public class MediaUrlResolver extends AsyncTask<Void, Void, MediaUrlResolver.Res
     }
 
     @Override
-    protected MediaUrlResolver.Result doInBackground(Void... params) {
+    protected MediaUrlResolver.Result doInBackground() {
         Uri uri = mDelegate.getUri();
         if (uri == null || uri.equals(Uri.EMPTY)) {
             return new MediaUrlResolver.Result(Uri.EMPTY, false);
@@ -178,18 +191,26 @@ public class MediaUrlResolver extends AsyncTask<Void, Void, MediaUrlResolver.Res
             // If server's response is not valid, don't try to fling the video.
             int responseCode = urlConnection.getResponseCode();
             if (!Arrays.asList(SUCCESS_RESPONSE_CODES).contains(responseCode)) {
-                recordResultHistogram(RESOLVE_RESULT_SERVER_ERROR);
+                recordResultHistogram(ResolveResult.SERVER_ERROR);
                 Log.e(TAG, "Server response is not valid: %d", responseCode);
                 uri = Uri.EMPTY;
             }
-        } catch (IOException e) {
-            recordResultHistogram(RESOLVE_RESULT_NETWORK_ERROR);
+        } catch (IOException | IllegalArgumentException e) {
+            // IllegalArgumentException for SSL issue (https://b/78588631).
+            recordResultHistogram(ResolveResult.NETWORK_ERROR);
             Log.e(TAG, "Failed to fetch the final url", e);
             uri = Uri.EMPTY;
         } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {
-            recordResultHistogram(RESOLVE_RESULT_HUC_EXCEPTION);
+            recordResultHistogram(ResolveResult.HUC_EXCEPTION);
             Log.e(TAG, "Threading issue with HUC, see https://crbug.com/754480", e);
             uri = Uri.EMPTY;
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof URISyntaxException) {
+                Log.e(TAG, "Invalid URL format", e);
+                uri = Uri.EMPTY;
+            } else {
+                throw e;
+            }
         } finally {
             if (urlConnection != null) urlConnection.disconnect();
         }
@@ -203,7 +224,7 @@ public class MediaUrlResolver extends AsyncTask<Void, Void, MediaUrlResolver.Res
 
     private boolean canPlayMedia(Uri uri, Map<String, List<String>> headers) {
         if (uri == null || uri.equals(Uri.EMPTY)) {
-            recordResultHistogram(RESOLVE_RESULT_MALFORMED_URL);
+            recordResultHistogram(ResolveResult.MALFORMED_URL);
             return false;
         }
 
@@ -212,7 +233,7 @@ public class MediaUrlResolver extends AsyncTask<Void, Void, MediaUrlResolver.Res
             List<String> corsData = headers.get(CORS_HEADER_NAME);
             if (corsData.isEmpty() || (!corsData.get(0).equals("*")
                     && !corsData.get(0).equals(CHROMECAST_ORIGIN))) {
-                recordResultHistogram(RESOLVE_RESULT_INCOMPATIBLE_CORS);
+                recordResultHistogram(ResolveResult.INCOMPATIBLE_CORS);
                 return false;
             }
         } else if (isEnhancedMedia(uri)) {
@@ -221,48 +242,47 @@ public class MediaUrlResolver extends AsyncTask<Void, Void, MediaUrlResolver.Res
             // Clank assumes that if CORS is set for the manifest it's set for everything but
             // it not necessary always true. See b/19138712
             Log.d(TAG, "HLS stream without CORS header: %s", uri);
-            recordResultHistogram(RESOLVE_RESULT_NO_CORS);
+            recordResultHistogram(ResolveResult.NO_CORS);
             return false;
         }
 
-        if (getMediaType(uri) == MEDIA_TYPE_UNKNOWN) {
+        if (getMediaType(uri) == MediaType.UNKNOWN) {
             Log.d(TAG, "Unsupported media container format: %s", uri);
-            recordResultHistogram(RESOLVE_RESULT_UNSUPPORTED_MEDIA);
+            recordResultHistogram(ResolveResult.UNSUPPORTED_MEDIA);
             return false;
         }
 
-        recordResultHistogram(RESOLVE_RESULT_SUCCESS);
+        recordResultHistogram(ResolveResult.SUCCESS);
         return true;
     }
 
     private boolean isEnhancedMedia(Uri uri) {
         int mediaType = getMediaType(uri);
-        return mediaType == MEDIA_TYPE_HLS
-                || mediaType == MEDIA_TYPE_DASH
-                || mediaType == MEDIA_TYPE_SMOOTHSTREAM;
+        return mediaType == MediaType.HLS || mediaType == MediaType.DASH
+                || mediaType == MediaType.SMOOTHSTREAM;
     }
 
     @VisibleForTesting
-    void recordResultHistogram(int result) {
-        RecordHistogram.recordEnumeratedHistogram("Cast.Sender.UrlResolveResult", result,
-                HISTOGRAM_RESULT_COUNT);
+    void recordResultHistogram(@ResolveResult int result) {
+        RecordHistogram.recordEnumeratedHistogram(
+                "Cast.Sender.UrlResolveResult", result, ResolveResult.NUM_ENTRIES);
     }
 
-    static int getMediaType(Uri uri) {
+    static @MediaType int getMediaType(Uri uri) {
         String path = uri.getPath();
 
-        if (path == null) return MEDIA_TYPE_UNKNOWN;
+        if (path == null) return MediaType.UNKNOWN;
 
         path = path.toLowerCase(Locale.US);
-        if (path.endsWith(".m3u8")) return MEDIA_TYPE_HLS;
-        if (path.endsWith(".mp4")) return MEDIA_TYPE_MPEG4;
-        if (path.endsWith(".mpd")) return MEDIA_TYPE_DASH;
-        if (path.endsWith(".ism")) return MEDIA_TYPE_SMOOTHSTREAM;
-        if (path.endsWith(".m4a") || path.endsWith(".aac")) return MEDIA_TYPE_AAC;
-        if (path.endsWith(".mp3")) return MEDIA_TYPE_MP3;
-        if (path.endsWith(".wav")) return MEDIA_TYPE_WAV;
-        if (path.endsWith(".webm")) return MEDIA_TYPE_WEBM;
-        if (path.endsWith(".ogg")) return MEDIA_TYPE_OGG;
-        return MEDIA_TYPE_UNKNOWN;
+        if (path.endsWith(".m3u8")) return MediaType.HLS;
+        if (path.endsWith(".mp4")) return MediaType.MPEG4;
+        if (path.endsWith(".mpd")) return MediaType.DASH;
+        if (path.endsWith(".ism")) return MediaType.SMOOTHSTREAM;
+        if (path.endsWith(".m4a") || path.endsWith(".aac")) return MediaType.AAC;
+        if (path.endsWith(".mp3")) return MediaType.MP3;
+        if (path.endsWith(".wav")) return MediaType.WAV;
+        if (path.endsWith(".webm")) return MediaType.WEBM;
+        if (path.endsWith(".ogg")) return MediaType.OGG;
+        return MediaType.UNKNOWN;
     }
 }

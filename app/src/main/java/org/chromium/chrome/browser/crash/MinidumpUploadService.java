@@ -60,14 +60,16 @@ public class MinidumpUploadService extends IntentService {
     private static final int FAILURE = 0;
     private static final int SUCCESS = 1;
 
-    @StringDef({BROWSER, RENDERER, GPU, OTHER})
-    public @interface ProcessType {}
-    static final String BROWSER = "Browser";
-    static final String RENDERER = "Renderer";
-    static final String GPU = "GPU";
-    static final String OTHER = "Other";
+    @StringDef({ProcessType.BROWSER, ProcessType.RENDERER, ProcessType.GPU, ProcessType.OTHER})
+    public @interface ProcessType {
+        String BROWSER = "Browser";
+        String RENDERER = "Renderer";
+        String GPU = "GPU";
+        String OTHER = "Other";
+    }
 
-    static final String[] TYPES = {BROWSER, RENDERER, GPU, OTHER};
+    static final String[] TYPES = {
+            ProcessType.BROWSER, ProcessType.RENDERER, ProcessType.GPU, ProcessType.OTHER};
 
     public MinidumpUploadService() {
         super(TAG);
@@ -217,23 +219,11 @@ public class MinidumpUploadService extends IntentService {
                     // Crash type is on the line after the next line.
                     fileReader.readLine();
                     String crashType = fileReader.readLine();
-                    if (crashType == null) {
-                        return OTHER;
-                    }
-
-                    if (crashType.equals("browser")) {
-                        return BROWSER;
-                    }
-
-                    if (crashType.equals("renderer")) {
-                        return RENDERER;
-                    }
-
-                    if (crashType.equals("gpu-process")) {
-                        return GPU;
-                    }
-
-                    return OTHER;
+                    if (crashType == null) return ProcessType.OTHER;
+                    if (crashType.equals("browser")) return ProcessType.BROWSER;
+                    if (crashType.equals("renderer")) return ProcessType.RENDERER;
+                    if (crashType.equals("gpu-process")) return ProcessType.GPU;
+                    return ProcessType.OTHER;
                 }
             }
         } catch (IOException e) {
@@ -241,7 +231,7 @@ public class MinidumpUploadService extends IntentService {
         } finally {
             StreamUtil.closeQuietly(fileReader);
         }
-        return OTHER;
+        return ProcessType.OTHER;
     }
 
     /**

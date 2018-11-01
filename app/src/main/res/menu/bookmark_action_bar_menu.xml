@@ -4,7 +4,7 @@
      found in the LICENSE file. -->
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto" >
+    xmlns:app="http://schemas.android.com/apk/res-auto" >
 
     <group android:id="@+id/normal_menu_group" >
         <item
@@ -12,18 +12,21 @@
             android:icon="@drawable/ic_edit_24dp"
             android:title="@string/bookmark_action_bar_edit_folder"
             android:visible="false"
-            chrome:showAsAction="ifRoom"/>
+            app:showAsAction="ifRoom"
+            app:iconTint="@color/dark_mode_tint" />
         <item
             android:id="@+id/search_menu_id"
             android:icon="@drawable/ic_search"
             android:title="@string/search"
             android:visible="false"
-            chrome:showAsAction="ifRoom"/>
+            app:showAsAction="ifRoom"
+            app:iconTint="@color/dark_mode_tint" />
         <item
             android:id="@+id/close_menu_id"
             android:icon="@drawable/btn_close"
             android:title="@string/bookmark_action_bar_close"
-            chrome:showAsAction="ifRoom"/>
+            app:showAsAction="ifRoom"
+            app:iconTint="@color/dark_mode_tint" />
     </group>
     <group
         android:id="@+id/selection_mode_menu_group"
@@ -32,25 +35,25 @@
             android:id="@+id/selection_mode_edit_menu_id"
             android:icon="@drawable/bookmark_edit_active"
             android:title="@null"
-            chrome:showAsAction="ifRoom"/>
+            app:showAsAction="ifRoom" />
         <item
             android:id="@+id/selection_mode_move_menu_id"
             android:icon="@drawable/bookmark_move_active"
             android:title="@null"
-            chrome:showAsAction="ifRoom"/>
+            app:showAsAction="ifRoom" />
         <item
             android:id="@+id/selection_mode_delete_menu_id"
             android:icon="@drawable/ic_delete_white_24dp"
             android:title="@null"
-            chrome:showAsAction="ifRoom"/>
+            app:showAsAction="ifRoom" />
         <item
             android:id="@+id/selection_open_in_new_tab_id"
             android:title="@string/contextmenu_open_in_new_tab"
-            chrome:showAsAction="never"/>
+            app:showAsAction="never" />
         <item
             android:id="@+id/selection_open_in_incognito_tab_id"
             android:title="@string/contextmenu_open_in_incognito_tab"
-            chrome:showAsAction="never"/>
+            app:showAsAction="never" />
     </group>
 
 </menu>

@@ -4,11 +4,18 @@
 
 package org.chromium.chrome.browser.toolbar;
 
+import android.content.res.ColorStateList;
+import android.content.res.Resources;
+import android.support.annotation.ColorRes;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 
+import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ntp.NewTabPage;
+import org.chromium.chrome.browser.omnibox.UrlBarData;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.components.security_state.ConnectionSecurityLevel;
@@ -50,9 +57,9 @@ public interface ToolbarDataProvider {
     Profile getProfile();
 
     /**
-     * @return The formatted text (URL or search terms) for display.
+     * @return The contents of the {@link org.chromium.chrome.browser.omnibox.UrlBar}.
      */
-    String getText();
+    UrlBarData getUrlBarData();
 
     /**
      * @return The title of the current tab, or the empty string if there is currently no tab.
@@ -75,20 +82,9 @@ public interface ToolbarDataProvider {
     boolean isOfflinePage();
 
     /**
-     * @return Whether the page currently shown is an untrusted offline page.
+     * @return Whether the page currently shown is a preview.
      */
-    boolean isShowingUntrustedOfflinePage();
-
-    /**
-     * @param urlBarText The text currently displayed in the url bar.
-     * @return Whether the Google 'G' should be shown in the location bar.
-     */
-    boolean shouldShowGoogleG(String urlBarText);
-
-    /**
-     * @return Whether the security icon should be displayed.
-     */
-    boolean shouldShowSecurityIcon();
+    boolean isPreview();
 
     /**
      * @return Whether verbose status next to the security icon should be displayed.
@@ -102,14 +98,85 @@ public interface ToolbarDataProvider {
     int getSecurityLevel();
 
     /**
-     * Determines the icon that should be displayed for the current security level.
-     * @return The resource ID of the icon that should be displayed, 0 if no icon should show.
+     * @return The resource ID of the icon that should be displayed or 0 if no icon should be shown.
      */
     @DrawableRes
-    int getSecurityIconResource();
+    int getSecurityIconResource(boolean isTablet);
 
     /**
-     * @return Whether or not we're currently showing a search query instead of a URL.
+     * @return The resource ID of the text color for the verbose status view or 0 if none
+     * applies.
      */
-    boolean isDisplayingQueryTerms();
+    @ColorRes
+    default int getVerboseStatusTextColor(Resources res, boolean useDarkColors) {
+        if (isPreview()) {
+            return ApiCompatibilityUtils.getColor(res,
+                    useDarkColors ? R.color.locationbar_status_preview_color
+                                  : R.color.locationbar_status_preview_color_light);
+        }
+
+        if (isOfflinePage()) {
+            return ApiCompatibilityUtils.getColor(res,
+                    useDarkColors ? R.color.locationbar_status_offline_color
+                                  : R.color.locationbar_status_offline_color_light);
+        }
+        return 0;
+    }
+
+    /**
+     * @return The resource ID of the color to use for the separator in the Omnibox Verbose status
+     * view or 0 if none applies.
+     */
+    @ColorRes
+    default int getVerboseStatusSeparatorColor(Resources res, boolean useDarkColors) {
+        return ApiCompatibilityUtils.getColor(res,
+                useDarkColors ? R.color.locationbar_status_separator_color
+                              : R.color.locationbar_status_separator_color_light);
+    }
+
+    /**
+     * @return The resource ID of the display string for the verbose status view or 0 if none
+     * applies.
+     */
+    @StringRes
+    default int getVerboseStatusString() {
+        if (isPreview()) {
+            return R.string.location_bar_verbose_status_preview;
+        }
+        if (isOfflinePage()) {
+            return R.string.location_bar_verbose_status_offline;
+        }
+        return 0;
+    }
+
+    /**
+     * @return The resource ID of the content description for the security icon.
+     */
+    @StringRes
+    default int getSecurityIconContentDescription() {
+        switch (getSecurityLevel()) {
+            case ConnectionSecurityLevel.NONE:
+            case ConnectionSecurityLevel.HTTP_SHOW_WARNING:
+                return R.string.accessibility_security_btn_warn;
+            case ConnectionSecurityLevel.DANGEROUS:
+                return R.string.accessibility_security_btn_dangerous;
+            case ConnectionSecurityLevel.SECURE_WITH_POLICY_INSTALLED_CERT:
+            case ConnectionSecurityLevel.SECURE:
+            case ConnectionSecurityLevel.EV_SECURE:
+                return R.string.accessibility_security_btn_secure;
+            default:
+                assert false;
+        }
+        return 0;
+    }
+
+    /**
+     * @return The {@link ColorStateList} to use to tint the security state icon.
+     */
+    ColorStateList getSecurityIconColorStateList();
+
+    /**
+     * @return Whether or not we should display search terms instead of a URL for query in omnibox.
+     */
+    boolean shouldDisplaySearchTerms();
 }

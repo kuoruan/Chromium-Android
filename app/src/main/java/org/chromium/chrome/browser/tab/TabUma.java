@@ -5,11 +5,14 @@
 package org.chromium.chrome.browser.tab;
 
 import android.os.SystemClock;
+import android.support.annotation.IntDef;
 
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.net.NetError;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -59,15 +62,19 @@ public class TabUma {
      * State in which the tab was created. This can be used in metric accounting - e.g. to
      * distinguish reasons for a tab to be restored upon first display.
      */
-    public enum TabCreationState {
-        LIVE_IN_FOREGROUND,
-        LIVE_IN_BACKGROUND,
-        FROZEN_ON_RESTORE,
-        FROZEN_FOR_LAZY_LOAD,
-        FROZEN_ON_RESTORE_FAILED,
+    @IntDef({TabCreationState.LIVE_IN_FOREGROUND, TabCreationState.LIVE_IN_BACKGROUND,
+            TabCreationState.FROZEN_ON_RESTORE, TabCreationState.FROZEN_FOR_LAZY_LOAD,
+            TabCreationState.FROZEN_ON_RESTORE_FAILED})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface TabCreationState {
+        int LIVE_IN_FOREGROUND = 0;
+        int LIVE_IN_BACKGROUND = 1;
+        int FROZEN_ON_RESTORE = 2;
+        int FROZEN_FOR_LAZY_LOAD = 3;
+        int FROZEN_ON_RESTORE_FAILED = 4;
     }
 
-    private final TabCreationState mTabCreationState;
+    private final @TabCreationState int mTabCreationState;
 
     // Timestamp when this tab was last shown.
     private long mLastShownTimestamp = -1;
@@ -90,21 +97,23 @@ public class TabUma {
      * Constructs a new UMA tracker for a specific tab.
      * @param creationState In what state the tab was created.
      */
-    public TabUma(TabCreationState creationState) {
+    public TabUma(@TabCreationState int creationState) {
         mTabCreationState = creationState;
 
         mLastTabStateChangeMillis = System.currentTimeMillis();
-        if (mTabCreationState == TabCreationState.LIVE_IN_FOREGROUND) {
-            updateTabState(TAB_STATE_ACTIVE);
-        } else if (mTabCreationState == TabCreationState.LIVE_IN_BACKGROUND
-                || mTabCreationState == TabCreationState.FROZEN_ON_RESTORE
-                || mTabCreationState == TabCreationState.FROZEN_FOR_LAZY_LOAD) {
-            updateTabState(TAB_STATE_INACTIVE);
-        } else if (mTabCreationState == TabCreationState.FROZEN_ON_RESTORE_FAILED) {
-            // A previous TabUma should have reported an active tab state. Initialize but avoid
-            // recording this as a state change.
-            mLastTabState = TAB_STATE_ACTIVE;
-            updateTabState(TAB_STATE_ACTIVE);
+        switch (mTabCreationState) {
+            case TabCreationState.FROZEN_ON_RESTORE_FAILED:
+                // A previous TabUma should have reported an active tab state. Initialize but avoid
+                // recording this as a state change.
+                mLastTabState = TAB_STATE_ACTIVE;
+            // Fall through
+            case TabCreationState.LIVE_IN_FOREGROUND:
+                updateTabState(TAB_STATE_ACTIVE);
+                break;
+            case TabCreationState.LIVE_IN_BACKGROUND: // Fall through
+            case TabCreationState.FROZEN_ON_RESTORE: // Fall through
+            case TabCreationState.FROZEN_FOR_LAZY_LOAD:
+                updateTabState(TAB_STATE_INACTIVE);
         }
     }
 
@@ -199,7 +208,7 @@ public class TabUma {
      *                                opened in background and not yet displayed
      * @param rank The MRU rank for this tab within the model.
      */
-    void onShow(TabSelectionType selectionType, long previousTimestampMillis, int rank) {
+    void onShow(@TabSelectionType int selectionType, long previousTimestampMillis, int rank) {
         long now = SystemClock.elapsedRealtime();
         // Do not collect the tab switching data for the first switch to a tab after the cold start
         // and for the tab switches that were not user-originated (e.g. the user closes the last

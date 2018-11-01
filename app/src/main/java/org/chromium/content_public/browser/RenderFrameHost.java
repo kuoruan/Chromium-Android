@@ -35,7 +35,14 @@ public interface RenderFrameHost {
     InterfaceProvider getRemoteInterfaces();
 
     /**
-     * Notifies the native RenderFrameHost of a user gesture.
+     * Notifies the native RenderFrameHost about a user activation from the browser side.
      */
-    void setHasReceivedUserGesture();
+    void notifyUserActivation();
+
+    /**
+     * Returns whether we're in incognito mode.
+     *
+     * @return {@code true} if we're in incoginto mode.
+     */
+    boolean isIncognito();
 }

@@ -23,6 +23,8 @@ import org.chromium.components.feature_engagement.EventConstants;
 import org.chromium.content.R;
 import org.chromium.content_public.browser.ActionModeCallbackHelper;
 import org.chromium.content_public.browser.LoadUrlParams;
+import org.chromium.content_public.browser.SelectionPopupController;
+import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.PageTransition;
 
 /**
@@ -32,9 +34,14 @@ public class ChromeActionModeCallback implements ActionMode.Callback {
     private final Tab mTab;
     private final ActionModeCallbackHelper mHelper;
 
-    public ChromeActionModeCallback(Tab tab, ActionModeCallbackHelper helper) {
+    public ChromeActionModeCallback(Tab tab, WebContents webContents) {
         mTab = tab;
-        mHelper = helper;
+        mHelper = getActionModeCallbackHelper(webContents);
+    }
+
+    @VisibleForTesting
+    protected ActionModeCallbackHelper getActionModeCallbackHelper(WebContents webContents) {
+        return SelectionPopupController.fromWebContents(webContents).getActionModeCallbackHelper();
     }
 
     @Override

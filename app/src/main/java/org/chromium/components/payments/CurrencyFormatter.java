@@ -25,20 +25,16 @@ public class CurrencyFormatter {
      * @param currencyCode  The currency code. Most commonly, this follows ISO 4217 format: 3 upper
      *                      case ASCII letters. For example, "USD". Format is not restricted. Should
      *                      not be null.
-     * @param currencySystem URI specifying the ISO4217 currency code specification. See for
-     *          details: https://w3c.github.io/browser-payment-api/#paymentcurrencyamount-dictionary
-     *          By default, the value is "urn:iso:std:iso:4217".
      * @param userLocale User's current locale. Should not be null.
      */
-    public CurrencyFormatter(String currencyCode, String currencySystem, Locale userLocale) {
+    public CurrencyFormatter(String currencyCode, Locale userLocale) {
         assert currencyCode != null : "currencyCode should not be null";
-        assert currencySystem != null : "currencySystem should not be null";
         assert userLocale != null : "userLocale should not be null";
 
         // Note that this pointer could leak the native object. The called must call destroy() to
         // ensure that the native object is destroyed.
-        mCurrencyFormatterAndroid = nativeInitCurrencyFormatterAndroid(
-                currencyCode, currencySystem, userLocale.toString());
+        mCurrencyFormatterAndroid =
+                nativeInitCurrencyFormatterAndroid(currencyCode, userLocale.toString());
     }
 
     /** Will destroy the native object. This class shouldn't be used afterwards. */
@@ -70,8 +66,7 @@ public class CurrencyFormatter {
         return nativeFormat(mCurrencyFormatterAndroid, amountValue);
     }
 
-    private native long nativeInitCurrencyFormatterAndroid(
-            String currencyCode, String currencySystem, String localeName);
+    private native long nativeInitCurrencyFormatterAndroid(String currencyCode, String localeName);
     private native void nativeDestroy(long nativeCurrencyFormatterAndroid);
     private native String nativeFormat(long nativeCurrencyFormatterAndroid, String amountValue);
     private native String nativeGetFormattedCurrencyCode(long nativeCurrencyFormatterAndroid);

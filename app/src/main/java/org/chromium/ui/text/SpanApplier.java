@@ -4,6 +4,7 @@
 
 package org.chromium.ui.text;
 
+import android.support.annotation.Nullable;
 import android.text.SpannableString;
 
 import java.util.Arrays;
@@ -28,16 +29,17 @@ public class SpanApplier {
     public static final class SpanInfo implements Comparable<SpanInfo> {
         final String mStartTag;
         final String mEndTag;
-        final Object mSpan;
+        final @Nullable Object mSpan;
         int mStartTagIndex;
         int mEndTagIndex;
 
         /**
          * @param startTag The start tag, e.g. "<tos>".
          * @param endTag The end tag, e.g. "</tos>".
-         * @param span The span to apply to the text between the start and end tags.
+         * @param span The span to apply to the text between the start and end tags. May be null,
+         *         then SpanApplier will just remove start and end tags without applying any span.
          */
-        public SpanInfo(String startTag, String endTag, Object span) {
+        public SpanInfo(String startTag, String endTag, @Nullable Object span) {
             mStartTag = startTag;
             mEndTag = endTag;
             mSpan = span;
@@ -109,7 +111,7 @@ public class SpanApplier {
 
         SpannableString spannableString = new SpannableString(output);
         for (SpanInfo span : spans) {
-            if (span.mStartTagIndex != -1) {
+            if (span.mStartTagIndex != -1 && span.mSpan != null) {
                 spannableString.setSpan(span.mSpan, span.mStartTagIndex, span.mEndTagIndex, 0);
             }
         }

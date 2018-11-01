@@ -67,6 +67,11 @@ public class AudioFocusDelegate implements AudioManager.OnAudioFocusChangeListen
         am.abandonAudioFocus(this);
     }
 
+    @CalledByNative
+    private boolean isFocusTransient() {
+        return mFocusType == AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK;
+    }
+
     private boolean requestAudioFocusInternal() {
         AudioManager am = (AudioManager) ContextUtils.getApplicationContext().getSystemService(
                 Context.AUDIO_SERVICE);

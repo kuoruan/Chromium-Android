@@ -38,9 +38,6 @@ public final class UrlRequest extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static UrlRequest deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -54,7 +51,9 @@ public final class UrlRequest extends org.chromium.mojo.bindings.Struct {
         UrlRequest result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new UrlRequest(mainDataHeader.elementsOrVersion);
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new UrlRequest(elementsOrVersion);
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -65,29 +64,5 @@ public final class UrlRequest extends org.chromium.mojo.bindings.Struct {
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        return result;
     }
 }

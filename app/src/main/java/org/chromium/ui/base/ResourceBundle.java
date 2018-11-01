@@ -20,8 +20,7 @@ final class ResourceBundle {
 
     @CalledByNative
     private static String getLocalePakResourcePath(String locale) {
-        if (Arrays.binarySearch(BuildConfig.UNCOMPRESSED_LOCALES,
-                "stored-locales/" + locale) >= 0) {
+        if (Arrays.binarySearch(BuildConfig.UNCOMPRESSED_LOCALES, locale) >= 0) {
             return "assets/stored-locales/" + locale + ".pak";
         }
         return null;

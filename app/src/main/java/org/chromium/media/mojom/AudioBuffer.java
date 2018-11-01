@@ -25,7 +25,7 @@ public final class AudioBuffer extends org.chromium.mojo.bindings.Struct {
     public int sampleRate;
     public int frameCount;
     public boolean endOfStream;
-    public org.chromium.mojo.common.mojom.TimeDelta timestamp;
+    public org.chromium.mojo_base.mojom.TimeDelta timestamp;
     public byte[] data;
 
     private AudioBuffer(int version) {
@@ -46,9 +46,6 @@ public final class AudioBuffer extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static AudioBuffer deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -62,42 +59,44 @@ public final class AudioBuffer extends org.chromium.mojo.bindings.Struct {
         AudioBuffer result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new AudioBuffer(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new AudioBuffer(elementsOrVersion);
+                {
+                    
                 result.sampleFormat = decoder0.readInt(8);
                     SampleFormat.validate(result.sampleFormat);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.channelLayout = decoder0.readInt(12);
                     ChannelLayout.validate(result.channelLayout);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.channelCount = decoder0.readInt(16);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.sampleRate = decoder0.readInt(20);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.frameCount = decoder0.readInt(24);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.endOfStream = decoder0.readBoolean(28, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
-                result.timestamp = org.chromium.mojo.common.mojom.TimeDelta.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                result.timestamp = org.chromium.mojo_base.mojom.TimeDelta.decode(decoder1);
+                }
+                {
+                    
                 result.data = decoder0.readBytes(40, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -124,54 +123,5 @@ public final class AudioBuffer extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.timestamp, 32, false);
         
         encoder0.encode(this.data, 40, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        AudioBuffer other = (AudioBuffer) object;
-        if (this.sampleFormat!= other.sampleFormat)
-            return false;
-        if (this.channelLayout!= other.channelLayout)
-            return false;
-        if (this.channelCount!= other.channelCount)
-            return false;
-        if (this.sampleRate!= other.sampleRate)
-            return false;
-        if (this.frameCount!= other.frameCount)
-            return false;
-        if (this.endOfStream!= other.endOfStream)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.timestamp, other.timestamp))
-            return false;
-        if (!java.util.Arrays.equals(this.data, other.data))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sampleFormat);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.channelLayout);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.channelCount);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sampleRate);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.frameCount);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.endOfStream);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.timestamp);
-        result = prime * result + java.util.Arrays.hashCode(this.data);
-        return result;
     }
 }

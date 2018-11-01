@@ -44,9 +44,6 @@ public final class PipelineStatistics extends org.chromium.mojo.bindings.Struct 
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static PipelineStatistics deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -60,31 +57,33 @@ public final class PipelineStatistics extends org.chromium.mojo.bindings.Struct 
         PipelineStatistics result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new PipelineStatistics(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new PipelineStatistics(elementsOrVersion);
+                {
+                    
                 result.audioBytesDecoded = decoder0.readLong(8);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.videoBytesDecoded = decoder0.readLong(16);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.videoFramesDecoded = decoder0.readInt(24);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.videoFramesDropped = decoder0.readInt(28);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.audioMemoryUsage = decoder0.readLong(32);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.videoMemoryUsage = decoder0.readLong(40);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -107,48 +106,5 @@ public final class PipelineStatistics extends org.chromium.mojo.bindings.Struct 
         encoder0.encode(this.audioMemoryUsage, 32);
         
         encoder0.encode(this.videoMemoryUsage, 40);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        PipelineStatistics other = (PipelineStatistics) object;
-        if (this.audioBytesDecoded!= other.audioBytesDecoded)
-            return false;
-        if (this.videoBytesDecoded!= other.videoBytesDecoded)
-            return false;
-        if (this.videoFramesDecoded!= other.videoFramesDecoded)
-            return false;
-        if (this.videoFramesDropped!= other.videoFramesDropped)
-            return false;
-        if (this.audioMemoryUsage!= other.audioMemoryUsage)
-            return false;
-        if (this.videoMemoryUsage!= other.videoMemoryUsage)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.audioBytesDecoded);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoBytesDecoded);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoFramesDecoded);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoFramesDropped);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.audioMemoryUsage);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.videoMemoryUsage);
-        return result;
     }
 }

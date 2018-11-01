@@ -9,6 +9,7 @@ import android.content.Context;
 import org.chromium.base.Callback;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.browser.background_task_scheduler.NativeBackgroundTask;
+import org.chromium.chrome.browser.background_task_scheduler.NativeBackgroundTask.StartBeforeNativeResult;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.components.background_task_scheduler.TaskParameters;
 import org.chromium.components.download.DownloadTaskType;
@@ -37,7 +38,7 @@ public class DownloadBackgroundTask extends NativeBackgroundTask {
     private Map<Integer, PendingTaskCounter> mPendingTaskCounters = new HashMap<>();
 
     @Override
-    protected int onStartTaskBeforeNativeLoaded(
+    protected @StartBeforeNativeResult int onStartTaskBeforeNativeLoaded(
             Context context, TaskParameters taskParameters, TaskFinishedCallback callback) {
         boolean requiresCharging = taskParameters.getExtras().getBoolean(
                 DownloadTaskScheduler.EXTRA_BATTERY_REQUIRES_CHARGING);
@@ -46,10 +47,10 @@ public class DownloadBackgroundTask extends NativeBackgroundTask {
         // Reschedule if minimum battery level is not satisfied.
         if (!requiresCharging
                 && BatteryStatusListenerAndroid.getBatteryPercentage() < optimalBatteryPercentage) {
-            return NativeBackgroundTask.RESCHEDULE;
+            return StartBeforeNativeResult.RESCHEDULE;
         }
 
-        return NativeBackgroundTask.LOAD_NATIVE;
+        return StartBeforeNativeResult.LOAD_NATIVE;
     }
 
     @Override
@@ -65,6 +66,8 @@ public class DownloadBackgroundTask extends NativeBackgroundTask {
         Callback<Boolean> wrappedCallback = new Callback<Boolean>() {
             @Override
             public void onResult(Boolean needsReschedule) {
+                if (mPendingTaskCounters.get(taskType) == null) return;
+
                 boolean noPendingCallbacks =
                         decrementPendingCallbackCount(taskType, needsReschedule);
                 if (noPendingCallbacks) {

@@ -31,10 +31,10 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.firstrun.FirstRunFlowSequencer;
 import org.chromium.chrome.browser.locale.LocaleManager;
-import org.chromium.chrome.browser.omnibox.LocationBarLayout;
+import org.chromium.chrome.browser.omnibox.UrlBarData;
+import org.chromium.chrome.browser.search_engines.TemplateUrl;
 import org.chromium.chrome.browser.search_engines.TemplateUrlService;
 import org.chromium.chrome.browser.search_engines.TemplateUrlService.LoadListener;
-import org.chromium.chrome.browser.search_engines.TemplateUrlService.TemplateUrl;
 import org.chromium.chrome.browser.search_engines.TemplateUrlService.TemplateUrlServiceObserver;
 import org.chromium.chrome.browser.util.IntentUtils;
 
@@ -133,7 +133,6 @@ public class SearchWidgetProvider extends AppWidgetProvider {
     /** Number of consecutive crashes this widget will absorb before giving up. */
     private static final int CRASH_LIMIT = 3;
 
-    private static final String TAG = "searchwidget";
     private static final Object DELEGATE_LOCK = new Object();
     private static final Object OBSERVER_LOCK = new Object();
 
@@ -151,7 +150,7 @@ public class SearchWidgetProvider extends AppWidgetProvider {
      */
     public static void initialize() {
         ThreadUtils.assertOnUiThread();
-        assert LibraryLoader.isInitialized();
+        assert LibraryLoader.getInstance().isInitialized();
 
         // Set up an observer to monitor for changes.
         synchronized (OBSERVER_LOCK) {
@@ -219,7 +218,7 @@ public class SearchWidgetProvider extends AppWidgetProvider {
 
     @VisibleForTesting
     static void startSearchActivity(Intent intent, boolean startVoiceSearch) {
-        Log.d(TAG, "Launching SearchActivity: VOICE=" + startVoiceSearch);
+        Log.d(SearchActivity.TAG, "Launching SearchActivity: VOICE=" + startVoiceSearch);
         Context context = getDelegate().getContext();
 
         // Abort if the user needs to go through First Run.
@@ -285,7 +284,7 @@ public class SearchWidgetProvider extends AppWidgetProvider {
         String text = TextUtils.isEmpty(engineName) || !shouldShowFullString()
                 ? context.getString(R.string.search_widget_default)
                 : context.getString(R.string.search_with_product, engineName);
-        views.setTextViewText(R.id.title, text);
+        views.setCharSequence(R.id.title, "setHint", text);
 
         return views;
     }
@@ -310,7 +309,7 @@ public class SearchWidgetProvider extends AppWidgetProvider {
     /** Attempts to update the cached search engine name. */
     public static void updateCachedEngineName() {
         ThreadUtils.assertOnUiThread();
-        if (!LibraryLoader.isInitialized()) return;
+        if (!LibraryLoader.getInstance().isInitialized()) return;
 
         // Getting an instance of the TemplateUrlService requires that the native library be
         // loaded, but the TemplateUrlService also itself needs to be initialized.
@@ -323,8 +322,11 @@ public class SearchWidgetProvider extends AppWidgetProvider {
         if (dseTemplateUrl != null) {
             String searchEngineUrl =
                     service.getSearchEngineUrlFromTemplateUrl(dseTemplateUrl.getKeyword());
+            UrlBarData urlBarData = UrlBarData.forUrl(searchEngineUrl);
             sDefaultSearchEngineUrl =
-                    LocationBarLayout.splitPathFromUrlDisplayText(searchEngineUrl).first;
+                    urlBarData.displayText
+                            .subSequence(urlBarData.originStartIndex, urlBarData.originEndIndex)
+                            .toString();
             engineName = dseTemplateUrl.getShortName();
         }
 
@@ -400,7 +402,8 @@ public class SearchWidgetProvider extends AppWidgetProvider {
 
             if (numCrashes < CRASH_LIMIT) {
                 // Absorb the crash.
-                Log.e(TAG, "Absorbing exception caught when attempting to launch widget.", e);
+                Log.e(SearchActivity.TAG,
+                        "Absorbing exception caught when attempting to launch widget.", e);
             } else {
                 // Too many crashes have happened consecutively.  Let Android handle it.
                 throw e;

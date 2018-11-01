@@ -278,8 +278,7 @@ public class RemoteMediaPlayerController implements MediaRouteController.UiListe
     }
 
     @Override
-    public void onPlaybackStateChanged(PlayerState newState) {
-    }
+    public void onPlaybackStateChanged(@PlayerState int newState) {}
 
     @Override
     public void onError(int error, String errorMessage) {
@@ -344,5 +343,4 @@ public class RemoteMediaPlayerController implements MediaRouteController.UiListe
     static RemoteMediaPlayerController getIfExists() {
         return sInstance;
     }
-
 }

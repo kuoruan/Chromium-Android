@@ -6,16 +6,23 @@ package org.chromium.base;
 
 import android.app.Activity;
 import android.content.ComponentCallbacks2;
-import android.content.res.Configuration;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.MainDex;
-
+import org.chromium.base.memory.MemoryPressureCallback;
 
 /**
- * This is an internal implementation of the C++ counterpart.
- * It registers a ComponentCallbacks2 with the system, and dispatches into
- * native for levels that are considered actionable.
+ * This class is Java equivalent of base::MemoryPressureListener: it distributes pressure
+ * signals to callbacks.
+ *
+ * The class also serves as an entry point to the native side - once native code is ready,
+ * it adds native callback.
+ *
+ * notifyMemoryPressure() is called exclusively by MemoryPressureMonitor, which
+ * monitors and throttles pressure signals.
+ *
+ * NOTE: this class should only be used on UiThread as defined by ThreadUtils (which is
+ *       Android main thread for Chrome, but can be some other thread for WebView).
  */
 @MainDex
 public class MemoryPressureListener {
@@ -45,57 +52,41 @@ public class MemoryPressureListener {
     private static final String ACTION_TRIM_MEMORY_MODERATE =
             "org.chromium.base.ACTION_TRIM_MEMORY_MODERATE";
 
-    private static OnMemoryPressureCallbackForTesting sOnMemoryPressureCallbackForTesting;
+    private static final ObserverList<MemoryPressureCallback> sCallbacks = new ObserverList<>();
 
-    @VisibleForTesting
+    /**
+     * Called by the native side to add native callback.
+     */
     @CalledByNative
-    public static void registerSystemCallback() {
-        ContextUtils.getApplicationContext().registerComponentCallbacks(
-                new ComponentCallbacks2() {
-                    @Override
-                    public void onTrimMemory(int level) {
-                        if (level >= ComponentCallbacks2.TRIM_MEMORY_COMPLETE
-                                || level == ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL) {
-                            onMemoryPressure(MemoryPressureLevel.CRITICAL);
-                        } else if (level >= ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
-                            // Don't notifiy on TRIM_MEMORY_UI_HIDDEN, since this class only
-                            // dispatches actionable memory pressure signals to native.
-                            onMemoryPressure(MemoryPressureLevel.MODERATE);
-                        }
-                    }
-
-                    @Override
-                    public void onLowMemory() {
-                        onMemoryPressure(MemoryPressureLevel.CRITICAL);
-                    }
-
-                    @Override
-                    public void onConfigurationChanged(Configuration configuration) {
-                    }
-                });
+    private static void addNativeCallback() {
+        addCallback(MemoryPressureListener::nativeOnMemoryPressure);
     }
 
-    /** Memory pressure callback that is called before calling native. Use for testing only.
+    /**
+     * Adds a memory pressure callback.
+     * Callback is only added once, regardless of the number of addCallback() calls.
+     * This method should be called only on ThreadUtils.UiThread.
      */
-    @VisibleForTesting
-    @FunctionalInterface
-    public interface OnMemoryPressureCallbackForTesting {
-        public void apply(@MemoryPressureLevel int pressure);
+    public static void addCallback(MemoryPressureCallback callback) {
+        sCallbacks.addObserver(callback);
     }
 
-    @VisibleForTesting
-    public static void setOnMemoryPressureCallbackForTesting(
-            OnMemoryPressureCallbackForTesting callback) {
-        sOnMemoryPressureCallbackForTesting = callback;
-    }
-
-    /** Reports memory pressure.
+    /**
+     * Removes previously added memory pressure callback.
+     * This method should be called only on ThreadUtils.UiThread.
      */
-    public static void onMemoryPressure(@MemoryPressureLevel int pressure) {
-        if (sOnMemoryPressureCallbackForTesting != null) {
-            sOnMemoryPressureCallbackForTesting.apply(pressure);
+    public static void removeCallback(MemoryPressureCallback callback) {
+        sCallbacks.removeObserver(callback);
+    }
+
+    /**
+     * Distributes |pressure| to all callbacks.
+     * This method should be called only on ThreadUtils.UiThread.
+     */
+    public static void notifyMemoryPressure(@MemoryPressureLevel int pressure) {
+        for (MemoryPressureCallback callback : sCallbacks) {
+            callback.onPressure(pressure);
         }
-        nativeOnMemoryPressure(pressure);
     }
 
     /**
@@ -135,6 +126,5 @@ public class MemoryPressureListener {
         activity.onTrimMemory(level);
     }
 
-    // Don't call directly, always go through onMemoryPressure().
     private static native void nativeOnMemoryPressure(@MemoryPressureLevel int pressure);
 }

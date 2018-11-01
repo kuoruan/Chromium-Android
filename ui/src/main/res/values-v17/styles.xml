@@ -21,25 +21,24 @@
     <style name="ButtonCompatBase">
         <item name="android:minWidth">88dp</item>
         <item name="android:minHeight">36dp</item>
-        <item name="android:textSize">14sp</item>
         <item name="android:paddingStart">20dp</item>
         <item name="android:paddingEnd">20dp</item>
         <item name="android:paddingTop">5dp</item>
         <item name="android:paddingBottom">5dp</item>
-        <item name="android:textAllCaps">true</item>
         <item name="android:focusable">true</item>
         <item name="android:clickable">true</item>
         <item name="android:gravity">center_vertical|center_horizontal</item>
     </style>
     <style name="ButtonCompat" parent="ButtonCompatBase">
         <item name="android:background">@drawable/button_compat_shape</item>
-        <item name="android:textStyle">bold</item>
     </style>
     <style name="ButtonCompatBorderless" parent="ButtonCompat">
         <item name="android:background">?android:attr/selectableItemBackground</item>
     </style>
 
     <!-- Used by Chrome and Content -->
+    <!-- TODO(huayinz): Update prefixes for text appearance styles in ui/android. -->
+    <style name="TextAppearance" parent="android:TextAppearance" tools:ignore="UnusedResources" />
     <style name="RobotoMediumStyle">
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:textStyle">bold</item>
@@ -48,59 +47,64 @@
     <!-- Black Text Styles -->
     <!-- TODO(huayinz): remove tools:ignore once these text styles are all used in ui/android -->
     <style name="BlackHeadline1" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_87</item>
+        <item name="android:textColor">@color/default_text_color</item>
         <item name="android:textSize">@dimen/headline_size_large</item>
     </style>
     <style name="BlackHeadline2" parent="RobotoMediumStyle" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_87</item>
+        <item name="android:textColor">@color/default_text_color</item>
         <item name="android:textSize">@dimen/headline_size_medium</item>
     </style>
     <style name="BlackTitle1" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_87</item>
+        <item name="android:textColor">@color/black_title_color_list</item>
         <item name="android:textSize">@dimen/text_size_large</item>
     </style>
     <style name="BlackTitle2" parent="RobotoMediumStyle" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_87</item>
+        <item name="android:textColor">@color/default_text_color</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>
     <style name="BlackHint1" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_54</item>
+        <item name="android:textColor">@color/default_text_color_secondary</item>
         <item name="android:textSize">@dimen/text_size_large</item>
     </style>
     <style name="BlackHint2" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_54</item>
+        <item name="android:textColor">@color/default_text_color_secondary</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>
     <style name="BlackDisabledText1" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_38</item>
+        <item name="android:textColor">@color/disabled_text_color</item>
         <item name="android:textSize">@dimen/text_size_large</item>
     </style>
     <style name="BlackDisabledText2" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_38</item>
+        <item name="android:textColor">@color/disabled_text_color</item>
         <item name="android:textSize">@dimen/text_size_small</item>
     </style>
+    <style name="BlackDisabledText3" tools:ignore="UnusedResources">
+        <item name="android:textColor">@color/disabled_text_color</item>
+        <item name="android:textSize">@dimen/text_size_medium</item>
+    </style>
     <style name="BlackBodyDefault" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_87</item>
+        <item name="android:textColor">@color/default_text_color</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>
     <style name="BlackBody" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_54</item>
+        <item name="android:textColor">@color/black_body_color_list</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>
     <style name="BlackCaptionDefault" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_87</item>
+        <item name="android:textColor">@color/default_text_color</item>
         <item name="android:textSize">@dimen/text_size_small</item>
     </style>
     <style name="BlackCaption" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_54</item>
+        <item name="android:textColor">@color/default_text_color_secondary</item>
         <item name="android:textSize">@dimen/text_size_small</item>
     </style>
     <style name="BlackButtonText" parent="RobotoMediumStyle" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_54</item>
+        <item name="android:textColor">@color/default_text_color_secondary</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
+        <item name="android:textAllCaps">true</item>
     </style>
     <style name="BlackLink" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/black_alpha_54</item>
+        <item name="android:textColor">@color/default_text_color_secondary</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
         <item name="android:textStyle">bold</item>
     </style>
@@ -114,8 +118,12 @@
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">@dimen/headline_size_medium</item>
     </style>
+    <style name="WhiteHeadlineIncognito" tools:ignore="UnusedResources">
+        <item name="android:textColor">@color/modern_grey_300</item>
+        <item name="android:textSize">@dimen/headline_size_large</item>
+    </style>
     <style name="WhiteBodyIncognito" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/white_alpha_70</item>
+        <item name="android:textColor">@color/modern_grey_400</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>
     <style name="WhiteBody" tools:ignore="UnusedResources">
@@ -130,6 +138,9 @@
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>
+    <style name="WhiteButtonText" parent="WhiteTitle2" tools:ignore="UnusedResources">
+        <item name="android:textAllCaps">true</item>
+    </style>
     <style name="WhiteLink" tools:ignore="UnusedResources">
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
@@ -138,23 +149,25 @@
 
     <!-- Blue Text Styles -->
     <style name="BlueButtonText1" parent="RobotoMediumStyle" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/google_blue_300</item>
+        <item name="android:textColor">@color/modern_blue_300</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
+        <item name="android:textAllCaps">true</item>
     </style>
     <style name="BlueButtonText2" parent="RobotoMediumStyle" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/google_blue_500</item>
+        <item name="android:textColor">@color/blue_when_enabled</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
+        <item name="android:textAllCaps">true</item>
     </style>
     <style name="BlueLink1" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/google_blue_700</item>
+        <item name="android:textColor">@color/default_text_color_link</item>
         <item name="android:textSize">@dimen/text_size_large</item>
     </style>
     <style name="BlueLink2" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/google_blue_700</item>
+        <item name="android:textColor">@color/default_text_color_link</item>
         <item name="android:textSize">@dimen/text_size_medium</item>
     </style>
     <style name="BlueLink3" tools:ignore="UnusedResources">
-        <item name="android:textColor">@color/google_blue_700</item>
+        <item name="android:textColor">@color/default_text_color_link</item>
         <item name="android:textSize">@dimen/text_size_small</item>
     </style>
 </resources>

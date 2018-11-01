@@ -151,9 +151,11 @@ public class ContentSettingsResources {
                                  R.string.website_settings_category_notifications_ask, 0));
             localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS,
                     new ResourceItem(R.drawable.permission_popups, R.string.popup_permission_title,
-                                 R.string.popup_permission_title, ContentSetting.ALLOW,
-                                 ContentSetting.BLOCK, 0,
-                                 R.string.website_settings_category_popups_blocked));
+                            R.string.popup_permission_title, ContentSetting.ALLOW,
+                            ContentSetting.BLOCK, 0,
+                            R.string.website_settings_category_popups_redirects_blocked));
+            // PROTECTED_MEDIA_IDENTIFIER uses 3-state preference so some values are not used.
+            // If 3-state becomes more common we should update localMaps to support it better.
             localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER,
                     new ResourceItem(R.drawable.permission_protected_media,
                                  org.chromium.chrome.R.string.protected_content,
@@ -167,7 +169,18 @@ public class ContentSettingsResources {
                             R.string.website_settings_category_sound_blocked));
             localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA,
                     new ResourceItem(R.drawable.settings_usb, 0, 0, ContentSetting.ASK,
-                                 ContentSetting.BLOCK, 0, 0));
+                            ContentSetting.BLOCK, 0, 0));
+            localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_GUARD,
+                    new ResourceItem(R.drawable.settings_usb, R.string.website_settings_usb,
+                            R.string.website_settings_usb, ContentSetting.ASK, ContentSetting.BLOCK,
+                            R.string.website_settings_category_usb_ask,
+                            R.string.website_settings_category_usb_blocked));
+            localMap.put(ContentSettingsType.CONTENT_SETTINGS_TYPE_SENSORS,
+                    new ResourceItem(R.drawable.settings_sensors, R.string.sensors_permission_title,
+                            R.string.sensors_permission_title, ContentSetting.ALLOW,
+                            ContentSetting.BLOCK,
+                            R.string.website_settings_category_sensors_allowed,
+                            R.string.website_settings_category_sensors_blocked));
             sResourceInfo = localMap;
         }
         return sResourceInfo;
@@ -185,16 +198,6 @@ public class ContentSettingsResources {
      */
     public static int getIcon(int contentType) {
         return getResourceItem(contentType).getIcon();
-    }
-
-    /**
-     * Creates a {@link Drawable} for the given content type with the correct tint applied.
-     */
-    public static Drawable getTintedIcon(int contentType, Resources resources) {
-        Drawable icon = ApiCompatibilityUtils.getDrawable(resources, getIcon(contentType));
-        icon.setColorFilter(ApiCompatibilityUtils.getColor(resources, R.color.black_alpha_65),
-                PorterDuff.Mode.SRC_IN);
-        return icon;
     }
 
     /**
@@ -247,7 +250,7 @@ public class ContentSettingsResources {
      * Returns the string resource id for a given ContentSetting to show with a permission category.
      * @param value The ContentSetting for which we want the resource.
      */
-    private static int getCategorySummary(ContentSetting value) {
+    public static int getCategorySummary(ContentSetting value) {
         switch (value) {
             case ALLOW:
                 return R.string.website_settings_category_allowed;
@@ -344,5 +347,24 @@ public class ContentSettingsResources {
      */
     public static int getSoundBlockedListSummary() {
         return R.string.website_settings_category_sound_blocked_list;
+    }
+
+    /**
+     * Returns the resources IDs for descriptions for Allowed, Ask and Blocked states, in that
+     * order, on a tri-state setting.
+     *
+     * @return An array of 3 resource IDs for descriptions for Allowed, Ask and
+     *         Blocked states, in that order.
+     */
+    public static int[] getTriStateSettingDescriptionIDs(int contentType) {
+        if (contentType == ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER) {
+            int[] descriptionIDs = {R.string.website_settings_category_protected_content_allowed,
+                    R.string.website_settings_category_protected_content_ask,
+                    R.string.website_settings_category_protected_content_blocked};
+            return descriptionIDs;
+        }
+
+        assert false;
+        return null;
     }
 }

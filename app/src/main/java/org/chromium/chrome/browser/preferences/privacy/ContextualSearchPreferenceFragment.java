@@ -12,7 +12,6 @@ import android.preference.PreferenceFragment;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchUma;
 import org.chromium.chrome.browser.preferences.ChromeSwitchPreference;
-import org.chromium.chrome.browser.preferences.ManagedPreferenceDelegate;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.PreferenceUtils;
 
@@ -48,12 +47,8 @@ public class ContextualSearchPreferenceFragment extends PreferenceFragment {
                 return true;
             }
         });
-        contextualSearchSwitch.setManagedPreferenceDelegate(new ManagedPreferenceDelegate() {
-            @Override
-            public boolean isPreferenceControlledByPolicy(Preference preference) {
-                return PrefServiceBridge.getInstance().isContextualSearchDisabledByPolicy();
-            }
-        });
+        contextualSearchSwitch.setManagedPreferenceDelegate(
+                preference -> PrefServiceBridge.getInstance().isContextualSearchDisabledByPolicy());
     }
 
 }

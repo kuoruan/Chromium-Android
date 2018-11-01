@@ -14,7 +14,7 @@ public final class GURLUtils {
 
     /**
      * Get the origin of an url: Ex getOrigin("http://www.example.com:8080/index.html?bar=foo")
-     * would return "http://www.example.com:8080". It will return an empty string for an
+     * would return "http://www.example.com:8080/". It will return an empty string for an
      * invalid url.
      *
      * @return The origin of the url

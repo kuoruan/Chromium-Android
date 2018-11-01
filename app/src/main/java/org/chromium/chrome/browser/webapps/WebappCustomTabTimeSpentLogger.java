@@ -37,13 +37,13 @@ public class WebappCustomTabTimeSpentLogger {
         long timeSpent = SystemClock.elapsedRealtime() - mStartTime;
         String umaSuffix;
         switch (mActivityType) {
-            case WebappActivity.ACTIVITY_TYPE_WEBAPP:
+            case WebappActivity.ActivityType.WEBAPP:
                 umaSuffix = ".Webapp";
                 break;
-            case WebappActivity.ACTIVITY_TYPE_WEBAPK:
+            case WebappActivity.ActivityType.WEBAPK:
                 umaSuffix = ".WebApk";
                 break;
-            case WebappActivity.ACTIVITY_TYPE_TWA:
+            case WebappActivity.ActivityType.TWA:
                 umaSuffix = ".TWA";
                 break;
             default:

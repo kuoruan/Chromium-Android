@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
+import android.support.v4.util.ObjectsCompat;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnLayoutChangeListener;
@@ -20,7 +21,7 @@ import android.view.WindowManager;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.tab.Tab;
-import org.chromium.content_public.browser.ContentViewCore;
+import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.widget.Toast;
 
 import java.lang.ref.WeakReference;
@@ -44,12 +45,16 @@ public class FullscreenHtmlApiHandler {
     private final Handler mHandler;
     private final FullscreenHtmlApiDelegate mDelegate;
 
-    // We still need this since we are setting fullscreen UI state on the ContentViewCore's
-    // container view, and a Tab can change to have null content view core, i.e., if you navigate
-    // to a native page.
-    @Nullable private ContentViewCore mContentViewCoreInFullscreen;
+    // We need to cache WebContents/ContentView since we are setting fullscreen UI state on
+    // the WebContents's container view, and a Tab can change to have null web contents/
+    // content view, i.e., if you navigate to a native page.
+    @Nullable
+    private WebContents mWebContentsInFullscreen;
+    @Nullable
+    private View mContentViewInFullscreen;
     @Nullable private Tab mTabInFullscreen;
     private boolean mIsPersistentMode;
+    private FullscreenOptions mFullscreenOptions;
 
     // Toast at the top of the screen that is shown when user enters fullscreen for the
     // first time.
@@ -68,7 +73,7 @@ public class FullscreenHtmlApiHandler {
          * Once the delegate has hidden the their controls, it must call
          * {@link FullscreenHtmlApiHandler#enterFullscreen(Tab)}.
          */
-        void onEnterFullscreen();
+        void onEnterFullscreen(FullscreenOptions options);
 
         /**
          * Cancels a pending enter fullscreen request if present.
@@ -107,10 +112,11 @@ public class FullscreenHtmlApiHandler {
             FullscreenHtmlApiHandler fullscreenHtmlApiHandler = mFullscreenHtmlApiHandler.get();
             if (fullscreenHtmlApiHandler == null) return;
 
-            final ContentViewCore cvc = fullscreenHtmlApiHandler.mContentViewCoreInFullscreen;
-            if (cvc == null) return;
+            final WebContents webContents = fullscreenHtmlApiHandler.mWebContentsInFullscreen;
+            if (webContents == null) return;
 
-            final View contentView = cvc.getContainerView();
+            final View contentView = fullscreenHtmlApiHandler.mContentViewInFullscreen;
+            if (contentView == null) return;
             int systemUiVisibility = contentView.getSystemUiVisibility();
 
             switch (msg.what) {
@@ -122,9 +128,8 @@ public class FullscreenHtmlApiHandler {
                             == SYSTEM_UI_FLAG_FULLSCREEN) {
                         return;
                     }
-                    systemUiVisibility |= SYSTEM_UI_FLAG_FULLSCREEN;
-                    systemUiVisibility |= SYSTEM_UI_FLAG_LOW_PROFILE;
-                    systemUiVisibility |= getExtraFullscreenUIFlags();
+                    systemUiVisibility = fullscreenHtmlApiHandler.applyEnterFullscreenUIFlags(
+                            systemUiVisibility);
                     contentView.setSystemUiVisibility(systemUiVisibility);
 
                     // Trigger a update to clear the SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN flag
@@ -180,29 +185,40 @@ public class FullscreenHtmlApiHandler {
     }
 
     /**
-     * Enters or exits persistent fullscreen mode.  In this mode, the browser controls will be
+     * Enters persistent fullscreen mode. In this mode, the browser controls will be
      * permanently hidden until this mode is exited.
      *
-     * @param enabled Whether to enable persistent fullscreen mode.
+     * @param options Options to choose mode of fullscreen.
      */
-    public void setPersistentFullscreenMode(boolean enabled) {
-        if (mIsPersistentMode == enabled) return;
-
-        mIsPersistentMode = enabled;
-
-        if (mIsPersistentMode) {
-            mDelegate.onEnterFullscreen();
-        } else {
-            if (mContentViewCoreInFullscreen != null && mTabInFullscreen != null) {
-                exitFullscreen(mContentViewCoreInFullscreen, mTabInFullscreen);
-            } else {
-                if (!mDelegate.cancelPendingEnterFullscreen()) {
-                    assert false : "No content view previously set to fullscreen.";
-                }
-            }
-            mContentViewCoreInFullscreen = null;
-            mTabInFullscreen = null;
+    public void enterPersistentFullscreenMode(FullscreenOptions options) {
+        if (mIsPersistentMode && ObjectsCompat.equals(mFullscreenOptions, options)) {
+            return;
         }
+
+        mIsPersistentMode = true;
+        mDelegate.onEnterFullscreen(options);
+    }
+
+    /**
+     * Exits persistent fullscreen mode. Will restore browser controls visibility
+     * if they have been hidden.
+     */
+    public void exitPersistentFullscreenMode() {
+        if (!mIsPersistentMode) return;
+
+        mIsPersistentMode = false;
+
+        if (mWebContentsInFullscreen != null && mTabInFullscreen != null) {
+            exitFullscreen(mWebContentsInFullscreen, mContentViewInFullscreen, mTabInFullscreen);
+        } else {
+            if (!mDelegate.cancelPendingEnterFullscreen()) {
+                assert false : "No content view previously set to fullscreen.";
+            }
+        }
+        mWebContentsInFullscreen = null;
+        mContentViewInFullscreen = null;
+        mTabInFullscreen = null;
+        mFullscreenOptions = null;
     }
 
     /**
@@ -213,19 +229,17 @@ public class FullscreenHtmlApiHandler {
         return mIsPersistentMode;
     }
 
-    private void exitFullscreen(final ContentViewCore contentViewCore, final Tab tab) {
-        final View contentView = contentViewCore.getContainerView();
+    private void exitFullscreen(WebContents webContents, View contentView, Tab tab) {
         hideNotificationToast();
         mHandler.removeMessages(MSG_ID_SET_FULLSCREEN_SYSTEM_UI_FLAGS);
         mHandler.removeMessages(MSG_ID_CLEAR_LAYOUT_FULLSCREEN_FLAG);
 
         int systemUiVisibility = contentView.getSystemUiVisibility();
-        systemUiVisibility &= ~SYSTEM_UI_FLAG_LOW_PROFILE;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             systemUiVisibility &= ~SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-            systemUiVisibility &= ~SYSTEM_UI_FLAG_FULLSCREEN;
-            systemUiVisibility &= ~getExtraFullscreenUIFlags();
+            systemUiVisibility = applyExitFullscreenUIFlags(systemUiVisibility);
         } else {
+            systemUiVisibility &= ~SYSTEM_UI_FLAG_LOW_PROFILE;
             mWindow.addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
             mWindow.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         }
@@ -245,31 +259,33 @@ public class FullscreenHtmlApiHandler {
         };
         contentView.addOnLayoutChangeListener(mFullscreenOnLayoutChangeListener);
 
-        // getWebContents() will return null if contentViewCore has been destroyed
-        if (contentViewCore.getWebContents() != null) {
-            contentViewCore.getWebContents().exitFullscreen();
-        }
+        if (webContents != null && !webContents.isDestroyed()) webContents.exitFullscreen();
     }
 
     /**
      * Handles hiding the system UI components to allow the content to take up the full screen.
      * @param tab The tab that is entering fullscreen.
      */
-    public void enterFullscreen(final Tab tab) {
-        ContentViewCore contentViewCore = tab.getContentViewCore();
-        if (contentViewCore == null) return;
-        final View contentView = contentViewCore.getContainerView();
+    public void enterFullscreen(final Tab tab, FullscreenOptions options) {
+        WebContents webContents = tab.getWebContents();
+        if (webContents == null) return;
+        mFullscreenOptions = options;
+        final View contentView = tab.getContentView();
         int systemUiVisibility = contentView.getSystemUiVisibility();
-        systemUiVisibility |= SYSTEM_UI_FLAG_LOW_PROFILE;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            if ((systemUiVisibility & SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+            if ((systemUiVisibility & SYSTEM_UI_FLAG_FULLSCREEN) == SYSTEM_UI_FLAG_FULLSCREEN) {
+                // Already in full screen mode; just changed options. Mask off old
+                // ones and apply new ones.
+                systemUiVisibility = applyExitFullscreenUIFlags(systemUiVisibility);
+                systemUiVisibility = applyEnterFullscreenUIFlags(systemUiVisibility);
+            } else if ((systemUiVisibility & SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
                     == SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN) {
-                systemUiVisibility |= SYSTEM_UI_FLAG_FULLSCREEN;
-                systemUiVisibility |= getExtraFullscreenUIFlags();
+                systemUiVisibility = applyEnterFullscreenUIFlags(systemUiVisibility);
             } else {
                 systemUiVisibility |= SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
             }
         } else {
+            systemUiVisibility |= SYSTEM_UI_FLAG_LOW_PROFILE;
             mWindow.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
             mWindow.clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
         }
@@ -299,11 +315,13 @@ public class FullscreenHtmlApiHandler {
         };
         contentView.addOnLayoutChangeListener(mFullscreenOnLayoutChangeListener);
         contentView.setSystemUiVisibility(systemUiVisibility);
+        mFullscreenOptions = options;
 
         // Request a layout so the updated system visibility takes affect.
         contentView.requestLayout();
 
-        mContentViewCoreInFullscreen = contentViewCore;
+        mWebContentsInFullscreen = webContents;
+        mContentViewInFullscreen = contentView;
         mTabInFullscreen = tab;
     }
 
@@ -360,16 +378,36 @@ public class FullscreenHtmlApiHandler {
     }
 
     /*
-     * Helper method to return extra fullscreen UI flags for Kitkat devices.
+     * Returns system ui flags to enable fullscreen mode based on the current options.
      * @return fullscreen flags to be applied to system UI visibility.
      */
-    private static int getExtraFullscreenUIFlags() {
-        int flags = 0;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
-            flags |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-            flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+    private int applyEnterFullscreenUIFlags(int systemUiVisibility) {
+        boolean showNavigationBar =
+                mFullscreenOptions != null ? mFullscreenOptions.showNavigationBar() : false;
+        int flags = SYSTEM_UI_FLAG_FULLSCREEN;
+        if (!showNavigationBar) {
+            flags |= SYSTEM_UI_FLAG_LOW_PROFILE;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                flags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+                flags |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+                flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+            }
         }
-        return flags;
+        return flags | systemUiVisibility;
+    }
+
+    /*
+     * Returns system ui flags with any flags that might have been set during
+     * applyEnterFullscreenUIFlags masked off.
+     * @return fullscreen flags to be applied to system UI visibility.
+     */
+    private static int applyExitFullscreenUIFlags(int systemUiVisibility) {
+        int maskOffFlags = SYSTEM_UI_FLAG_LOW_PROFILE | SYSTEM_UI_FLAG_FULLSCREEN;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            maskOffFlags |= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+            maskOffFlags |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
+            maskOffFlags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+        }
+        return systemUiVisibility & ~maskOffFlags;
     }
 }

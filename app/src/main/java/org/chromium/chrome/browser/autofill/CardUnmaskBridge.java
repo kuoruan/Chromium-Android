@@ -9,6 +9,7 @@ import android.os.Handler;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ResourceId;
 import org.chromium.chrome.browser.autofill.CardUnmaskPrompt.CardUnmaskPromptDelegate;
 import org.chromium.ui.base.WindowAndroid;
@@ -81,8 +82,9 @@ public class CardUnmaskBridge implements CardUnmaskPromptDelegate {
      * Shows a prompt for unmasking a Wallet credit card.
      */
     @CalledByNative
-    private void show() {
-        if (mCardUnmaskPrompt != null) mCardUnmaskPrompt.show();
+    private void show(WindowAndroid windowAndroid) {
+        if (mCardUnmaskPrompt != null)
+            mCardUnmaskPrompt.show((ChromeActivity) (windowAndroid.getActivity().get()));
     }
 
     /**

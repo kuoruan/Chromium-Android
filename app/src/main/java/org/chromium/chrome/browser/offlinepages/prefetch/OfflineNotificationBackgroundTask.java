@@ -11,6 +11,7 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.browser.background_task_scheduler.NativeBackgroundTask;
+import org.chromium.chrome.browser.background_task_scheduler.NativeBackgroundTask.StartBeforeNativeResult;
 import org.chromium.chrome.browser.offlinepages.DeviceConditions;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.profiles.Profile;
@@ -120,19 +121,20 @@ public class OfflineNotificationBackgroundTask extends NativeBackgroundTask {
     }
 
     @Override
-    public int onStartTaskBeforeNativeLoaded(
+    public @StartBeforeNativeResult int onStartTaskBeforeNativeLoaded(
             Context context, TaskParameters taskParameters, TaskFinishedCallback callback) {
         if (shouldNotReschedule()) {
             resetPrefs();
-            return NativeBackgroundTask.DONE;
+            return StartBeforeNativeResult.DONE;
         }
 
-        if (DeviceConditions.getNetConnectionType(context) != ConnectionType.CONNECTION_NONE) {
+        if (DeviceConditions.getCurrentNetConnectionType(context)
+                != ConnectionType.CONNECTION_NONE) {
             scheduleTaskWhenOnline();
 
             // We schedule ourselves and return DONE because we want to reschedule using the normal
             // 1 hour timeout rather than Android's default 30s * 2^n exponential backoff schedule.
-            return NativeBackgroundTask.DONE;
+            return StartBeforeNativeResult.DONE;
         }
 
         int offlineCounter = PrefetchPrefs.getOfflineCounter();
@@ -140,10 +142,10 @@ public class OfflineNotificationBackgroundTask extends NativeBackgroundTask {
         PrefetchPrefs.setOfflineCounter(offlineCounter);
         if (offlineCounter < OFFLINE_POLLING_ATTEMPTS) {
             scheduleTask(DETECTION_MODE_OFFLINE);
-            return NativeBackgroundTask.DONE;
+            return StartBeforeNativeResult.DONE;
         }
 
-        return NativeBackgroundTask.LOAD_NATIVE;
+        return StartBeforeNativeResult.LOAD_NATIVE;
     }
 
     @Override

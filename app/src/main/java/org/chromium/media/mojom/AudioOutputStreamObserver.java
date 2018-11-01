@@ -18,6 +18,46 @@ public interface AudioOutputStreamObserver extends org.chromium.mojo.bindings.In
 
 
 
+    public static final class DisconnectReason {
+
+
+        public static final int DEFAULT = (int) (0L);
+
+        public static final int PLATFORM_ERROR = (int) (1L);
+
+        public static final int TERMINATED_BY_CLIENT = (int) (2L);
+
+        public static final int STREAM_CREATION_FAILED = (int) (3L);
+
+        public static final int DOCUMENT_DESTROYED = (int) (4L);
+
+
+        private static final boolean IS_EXTENSIBLE = false;
+
+        public static boolean isKnownValue(int value) {
+            switch (value) {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    return true;
+            }
+            return false;
+        }
+
+        public static void validate(int value) {
+            if (IS_EXTENSIBLE || isKnownValue(value))
+                return;
+
+            throw new DeserializationException("Invalid enum value.");
+        }
+
+        private DisconnectReason() {}
+
+    }
+
+
     public interface Proxy extends AudioOutputStreamObserver, org.chromium.mojo.bindings.Interface.Proxy {
     }
 

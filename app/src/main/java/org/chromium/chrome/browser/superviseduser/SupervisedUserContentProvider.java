@@ -65,7 +65,7 @@ public class SupervisedUserContentProvider extends WebRestrictionsContentProvide
         // This may lock for some time, but is always called on a background thread, and will only
         // take significant time if the Chrome process isn't already running.
         synchronized (sContentProviderLock) {
-            mChromeAlreadyStarted = LibraryLoader.isInitialized();
+            mChromeAlreadyStarted = LibraryLoader.getInstance().isInitialized();
             if (mNativeSupervisedUserContentProvider != 0) {
                 return mNativeSupervisedUserContentProvider;
             }

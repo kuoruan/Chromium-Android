@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.contextualsearch;
 
+import android.support.annotation.Nullable;
+
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.content_public.browser.WebContents;
@@ -12,22 +14,24 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 /**
  * Implements the UMA logging for Ranker that's used for Contextual Search Tap Suppression.
  */
-public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerLogger {
+public class ContextualSearchRankerLoggerImpl implements ContextualSearchInteractionRecorder {
     private static final String TAG = "ContextualSearch";
 
     // Names for all our features and labels.
-    private static final Map<Feature, String> ALL_NAMES;
+    // Integer values should contain @Feature values only.
+    private static final Map<Integer, String> ALL_NAMES;
     @VisibleForTesting
-    static final Map<Feature, String> OUTCOMES;
+    // Integer values should contain @Feature values only.
+    static final Map<Integer, String> OUTCOMES;
     @VisibleForTesting
-    static final Map<Feature, String> FEATURES;
+    // Integer values should contain @Feature values only.
+    static final Map<Integer, String> FEATURES;
     static {
-        Map<Feature, String> outcomes = new HashMap<Feature, String>();
+        // Integer values should contain @Feature values only.
+        Map<Integer, String> outcomes = new HashMap<Integer, String>();
         outcomes.put(Feature.OUTCOME_WAS_PANEL_OPENED, "OutcomeWasPanelOpened");
         outcomes.put(Feature.OUTCOME_WAS_QUICK_ACTION_CLICKED, "OutcomeWasQuickActionClicked");
         outcomes.put(Feature.OUTCOME_WAS_QUICK_ANSWER_SEEN, "OutcomeWasQuickAnswerSeen");
@@ -37,7 +41,8 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
 
         // NOTE: this list needs to be kept in sync with the white list in
         // predictor_config_definitions.cc and with ukm.xml!
-        Map<Feature, String> features = new HashMap<Feature, String>();
+        // Integer values should contain @Feature values only.
+        Map<Integer, String> features = new HashMap<Integer, String>();
         features.put(Feature.DURATION_AFTER_SCROLL_MS, "DurationAfterScrollMs");
         features.put(Feature.SCREEN_TOP_DPS, "ScreenTopDps");
         features.put(Feature.WAS_SCREEN_BOTTOM, "WasScreenBottom");
@@ -53,13 +58,25 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
         features.put(Feature.IS_ENTITY, "IsEntity");
         features.put(Feature.TAP_DURATION_MS, "TapDurationMs");
         // UKM CS v3 features.
-        features.put(Feature.IS_SECOND_TAP_OVERRIDE, "IsSecondTapOverride");
+        features.put(Feature.FONT_SIZE, "FontSize");
         features.put(Feature.IS_HTTP, "IsHttp");
+        features.put(Feature.IS_SECOND_TAP_OVERRIDE, "IsSecondTapOverride");
         features.put(Feature.IS_ENTITY_ELIGIBLE, "IsEntityEligible");
         features.put(Feature.IS_LANGUAGE_MISMATCH, "IsLanguageMismatch");
+        features.put(Feature.PORTION_OF_ELEMENT, "PortionOfElement");
+        // UKM CS v4 features.
+        features.put(Feature.TAP_COUNT, "TapCount");
+        features.put(Feature.OPEN_COUNT, "OpenCount");
+        features.put(Feature.QUICK_ANSWER_COUNT, "QuickAnswerCount");
+        features.put(Feature.ENTITY_IMPRESSIONS_COUNT, "EntityImpressionsCount");
+        features.put(Feature.ENTITY_OPENS_COUNT, "EntityOpensCount");
+        features.put(Feature.QUICK_ACTION_IMPRESSIONS_COUNT, "QuickActionImpressionsCount");
+        features.put(Feature.QUICK_ACTIONS_TAKEN_COUNT, "QuickActionsTaken");
+        features.put(Feature.QUICK_ACTIONS_IGNORED_COUNT, "QuickActionsIgnored");
         FEATURES = Collections.unmodifiableMap(features);
 
-        Map<Feature, String> allNames = new HashMap<Feature, String>();
+        // Integer values should contain @Feature values only.
+        Map<Integer, String> allNames = new HashMap<Integer, String>();
         allNames.putAll(outcomes);
         allNames.putAll(features);
         ALL_NAMES = Collections.unmodifiableMap(allNames);
@@ -83,11 +100,13 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
             AssistRankerPrediction.UNDETERMINED;
 
     // Map that accumulates all of the Features to log for a specific user-interaction.
-    private Map<Feature, Object> mFeaturesToLog;
+    // Integer values should contain @Feature values only.
+    private Map<Integer, Object> mFeaturesToLog;
 
     // A for-testing copy of all the features to log setup so that it will survive a {@link #reset}.
-    private Map<Feature, Object> mFeaturesLoggedForTesting;
-    private Map<Feature, Object> mOutcomesLoggedForTesting;
+    // Integer values should contain @Feature values only.
+    private Map<Integer, Object> mFeaturesLoggedForTesting;
+    private Map<Integer, Object> mOutcomesLoggedForTesting;
 
     /**
      * Constructs a Ranker Logger and associated native implementation to write Contextual Search
@@ -128,7 +147,7 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
     }
 
     @Override
-    public void logFeature(Feature feature, Object value) {
+    public void logFeature(@Feature int feature, Object value) {
         assert mIsLoggingReadyForPage : "mIsLoggingReadyForPage false.";
         assert !mHasInferenceOccurred;
         if (!isEnabled()) return;
@@ -137,7 +156,7 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
     }
 
     @Override
-    public void logOutcome(Feature feature, Object value) {
+    public void logOutcome(@Feature int feature, Object value) {
         assert mIsLoggingReadyForPage;
         assert mHasInferenceOccurred;
         if (!isEnabled()) return;
@@ -152,11 +171,11 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
         mHasInferenceOccurred = true;
         if (isEnabled() && mBasePageWebContents != null && mFeaturesToLog != null
                 && !mFeaturesToLog.isEmpty()) {
-            for (Map.Entry<Feature, Object> entry : mFeaturesToLog.entrySet()) {
+            for (Map.Entry<Integer, Object> entry : mFeaturesToLog.entrySet()) {
                 logObject(entry.getKey(), entry.getValue());
             }
             mFeaturesLoggedForTesting = mFeaturesToLog;
-            mFeaturesToLog = new HashMap<Feature, Object>();
+            mFeaturesToLog = new HashMap<Integer, Object>();
             mAssistRankerPrediction = nativeRunInference(mNativePointer);
             ContextualSearchUma.logRecordedFeaturesToRanker();
         }
@@ -186,7 +205,7 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
                 assert mHasInferenceOccurred;
                 // Only the outcomes will be present, since we logged inference features at
                 // inference time.
-                for (Map.Entry<Feature, Object> entry : mFeaturesToLog.entrySet()) {
+                for (Map.Entry<Integer, Object> entry : mFeaturesToLog.entrySet()) {
                     logObject(entry.getKey(), entry.getValue());
                 }
                 mOutcomesLoggedForTesting = mFeaturesToLog;
@@ -203,8 +222,8 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
      * @param feature The feature to log.
      * @param value The value to log.
      */
-    private void logInternal(Feature feature, Object value) {
-        if (mFeaturesToLog == null) mFeaturesToLog = new HashMap<Feature, Object>();
+    private void logInternal(@Feature int feature, Object value) {
+        if (mFeaturesToLog == null) mFeaturesToLog = new HashMap<Integer, Object>();
         mFeaturesToLog.put(feature, value);
     }
 
@@ -214,12 +233,12 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
     }
 
     /**
-     * Logs the given {@link ContextualSearchRankerLogger.Feature} with the given value
+     * Logs the given {@link ContextualSearchInteractionRecorder.Feature} with the given value
      * {@link Object}.
      * @param feature The feature to log.
      * @param value An {@link Object} value to log (must be convertible to a {@code long}).
      */
-    private void logObject(Feature feature, Object value) {
+    private void logObject(@Feature int feature, Object value) {
         if (value instanceof Boolean) {
             logToNative(feature, ((boolean) value ? 1 : 0));
         } else if (value instanceof Integer) {
@@ -229,7 +248,8 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
         } else if (value instanceof Character) {
             logToNative(feature, Character.getNumericValue((char) value));
         } else {
-            assert false : "Could not log feature to Ranker: " + feature.toString() + " of class "
+            assert false : "Could not log feature to Ranker: " + String.valueOf(feature)
+                           + " of class "
                            + value.getClass();
         }
     }
@@ -239,7 +259,7 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
      * @param feature The feature to log.
      * @param value The value to log.
      */
-    private void logToNative(Feature feature, long value) {
+    private void logToNative(@Feature int feature, long value) {
         String featureName = getFeatureName(feature);
         assert featureName != null : "No Name for feature " + feature;
         nativeLogLong(mNativePointer, featureName, value);
@@ -248,7 +268,7 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
     /**
      * @return The name of the given feature.
      */
-    private String getFeatureName(Feature feature) {
+    private String getFeatureName(@Feature int feature) {
         return ALL_NAMES.get(feature);
     }
 
@@ -259,7 +279,7 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
      */
     @VisibleForTesting
     @Nullable
-    Map<Feature, Object> getFeaturesLogged() {
+    Map<Integer, Object> getFeaturesLogged() {
         return mFeaturesLoggedForTesting;
     }
 
@@ -270,7 +290,7 @@ public class ContextualSearchRankerLoggerImpl implements ContextualSearchRankerL
      */
     @VisibleForTesting
     @Nullable
-    Map<Feature, Object> getOutcomesLogged() {
+    Map<Integer, Object> getOutcomesLogged() {
         return mOutcomesLoggedForTesting;
     }
 

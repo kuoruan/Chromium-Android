@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View.OnClickListener;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkModelObserver;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
@@ -37,7 +38,7 @@ public class BookmarkActionBar extends SelectableListToolbar<BookmarkId>
     private BookmarkModelObserver mBookmarkModelObserver = new BookmarkModelObserver() {
         @Override
         public void bookmarkModelChanged() {
-            onSelectionStateChange(mDelegate.getSelectionDelegate().getSelectedItems());
+            onSelectionStateChange(mDelegate.getSelectionDelegate().getSelectedItemsAsList());
         }
     };
 
@@ -52,6 +53,12 @@ public class BookmarkActionBar extends SelectableListToolbar<BookmarkId>
                 .setTitle(R.string.bookmark_action_bar_move);
         getMenu().findItem(R.id.selection_mode_delete_menu_id)
                 .setTitle(R.string.bookmark_action_bar_delete);
+
+        getMenu()
+                .findItem(R.id.selection_open_in_incognito_tab_id)
+                .setTitle(ChromeFeatureList.isEnabled(ChromeFeatureList.INCOGNITO_STRINGS)
+                                ? R.string.contextmenu_open_in_private_tab
+                                : R.string.contextmenu_open_in_incognito_tab);
 
         // Wait to enable the selection mode group until the BookmarkDelegate is set. The
         // SelectionDelegate is retrieved from the BookmarkDelegate.
@@ -86,7 +93,7 @@ public class BookmarkActionBar extends SelectableListToolbar<BookmarkId>
 
         SelectionDelegate<BookmarkId> selectionDelegate = mDelegate.getSelectionDelegate();
         if (menuItem.getItemId() == R.id.selection_mode_edit_menu_id) {
-            List<BookmarkId> list = selectionDelegate.getSelectedItems();
+            List<BookmarkId> list = selectionDelegate.getSelectedItemsAsList();
             assert list.size() == 1;
             BookmarkItem item = mDelegate.getModel().getBookmarkById(list.get(0));
             if (item.isFolder()) {
@@ -96,7 +103,7 @@ public class BookmarkActionBar extends SelectableListToolbar<BookmarkId>
             }
             return true;
         } else if (menuItem.getItemId() == R.id.selection_mode_move_menu_id) {
-            List<BookmarkId> list = selectionDelegate.getSelectedItems();
+            List<BookmarkId> list = selectionDelegate.getSelectedItemsAsList();
             if (list.size() >= 1) {
                 BookmarkFolderSelectActivity.startFolderSelectActivity(getContext(),
                         list.toArray(new BookmarkId[list.size()]));
@@ -107,13 +114,13 @@ public class BookmarkActionBar extends SelectableListToolbar<BookmarkId>
                     selectionDelegate.getSelectedItems().toArray(new BookmarkId[0]));
             return true;
         } else if (menuItem.getItemId() == R.id.selection_open_in_new_tab_id) {
-            openBookmarksInNewTabs(selectionDelegate.getSelectedItems(), new TabDelegate(false),
-                    mDelegate.getModel());
+            openBookmarksInNewTabs(selectionDelegate.getSelectedItemsAsList(),
+                    new TabDelegate(false), mDelegate.getModel());
             selectionDelegate.clearSelection();
             return true;
         } else if (menuItem.getItemId() == R.id.selection_open_in_incognito_tab_id) {
-            openBookmarksInNewTabs(selectionDelegate.getSelectedItems(), new TabDelegate(true),
-                    mDelegate.getModel());
+            openBookmarksInNewTabs(selectionDelegate.getSelectedItemsAsList(),
+                    new TabDelegate(true), mDelegate.getModel());
             selectionDelegate.clearSelection();
             return true;
         }

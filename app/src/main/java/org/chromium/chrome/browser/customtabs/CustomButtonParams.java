@@ -7,7 +7,6 @@ package org.chromium.chrome.browser.customtabs;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -89,11 +88,11 @@ public class CustomButtonParams {
     /**
      * @return The drawable for the customized button.
      */
-    Drawable getIcon(Resources res) {
+    Drawable getIcon(Context context) {
         if (mShouldTint) {
-            return new TintedDrawable(res, mIcon);
+            return new TintedDrawable(context, mIcon);
         } else {
-            return new BitmapDrawable(res, mIcon);
+            return new BitmapDrawable(context.getResources(), mIcon);
         }
     }
 
@@ -154,11 +153,9 @@ public class CustomButtonParams {
     /**
      * Parses a list of {@link CustomButtonParams} from the intent sent by clients.
      * @param intent The intent sent by the client.
-     * @param isTrustedIntent whether the intent is trusted.
      * @return A list of parsed {@link CustomButtonParams}. Return an empty list if input is invalid
      */
-    public static List<CustomButtonParams> fromIntent(
-            Context context, Intent intent, boolean isTrustedIntent) {
+    public static List<CustomButtonParams> fromIntent(Context context, Intent intent) {
         List<CustomButtonParams> paramsList = new ArrayList<>(1);
         if (intent == null) return paramsList;
 

@@ -103,16 +103,12 @@ public class SurveyInfoBar extends InfoBar {
             }
         });
 
-        NoUnderlineClickableSpan clickableSpan = new NoUnderlineClickableSpan() {
-            /** Prevent double clicking on the text span. */
-
-            @Override
-            public void onClick(View widget) {
-                if (mClicked) return;
-                showSurvey(tab);
-                mClosedByInteraction = true;
-            }
-        };
+        NoUnderlineClickableSpan clickableSpan = new NoUnderlineClickableSpan((widget) -> {
+            // Prevent double clicking on the text span.
+            if (mClicked) return;
+            showSurvey(tab);
+            mClosedByInteraction = true;
+        });
 
         CharSequence infoBarText = SpanApplier.applySpans(mDelegate.getSurveyPromptString(),
                 new SpanInfo("<LINK>", "</LINK>", clickableSpan));

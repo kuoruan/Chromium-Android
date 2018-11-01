@@ -24,7 +24,8 @@ import org.chromium.chrome.browser.util.AccessibilityUtil;
  * When action button is clicked, this manager will call {@link SnackbarController#onAction(Object)}
  * in corresponding listener, and show the next entry. Otherwise if no action is taken by user
  * during {@link #DEFAULT_SNACKBAR_DURATION_MS} milliseconds, it will call
- * {@link SnackbarController#onDismissNoAction(Object)}.
+ * {@link SnackbarController#onDismissNoAction(Object)}. Note, snackbars of
+ * {@link Snackbar#TYPE_PERSISTENT} do not get automatically dismissed after a timeout.
  */
 public class SnackbarManager implements OnClickListener, InfoBarContainer.InfoBarContainerObserver {
     /**
@@ -51,7 +52,7 @@ public class SnackbarManager implements OnClickListener, InfoBarContainer.InfoBa
         default void onAction(Object actionData) { }
 
         /**
-         * Called when the snackbar is dismissed by tiemout or UI enviroment change.
+         * Called when the snackbar is dismissed by timeout or UI environment change.
          * @param actionData Data object associated with the dismissed snackbar entry.
          */
         default void onDismissNoAction(Object actionData) { }
@@ -221,9 +222,11 @@ public class SnackbarManager implements OnClickListener, InfoBarContainer.InfoBa
             }
 
             if (viewChanged) {
-                int durationMs = getDuration(currentSnackbar);
                 mUIThreadHandler.removeCallbacks(mHideRunnable);
-                mUIThreadHandler.postDelayed(mHideRunnable, durationMs);
+                if (!currentSnackbar.isTypePersistent()) {
+                    int durationMs = getDuration(currentSnackbar);
+                    mUIThreadHandler.postDelayed(mHideRunnable, durationMs);
+                }
                 mView.announceforAccessibility();
             }
         }
@@ -240,7 +243,7 @@ public class SnackbarManager implements OnClickListener, InfoBarContainer.InfoBa
     }
 
     /**
-     * Disables the snackbar manager. This is only intented for testing purposes.
+     * Disables the snackbar manager. This is only intended for testing purposes.
      */
     @VisibleForTesting
     public void disableForTesting() {

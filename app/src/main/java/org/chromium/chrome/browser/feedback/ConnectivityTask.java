@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.feedback;
 
 import android.os.SystemClock;
+import android.support.annotation.IntDef;
 
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
@@ -13,8 +14,9 @@ import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.net.ConnectionType;
 import org.chromium.net.NetworkChangeNotifier;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -74,22 +76,22 @@ public class ConnectivityTask {
     @VisibleForTesting
     static final String SYSTEM_HTTPS_KEY = "HTTPS connection check (Android network stack)";
 
-    private static String getHumanReadableType(Type type) {
+    private static String getHumanReadableType(@Type int type) {
         switch (type) {
-            case CHROME_HTTP:
+            case Type.CHROME_HTTP:
                 return CHROME_HTTP_KEY;
-            case CHROME_HTTPS:
+            case Type.CHROME_HTTPS:
                 return CHROME_HTTPS_KEY;
-            case SYSTEM_HTTP:
+            case Type.SYSTEM_HTTP:
                 return SYSTEM_HTTP_KEY;
-            case SYSTEM_HTTPS:
+            case Type.SYSTEM_HTTPS:
                 return SYSTEM_HTTPS_KEY;
             default:
                 throw new IllegalArgumentException("Unknown connection type: " + type);
         }
     }
 
-    static String getHumanReadableResult(int result) {
+    static String getHumanReadableResult(@ConnectivityCheckResult int result) {
         switch (result) {
             case ConnectivityCheckResult.UNKNOWN:
                 return "UNKNOWN";
@@ -106,7 +108,7 @@ public class ConnectivityTask {
         }
     }
 
-    static String getHumanReadableConnectionType(int connectionType) {
+    static String getHumanReadableConnectionType(@ConnectionType int connectionType) {
         switch (connectionType) {
             case ConnectionType.CONNECTION_UNKNOWN:
                 return "Unknown";
@@ -143,12 +145,12 @@ public class ConnectivityTask {
      * FeedbackData contains the set of information that is to be included in a feedback report.
      */
     static final class FeedbackData {
-        private final Map<Type, Integer> mConnections;
+        private final Map<Integer, Integer> mConnections;
         private final int mTimeoutMs;
         private final long mElapsedTimeMs;
         private final int mConnectionType;
 
-        FeedbackData(Map<Type, Integer> connections, int timeoutMs, long elapsedTimeMs,
+        FeedbackData(Map<Integer, Integer> connections, int timeoutMs, long elapsedTimeMs,
                 int connectionType) {
             mConnections = connections;
             mTimeoutMs = timeoutMs;
@@ -161,7 +163,7 @@ public class ConnectivityTask {
          * types.
          */
         @VisibleForTesting
-        Map<Type, Integer> getConnections() {
+        Map<Integer, Integer> getConnections() {
             return Collections.unmodifiableMap(mConnections);
         }
 
@@ -186,7 +188,7 @@ public class ConnectivityTask {
          */
         Map<String, String> toMap() {
             Map<String, String> map = new HashMap<>();
-            for (Map.Entry<Type, Integer> entry : mConnections.entrySet()) {
+            for (Map.Entry<Integer, Integer> entry : mConnections.entrySet()) {
                 map.put(getHumanReadableType(entry.getKey()),
                         getHumanReadableResult(entry.getValue()));
             }
@@ -199,12 +201,20 @@ public class ConnectivityTask {
     /**
      * The type of network stack and connectivity check this result is about.
      */
-    public enum Type { CHROME_HTTP, CHROME_HTTPS, SYSTEM_HTTP, SYSTEM_HTTPS }
+    @IntDef({Type.CHROME_HTTP, Type.CHROME_HTTPS, Type.SYSTEM_HTTP, Type.SYSTEM_HTTPS})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Type {
+        int CHROME_HTTP = 0;
+        int CHROME_HTTPS = 1;
+        int SYSTEM_HTTP = 2;
+        int SYSTEM_HTTPS = 3;
+        int NUM_ENTRIES = 4;
+    }
 
     private class SingleTypeTask implements ConnectivityChecker.ConnectivityCheckerCallback {
-        private final Type mType;
+        private final @Type int mType;
 
-        public SingleTypeTask(Type type) {
+        public SingleTypeTask(@Type int type) {
             mType = type;
         }
 
@@ -216,18 +226,18 @@ public class ConnectivityTask {
         public void start(Profile profile, int timeoutMs) {
             Log.v(TAG, "Starting task for " + mType);
             switch (mType) {
-                case CHROME_HTTP:
+                case Type.CHROME_HTTP:
                     ConnectivityChecker.checkConnectivityChromeNetworkStack(
                             profile, false, timeoutMs, this);
                     break;
-                case CHROME_HTTPS:
+                case Type.CHROME_HTTPS:
                     ConnectivityChecker.checkConnectivityChromeNetworkStack(
                             profile, true, timeoutMs, this);
                     break;
-                case SYSTEM_HTTP:
+                case Type.SYSTEM_HTTP:
                     ConnectivityChecker.checkConnectivitySystemNetworkStack(false, timeoutMs, this);
                     break;
-                case SYSTEM_HTTPS:
+                case Type.SYSTEM_HTTPS:
                     ConnectivityChecker.checkConnectivitySystemNetworkStack(true, timeoutMs, this);
                     break;
                 default:
@@ -255,7 +265,7 @@ public class ConnectivityTask {
         }
     }
 
-    private final Map<Type, Integer> mResult = new EnumMap<Type, Integer>(Type.class);
+    private final Map<Integer, Integer> mResult = new HashMap<>();
     private final int mTimeoutMs;
     private final ConnectivityResult mCallback;
     private final long mStartCheckTimeMs;
@@ -270,7 +280,8 @@ public class ConnectivityTask {
 
     @VisibleForTesting
     void init(Profile profile, int timeoutMs) {
-        for (Type t : Type.values()) {
+        assert Type.CHROME_HTTP == 0;
+        for (@Type int t = Type.CHROME_HTTP; t < Type.NUM_ENTRIES; t++) {
             SingleTypeTask task = new SingleTypeTask(t);
             task.start(profile, timeoutMs);
         }
@@ -281,7 +292,7 @@ public class ConnectivityTask {
      */
     public boolean isDone() {
         ThreadUtils.assertOnUiThread();
-        return mResult.size() == Type.values().length;
+        return mResult.size() == Type.NUM_ENTRIES;
     }
 
     /**
@@ -292,9 +303,10 @@ public class ConnectivityTask {
      */
     public FeedbackData get() {
         ThreadUtils.assertOnUiThread();
-        Map<Type, Integer> result = new EnumMap<Type, Integer>(Type.class);
+        Map<Integer, Integer> result = new HashMap<>();
+        assert Type.CHROME_HTTP == 0;
         // Ensure the map is filled with a result for all {@link Type}s.
-        for (Type type : Type.values()) {
+        for (@Type int type = Type.CHROME_HTTP; type < Type.NUM_ENTRIES; type++) {
             if (mResult.containsKey(type)) {
                 result.put(type, mResult.get(type));
             } else {

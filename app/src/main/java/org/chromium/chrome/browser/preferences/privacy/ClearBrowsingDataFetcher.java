@@ -4,8 +4,10 @@
 
 package org.chromium.chrome.browser.preferences.privacy;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import org.chromium.base.metrics.RecordHistogram;
-import org.chromium.chrome.browser.ChromeFeatureList;
 
 import java.util.Arrays;
 
@@ -14,7 +16,7 @@ import java.util.Arrays;
  */
 public class ClearBrowsingDataFetcher
         implements BrowsingDataBridge.ImportantSitesCallback,
-                   BrowsingDataBridge.OtherFormsOfBrowsingHistoryListener {
+                   BrowsingDataBridge.OtherFormsOfBrowsingHistoryListener, Parcelable {
     // This is a constant on the C++ side.
     private int mMaxImportantSites;
     // This is the sorted list of important registerable domains. If null, then we haven't finished
@@ -32,13 +34,46 @@ public class ClearBrowsingDataFetcher
         mMaxImportantSites = BrowsingDataBridge.getMaxImportantSites();
     }
 
+    protected ClearBrowsingDataFetcher(Parcel in) {
+        mMaxImportantSites = in.readInt();
+        mSortedImportantDomains = in.createStringArray();
+        mSortedImportantDomainReasons = in.createIntArray();
+        mSortedExampleOrigins = in.createStringArray();
+        mIsDialogAboutOtherFormsOfBrowsingHistoryEnabled = in.readByte() != 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(mMaxImportantSites);
+        dest.writeStringArray(mSortedImportantDomains);
+        dest.writeIntArray(mSortedImportantDomainReasons);
+        dest.writeStringArray(mSortedExampleOrigins);
+        dest.writeByte((byte) (mIsDialogAboutOtherFormsOfBrowsingHistoryEnabled ? 1 : 0));
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<ClearBrowsingDataFetcher> CREATOR =
+            new Creator<ClearBrowsingDataFetcher>() {
+                @Override
+                public ClearBrowsingDataFetcher createFromParcel(Parcel in) {
+                    return new ClearBrowsingDataFetcher(in);
+                }
+
+                @Override
+                public ClearBrowsingDataFetcher[] newArray(int size) {
+                    return new ClearBrowsingDataFetcher[size];
+                }
+            };
+
     /**
      * Fetch important sites if the feature is enabled.
      */
     public void fetchImportantSites() {
-        if (ChromeFeatureList.isEnabled(ChromeFeatureList.IMPORTANT_SITES_IN_CBD)) {
-            BrowsingDataBridge.fetchImportantSites(this);
-        }
+        BrowsingDataBridge.fetchImportantSites(this);
     }
 
     /**

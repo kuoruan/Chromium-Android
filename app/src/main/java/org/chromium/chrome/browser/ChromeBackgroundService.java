@@ -77,9 +77,7 @@ public class ChromeBackgroundService extends GcmTaskService {
     }
 
     private void handleSnippetsOnPersistentSchedulerWakeUp(Context context, String tag) {
-        if (!SnippetsLauncher.hasInstance()) {
-            launchBrowser(context, tag);
-        }
+        if (!SnippetsLauncher.hasInstance()) launchBrowser(context, tag);
         snippetsOnPersistentSchedulerWakeUp();
     }
 

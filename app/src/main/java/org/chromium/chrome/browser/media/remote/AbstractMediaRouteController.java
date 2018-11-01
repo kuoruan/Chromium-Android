@@ -178,8 +178,8 @@ public abstract class AbstractMediaRouteController implements MediaRouteControll
     // There are times when the player state shown to user (e.g. just after pressing the pause
     // button) should update before we receive an update from the Chromecast, so we have to track
     // two player states.
-    private PlayerState mRemotePlayerState = PlayerState.FINISHED;
-    private PlayerState mDisplayedPlayerState = PlayerState.FINISHED;
+    private @PlayerState int mRemotePlayerState = PlayerState.FINISHED;
+    private @PlayerState int mDisplayedPlayerState = PlayerState.FINISHED;
     private boolean mRoutesAvailable;
     private final Set<UiListener> mUiListeners;
     private boolean mWatchingRouteSelection;
@@ -291,12 +291,12 @@ public abstract class AbstractMediaRouteController implements MediaRouteControll
         return mMediaStateListener;
     }
 
-    public final PlayerState getRemotePlayerState() {
+    public final @PlayerState int getRemotePlayerState() {
         return mRemotePlayerState;
     }
 
     @Override
-    public final PlayerState getDisplayedPlayerState() {
+    public final @PlayerState int getDisplayedPlayerState() {
         return mDisplayedPlayerState;
     }
 
@@ -529,7 +529,8 @@ public abstract class AbstractMediaRouteController implements MediaRouteControll
 
     @VisibleForTesting
     void setPlayerStateForMediaItemState(int state) {
-        PlayerState playerState = PlayerState.STOPPED;
+        @PlayerState
+        int playerState = PlayerState.STOPPED;
         switch (state) {
             case MediaItemStatus.PLAYBACK_STATE_BUFFERING:
                 playerState = PlayerState.LOADING;
@@ -569,28 +570,28 @@ public abstract class AbstractMediaRouteController implements MediaRouteControll
     protected void updateState(int state) {
         Log.d(TAG, "updateState oldState: %s player state: %s", mRemotePlayerState, state);
 
-        PlayerState oldState = mRemotePlayerState;
+        @PlayerState
+        int oldState = mRemotePlayerState;
         setPlayerStateForMediaItemState(state);
 
         Log.d(TAG, "updateState newState: %s", mRemotePlayerState);
 
         if (oldState != mRemotePlayerState) {
             setDisplayedPlayerState(mRemotePlayerState);
-
             switch (mRemotePlayerState) {
-                case PLAYING:
+                case PlayerState.PLAYING:
                     onCasting();
                     break;
-                case PAUSED:
+                case PlayerState.PAUSED:
                     onCasting();
                     break;
-                case FINISHED:
+                case PlayerState.FINISHED:
                     release();
                     break;
-                case INVALIDATED:
+                case PlayerState.INVALIDATED:
                     clearItemState();
                     break;
-                case ERROR:
+                case PlayerState.ERROR:
                     sendErrorToListeners(CastMediaControlIntent.ERROR_CODE_REQUEST_FAILED);
                     release();
                     break;
@@ -600,7 +601,7 @@ public abstract class AbstractMediaRouteController implements MediaRouteControll
         }
     }
 
-    protected void setDisplayedPlayerState(PlayerState state) {
+    protected void setDisplayedPlayerState(@PlayerState int state) {
         mDisplayedPlayerState = state;
         for (UiListener listener : mUiListeners) {
             listener.onPlaybackStateChanged(mDisplayedPlayerState);

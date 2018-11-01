@@ -33,7 +33,6 @@ public class ThreadUtils {
         }
     }
 
-    @VisibleForTesting
     public static void setUiThread(Looper looper) {
         synchronized (sLock) {
             if (looper == null) {
@@ -51,7 +50,7 @@ public class ThreadUtils {
         }
     }
 
-    private static Handler getUiThreadHandler() {
+    public static Handler getUiThreadHandler() {
         synchronized (sLock) {
             if (sUiThreadHandler == null) {
                 if (sWillOverride) {

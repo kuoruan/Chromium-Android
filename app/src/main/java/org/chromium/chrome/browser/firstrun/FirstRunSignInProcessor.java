@@ -5,7 +5,6 @@
 package org.chromium.chrome.browser.firstrun;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.text.TextUtils;
 
 import org.chromium.base.ApiCompatibilityUtils;
@@ -13,11 +12,14 @@ import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
+import org.chromium.chrome.browser.preferences.SyncAndServicesPreferences;
 import org.chromium.chrome.browser.signin.AccountManagementFragment;
 import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.signin.SigninManager.SignInCallback;
+import org.chromium.chrome.browser.signin.UnifiedConsentServiceBridge;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 
 /**
@@ -85,6 +87,9 @@ public final class FirstRunSignInProcessor {
         signinManager.signIn(accountName, activity, new SignInCallback() {
             @Override
             public void onSignInComplete() {
+                if (ChromeFeatureList.isEnabled(ChromeFeatureList.UNIFIED_CONSENT)) {
+                    UnifiedConsentServiceBridge.setUnifiedConsentGiven(true);
+                }
                 // Show sync settings if user pressed the "Settings" button.
                 if (setUp) {
                     openSignInSettings(activity);
@@ -105,9 +110,13 @@ public final class FirstRunSignInProcessor {
      * Opens sign in settings as requested in the FRE sign-in dialog.
      */
     private static void openSignInSettings(Activity activity) {
-        Intent intent = PreferencesLauncher.createIntentForSettingsPage(
-                activity, AccountManagementFragment.class.getName());
-        activity.startActivity(intent);
+        final String fragmentName;
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.UNIFIED_CONSENT)) {
+            fragmentName = SyncAndServicesPreferences.class.getName();
+        } else {
+            fragmentName = AccountManagementFragment.class.getName();
+        }
+        PreferencesLauncher.launchSettingsPage(activity, fragmentName);
     }
 
     /**

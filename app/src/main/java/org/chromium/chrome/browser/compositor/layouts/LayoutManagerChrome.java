@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 
 import org.chromium.base.ObserverList;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.compositor.TitleCache;
 import org.chromium.chrome.browser.compositor.layouts.components.LayoutTab;
 import org.chromium.chrome.browser.compositor.layouts.components.VirtualView;
@@ -26,7 +27,9 @@ import org.chromium.chrome.browser.tabmodel.TabCreatorManager;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelUtils;
+import org.chromium.chrome.browser.toolbar.ToolbarManager;
 import org.chromium.chrome.browser.util.AccessibilityUtil;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.OverviewListLayout;
 import org.chromium.ui.resources.dynamics.DynamicResourceLoader;
 
@@ -93,7 +96,7 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
      * @return The {@link EdgeSwipeHandler} responsible for processing swipe events for the toolbar.
      */
     @Override
-    public EdgeSwipeHandler getTopSwipeHandler() {
+    public EdgeSwipeHandler getToolbarSwipeHandler() {
         return mToolbarSwipeHandler;
     }
 
@@ -112,6 +115,16 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
 
         super.init(selector, creator, content, androidContentContainer, contextualSearchDelegate,
                 dynamicResourceLoader);
+    }
+
+    /**
+     * Set the toolbar manager for layouts that need draw to different toolbars.
+     * @param manager The {@link ToolbarManager} for accessing toolbar textures.
+     */
+    public void setToolbarManager(ToolbarManager manager) {
+        if (FeatureUtilities.isBottomToolbarEnabled()) {
+            manager.getBottomToolbarCoordinator().setToolbarSwipeLayout(mToolbarSwipeLayout);
+        }
     }
 
     @Override
@@ -251,8 +264,8 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
     }
 
     @Override
-    protected void tabCreated(int id, int sourceId, TabLaunchType launchType, boolean incognito,
-            boolean willBeSelected, float originX, float originY) {
+    protected void tabCreated(int id, int sourceId, @TabLaunchType int launchType,
+            boolean incognito, boolean willBeSelected, float originX, float originY) {
         Tab newTab = TabModelUtils.getTabById(getTabModelSelector().getModel(incognito), id);
         mCreatingNtp = newTab != null && newTab.isNativePage();
         super.tabCreated(id, sourceId, launchType, incognito, willBeSelected, originX, originY);
@@ -379,7 +392,7 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
      */
     protected class ToolbarSwipeHandler extends EdgeSwipeHandlerLayoutDelegate {
         /** The scroll direction of the current gesture. */
-        private ScrollDirection mScrollDirection;
+        private @ScrollDirection int mScrollDirection;
 
         /**
          * The range in degrees that a swipe can be from a particular direction to be considered
@@ -396,7 +409,7 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
         }
 
         @Override
-        public void swipeStarted(ScrollDirection direction, float x, float y) {
+        public void swipeStarted(@ScrollDirection int direction, float x, float y) {
             mScrollDirection = ScrollDirection.UNKNOWN;
         }
 
@@ -414,6 +427,7 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
             if (mScrollDirection == ScrollDirection.UNKNOWN) return;
 
             if (mOverviewLayout != null && mScrollDirection == ScrollDirection.DOWN) {
+                RecordUserAction.record("MobileToolbarSwipeOpenStackView");
                 startShowing(mOverviewLayout, true);
             } else if (mToolbarSwipeLayout != null
                     && (mScrollDirection == ScrollDirection.LEFT
@@ -430,8 +444,9 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
          * @param dy The distance traveled on the Y axis.
          * @return The direction of the scroll.
          */
-        private ScrollDirection computeScrollDirection(float dx, float dy) {
-            ScrollDirection direction = ScrollDirection.UNKNOWN;
+        private @ScrollDirection int computeScrollDirection(float dx, float dy) {
+            @ScrollDirection
+            int direction = ScrollDirection.UNKNOWN;
 
             // Figure out the angle of the swipe. Invert 'dy' so 90 degrees is up.
             double swipeAngle = (Math.toDegrees(Math.atan2(-dy, dx)) + 360) % 360;
@@ -448,7 +463,7 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
         }
 
         @Override
-        public boolean isSwipeEnabled(ScrollDirection direction) {
+        public boolean isSwipeEnabled(@ScrollDirection int direction) {
             FullscreenManager manager = mHost.getFullscreenManager();
             if (getActiveLayout() != mStaticLayout
                     || !DeviceClassManager.enableToolbarSwipe()

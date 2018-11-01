@@ -95,12 +95,13 @@ public class InstallerDelegate {
     }
 
     // Installation states.
+    @IntDef({InstallState.NOT_INSTALLED, InstallState.INSTALLING, InstallState.INSTALLED})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({INSTALL_STATE_NOT_INSTALLED, INSTALL_STATE_INSTALLING, INSTALL_STATE_INSTALLED})
-    public @interface InstallState {}
-    public static final int INSTALL_STATE_NOT_INSTALLED = 0;
-    public static final int INSTALL_STATE_INSTALLING = 1;
-    public static final int INSTALL_STATE_INSTALLED = 2;
+    public @interface InstallState {
+        int NOT_INSTALLED = 0;
+        int INSTALLING = 1;
+        int INSTALLED = 2;
+    }
 
     private static final String TAG = "cr_InstallerDelegate";
     private static final long DEFAULT_MS_BETWEEN_RUNS = TimeUnit.SECONDS.toMillis(1);
@@ -206,15 +207,8 @@ public class InstallerDelegate {
      * @param packageName Name of the package to check.
      */
     public @InstallState int determineInstallState(String packageName) {
-        if (mIsRunning) {
-            return INSTALL_STATE_INSTALLING;
-        }
-
-        if (isInstalled(packageName)) {
-            return INSTALL_STATE_INSTALLED;
-        }
-
-        return INSTALL_STATE_NOT_INSTALLED;
+        if (mIsRunning) return InstallState.INSTALLING;
+        return isInstalled(packageName) ? InstallState.INSTALLED : InstallState.NOT_INSTALLED;
     }
 
     /**

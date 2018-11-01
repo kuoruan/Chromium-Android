@@ -3,129 +3,105 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/data_reduction_stats_container"
+<org.chromium.ui.widget.OptimizedFrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:clipChildren="false"
-    android:clipToPadding="false"
-    android:orientation="vertical" >
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/initial_data_savings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:drawablePadding="3dp"
+        android:text="@string/data_reduction_initial_title"
+        android:textAppearance="@style/BlackDisabledText1" />
 
     <LinearLayout
+        android:id="@+id/data_reduction_stats_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:baselineAligned="false"
-        android:orientation="horizontal" >
+        android:orientation="vertical">
 
         <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:orientation="vertical" >
+            android:layout_marginTop="8dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal" >
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/data_reduction_savings"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal" >
+                android:layout_marginTop="3dp"
+                android:singleLine="true"
+                android:textAppearance="@style/TextAppearance.DataReductionHeadline" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:singleLine="true"
-                    android:text="@string/data_reduction_savings_label"
-                    android:textAppearance="@style/PreferenceCategoryTextStyle" />
-
-                <TextView
-                    android:id="@+id/data_reduction_savings"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="3dp"
-                    android:textAppearance="@style/PreferenceCategoryTextStyle" />
-
-            </LinearLayout>
-
-            <LinearLayout
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:orientation="horizontal" >
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:singleLine="true"
-                    android:text="@string/data_reduction_usage_label"
-                    android:textAppearance="@style/DataReductionPrefSecondaryStyle" />
-
-                <TextView
-                    android:id="@+id/data_reduction_usage"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="3dp"
-                    android:textAppearance="@style/DataReductionPrefSecondaryStyle" />
-            </LinearLayout>
+                android:layout_marginTop="3dp"
+                android:paddingStart="3dp"
+                android:text="@string/data_reduction_savings_label"
+                android:textAppearance="@style/BlueLink2" />
 
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/data_reduction_percent"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_marginTop="0dp"
-            android:includeFontPadding="false"
-            android:textColor="@color/light_active_color"
-            android:textSize="34sp" />
+            android:gravity="center_horizontal"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:id="@+id/data_reduction_usage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:textAppearance="@style/BlackBody" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="3dp"
+                android:text="@string/data_reduction_usage_label"
+                android:textAppearance="@style/BlackBody" />
+        </LinearLayout>
+
+        <include layout="@layout/data_usage_chart" />
+
+        <FrameLayout
+            android:id="@+id/chart_dates"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/data_reduction_start_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/BlackBody" />
+
+            <TextView
+                android:id="@+id/data_reduction_end_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/BlackBody" />
+
+        </FrameLayout>
+
+        <include layout="@layout/data_usage_breakdown" />
+
+        <Button
+            android:id="@+id/data_reduction_reset_statistics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="24dp"
+            android:text="@string/data_reduction_usage_reset_statistics_button" />
 
     </LinearLayout>
 
-    <include layout="@layout/data_usage_chart" />
-
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-
-        <TextView
-            android:id="@+id/data_reduction_start_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="@style/PreferenceSummary"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/data_reduction_end_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="@style/PreferenceSummary"
-            android:textSize="14sp" />
-
-    </FrameLayout>
-
-    <TextView
-        android:id="@+id/data_reduction_proxy_unreachable"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
-        android:layout_marginTop="20dp"
-        android:drawableStart="@drawable/exclamation_triangle"
-        android:drawablePadding="6dp"
-        android:text="@string/data_reduction_proxy_unreachable_warn"
-        android:textColor="?android:attr/textColorPrimary"
-        android:textSize="14sp" />
-
-    <include layout="@layout/data_usage_breakdown" />
-
-    <Button
-        android:id="@+id/data_reduction_reset_statistics"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="24dp"
-        android:text="@string/data_reduction_usage_reset_statistics_button"
-        android:textAllCaps="true"
-        android:textColor="@color/light_active_color"
-        android:textSize="14sp"
-        style="@style/ButtonCompatBorderless" />
-
-</LinearLayout>
+</org.chromium.ui.widget.OptimizedFrameLayout>

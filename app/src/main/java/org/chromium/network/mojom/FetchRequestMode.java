@@ -26,8 +26,6 @@ public final class FetchRequestMode {
 
     public static final int NAVIGATE = CORS_WITH_FORCED_PREFLIGHT + 1;
 
-    public static final int LAST = (int) (FetchRequestMode.NAVIGATE);
-
 
     private static final boolean IS_EXTENSIBLE = false;
 

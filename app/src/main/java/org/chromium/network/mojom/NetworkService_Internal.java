@@ -18,28 +18,28 @@ class NetworkService_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<NetworkService, NetworkService.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<NetworkService, NetworkService.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "network::mojom::NetworkService";
+            return "network.mojom.NetworkService";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, NetworkService impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public NetworkService[] buildArray(int size) {
           return new NetworkService[size];
@@ -49,13 +49,33 @@ class NetworkService_Internal {
 
     private static final int SET_CLIENT_ORDINAL = 0;
 
-    private static final int CREATE_NETWORK_CONTEXT_ORDINAL = 1;
+    private static final int START_NET_LOG_ORDINAL = 1;
 
-    private static final int DISABLE_QUIC_ORDINAL = 2;
+    private static final int CREATE_NETWORK_CONTEXT_ORDINAL = 2;
 
-    private static final int SET_RAW_HEADERS_ACCESS_ORDINAL = 3;
+    private static final int CONFIGURE_STUB_HOST_RESOLVER_ORDINAL = 3;
 
-    private static final int GET_NETWORK_CHANGE_MANAGER_ORDINAL = 4;
+    private static final int DISABLE_QUIC_ORDINAL = 4;
+
+    private static final int SET_UP_HTTP_AUTH_ORDINAL = 5;
+
+    private static final int CONFIGURE_HTTP_AUTH_PREFS_ORDINAL = 6;
+
+    private static final int SET_RAW_HEADERS_ACCESS_ORDINAL = 7;
+
+    private static final int GET_NETWORK_CHANGE_MANAGER_ORDINAL = 8;
+
+    private static final int GET_NETWORK_QUALITY_ESTIMATOR_MANAGER_ORDINAL = 9;
+
+    private static final int GET_TOTAL_NETWORK_USAGES_ORDINAL = 10;
+
+    private static final int UPDATE_SIGNED_TREE_HEAD_ORDINAL = 11;
+
+    private static final int UPDATE_CRL_SET_ORDINAL = 12;
+
+    private static final int ADD_CORB_EXCEPTION_FOR_PLUGIN_ORDINAL = 13;
+
+    private static final int REMOVE_CORB_EXCEPTION_FOR_PLUGIN_ORDINAL = 14;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements NetworkService.Proxy {
@@ -84,6 +104,25 @@ NetworkServiceClient client) {
 
 
         @Override
+        public void startNetLog(
+org.chromium.mojo_base.mojom.File file, org.chromium.mojo_base.mojom.DictionaryValue constants) {
+
+            NetworkServiceStartNetLogParams _message = new NetworkServiceStartNetLogParams();
+
+            _message.file = file;
+
+            _message.constants = constants;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(START_NET_LOG_ORDINAL)));
+
+        }
+
+
+        @Override
         public void createNetworkContext(
 org.chromium.mojo.bindings.InterfaceRequest<NetworkContext> context, NetworkContextParams params) {
 
@@ -103,6 +142,25 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkContext> context, NetworkCont
 
 
         @Override
+        public void configureStubHostResolver(
+boolean stubResolverEnabled, DnsOverHttpsServer[] dnsOverHttpsServers) {
+
+            NetworkServiceConfigureStubHostResolverParams _message = new NetworkServiceConfigureStubHostResolverParams();
+
+            _message.stubResolverEnabled = stubResolverEnabled;
+
+            _message.dnsOverHttpsServers = dnsOverHttpsServers;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(CONFIGURE_STUB_HOST_RESOLVER_ORDINAL)));
+
+        }
+
+
+        @Override
         public void disableQuic(
 ) {
 
@@ -113,6 +171,40 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkContext> context, NetworkCont
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(DISABLE_QUIC_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void setUpHttpAuth(
+HttpAuthStaticParams httpAuthStaticParams) {
+
+            NetworkServiceSetUpHttpAuthParams _message = new NetworkServiceSetUpHttpAuthParams();
+
+            _message.httpAuthStaticParams = httpAuthStaticParams;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(SET_UP_HTTP_AUTH_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void configureHttpAuthPrefs(
+HttpAuthDynamicParams httpAuthDynamicParams) {
+
+            NetworkServiceConfigureHttpAuthPrefsParams _message = new NetworkServiceConfigureHttpAuthPrefsParams();
+
+            _message.httpAuthDynamicParams = httpAuthDynamicParams;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(CONFIGURE_HTTP_AUTH_PREFS_ORDINAL)));
 
         }
 
@@ -153,6 +245,111 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
         }
 
 
+        @Override
+        public void getNetworkQualityEstimatorManager(
+org.chromium.mojo.bindings.InterfaceRequest<NetworkQualityEstimatorManager> networkQualityEstimatorManager) {
+
+            NetworkServiceGetNetworkQualityEstimatorManagerParams _message = new NetworkServiceGetNetworkQualityEstimatorManagerParams();
+
+            _message.networkQualityEstimatorManager = networkQualityEstimatorManager;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(GET_NETWORK_QUALITY_ESTIMATOR_MANAGER_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void getTotalNetworkUsages(
+
+GetTotalNetworkUsagesResponse callback) {
+
+            NetworkServiceGetTotalNetworkUsagesParams _message = new NetworkServiceGetTotalNetworkUsagesParams();
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    GET_TOTAL_NETWORK_USAGES_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new NetworkServiceGetTotalNetworkUsagesResponseParamsForwardToCallback(callback));
+
+        }
+
+
+        @Override
+        public void updateSignedTreeHead(
+SignedTreeHead signedTreeHead) {
+
+            NetworkServiceUpdateSignedTreeHeadParams _message = new NetworkServiceUpdateSignedTreeHeadParams();
+
+            _message.signedTreeHead = signedTreeHead;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(UPDATE_SIGNED_TREE_HEAD_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void updateCrlSet(
+org.chromium.mojo_base.mojom.ReadOnlyBuffer crlSet) {
+
+            NetworkServiceUpdateCrlSetParams _message = new NetworkServiceUpdateCrlSetParams();
+
+            _message.crlSet = crlSet;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(UPDATE_CRL_SET_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void addCorbExceptionForPlugin(
+int processId) {
+
+            NetworkServiceAddCorbExceptionForPluginParams _message = new NetworkServiceAddCorbExceptionForPluginParams();
+
+            _message.processId = processId;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(ADD_CORB_EXCEPTION_FOR_PLUGIN_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void removeCorbExceptionForPlugin(
+int processId) {
+
+            NetworkServiceRemoveCorbExceptionForPluginParams _message = new NetworkServiceRemoveCorbExceptionForPluginParams();
+
+            _message.processId = processId;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(REMOVE_CORB_EXCEPTION_FOR_PLUGIN_ORDINAL)));
+
+        }
+
+
     }
 
     static final class Stub extends org.chromium.mojo.bindings.Interface.Stub<NetworkService> {
@@ -171,76 +368,195 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 NetworkService_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case SET_CLIENT_ORDINAL: {
-            
+
                         NetworkServiceSetClientParams data =
                                 NetworkServiceSetClientParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().setClient(data.client);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
+                    case START_NET_LOG_ORDINAL: {
+
+                        NetworkServiceStartNetLogParams data =
+                                NetworkServiceStartNetLogParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().startNetLog(data.file, data.constants);
+                        return true;
+                    }
+
+
+
+
+
                     case CREATE_NETWORK_CONTEXT_ORDINAL: {
-            
+
                         NetworkServiceCreateNetworkContextParams data =
                                 NetworkServiceCreateNetworkContextParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().createNetworkContext(data.context, data.params);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
+                    case CONFIGURE_STUB_HOST_RESOLVER_ORDINAL: {
+
+                        NetworkServiceConfigureStubHostResolverParams data =
+                                NetworkServiceConfigureStubHostResolverParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().configureStubHostResolver(data.stubResolverEnabled, data.dnsOverHttpsServers);
+                        return true;
+                    }
+
+
+
+
+
                     case DISABLE_QUIC_ORDINAL: {
-            
+
                         NetworkServiceDisableQuicParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().disableQuic();
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
+                    case SET_UP_HTTP_AUTH_ORDINAL: {
+
+                        NetworkServiceSetUpHttpAuthParams data =
+                                NetworkServiceSetUpHttpAuthParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().setUpHttpAuth(data.httpAuthStaticParams);
+                        return true;
+                    }
+
+
+
+
+
+                    case CONFIGURE_HTTP_AUTH_PREFS_ORDINAL: {
+
+                        NetworkServiceConfigureHttpAuthPrefsParams data =
+                                NetworkServiceConfigureHttpAuthPrefsParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().configureHttpAuthPrefs(data.httpAuthDynamicParams);
+                        return true;
+                    }
+
+
+
+
+
                     case SET_RAW_HEADERS_ACCESS_ORDINAL: {
-            
+
                         NetworkServiceSetRawHeadersAccessParams data =
                                 NetworkServiceSetRawHeadersAccessParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().setRawHeadersAccess(data.processId, data.allow);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case GET_NETWORK_CHANGE_MANAGER_ORDINAL: {
-            
+
                         NetworkServiceGetNetworkChangeManagerParams data =
                                 NetworkServiceGetNetworkChangeManagerParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().getNetworkChangeManager(data.networkChangeManager);
                         return true;
                     }
-            
-            
+
+
+
+
+
+                    case GET_NETWORK_QUALITY_ESTIMATOR_MANAGER_ORDINAL: {
+
+                        NetworkServiceGetNetworkQualityEstimatorManagerParams data =
+                                NetworkServiceGetNetworkQualityEstimatorManagerParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().getNetworkQualityEstimatorManager(data.networkQualityEstimatorManager);
+                        return true;
+                    }
+
+
+
+
+
+
+
+                    case UPDATE_SIGNED_TREE_HEAD_ORDINAL: {
+
+                        NetworkServiceUpdateSignedTreeHeadParams data =
+                                NetworkServiceUpdateSignedTreeHeadParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().updateSignedTreeHead(data.signedTreeHead);
+                        return true;
+                    }
+
+
+
+
+
+                    case UPDATE_CRL_SET_ORDINAL: {
+
+                        NetworkServiceUpdateCrlSetParams data =
+                                NetworkServiceUpdateCrlSetParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().updateCrlSet(data.crlSet);
+                        return true;
+                    }
+
+
+
+
+
+                    case ADD_CORB_EXCEPTION_FOR_PLUGIN_ORDINAL: {
+
+                        NetworkServiceAddCorbExceptionForPluginParams data =
+                                NetworkServiceAddCorbExceptionForPluginParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().addCorbExceptionForPlugin(data.processId);
+                        return true;
+                    }
+
+
+
+
+
+                    case REMOVE_CORB_EXCEPTION_FOR_PLUGIN_ORDINAL: {
+
+                        NetworkServiceRemoveCorbExceptionForPluginParams data =
+                                NetworkServiceRemoveCorbExceptionForPluginParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().removeCorbExceptionForPlugin(data.processId);
+                        return true;
+                    }
+
+
                     default:
                         return false;
                 }
@@ -260,22 +576,54 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), NetworkService_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    case GET_TOTAL_NETWORK_USAGES_ORDINAL: {
+
+                        NetworkServiceGetTotalNetworkUsagesParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().getTotalNetworkUsages(new NetworkServiceGetTotalNetworkUsagesResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
+
+
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -289,37 +637,34 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
 
     
     static final class NetworkServiceSetClientParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public NetworkServiceClient client;
-    
+
         private NetworkServiceSetClientParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceSetClientParams() {
             this(0);
         }
-    
+
         public static NetworkServiceSetClientParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceSetClientParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceSetClientParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -329,17 +674,19 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
             NetworkServiceSetClientParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceSetClientParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceSetClientParams(elementsOrVersion);
+                    {
+                        
                     result.client = decoder0.readServiceInterface(8, false, NetworkServiceClient.MANAGER);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -347,33 +694,77 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
             
             encoder0.encode(this.client, 8, false, NetworkServiceClient.MANAGER);
         }
+    }
+
+
+
     
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceSetClientParams other = (NetworkServiceSetClientParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.client, other.client))
-                return false;
-            return true;
+    static final class NetworkServiceStartNetLogParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public org.chromium.mojo_base.mojom.File file;
+        public org.chromium.mojo_base.mojom.DictionaryValue constants;
+
+        private NetworkServiceStartNetLogParams(int version) {
+            super(STRUCT_SIZE, version);
         }
-    
+
+        public NetworkServiceStartNetLogParams() {
+            this(0);
+        }
+
+        public static NetworkServiceStartNetLogParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
         /**
-         * @see Object#hashCode()
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
+        public static NetworkServiceStartNetLogParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceStartNetLogParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceStartNetLogParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceStartNetLogParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.file = org.chromium.mojo_base.mojom.File.decode(decoder1);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    result.constants = org.chromium.mojo_base.mojom.DictionaryValue.decode(decoder1);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
             return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.file, 8, false);
+            
+            encoder0.encode(this.constants, 16, false);
         }
     }
 
@@ -381,38 +772,35 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
 
     
     static final class NetworkServiceCreateNetworkContextParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.InterfaceRequest<NetworkContext> context;
         public NetworkContextParams params;
-    
+
         private NetworkServiceCreateNetworkContextParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceCreateNetworkContextParams() {
             this(0);
         }
-    
+
         public static NetworkServiceCreateNetworkContextParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceCreateNetworkContextParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceCreateNetworkContextParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -422,22 +810,24 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
             NetworkServiceCreateNetworkContextParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceCreateNetworkContextParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceCreateNetworkContextParams(elementsOrVersion);
+                    {
+                        
                     result.context = decoder0.readInterfaceRequest(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.params = NetworkContextParams.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -447,36 +837,94 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
             
             encoder0.encode(this.params, 16, false);
         }
+    }
+
+
+
     
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceCreateNetworkContextParams other = (NetworkServiceCreateNetworkContextParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.context, other.context))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.params, other.params))
-                return false;
-            return true;
+    static final class NetworkServiceConfigureStubHostResolverParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public boolean stubResolverEnabled;
+        public DnsOverHttpsServer[] dnsOverHttpsServers;
+
+        private NetworkServiceConfigureStubHostResolverParams(int version) {
+            super(STRUCT_SIZE, version);
         }
-    
+
+        public NetworkServiceConfigureStubHostResolverParams() {
+            this(0);
+        }
+
+        public static NetworkServiceConfigureStubHostResolverParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
         /**
-         * @see Object#hashCode()
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.context);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.params);
+        public static NetworkServiceConfigureStubHostResolverParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceConfigureStubHostResolverParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceConfigureStubHostResolverParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceConfigureStubHostResolverParams(elementsOrVersion);
+                    {
+                        
+                    result.stubResolverEnabled = decoder0.readBoolean(8, 0);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, true);
+                    if (decoder1 == null) {
+                        result.dnsOverHttpsServers = null;
+                    } else {
+                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                        result.dnsOverHttpsServers = new DnsOverHttpsServer[si1.elementsOrVersion];
+                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                            
+                            org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
+                            result.dnsOverHttpsServers[i1] = DnsOverHttpsServer.decode(decoder2);
+                        }
+                    }
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
             return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.stubResolverEnabled, 8, 0);
+            
+            if (this.dnsOverHttpsServers == null) {
+                encoder0.encodeNullPointer(16, true);
+            } else {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.dnsOverHttpsServers.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.dnsOverHttpsServers.length; ++i0) {
+                    
+                    encoder1.encode(this.dnsOverHttpsServers[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                }
+            }
         }
     }
 
@@ -484,36 +932,33 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
 
     
     static final class NetworkServiceDisableQuicParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private NetworkServiceDisableQuicParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceDisableQuicParams() {
             this(0);
         }
-    
+
         public static NetworkServiceDisableQuicParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceDisableQuicParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceDisableQuicParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -523,41 +968,147 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
             NetworkServiceDisableQuicParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceDisableQuicParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceDisableQuicParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         }
+    }
+
+
+
     
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
+    static final class NetworkServiceSetUpHttpAuthParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public HttpAuthStaticParams httpAuthStaticParams;
+
+        private NetworkServiceSetUpHttpAuthParams(int version) {
+            super(STRUCT_SIZE, version);
         }
-    
+
+        public NetworkServiceSetUpHttpAuthParams() {
+            this(0);
+        }
+
+        public static NetworkServiceSetUpHttpAuthParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
         /**
-         * @see Object#hashCode()
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
+        public static NetworkServiceSetUpHttpAuthParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceSetUpHttpAuthParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceSetUpHttpAuthParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceSetUpHttpAuthParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.httpAuthStaticParams = HttpAuthStaticParams.decode(decoder1);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
             return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.httpAuthStaticParams, 8, false);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceConfigureHttpAuthPrefsParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public HttpAuthDynamicParams httpAuthDynamicParams;
+
+        private NetworkServiceConfigureHttpAuthPrefsParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceConfigureHttpAuthPrefsParams() {
+            this(0);
+        }
+
+        public static NetworkServiceConfigureHttpAuthPrefsParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceConfigureHttpAuthPrefsParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceConfigureHttpAuthPrefsParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceConfigureHttpAuthPrefsParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceConfigureHttpAuthPrefsParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.httpAuthDynamicParams = HttpAuthDynamicParams.decode(decoder1);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.httpAuthDynamicParams, 8, false);
         }
     }
 
@@ -565,38 +1116,35 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
 
     
     static final class NetworkServiceSetRawHeadersAccessParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int processId;
         public boolean allow;
-    
+
         private NetworkServiceSetRawHeadersAccessParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceSetRawHeadersAccessParams() {
             this(0);
         }
-    
+
         public static NetworkServiceSetRawHeadersAccessParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceSetRawHeadersAccessParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceSetRawHeadersAccessParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -606,21 +1154,23 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
             NetworkServiceSetRawHeadersAccessParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceSetRawHeadersAccessParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceSetRawHeadersAccessParams(elementsOrVersion);
+                    {
+                        
                     result.processId = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.allow = decoder0.readBoolean(12, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -630,74 +1180,40 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
             
             encoder0.encode(this.allow, 12, 0);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceSetRawHeadersAccessParams other = (NetworkServiceSetRawHeadersAccessParams) object;
-            if (this.processId!= other.processId)
-                return false;
-            if (this.allow!= other.allow)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.processId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.allow);
-            return result;
-        }
     }
 
 
 
     
     static final class NetworkServiceGetNetworkChangeManagerParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeManager;
-    
+
         private NetworkServiceGetNetworkChangeManagerParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceGetNetworkChangeManagerParams() {
             this(0);
         }
-    
+
         public static NetworkServiceGetNetworkChangeManagerParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceGetNetworkChangeManagerParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceGetNetworkChangeManagerParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -707,17 +1223,19 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
             NetworkServiceGetNetworkChangeManagerParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceGetNetworkChangeManagerParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceGetNetworkChangeManagerParams(elementsOrVersion);
+                    {
+                        
                     result.networkChangeManager = decoder0.readInterfaceRequest(8, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -725,33 +1243,519 @@ org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeM
             
             encoder0.encode(this.networkChangeManager, 8, false);
         }
+    }
+
+
+
     
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceGetNetworkChangeManagerParams other = (NetworkServiceGetNetworkChangeManagerParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.networkChangeManager, other.networkChangeManager))
-                return false;
-            return true;
+    static final class NetworkServiceGetNetworkQualityEstimatorManagerParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public org.chromium.mojo.bindings.InterfaceRequest<NetworkQualityEstimatorManager> networkQualityEstimatorManager;
+
+        private NetworkServiceGetNetworkQualityEstimatorManagerParams(int version) {
+            super(STRUCT_SIZE, version);
         }
-    
+
+        public NetworkServiceGetNetworkQualityEstimatorManagerParams() {
+            this(0);
+        }
+
+        public static NetworkServiceGetNetworkQualityEstimatorManagerParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
         /**
-         * @see Object#hashCode()
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.networkChangeManager);
+        public static NetworkServiceGetNetworkQualityEstimatorManagerParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceGetNetworkQualityEstimatorManagerParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceGetNetworkQualityEstimatorManagerParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceGetNetworkQualityEstimatorManagerParams(elementsOrVersion);
+                    {
+                        
+                    result.networkQualityEstimatorManager = decoder0.readInterfaceRequest(8, false);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
             return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.networkQualityEstimatorManager, 8, false);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceGetTotalNetworkUsagesParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 8;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+
+        private NetworkServiceGetTotalNetworkUsagesParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceGetTotalNetworkUsagesParams() {
+            this(0);
+        }
+
+        public static NetworkServiceGetTotalNetworkUsagesParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceGetTotalNetworkUsagesParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceGetTotalNetworkUsagesParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceGetTotalNetworkUsagesParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceGetTotalNetworkUsagesParams(elementsOrVersion);
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceGetTotalNetworkUsagesResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public NetworkUsage[] totalNetworkUsages;
+
+        private NetworkServiceGetTotalNetworkUsagesResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceGetTotalNetworkUsagesResponseParams() {
+            this(0);
+        }
+
+        public static NetworkServiceGetTotalNetworkUsagesResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceGetTotalNetworkUsagesResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceGetTotalNetworkUsagesResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceGetTotalNetworkUsagesResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceGetTotalNetworkUsagesResponseParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    {
+                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                        result.totalNetworkUsages = new NetworkUsage[si1.elementsOrVersion];
+                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                            
+                            org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
+                            result.totalNetworkUsages[i1] = NetworkUsage.decode(decoder2);
+                        }
+                    }
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            if (this.totalNetworkUsages == null) {
+                encoder0.encodeNullPointer(8, false);
+            } else {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.totalNetworkUsages.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.totalNetworkUsages.length; ++i0) {
+                    
+                    encoder1.encode(this.totalNetworkUsages[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                }
+            }
+        }
+    }
+
+    static class NetworkServiceGetTotalNetworkUsagesResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final NetworkService.GetTotalNetworkUsagesResponse mCallback;
+
+        NetworkServiceGetTotalNetworkUsagesResponseParamsForwardToCallback(NetworkService.GetTotalNetworkUsagesResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(GET_TOTAL_NETWORK_USAGES_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                NetworkServiceGetTotalNetworkUsagesResponseParams response = NetworkServiceGetTotalNetworkUsagesResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.totalNetworkUsages);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class NetworkServiceGetTotalNetworkUsagesResponseParamsProxyToResponder implements NetworkService.GetTotalNetworkUsagesResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        NetworkServiceGetTotalNetworkUsagesResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(NetworkUsage[] totalNetworkUsages) {
+            NetworkServiceGetTotalNetworkUsagesResponseParams _response = new NetworkServiceGetTotalNetworkUsagesResponseParams();
+
+            _response.totalNetworkUsages = totalNetworkUsages;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    GET_TOTAL_NETWORK_USAGES_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceUpdateSignedTreeHeadParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public SignedTreeHead signedTreeHead;
+
+        private NetworkServiceUpdateSignedTreeHeadParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceUpdateSignedTreeHeadParams() {
+            this(0);
+        }
+
+        public static NetworkServiceUpdateSignedTreeHeadParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceUpdateSignedTreeHeadParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceUpdateSignedTreeHeadParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceUpdateSignedTreeHeadParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceUpdateSignedTreeHeadParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.signedTreeHead = SignedTreeHead.decode(decoder1);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.signedTreeHead, 8, false);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceUpdateCrlSetParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public org.chromium.mojo_base.mojom.ReadOnlyBuffer crlSet;
+
+        private NetworkServiceUpdateCrlSetParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceUpdateCrlSetParams() {
+            this(0);
+        }
+
+        public static NetworkServiceUpdateCrlSetParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceUpdateCrlSetParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceUpdateCrlSetParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceUpdateCrlSetParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceUpdateCrlSetParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.crlSet = org.chromium.mojo_base.mojom.ReadOnlyBuffer.decode(decoder1);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.crlSet, 8, false);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceAddCorbExceptionForPluginParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int processId;
+
+        private NetworkServiceAddCorbExceptionForPluginParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceAddCorbExceptionForPluginParams() {
+            this(0);
+        }
+
+        public static NetworkServiceAddCorbExceptionForPluginParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceAddCorbExceptionForPluginParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceAddCorbExceptionForPluginParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceAddCorbExceptionForPluginParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceAddCorbExceptionForPluginParams(elementsOrVersion);
+                    {
+                        
+                    result.processId = decoder0.readInt(8);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.processId, 8);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceRemoveCorbExceptionForPluginParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int processId;
+
+        private NetworkServiceRemoveCorbExceptionForPluginParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceRemoveCorbExceptionForPluginParams() {
+            this(0);
+        }
+
+        public static NetworkServiceRemoveCorbExceptionForPluginParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceRemoveCorbExceptionForPluginParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceRemoveCorbExceptionForPluginParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceRemoveCorbExceptionForPluginParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceRemoveCorbExceptionForPluginParams(elementsOrVersion);
+                    {
+                        
+                    result.processId = decoder0.readInt(8);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.processId, 8);
         }
     }
 

@@ -7,23 +7,31 @@ package org.chromium.chrome.browser.metrics;
 import static org.chromium.base.metrics.CachedMetrics.EnumeratedHistogramSample;
 
 import android.content.Intent;
+import android.support.annotation.IntDef;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * Helper class to record which kind of media notifications does the user click to go back to
  * Chrome.
  */
 public class MediaNotificationUma {
-    public static final int SOURCE_INVALID = -1;
-    public static final int SOURCE_MEDIA = 0;
-    public static final int SOURCE_PRESENTATION = 1;
-    public static final int SOURCE_MEDIA_FLING = 2;
-    public static final int SOURCE_MAX = 3;
+    @IntDef({Source.INVALID, Source.MEDIA, Source.PRESENTATION, Source.MEDIA_FLING})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Source {
+        int INVALID = -1;
+        int MEDIA = 0;
+        int PRESENTATION = 1;
+        int MEDIA_FLING = 2;
+        int NUM_ENTRIES = 3;
+    }
 
     public static final String INTENT_EXTRA_NAME =
             "org.chromium.chrome.browser.metrics.MediaNotificationUma.EXTRA_CLICK_SOURCE";
 
     private static final EnumeratedHistogramSample sClickSourceHistogram =
-            new EnumeratedHistogramSample("Media.Notification.Click", SOURCE_MAX);
+            new EnumeratedHistogramSample("Media.Notification.Click", Source.NUM_ENTRIES);
 
     /**
      * Record the UMA as specified by {@link intent}. The {@link intent} should contain intent extra
@@ -32,8 +40,9 @@ public class MediaNotificationUma {
      */
     public static void recordClickSource(Intent intent) {
         if (intent == null) return;
-        int source = intent.getIntExtra(INTENT_EXTRA_NAME, SOURCE_INVALID);
-        if (source == SOURCE_INVALID || source >= SOURCE_MAX) return;
+        @Source
+        int source = intent.getIntExtra(INTENT_EXTRA_NAME, Source.INVALID);
+        if (source == Source.INVALID || source >= Source.NUM_ENTRIES) return;
         sClickSourceHistogram.record(source);
     }
 }

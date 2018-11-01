@@ -57,7 +57,7 @@ public class ExpandedControllerActivity
             if (mMediaRouteController == null) return;
             mMediaRouteController.resume();
             RecordCastAction.recordFullscreenControlsAction(
-                    RecordCastAction.FULLSCREEN_CONTROLS_RESUME,
+                    RecordCastAction.FullScreenControls.RESUME,
                     mMediaRouteController.getMediaStateListener() != null);
         }
 
@@ -66,7 +66,7 @@ public class ExpandedControllerActivity
             if (mMediaRouteController == null) return;
             mMediaRouteController.pause();
             RecordCastAction.recordFullscreenControlsAction(
-                    RecordCastAction.FULLSCREEN_CONTROLS_PAUSE,
+                    RecordCastAction.FullScreenControls.PAUSE,
                     mMediaRouteController.getMediaStateListener() != null);
         }
 
@@ -87,7 +87,7 @@ public class ExpandedControllerActivity
             if (mMediaRouteController == null) return;
             mMediaRouteController.seekTo(pos);
             RecordCastAction.recordFullscreenControlsAction(
-                    RecordCastAction.FULLSCREEN_CONTROLS_SEEK,
+                    RecordCastAction.FullScreenControls.SEEK,
                     mMediaRouteController.getMediaStateListener() != null);
         }
 
@@ -289,7 +289,7 @@ public class ExpandedControllerActivity
     }
 
     @Override
-    public void onPlaybackStateChanged(PlayerState newState) {
+    public void onPlaybackStateChanged(@PlayerState int newState) {
         RemoteVideoInfo videoInfo = new RemoteVideoInfo(mVideoInfo);
         videoInfo.state = newState;
         setVideoInfo(videoInfo);

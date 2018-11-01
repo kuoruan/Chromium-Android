@@ -95,17 +95,15 @@ public class ActivityAssigner {
 
     static final int INVALID_ACTIVITY_INDEX = -1;
 
+    @IntDef({ActivityAssignerNamespace.WEBAPP_NAMESPACE, ActivityAssignerNamespace.WEBAPK_NAMESPACE,
+            ActivityAssignerNamespace.SEPARATE_TASK_CCT_NAMESPACE})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({
-        WEBAPP_NAMESPACE,
-        WEBAPK_NAMESPACE,
-        SEPARATE_TASK_CCT_NAMESPACE
-    })
-    private @interface ActivityAssignerNamespace {}
-    public static final int WEBAPP_NAMESPACE = 0;
-    public static final int WEBAPK_NAMESPACE = 1;
-    public static final int SEPARATE_TASK_CCT_NAMESPACE = 2;
-    static final int NAMESPACE_COUNT = 3;
+    public @interface ActivityAssignerNamespace {
+        int WEBAPP_NAMESPACE = 0;
+        int WEBAPK_NAMESPACE = 1;
+        int SEPARATE_TASK_CCT_NAMESPACE = 2;
+        int NUM_ENTRIES = 3;
+    }
 
     private static final Object LOCK = new Object();
     private static List<ActivityAssigner> sInstances;
@@ -123,7 +121,7 @@ public class ActivityAssigner {
      * disk access async task in the future.
      */
     public static void warmUpSharedPrefs(Context context) {
-        for (int i = 0; i < NAMESPACE_COUNT; ++i) {
+        for (int i = 0; i < ActivityAssignerNamespace.NUM_ENTRIES; ++i) {
             context.getSharedPreferences(PREF_PACKAGE[i], Context.MODE_PRIVATE);
         }
     }
@@ -146,8 +144,8 @@ public class ActivityAssigner {
         ThreadUtils.assertOnUiThread();
         synchronized (LOCK) {
             if (sInstances == null) {
-                sInstances = new ArrayList<ActivityAssigner>(NAMESPACE_COUNT);
-                for (int i = 0; i < NAMESPACE_COUNT; ++i) {
+                sInstances = new ArrayList<ActivityAssigner>(ActivityAssignerNamespace.NUM_ENTRIES);
+                for (int i = 0; i < ActivityAssignerNamespace.NUM_ENTRIES; ++i) {
                     sInstances.add(new ActivityAssigner(i));
                 }
             }

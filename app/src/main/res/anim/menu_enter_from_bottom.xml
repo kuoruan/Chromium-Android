@@ -5,7 +5,7 @@
 -->
 
 <set xmlns:android="http://schemas.android.com/apk/res/android" android:shareInterpolator="false">
-    <scale android:interpolator="@interpolator/transform_curve_interpolator"
+    <scale android:interpolator="@android:anim/accelerate_decelerate_interpolator"
         android:fromXScale="0"
         android:toXScale="1"
         android:fromYScale="0"
@@ -16,7 +16,7 @@
     <alpha android:interpolator="@android:anim/linear_interpolator"
         android:fromAlpha="0" android:toAlpha="1"
         android:duration="200" />
-    <translate android:interpolator="@interpolator/transform_curve_interpolator"
+    <translate android:interpolator="@android:anim/accelerate_decelerate_interpolator"
         android:fromYDelta="@dimen/menu_negative_software_vertical_offset"
         android:toYDelta="0"
         android:duration="200" />

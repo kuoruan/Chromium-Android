@@ -18,28 +18,28 @@ class VideoFrameHandleReleaser_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<VideoFrameHandleReleaser, VideoFrameHandleReleaser.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<VideoFrameHandleReleaser, VideoFrameHandleReleaser.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::VideoFrameHandleReleaser";
+            return "media.mojom.VideoFrameHandleReleaser";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, VideoFrameHandleReleaser impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public VideoFrameHandleReleaser[] buildArray(int size) {
           return new VideoFrameHandleReleaser[size];
@@ -60,7 +60,7 @@ class VideoFrameHandleReleaser_Internal {
 
         @Override
         public void releaseVideoFrame(
-org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.mojom.SyncToken releaseSyncToken) {
+org.chromium.mojo_base.mojom.UnguessableToken releaseToken, org.chromium.gpu.mojom.SyncToken releaseSyncToken) {
 
             VideoFrameHandleReleaserReleaseVideoFrameParams _message = new VideoFrameHandleReleaserReleaseVideoFrameParams();
 
@@ -95,25 +95,25 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 VideoFrameHandleReleaser_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case RELEASE_VIDEO_FRAME_ORDINAL: {
-            
+
                         VideoFrameHandleReleaserReleaseVideoFrameParams data =
                                 VideoFrameHandleReleaserReleaseVideoFrameParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().releaseVideoFrame(data.releaseToken, data.releaseSyncToken);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -133,14 +133,14 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), VideoFrameHandleReleaser_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -154,38 +154,35 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
 
     
     static final class VideoFrameHandleReleaserReleaseVideoFrameParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.mojo.common.mojom.UnguessableToken releaseToken;
+        public org.chromium.mojo_base.mojom.UnguessableToken releaseToken;
         public org.chromium.gpu.mojom.SyncToken releaseSyncToken;
-    
+
         private VideoFrameHandleReleaserReleaseVideoFrameParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public VideoFrameHandleReleaserReleaseVideoFrameParams() {
             this(0);
         }
-    
+
         public static VideoFrameHandleReleaserReleaseVideoFrameParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static VideoFrameHandleReleaserReleaseVideoFrameParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static VideoFrameHandleReleaserReleaseVideoFrameParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -195,23 +192,25 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
             VideoFrameHandleReleaserReleaseVideoFrameParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoFrameHandleReleaserReleaseVideoFrameParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoFrameHandleReleaserReleaseVideoFrameParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.releaseToken = org.chromium.mojo.common.mojom.UnguessableToken.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    result.releaseToken = org.chromium.mojo_base.mojom.UnguessableToken.decode(decoder1);
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.releaseSyncToken = org.chromium.gpu.mojom.SyncToken.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -220,37 +219,6 @@ org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.m
             encoder0.encode(this.releaseToken, 8, false);
             
             encoder0.encode(this.releaseSyncToken, 16, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            VideoFrameHandleReleaserReleaseVideoFrameParams other = (VideoFrameHandleReleaserReleaseVideoFrameParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.releaseToken, other.releaseToken))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.releaseSyncToken, other.releaseSyncToken))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.releaseToken);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.releaseSyncToken);
-            return result;
         }
     }
 

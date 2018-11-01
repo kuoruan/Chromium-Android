@@ -57,5 +57,5 @@ public abstract class SiteSectionViewHolder extends NewTabPageViewHolder {
     public abstract void refreshData();
 
     @Nullable
-    protected abstract TileView findTileView(SiteSuggestion data);
+    public abstract TileView findTileView(SiteSuggestion data);
 }

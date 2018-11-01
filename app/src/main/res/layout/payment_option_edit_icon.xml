@@ -5,6 +5,7 @@
 
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/payments_open_editor_pencil_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -14,8 +15,8 @@
             android:layout_width="1dp"
             android:layout_height="48dp"
             android:layout_gravity="center_vertical"
-            android:layout_marginStart="@dimen/payments_section_large_spacing"
-            android:layout_marginEnd="@dimen/payments_section_large_spacing"
+            android:layout_marginStart="@dimen/editor_dialog_section_large_spacing"
+            android:layout_marginEnd="@dimen/editor_dialog_section_large_spacing"
             android:background="@color/payments_section_separator"
             android:importantForAccessibility="no"/>
 
@@ -24,6 +25,6 @@
             android:layout_height="24dp"
             android:layout_gravity="center_vertical"
             android:src="@drawable/ic_edit_24dp"
-            android:contentDescription="@null"
+            tools:ignore="ContentDescription"
             android:importantForAccessibility="no" />
 </LinearLayout>

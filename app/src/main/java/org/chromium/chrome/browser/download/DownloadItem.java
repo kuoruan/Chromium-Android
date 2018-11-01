@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.download;
 
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.components.offline_items_collection.ContentId;
+import org.chromium.components.offline_items_collection.OfflineItem;
 import org.chromium.components.offline_items_collection.OfflineItem.Progress;
 
 /**
@@ -128,6 +129,18 @@ public class DownloadItem {
      */
     public boolean hasBeenExternallyRemoved() {
         return mHasBeenExternallyRemoved;
+    }
+
+    /**
+     * Helper method to build an {@link OfflineItem} from a {@link DownloadItem}.
+     * @param item The {@link DownloadItem} to mimic.
+     * @return     A {@link OfflineItem} containing the relevant fields from {@code item}.
+     */
+    public static OfflineItem createOfflineItem(DownloadItem item) {
+        OfflineItem offlineItem = DownloadInfo.createOfflineItem(item.getDownloadInfo());
+        offlineItem.creationTimeMs = item.getStartTime();
+        offlineItem.externallyRemoved = item.hasBeenExternallyRemoved();
+        return offlineItem;
     }
 
     @CalledByNative

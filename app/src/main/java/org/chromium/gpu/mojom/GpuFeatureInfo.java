@@ -16,13 +16,14 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class GpuFeatureInfo extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 56;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(56, 0)};
+    private static final int STRUCT_SIZE = 64;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(64, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public int[] statusValues;
     public int[] enabledGpuDriverBugWorkarounds;
     public String disabledExtensions;
     public String disabledWebglExtensions;
+    public WebglPreferences webglPreferences;
     public int[] appliedGpuBlacklistEntries;
     public int[] appliedGpuDriverBugListEntries;
 
@@ -44,9 +45,6 @@ public final class GpuFeatureInfo extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static GpuFeatureInfo deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -60,36 +58,43 @@ public final class GpuFeatureInfo extends org.chromium.mojo.bindings.Struct {
         GpuFeatureInfo result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new GpuFeatureInfo(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new GpuFeatureInfo(elementsOrVersion);
+                {
+                    
                 result.statusValues = decoder0.readInts(8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
                 {
                     for (int i0 = 0; i0 < result.statusValues.length; ++i0) {
                         GpuFeatureStatus.validate(result.statusValues[i0]);
                     }
                 }
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.enabledGpuDriverBugWorkarounds = decoder0.readInts(16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.disabledExtensions = decoder0.readString(24, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.disabledWebglExtensions = decoder0.readString(32, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.appliedGpuBlacklistEntries = decoder0.readInts(40, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.appliedGpuDriverBugListEntries = decoder0.readInts(48, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            }
+                }
+                {
+                    
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(40, false);
+                result.webglPreferences = WebglPreferences.decode(decoder1);
+                }
+                {
+                    
+                result.appliedGpuBlacklistEntries = decoder0.readInts(48, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                }
+                {
+                    
+                result.appliedGpuDriverBugListEntries = decoder0.readInts(56, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -109,51 +114,10 @@ public final class GpuFeatureInfo extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.disabledWebglExtensions, 32, false);
         
-        encoder0.encode(this.appliedGpuBlacklistEntries, 40, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        encoder0.encode(this.webglPreferences, 40, false);
         
-        encoder0.encode(this.appliedGpuDriverBugListEntries, 48, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        GpuFeatureInfo other = (GpuFeatureInfo) object;
-        if (!java.util.Arrays.equals(this.statusValues, other.statusValues))
-            return false;
-        if (!java.util.Arrays.equals(this.enabledGpuDriverBugWorkarounds, other.enabledGpuDriverBugWorkarounds))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.disabledExtensions, other.disabledExtensions))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.disabledWebglExtensions, other.disabledWebglExtensions))
-            return false;
-        if (!java.util.Arrays.equals(this.appliedGpuBlacklistEntries, other.appliedGpuBlacklistEntries))
-            return false;
-        if (!java.util.Arrays.equals(this.appliedGpuDriverBugListEntries, other.appliedGpuDriverBugListEntries))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + java.util.Arrays.hashCode(this.statusValues);
-        result = prime * result + java.util.Arrays.hashCode(this.enabledGpuDriverBugWorkarounds);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disabledExtensions);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.disabledWebglExtensions);
-        result = prime * result + java.util.Arrays.hashCode(this.appliedGpuBlacklistEntries);
-        result = prime * result + java.util.Arrays.hashCode(this.appliedGpuDriverBugListEntries);
-        return result;
+        encoder0.encode(this.appliedGpuBlacklistEntries, 48, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        
+        encoder0.encode(this.appliedGpuDriverBugListEntries, 56, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
     }
 }

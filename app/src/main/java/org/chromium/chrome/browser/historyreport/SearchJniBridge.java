@@ -45,6 +45,11 @@ public interface SearchJniBridge {
     void removeUsageReports(UsageReport[] reports);
 
     /**
+     * Clear the buffer of usage reports.
+     */
+    void clearUsageReports();
+
+    /**
      * Adds all the historic visits to the usage report buffer.
      *
      * Should be done only once.

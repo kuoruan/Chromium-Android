@@ -6,7 +6,8 @@
 -->
 <org.chromium.chrome.browser.signin.AccountSigninView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/signin_body_background">
@@ -44,7 +45,7 @@
                     android:textAppearance="@style/BlackHeadline1"
                     android:text="@string/sign_in_to_chrome"/>
 
-                <View style="@style/Divider"/>
+                <View style="@style/HorizontalDivider"/>
 
                 <TextView
                     android:id="@+id/signin_choice_description"
@@ -89,7 +90,7 @@
                         android:layout_height="@dimen/signin_account_image_size"
                         android:layout_marginBottom="24dp"
                         android:scaleType="fitCenter"
-                        android:contentDescription="@null"/>
+                        tools:ignore="ContentDescription"/>
 
                     <TextView
                         android:id="@+id/signin_account_name"
@@ -105,13 +106,12 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
-                        android:textColor="@color/descriptive_text_color"
-                        android:textSize="@dimen/text_size_medium"
+                        android:textAppearance="@style/BlackBody"
                         android:ellipsize="end"
                         android:maxLines="1"/>
                 </LinearLayout>
 
-                <View style="@style/Divider"/>
+                <View style="@style/HorizontalDivider"/>
 
                 <TextView
                     android:id="@+id/signin_sync_title"
@@ -133,11 +133,10 @@
                     android:paddingStart="56dp"
                     android:paddingEnd="16dp"
                     android:lineSpacingMultiplier="1.4"
-                    android:textColor="@color/descriptive_text_color"
-                    android:textSize="@dimen/text_size_medium" />
+                    android:textAppearance="@style/BlackBody" />
 
                 <View
-                    style="@style/Divider"
+                    style="@style/HorizontalDivider"
                     android:layout_marginStart="56dp"
                     android:layout_marginEnd="16dp"/>
 
@@ -161,8 +160,7 @@
                     android:paddingStart="56dp"
                     android:paddingEnd="16dp"
                     android:lineSpacingMultiplier="1.4"
-                    android:textColor="@color/descriptive_text_color"
-                    android:textSize="@dimen/text_size_medium"/>
+                    android:textAppearance="@style/BlackBody" />
 
                 <org.chromium.ui.widget.TextViewWithClickableSpans
                     android:id="@+id/signin_settings_control"
@@ -172,8 +170,7 @@
                     android:paddingEnd="16dp"
                     android:paddingBottom="36dp"
                     android:lineSpacingMultiplier="1.4"
-                    android:textColor="@color/descriptive_text_color"
-                    android:textSize="@dimen/text_size_medium" />
+                    android:textAppearance="@style/BlackBody" />
             </LinearLayout>
         </org.chromium.chrome.browser.signin.AccountSigninConfirmationView>
     </FrameLayout>
@@ -189,14 +186,10 @@
         <!--suppress ButtonStyle -->
         <Button
             android:id="@+id/negative_button"
-            style="@style/ButtonCompatBorderless"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
             android:paddingStart="@dimen/fre_button_padding"
-            android:paddingEnd="@dimen/fre_button_padding"
-            android:textAllCaps="true"
-            android:textColor="@color/light_active_color"
-            android:textSize="14sp"/>
+            android:paddingEnd="@dimen/fre_button_padding" />
 
         <View
             android:layout_width="0dp"
@@ -211,19 +204,14 @@
             android:layout_height="36dp"
             android:paddingStart="@dimen/fre_button_padding"
             android:paddingEnd="@dimen/fre_button_padding"
-            android:textAllCaps="true"
-            style="@style/WhiteBody"
-            chrome:buttonColor="@color/light_active_color"
-            chrome:buttonRaised="false"/>
+            android:textAppearance="@style/WhiteButtonText"
+            app:buttonColor="@color/light_active_color"
+            app:buttonRaised="false"/>
 
         <Button
             android:id="@+id/more_button"
-            style="@style/ButtonCompatBorderless"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
-            android:textAllCaps="true"
-            android:textColor="@color/light_active_color"
-            android:textSize="@dimen/text_size_medium"
             android:drawableEnd="@drawable/down_arrow"
             android:drawablePadding="8dp"
             android:visibility="gone"/>

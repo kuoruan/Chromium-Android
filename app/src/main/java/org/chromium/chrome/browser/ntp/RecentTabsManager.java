@@ -18,7 +18,6 @@ import org.chromium.chrome.browser.favicon.FaviconHelper;
 import org.chromium.chrome.browser.favicon.FaviconHelper.FaviconImageCallback;
 import org.chromium.chrome.browser.history.HistoryManagerUtils;
 import org.chromium.chrome.browser.invalidation.InvalidationController;
-import org.chromium.chrome.browser.metrics.StartupMetrics;
 import org.chromium.chrome.browser.ntp.ForeignSessionHelper.ForeignSession;
 import org.chromium.chrome.browser.ntp.ForeignSessionHelper.ForeignSessionTab;
 import org.chromium.chrome.browser.profiles.Profile;
@@ -118,7 +117,7 @@ public class RecentTabsManager implements AndroidSyncSettingsObserver, SignInSta
         mForeignSessionHelper.triggerSessionSync();
         registerObservers();
 
-        InvalidationController.get(mContext).onRecentTabsPageOpened();
+        InvalidationController.get().onRecentTabsPageOpened();
     }
 
     /**
@@ -126,7 +125,7 @@ public class RecentTabsManager implements AndroidSyncSettingsObserver, SignInSta
      */
     public void destroy() {
         mIsDestroyed = true;
-        AndroidSyncSettings.unregisterObserver(mContext, this);
+        AndroidSyncSettings.unregisterObserver(this);
 
         mSignInManager.removeSignInStateObserver(this);
         mSignInManager = null;
@@ -148,7 +147,7 @@ public class RecentTabsManager implements AndroidSyncSettingsObserver, SignInSta
         mPrefs.destroy();
         mPrefs = null;
 
-        InvalidationController.get(mContext).onRecentTabsPageClosed();
+        InvalidationController.get().onRecentTabsPageClosed();
     }
 
     private void registerForForeignSessionUpdates() {
@@ -159,7 +158,7 @@ public class RecentTabsManager implements AndroidSyncSettingsObserver, SignInSta
     }
 
     private void registerObservers() {
-        AndroidSyncSettings.registerObserver(mContext, this);
+        AndroidSyncSettings.registerObserver(this);
         mSignInManager.addSignInStateObserver(this);
 
         mProfileDataCache.addObserver(this);
@@ -225,7 +224,6 @@ public class RecentTabsManager implements AndroidSyncSettingsObserver, SignInSta
     public void openHistoryPage() {
         if (mIsDestroyed) return;
         HistoryManagerUtils.showHistoryManager(mTab.getActivity(), mTab);
-        StartupMetrics.getInstance().recordOpenedHistory();
     }
 
     /**
@@ -354,8 +352,7 @@ public class RecentTabsManager implements AndroidSyncSettingsObserver, SignInSta
             return PromoState.PROMO_SIGNIN_PERSONALIZED;
         }
 
-        if (AndroidSyncSettings.isSyncEnabled(mContext)
-                && AndroidSyncSettings.isChromeSyncEnabled(mContext)
+        if (AndroidSyncSettings.isSyncEnabled() && AndroidSyncSettings.isChromeSyncEnabled()
                 && !mForeignSessions.isEmpty()) {
             return PromoState.PROMO_NONE;
         }

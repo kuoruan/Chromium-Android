@@ -22,18 +22,18 @@ import java.lang.annotation.RetentionPolicy;
  * An extension of the ScrollView that supports edge boundaries coming in.
  */
 public class FadingEdgeScrollView extends ScrollView {
-    /** Draw no lines at all. */
-    public static final int DRAW_NO_EDGE = 0;
-
-    /** Draw an edge that fades in, depending on how much is left to scroll. */
-    public static final int DRAW_FADING_EDGE = 1;
-
-    /** Draw either no line (if there is nothing to scroll) or a fully opaque line. */
-    public static final int DRAW_HARD_EDGE = 2;
-
+    @IntDef({EdgeType.NONE, EdgeType.FADING, EdgeType.HARD})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({DRAW_NO_EDGE, DRAW_FADING_EDGE, DRAW_HARD_EDGE})
-    public @interface EdgeType {}
+    public @interface EdgeType {
+        /** Draw no lines at all. */
+        int NONE = 0;
+
+        /** Draw an edge that fades in, depending on how much is left to scroll. */
+        int FADING = 1;
+
+        /** Draw either no line (if there is nothing to scroll) or a fully opaque line. */
+        int HARD = 2;
+    }
 
     private static final int POSITION_TOP = 0;
     private static final int POSITION_BOTTOM = 1;
@@ -43,9 +43,9 @@ public class FadingEdgeScrollView extends ScrollView {
     private final int mSeparatorHeight;
 
     @EdgeType
-    private int mDrawTopEdge = DRAW_FADING_EDGE;
+    private int mDrawTopEdge = EdgeType.FADING;
     @EdgeType
-    private int mDrawBottomEdge = DRAW_FADING_EDGE;
+    private int mDrawBottomEdge = EdgeType.FADING;
 
     public FadingEdgeScrollView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -90,9 +90,9 @@ public class FadingEdgeScrollView extends ScrollView {
      */
     private void drawBoundaryLine(
             Canvas canvas, int position, float edgeStrength, @EdgeType int edgeType) {
-        if (edgeType == DRAW_NO_EDGE) {
+        if (edgeType == EdgeType.NONE) {
             return;
-        } else if (edgeType == DRAW_FADING_EDGE) {
+        } else if (edgeType == EdgeType.FADING) {
             edgeStrength = Math.max(0.0f, Math.min(1.0f, edgeStrength));
         } else {
             edgeStrength = 1.0f;

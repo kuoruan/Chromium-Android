@@ -24,8 +24,6 @@ public final class RequestContextFrameType {
 
     public static final int TOP_LEVEL = NONE + 1;
 
-    public static final int LAST = (int) (RequestContextFrameType.TOP_LEVEL);
-
 
     private static final boolean IS_EXTENSIBLE = false;
 

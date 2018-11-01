@@ -9,6 +9,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Region;
+import android.support.annotation.IntDef;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
@@ -21,6 +22,9 @@ import org.chromium.chrome.browser.util.MathUtils;
 import org.chromium.content_public.browser.GestureListenerManager;
 import org.chromium.content_public.browser.GestureStateListener;
 import org.chromium.content_public.browser.WebContents;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * View that slides up from the bottom of the page and slides away as the user scrolls the page.
@@ -42,9 +46,13 @@ public abstract class SwipableOverlayView extends FrameLayout {
     private static final float VERTICAL_FLING_SHOW_THRESHOLD = 0.2f;
     private static final float VERTICAL_FLING_HIDE_THRESHOLD = 0.9f;
 
-    private static final int GESTURE_NONE = 0;
-    private static final int GESTURE_SCROLLING = 1;
-    private static final int GESTURE_FLINGING = 2;
+    @IntDef({Gesture.NONE, Gesture.SCROLLING, Gesture.FLINGING})
+    @Retention(RetentionPolicy.SOURCE)
+    private @interface Gesture {
+        int NONE = 0;
+        int SCROLLING = 1;
+        int FLINGING = 2;
+    }
 
     private static final long ANIMATION_DURATION_MS = 250;
 
@@ -58,7 +66,7 @@ public abstract class SwipableOverlayView extends FrameLayout {
     private final Interpolator mInterpolator;
 
     /** Tracks whether the user is scrolling or flinging. */
-    private int mGestureState;
+    private @Gesture int mGestureState;
 
     /** Animation currently being used to translate the View. */
     private Animator mCurrentAnimation;
@@ -86,7 +94,7 @@ public abstract class SwipableOverlayView extends FrameLayout {
     public SwipableOverlayView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mGestureStateListener = createGestureStateListener();
-        mGestureState = GESTURE_NONE;
+        mGestureState = Gesture.NONE;
         mLayoutChangeListener = createLayoutChangeListener();
         mInterpolator = new DecelerateInterpolator(1.0f);
 
@@ -162,7 +170,7 @@ public abstract class SwipableOverlayView extends FrameLayout {
         int currentParentHeight = getParent() == null ? 0 : ((View) getParent()).getHeight();
         if (mParentHeight != currentParentHeight) {
             mParentHeight = currentParentHeight;
-            mGestureState = GESTURE_NONE;
+            mGestureState = Gesture.NONE;
             if (mCurrentAnimation != null) mCurrentAnimation.end();
         }
 
@@ -193,13 +201,13 @@ public abstract class SwipableOverlayView extends FrameLayout {
             public void onFlingStartGesture(int scrollOffsetY, int scrollExtentY) {
                 if (!isAllowedToAutoHide() || !cancelCurrentAnimation()) return;
                 resetInternalScrollState(scrollOffsetY, scrollExtentY);
-                mGestureState = GESTURE_FLINGING;
+                mGestureState = Gesture.FLINGING;
             }
 
             @Override
             public void onFlingEndGesture(int scrollOffsetY, int scrollExtentY) {
-                if (mGestureState != GESTURE_FLINGING) return;
-                mGestureState = GESTURE_NONE;
+                if (mGestureState != Gesture.FLINGING) return;
+                mGestureState = Gesture.NONE;
 
                 updateTranslation(scrollOffsetY, scrollExtentY);
 
@@ -222,13 +230,13 @@ public abstract class SwipableOverlayView extends FrameLayout {
                 if (!isAllowedToAutoHide() || !cancelCurrentAnimation()) return;
                 resetInternalScrollState(scrollOffsetY, scrollExtentY);
                 mLastScrollOffsetY = scrollOffsetY;
-                mGestureState = GESTURE_SCROLLING;
+                mGestureState = Gesture.SCROLLING;
             }
 
             @Override
             public void onScrollEnded(int scrollOffsetY, int scrollExtentY) {
-                if (mGestureState != GESTURE_SCROLLING) return;
-                mGestureState = GESTURE_NONE;
+                if (mGestureState != Gesture.SCROLLING) return;
+                mGestureState = Gesture.NONE;
 
                 updateTranslation(scrollOffsetY, scrollExtentY);
 
@@ -245,7 +253,7 @@ public abstract class SwipableOverlayView extends FrameLayout {
                 }
 
                 // This function is called for both fling and scrolls.
-                if (mGestureState == GESTURE_NONE || !cancelCurrentAnimation()
+                if (mGestureState == Gesture.NONE || !cancelCurrentAnimation()
                         || isIndependentlyAnimating()) {
                     return;
                 }
@@ -351,7 +359,7 @@ public abstract class SwipableOverlayView extends FrameLayout {
         mCurrentAnimation.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                mGestureState = GESTURE_NONE;
+                mGestureState = Gesture.NONE;
                 mCurrentAnimation = null;
                 mIsBeingDisplayedForFirstTime = false;
             }

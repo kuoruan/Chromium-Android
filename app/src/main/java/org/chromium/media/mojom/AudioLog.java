@@ -54,6 +54,11 @@ double volume);
 
 
 
+    void onProcessingStateChanged(
+String message);
+
+
+
     void onLogMessage(
 String message);
 

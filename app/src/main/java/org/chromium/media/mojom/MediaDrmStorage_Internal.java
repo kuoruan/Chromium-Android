@@ -18,28 +18,28 @@ class MediaDrmStorage_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<MediaDrmStorage, MediaDrmStorage.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<MediaDrmStorage, MediaDrmStorage.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::MediaDrmStorage";
+            return "media.mojom.MediaDrmStorage";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, MediaDrmStorage impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public MediaDrmStorage[] buildArray(int size) {
           return new MediaDrmStorage[size];
@@ -192,22 +192,22 @@ RemovePersistentSessionResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 MediaDrmStorage_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -227,85 +227,85 @@ RemovePersistentSessionResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), MediaDrmStorage_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case INITIALIZE_ORDINAL: {
-            
+
                         MediaDrmStorageInitializeParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().initialize(new MediaDrmStorageInitializeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case ON_PROVISIONED_ORDINAL: {
-            
+
                         MediaDrmStorageOnProvisionedParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onProvisioned(new MediaDrmStorageOnProvisionedResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case SAVE_PERSISTENT_SESSION_ORDINAL: {
-            
+
                         MediaDrmStorageSavePersistentSessionParams data =
                                 MediaDrmStorageSavePersistentSessionParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().savePersistentSession(data.sessionId, data.sessionData, new MediaDrmStorageSavePersistentSessionResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case LOAD_PERSISTENT_SESSION_ORDINAL: {
-            
+
                         MediaDrmStorageLoadPersistentSessionParams data =
                                 MediaDrmStorageLoadPersistentSessionParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().loadPersistentSession(data.sessionId, new MediaDrmStorageLoadPersistentSessionResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case REMOVE_PERSISTENT_SESSION_ORDINAL: {
-            
+
                         MediaDrmStorageRemovePersistentSessionParams data =
                                 MediaDrmStorageRemovePersistentSessionParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().removePersistentSession(data.sessionId, new MediaDrmStorageRemovePersistentSessionResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -319,36 +319,33 @@ RemovePersistentSessionResponse callback) {
 
     
     static final class MediaDrmStorageInitializeParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private MediaDrmStorageInitializeParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public MediaDrmStorageInitializeParams() {
             this(0);
         }
-    
+
         public static MediaDrmStorageInitializeParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static MediaDrmStorageInitializeParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static MediaDrmStorageInitializeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -358,41 +355,19 @@ RemovePersistentSessionResponse callback) {
             MediaDrmStorageInitializeParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new MediaDrmStorageInitializeParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new MediaDrmStorageInitializeParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -400,37 +375,34 @@ RemovePersistentSessionResponse callback) {
 
     
     static final class MediaDrmStorageInitializeResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.mojo.common.mojom.UnguessableToken originId;
-    
+        public org.chromium.mojo_base.mojom.UnguessableToken originId;
+
         private MediaDrmStorageInitializeResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public MediaDrmStorageInitializeResponseParams() {
             this(0);
         }
-    
+
         public static MediaDrmStorageInitializeResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static MediaDrmStorageInitializeResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static MediaDrmStorageInitializeResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -440,52 +412,26 @@ RemovePersistentSessionResponse callback) {
             MediaDrmStorageInitializeResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new MediaDrmStorageInitializeResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new MediaDrmStorageInitializeResponseParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.originId = org.chromium.mojo.common.mojom.UnguessableToken.decode(decoder1);
-                }
+                    result.originId = org.chromium.mojo_base.mojom.UnguessableToken.decode(decoder1);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.originId, 8, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            MediaDrmStorageInitializeResponseParams other = (MediaDrmStorageInitializeResponseParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.originId, other.originId))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.originId);
-            return result;
         }
     }
 
@@ -534,7 +480,7 @@ RemovePersistentSessionResponse callback) {
         }
 
         @Override
-        public void call(org.chromium.mojo.common.mojom.UnguessableToken originId) {
+        public void call(org.chromium.mojo_base.mojom.UnguessableToken originId) {
             MediaDrmStorageInitializeResponseParams _response = new MediaDrmStorageInitializeResponseParams();
 
             _response.originId = originId;
@@ -554,36 +500,33 @@ RemovePersistentSessionResponse callback) {
 
     
     static final class MediaDrmStorageOnProvisionedParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private MediaDrmStorageOnProvisionedParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public MediaDrmStorageOnProvisionedParams() {
             this(0);
         }
-    
+
         public static MediaDrmStorageOnProvisionedParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static MediaDrmStorageOnProvisionedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static MediaDrmStorageOnProvisionedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -593,41 +536,19 @@ RemovePersistentSessionResponse callback) {
             MediaDrmStorageOnProvisionedParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new MediaDrmStorageOnProvisionedParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new MediaDrmStorageOnProvisionedParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -635,37 +556,34 @@ RemovePersistentSessionResponse callback) {
 
     
     static final class MediaDrmStorageOnProvisionedResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean success;
-    
+
         private MediaDrmStorageOnProvisionedResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public MediaDrmStorageOnProvisionedResponseParams() {
             this(0);
         }
-    
+
         public static MediaDrmStorageOnProvisionedResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static MediaDrmStorageOnProvisionedResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static MediaDrmStorageOnProvisionedResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -675,51 +593,25 @@ RemovePersistentSessionResponse callback) {
             MediaDrmStorageOnProvisionedResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new MediaDrmStorageOnProvisionedResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new MediaDrmStorageOnProvisionedResponseParams(elementsOrVersion);
+                    {
+                        
                     result.success = decoder0.readBoolean(8, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.success, 8, 0);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            MediaDrmStorageOnProvisionedResponseParams other = (MediaDrmStorageOnProvisionedResponseParams) object;
-            if (this.success!= other.success)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
-            return result;
         }
     }
 
@@ -788,38 +680,35 @@ RemovePersistentSessionResponse callback) {
 
     
     static final class MediaDrmStorageSavePersistentSessionParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public String sessionId;
         public SessionData sessionData;
-    
+
         private MediaDrmStorageSavePersistentSessionParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public MediaDrmStorageSavePersistentSessionParams() {
             this(0);
         }
-    
+
         public static MediaDrmStorageSavePersistentSessionParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static MediaDrmStorageSavePersistentSessionParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static MediaDrmStorageSavePersistentSessionParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -829,22 +718,24 @@ RemovePersistentSessionResponse callback) {
             MediaDrmStorageSavePersistentSessionParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new MediaDrmStorageSavePersistentSessionParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new MediaDrmStorageSavePersistentSessionParams(elementsOrVersion);
+                    {
+                        
                     result.sessionId = decoder0.readString(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.sessionData = SessionData.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -854,74 +745,40 @@ RemovePersistentSessionResponse callback) {
             
             encoder0.encode(this.sessionData, 16, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            MediaDrmStorageSavePersistentSessionParams other = (MediaDrmStorageSavePersistentSessionParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionId, other.sessionId))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionData, other.sessionData))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionData);
-            return result;
-        }
     }
 
 
 
     
     static final class MediaDrmStorageSavePersistentSessionResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean success;
-    
+
         private MediaDrmStorageSavePersistentSessionResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public MediaDrmStorageSavePersistentSessionResponseParams() {
             this(0);
         }
-    
+
         public static MediaDrmStorageSavePersistentSessionResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static MediaDrmStorageSavePersistentSessionResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static MediaDrmStorageSavePersistentSessionResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -931,51 +788,25 @@ RemovePersistentSessionResponse callback) {
             MediaDrmStorageSavePersistentSessionResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new MediaDrmStorageSavePersistentSessionResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new MediaDrmStorageSavePersistentSessionResponseParams(elementsOrVersion);
+                    {
+                        
                     result.success = decoder0.readBoolean(8, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.success, 8, 0);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            MediaDrmStorageSavePersistentSessionResponseParams other = (MediaDrmStorageSavePersistentSessionResponseParams) object;
-            if (this.success!= other.success)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
-            return result;
         }
     }
 
@@ -1044,37 +875,34 @@ RemovePersistentSessionResponse callback) {
 
     
     static final class MediaDrmStorageLoadPersistentSessionParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public String sessionId;
-    
+
         private MediaDrmStorageLoadPersistentSessionParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public MediaDrmStorageLoadPersistentSessionParams() {
             this(0);
         }
-    
+
         public static MediaDrmStorageLoadPersistentSessionParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static MediaDrmStorageLoadPersistentSessionParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static MediaDrmStorageLoadPersistentSessionParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1084,17 +912,19 @@ RemovePersistentSessionResponse callback) {
             MediaDrmStorageLoadPersistentSessionParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new MediaDrmStorageLoadPersistentSessionParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new MediaDrmStorageLoadPersistentSessionParams(elementsOrVersion);
+                    {
+                        
                     result.sessionId = decoder0.readString(8, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1102,71 +932,40 @@ RemovePersistentSessionResponse callback) {
             
             encoder0.encode(this.sessionId, 8, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            MediaDrmStorageLoadPersistentSessionParams other = (MediaDrmStorageLoadPersistentSessionParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionId, other.sessionId))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
-            return result;
-        }
     }
 
 
 
     
     static final class MediaDrmStorageLoadPersistentSessionResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public SessionData sessionData;
-    
+
         private MediaDrmStorageLoadPersistentSessionResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public MediaDrmStorageLoadPersistentSessionResponseParams() {
             this(0);
         }
-    
+
         public static MediaDrmStorageLoadPersistentSessionResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static MediaDrmStorageLoadPersistentSessionResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static MediaDrmStorageLoadPersistentSessionResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1176,52 +975,26 @@ RemovePersistentSessionResponse callback) {
             MediaDrmStorageLoadPersistentSessionResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new MediaDrmStorageLoadPersistentSessionResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new MediaDrmStorageLoadPersistentSessionResponseParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, true);
                     result.sessionData = SessionData.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.sessionData, 8, true);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            MediaDrmStorageLoadPersistentSessionResponseParams other = (MediaDrmStorageLoadPersistentSessionResponseParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionData, other.sessionData))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionData);
-            return result;
         }
     }
 
@@ -1290,37 +1063,34 @@ RemovePersistentSessionResponse callback) {
 
     
     static final class MediaDrmStorageRemovePersistentSessionParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public String sessionId;
-    
+
         private MediaDrmStorageRemovePersistentSessionParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public MediaDrmStorageRemovePersistentSessionParams() {
             this(0);
         }
-    
+
         public static MediaDrmStorageRemovePersistentSessionParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static MediaDrmStorageRemovePersistentSessionParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static MediaDrmStorageRemovePersistentSessionParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1330,17 +1100,19 @@ RemovePersistentSessionResponse callback) {
             MediaDrmStorageRemovePersistentSessionParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new MediaDrmStorageRemovePersistentSessionParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new MediaDrmStorageRemovePersistentSessionParams(elementsOrVersion);
+                    {
+                        
                     result.sessionId = decoder0.readString(8, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1348,71 +1120,40 @@ RemovePersistentSessionResponse callback) {
             
             encoder0.encode(this.sessionId, 8, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            MediaDrmStorageRemovePersistentSessionParams other = (MediaDrmStorageRemovePersistentSessionParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sessionId, other.sessionId))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sessionId);
-            return result;
-        }
     }
 
 
 
     
     static final class MediaDrmStorageRemovePersistentSessionResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean success;
-    
+
         private MediaDrmStorageRemovePersistentSessionResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public MediaDrmStorageRemovePersistentSessionResponseParams() {
             this(0);
         }
-    
+
         public static MediaDrmStorageRemovePersistentSessionResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static MediaDrmStorageRemovePersistentSessionResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static MediaDrmStorageRemovePersistentSessionResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1422,51 +1163,25 @@ RemovePersistentSessionResponse callback) {
             MediaDrmStorageRemovePersistentSessionResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new MediaDrmStorageRemovePersistentSessionResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new MediaDrmStorageRemovePersistentSessionResponseParams(elementsOrVersion);
+                    {
+                        
                     result.success = decoder0.readBoolean(8, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.success, 8, 0);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            MediaDrmStorageRemovePersistentSessionResponseParams other = (MediaDrmStorageRemovePersistentSessionResponseParams) object;
-            if (this.success!= other.success)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
-            return result;
         }
     }
 

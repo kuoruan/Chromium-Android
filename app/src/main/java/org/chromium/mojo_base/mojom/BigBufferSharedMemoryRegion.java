@@ -41,9 +41,6 @@ public final class BigBufferSharedMemoryRegion extends org.chromium.mojo.binding
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static BigBufferSharedMemoryRegion deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -57,15 +54,17 @@ public final class BigBufferSharedMemoryRegion extends org.chromium.mojo.binding
         BigBufferSharedMemoryRegion result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new BigBufferSharedMemoryRegion(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new BigBufferSharedMemoryRegion(elementsOrVersion);
+                {
+                    
                 result.bufferHandle = decoder0.readSharedBufferHandle(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.size = decoder0.readInt(12);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -80,36 +79,5 @@ public final class BigBufferSharedMemoryRegion extends org.chromium.mojo.binding
         encoder0.encode(this.bufferHandle, 8, false);
         
         encoder0.encode(this.size, 12);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        BigBufferSharedMemoryRegion other = (BigBufferSharedMemoryRegion) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.bufferHandle, other.bufferHandle))
-            return false;
-        if (this.size!= other.size)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bufferHandle);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.size);
-        return result;
     }
 }

@@ -5,8 +5,12 @@
 package org.chromium.chrome.browser.preferences;
 
 import android.content.Context;
+import android.preference.Preference;
+import android.support.annotation.Nullable;
+import android.view.View;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.util.ViewUtils;
 import org.chromium.ui.widget.Toast;
 
 /**
@@ -45,5 +49,85 @@ public class ManagedPreferencesUtils {
      */
     public static int getManagedByEnterpriseIconId() {
         return R.drawable.controlled_setting_mandatory;
+    }
+
+    /**
+     * Initializes the Preference based on the state of any policies that may affect it,
+     * e.g. by showing a managed icon or disabling clicks on the preference.
+     *
+     * This should be called once, before the preference is displayed.
+     *
+     * @param delegate The delegate that controls whether the preference is managed. May be null,
+     *         then this method does nothing.
+     * @param preference The Preference that is being initialized
+     */
+    public static void initPreference(
+            @Nullable ManagedPreferenceDelegate delegate, Preference preference) {
+        if (delegate == null) return;
+
+        if (delegate.isPreferenceControlledByPolicy(preference)) {
+            preference.setIcon(getManagedByEnterpriseIconId());
+        } else if (delegate.isPreferenceControlledByCustodian(preference)) {
+            preference.setIcon(R.drawable.ic_account_child_grey600_36dp);
+        }
+
+        if (delegate.isPreferenceClickDisabledByPolicy(preference)) {
+            // Disable the views and prevent the Preference from mucking with the enabled state.
+            preference.setShouldDisableView(false);
+
+            // Prevent default click behavior.
+            preference.setFragment(null);
+            preference.setIntent(null);
+            preference.setOnPreferenceClickListener(null);
+        }
+    }
+
+    /**
+     * Disables the Preference's views if the preference is not clickable.
+     *
+     * Note: this disables the View instead of disabling the Preference, so that the Preference
+     * still receives click events, which will trigger a "Managed by your administrator" toast.
+     *
+     * This should be called from the Preference's onBindView() method.
+     *
+     * @param delegate The delegate that controls whether the preference is managed. May be null,
+     *         then this method does nothing.
+     * @param preference The Preference that owns the view
+     * @param view The View that was bound to the Preference
+     */
+    public static void onBindViewToPreference(
+            @Nullable ManagedPreferenceDelegate delegate, Preference preference, View view) {
+        if (delegate != null && delegate.isPreferenceClickDisabledByPolicy(preference)) {
+            ViewUtils.setEnabledRecursive(view, false);
+        }
+    }
+
+    /**
+     * Intercepts the click event if the given Preference is managed and shows a toast in that case.
+     *
+     * This should be called from the Preference's onClick() method.
+     *
+     * @param delegate The delegate that controls whether the preference is managed. May be null,
+     *         then this method does nothing and returns false.
+     * @param preference The Preference that was clicked.
+     * @return true if the click event was handled by this helper and shouldn't be further
+     *         propagated; false otherwise.
+     */
+    public static boolean onClickPreference(
+            @Nullable ManagedPreferenceDelegate delegate, Preference preference) {
+        if (delegate == null || !delegate.isPreferenceClickDisabledByPolicy(preference)) {
+            return false;
+        }
+
+        if (delegate.isPreferenceControlledByPolicy(preference)) {
+            showManagedByAdministratorToast(preference.getContext());
+        } else if (delegate.isPreferenceControlledByCustodian(preference)) {
+            showManagedByParentToast(preference.getContext());
+        } else {
+            // If the preference is disabled, it should be either because it's managed by enterprise
+            // policy or by the custodian.
+            assert false;
+        }
+        return true;
     }
 }

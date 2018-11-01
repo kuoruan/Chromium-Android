@@ -21,6 +21,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.NativeClassQualifiedName;
+import org.chromium.base.annotations.UsedByReflection;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -28,7 +29,12 @@ import java.lang.reflect.Method;
 /**
  * This class partners with native ProxyConfigServiceAndroid to listen for
  * proxy change notifications from Android.
+ *
+ * Unfortunately this is called directly via reflection in a number of WebView applications
+ * to provide a hacky way to set per-application proxy settings, so it must not be mangled by
+ * Proguard.
  */
+@UsedByReflection("WebView embedders call this to override proxy settings")
 @JNINamespace("net")
 public class ProxyChangeListener {
     private static final String TAG = "ProxyChangeListener";
@@ -99,8 +105,10 @@ public class ProxyChangeListener {
         unregisterReceiver();
     }
 
+    @UsedByReflection("WebView embedders call this to override proxy settings")
     private class ProxyReceiver extends BroadcastReceiver {
         @Override
+        @UsedByReflection("WebView embedders call this to override proxy settings")
         public void onReceive(Context context, final Intent intent) {
             if (intent.getAction().equals(Proxy.PROXY_CHANGE_ACTION)) {
                 runOnThread(new Runnable() {

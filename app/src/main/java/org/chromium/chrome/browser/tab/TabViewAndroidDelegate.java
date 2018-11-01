@@ -16,11 +16,10 @@ class TabViewAndroidDelegate extends ViewAndroidDelegate {
     private static final String TAG = "TabVAD";
 
     private final Tab mTab;
-    private final ViewGroup mContainerView;
 
     TabViewAndroidDelegate(Tab tab, ViewGroup containerView) {
+        super(containerView);
         mTab = tab;
-        mContainerView = containerView;
     }
 
     @Override
@@ -30,21 +29,18 @@ class TabViewAndroidDelegate extends ViewAndroidDelegate {
 
     @Override
     public void onTopControlsChanged(float topControlsOffsetY, float topContentOffsetY) {
-        mTab.onOffsetsChanged(topControlsOffsetY, Float.NaN, topContentOffsetY);
+        mTab.getControlsOffsetHelper().onOffsetsChanged(
+                topControlsOffsetY, Float.NaN, topContentOffsetY);
     }
 
     @Override
     public void onBottomControlsChanged(float bottomControlsOffsetY, float bottomContentOffsetY) {
-        mTab.onOffsetsChanged(Float.NaN, bottomControlsOffsetY, Float.NaN);
+        mTab.getControlsOffsetHelper().onOffsetsChanged(
+                Float.NaN, bottomControlsOffsetY, Float.NaN);
     }
 
     @Override
     public int getSystemWindowInsetBottom() {
         return mTab.getSystemWindowInsetBottom();
-    }
-
-    @Override
-    public ViewGroup getContainerView() {
-        return mContainerView;
     }
 }

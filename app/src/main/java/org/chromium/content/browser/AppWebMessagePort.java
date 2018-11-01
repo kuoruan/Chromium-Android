@@ -24,6 +24,7 @@ import org.chromium.mojo.system.Core;
 import org.chromium.mojo.system.MessagePipeHandle;
 import org.chromium.mojo.system.Pair;
 import org.chromium.mojo.system.impl.CoreImpl;
+import org.chromium.mojo_base.BigBufferUtil;
 import org.chromium.skia.mojom.Bitmap;
 
 /**
@@ -128,7 +129,8 @@ public class AppWebMessagePort implements MessagePort {
                     ports[i] = new AppWebMessagePort(msg.ports[i]);
                 }
                 MessagePortMessage portMsg = new MessagePortMessage();
-                portMsg.encodedMessage = msg.message.encodedMessage;
+                portMsg.encodedMessage =
+                        BigBufferUtil.getBytesFromBigBuffer(msg.message.encodedMessage);
                 portMsg.ports = ports;
                 sendMessage(obtainMessage(MESSAGE_RECEIVED, portMsg));
             } catch (DeserializationException e) {
@@ -248,7 +250,8 @@ public class AppWebMessagePort implements MessagePort {
 
         TransferableMessage msg = new TransferableMessage();
         msg.message = new CloneableMessage();
-        msg.message.encodedMessage = nativeEncodeStringMessage(message);
+        msg.message.encodedMessage =
+                BigBufferUtil.createBigBufferFromBytes(nativeEncodeStringMessage(message));
         msg.message.blobs = new SerializedBlob[0];
         msg.arrayBufferContentsArray = new SerializedArrayBufferContents[0];
         msg.imageBitmapContentsArray = new Bitmap[0];

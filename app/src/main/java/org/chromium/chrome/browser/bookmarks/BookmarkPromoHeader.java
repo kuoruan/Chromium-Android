@@ -80,7 +80,7 @@ class BookmarkPromoHeader implements AndroidSyncSettingsObserver, SignInStateObs
         mContext = context;
         mPromoHeaderChangeAction = promoHeaderChangeAction;
 
-        AndroidSyncSettings.registerObserver(mContext, this);
+        AndroidSyncSettings.registerObserver(this);
 
         if (SigninPromoController.hasNotReachedImpressionLimit(
                     SigninAccessPoint.BOOKMARK_MANAGER)) {
@@ -113,7 +113,7 @@ class BookmarkPromoHeader implements AndroidSyncSettingsObserver, SignInStateObs
      * Clean ups the class. Must be called once done using this class.
      */
     void destroy() {
-        AndroidSyncSettings.unregisterObserver(mContext, this);
+        AndroidSyncSettings.unregisterObserver(this);
 
         if (mSigninPromoController != null) {
             AccountManagerFacade.get().removeObserver(this);
@@ -203,7 +203,7 @@ class BookmarkPromoHeader implements AndroidSyncSettingsObserver, SignInStateObs
             return sPromoStateForTests;
         }
 
-        if (!AndroidSyncSettings.isMasterSyncEnabled(mContext)) {
+        if (!AndroidSyncSettings.isMasterSyncEnabled()) {
             return PromoState.PROMO_NONE;
         }
 
@@ -220,7 +220,7 @@ class BookmarkPromoHeader implements AndroidSyncSettingsObserver, SignInStateObs
         boolean impressionLimitNotReached = ContextUtils.getAppSharedPreferences().getInt(
                                                     PREF_SIGNIN_AND_SYNC_PROMO_SHOW_COUNT, 0)
                 < MAX_SIGNIN_AND_SYNC_PROMO_SHOW_COUNT;
-        if (!AndroidSyncSettings.isChromeSyncEnabled(mContext) && impressionLimitNotReached) {
+        if (!AndroidSyncSettings.isChromeSyncEnabled() && impressionLimitNotReached) {
             return PromoState.PROMO_SYNC;
         }
         return PromoState.PROMO_NONE;

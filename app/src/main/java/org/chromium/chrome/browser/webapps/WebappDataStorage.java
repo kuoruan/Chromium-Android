@@ -8,10 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
@@ -69,8 +69,8 @@ public class WebappDataStorage {
     // The shell Apk version requested in the last update.
     static final String KEY_LAST_REQUESTED_SHELL_APK_VERSION = "last_requested_shell_apk_version";
 
-    // Whether the user has dismissed the disclosure UI.
-    static final String KEY_DISMISSED_DISCLOSURE = "dismissed_dislosure";
+    // Whether to show the user the Snackbar disclosure UI.
+    static final String KEY_SHOW_DISCLOSURE = "show_disclosure";
 
     // The path where serialized update data is written before uploading to the WebAPK server.
     static final String KEY_PENDING_UPDATE_FILE_PATH = "pending_update_file_path";
@@ -170,9 +170,9 @@ public class WebappDataStorage {
      *                 The bitmap result will be null if no image was found.
      */
     public void getSplashScreenImage(final FetchCallback<Bitmap> callback) {
-        new AsyncTask<Void, Void, Bitmap>() {
+        new AsyncTask<Bitmap>() {
             @Override
-            protected final Bitmap doInBackground(Void... nothing) {
+            protected final Bitmap doInBackground() {
                 return ShortcutHelper.decodeBitmapFromString(
                         mPreferences.getString(KEY_SPLASH_ICON, null));
             }
@@ -182,7 +182,8 @@ public class WebappDataStorage {
                 assert callback != null;
                 callback.onDataRetrieved(result);
             }
-        }.execute();
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**
@@ -334,7 +335,7 @@ public class WebappDataStorage {
         editor.remove(KEY_LAST_UPDATE_REQUEST_COMPLETE_TIME);
         editor.remove(KEY_DID_LAST_UPDATE_REQUEST_SUCCEED);
         editor.remove(KEY_RELAX_UPDATES);
-        editor.remove(KEY_DISMISSED_DISCLOSURE);
+        editor.remove(KEY_SHOW_DISCLOSURE);
         editor.apply();
     }
 
@@ -422,7 +423,7 @@ public class WebappDataStorage {
      * Returns the completion time, in milliseconds, of the last check for whether the WebAPK's Web
      * Manifest was updated. This time needs to be set when the WebAPK is registered.
      */
-    private long getLastCheckForWebManifestUpdateTimeMs() {
+    public long getLastCheckForWebManifestUpdateTimeMs() {
         return mPreferences.getLong(KEY_LAST_CHECK_WEB_MANIFEST_UPDATE_TIME, TIMESTAMP_INVALID);
     }
 
@@ -457,12 +458,30 @@ public class WebappDataStorage {
         return mPreferences.getBoolean(KEY_DID_LAST_UPDATE_REQUEST_SUCCEED, false);
     }
 
-    void setDismissedDisclosure() {
-        mPreferences.edit().putBoolean(KEY_DISMISSED_DISCLOSURE, true).apply();
+    /**
+     * Returns whether to show the user a privacy disclosure (used for TWAs and unbound WebAPKs).
+     * This is not cleared until the user explicitly acknowledges it.
+     */
+    boolean shouldShowDisclosure() {
+        return mPreferences.getBoolean(KEY_SHOW_DISCLOSURE, false);
     }
 
-    boolean hasDismissedDisclosure() {
-        return mPreferences.getBoolean(KEY_DISMISSED_DISCLOSURE, false);
+    /**
+     * Clears the show disclosure bit, this stops TWAs and unbound WebAPKs from showing a privacy
+     * disclosure on every resume of the Webapp. This should be called when the user has
+     * acknowledged the disclosure.
+     */
+    void clearShowDisclosure() {
+        mPreferences.edit().putBoolean(KEY_SHOW_DISCLOSURE, false).apply();
+    }
+
+    /**
+     * Sets the disclosure bit which causes TWAs and unbound WebAPKs to show a privacy disclosure.
+     * This is set the first time an app is opened without storage (either right after install or
+     * after Chrome's storage is cleared).
+     */
+    void setShowDisclosure() {
+        mPreferences.edit().putBoolean(KEY_SHOW_DISCLOSURE, true).apply();
     }
 
     /** Updates the shell Apk version requested in the last update. */
@@ -493,7 +512,7 @@ public class WebappDataStorage {
     }
 
     /** Returns whether we should check for updates less frequently. */
-    private boolean shouldRelaxUpdates() {
+    public boolean shouldRelaxUpdates() {
         return mPreferences.getBoolean(KEY_RELAX_UPDATES, false);
     }
 
@@ -522,15 +541,16 @@ public class WebappDataStorage {
         if (pendingUpdateFilePath == null) return;
 
         mPreferences.edit().remove(KEY_PENDING_UPDATE_FILE_PATH).apply();
-        new AsyncTask<Void, Void, Void>() {
+        new AsyncTask<Void>() {
             @Override
-            protected Void doInBackground(Void... params) {
+            protected Void doInBackground() {
                 if (!new File(pendingUpdateFilePath).delete()) {
                     Log.d(TAG, "Failed to delete file " + pendingUpdateFilePath);
                 }
                 return null;
             }
-        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**

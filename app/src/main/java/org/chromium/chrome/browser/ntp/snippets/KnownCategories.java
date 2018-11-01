@@ -16,18 +16,18 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
-    KnownCategories.RECENT_TABS, KnownCategories.DOWNLOADS, KnownCategories.BOOKMARKS,
-    KnownCategories.PHYSICAL_WEB_PAGES, KnownCategories.FOREIGN_TABS, KnownCategories.READING_LIST,
-    KnownCategories.CONTEXTUAL, KnownCategories.LOCAL_CATEGORIES_COUNT,
-    KnownCategories.REMOTE_CATEGORIES_OFFSET, KnownCategories.ARTICLES,
-    KnownCategories.LAST_KNOWN_REMOTE_CATEGORY
+    KnownCategories.RECENT_TABS_DEPRECATED, KnownCategories.DOWNLOADS, KnownCategories.BOOKMARKS,
+    KnownCategories.PHYSICAL_WEB_PAGES_DEPRECATED, KnownCategories.FOREIGN_TABS,
+    KnownCategories.READING_LIST, KnownCategories.CONTEXTUAL,
+    KnownCategories.LOCAL_CATEGORIES_COUNT, KnownCategories.REMOTE_CATEGORIES_OFFSET,
+    KnownCategories.ARTICLES, KnownCategories.LAST_KNOWN_REMOTE_CATEGORY
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface KnownCategories {
   /**
    * Pages recently downloaded during normal navigation.
    */
-  int RECENT_TABS = 0;
+  int RECENT_TABS_DEPRECATED = 0;
   /**
    * Pages downloaded by the user for offline consumption.
    */
@@ -39,7 +39,7 @@ public @interface KnownCategories {
   /**
    * Physical Web page available in the vicinity.
    */
-  int PHYSICAL_WEB_PAGES = 3;
+  int PHYSICAL_WEB_PAGES_DEPRECATED = 3;
   /**
    * Pages recently browsed to on other devices.
    */

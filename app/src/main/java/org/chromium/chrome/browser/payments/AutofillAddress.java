@@ -13,9 +13,9 @@ import android.util.Pair;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
-import org.chromium.chrome.browser.payments.ui.PaymentOption;
 import org.chromium.chrome.browser.preferences.autofill.AutofillProfileBridge;
 import org.chromium.chrome.browser.preferences.autofill.AutofillProfileBridge.AddressField;
+import org.chromium.chrome.browser.widget.prefeditor.EditableOption;
 import org.chromium.payments.mojom.PaymentAddress;
 
 import java.lang.annotation.Retention;
@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 /**
  * The locally stored autofill address.
  */
-public class AutofillAddress extends PaymentOption {
+public class AutofillAddress extends EditableOption {
     /** The pattern for a valid region code. */
     private static final String REGION_CODE_PATTERN = "^[A-Z]{2}$";
 
@@ -40,28 +40,31 @@ public class AutofillAddress extends PaymentOption {
     private static final int LANGUAGE_CODE_GROUP = 1;
     private static final int SCRIPT_CODE_GROUP = 3;
 
-    @IntDef({COMPLETE, INVALID_ADDRESS, INVALID_PHONE_NUMBER, INVALID_RECIPIENT,
-            INVALID_MULTIPLE_FIELDS})
+    @IntDef({CompletionStatus.COMPLETE, CompletionStatus.INVALID_ADDRESS,
+            CompletionStatus.INVALID_PHONE_NUMBER, CompletionStatus.INVALID_RECIPIENT,
+            CompletionStatus.INVALID_MULTIPLE_FIELDS})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface CompletionStatus {}
-    /** Can be sent to the merchant as-is without editing first. */
-    public static final int COMPLETE = 0;
-    /** The address is invalid. For example, missing state or city name. */
-    public static final int INVALID_ADDRESS = 1;
-    /** The phone number is invalid or missing. */
-    public static final int INVALID_PHONE_NUMBER = 2;
-    /** The recipient is missing. */
-    public static final int INVALID_RECIPIENT = 3;
-    /** Multiple fields are invalid or missing. */
-    public static final int INVALID_MULTIPLE_FIELDS = 4;
+    public @interface CompletionStatus {
+        /** Can be sent to the merchant as-is without editing first. */
+        int COMPLETE = 0;
+        /** The address is invalid. For example, missing state or city name. */
+        int INVALID_ADDRESS = 1;
+        /** The phone number is invalid or missing. */
+        int INVALID_PHONE_NUMBER = 2;
+        /** The recipient is missing. */
+        int INVALID_RECIPIENT = 3;
+        /** Multiple fields are invalid or missing. */
+        int INVALID_MULTIPLE_FIELDS = 4;
+    }
 
-    @IntDef({NORMAL_COMPLETENESS_CHECK, IGNORE_PHONE_COMPLETENESS_CHECK})
+    @IntDef({CompletenessCheckType.NORMAL, CompletenessCheckType.IGNORE_PHONE})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface CompletenessCheckType {}
-    /** A normal completeness check. */
-    public static final int NORMAL_COMPLETENESS_CHECK = 0;
-    /** A completeness check that ignores phone numbers. */
-    public static final int IGNORE_PHONE_COMPLETENESS_CHECK = 1;
+    public @interface CompletenessCheckType {
+        /** A normal completeness check. */
+        int NORMAL = 0;
+        /** A completeness check that ignores phone numbers. */
+        int IGNORE_PHONE = 1;
+    }
 
     @Nullable private static Pattern sRegionCodePattern;
 
@@ -113,7 +116,7 @@ public class AutofillAddress extends PaymentOption {
 
     /**
      * Gets the shipping address label which includes the country for the profile associated with
-     * this address and sets it as sublabel for this PaymentOption.
+     * this address and sets it as sublabel for this EditableOption.
      */
     public void setShippingAddressLabelWithCountry() {
         assert mProfile != null;
@@ -130,7 +133,7 @@ public class AutofillAddress extends PaymentOption {
 
     /**
      * Gets the shipping address label which does not include the country for the profile associated
-     * with this address and sets it as sublabel for this PaymentOption.
+     * with this address and sets it as sublabel for this EditableOption.
      */
     public void setShippingAddressLabelWithoutCountry() {
         assert mProfile != null;
@@ -147,7 +150,7 @@ public class AutofillAddress extends PaymentOption {
 
     /*
      * Gets the billing address label for the profile associated with this address and sets it as
-     * sublabel for this PaymentOption.
+     * sublabel for this EditableOption.
      */
     public void setBillingAddressLabel() {
         assert mProfile != null;
@@ -168,7 +171,7 @@ public class AutofillAddress extends PaymentOption {
      */
     private void checkAndUpdateAddressCompleteness() {
         Pair<Integer, Integer> messageResIds = getEditMessageAndTitleResIds(
-                checkAddressCompletionStatus(mProfile, NORMAL_COMPLETENESS_CHECK));
+                checkAddressCompletionStatus(mProfile, CompletenessCheckType.NORMAL));
 
         mEditMessage = messageResIds.first.intValue() == 0
                 ? null
@@ -192,22 +195,22 @@ public class AutofillAddress extends PaymentOption {
         int editTitleResId = 0;
 
         switch (completionStatus) {
-            case COMPLETE:
+            case CompletionStatus.COMPLETE:
                 editTitleResId = R.string.payments_edit_address;
                 break;
-            case INVALID_ADDRESS:
+            case CompletionStatus.INVALID_ADDRESS:
                 editMessageResId = R.string.payments_invalid_address;
                 editTitleResId = R.string.payments_add_valid_address;
                 break;
-            case INVALID_PHONE_NUMBER:
+            case CompletionStatus.INVALID_PHONE_NUMBER:
                 editMessageResId = R.string.payments_phone_number_required;
                 editTitleResId = R.string.payments_add_phone_number;
                 break;
-            case INVALID_RECIPIENT:
+            case CompletionStatus.INVALID_RECIPIENT:
                 editMessageResId = R.string.payments_recipient_required;
                 editTitleResId = R.string.payments_add_recipient;
                 break;
-            case INVALID_MULTIPLE_FIELDS:
+            case CompletionStatus.INVALID_MULTIPLE_FIELDS:
                 editMessageResId = R.string.payments_more_information_required;
                 editTitleResId = R.string.payments_add_more_information;
                 break;
@@ -233,12 +236,13 @@ public class AutofillAddress extends PaymentOption {
     public static int checkAddressCompletionStatus(
             AutofillProfile profile, @CompletenessCheckType int checkType) {
         int invalidFieldsCount = 0;
-        int completionStatus = COMPLETE;
+        @CompletionStatus
+        int completionStatus = CompletionStatus.COMPLETE;
 
-        if (checkType != IGNORE_PHONE_COMPLETENESS_CHECK
+        if (checkType != CompletenessCheckType.IGNORE_PHONE
                 && !PhoneNumberUtils.isGlobalPhoneNumber(
                            PhoneNumberUtils.stripSeparators(profile.getPhoneNumber().toString()))) {
-            completionStatus = INVALID_PHONE_NUMBER;
+            completionStatus = CompletionStatus.INVALID_PHONE_NUMBER;
             invalidFieldsCount++;
         }
 
@@ -247,18 +251,18 @@ public class AutofillAddress extends PaymentOption {
         for (int fieldId : requiredFields) {
             if (fieldId == AddressField.RECIPIENT || fieldId == AddressField.COUNTRY) continue;
             if (!TextUtils.isEmpty(getProfileField(profile, fieldId))) continue;
-            completionStatus = INVALID_ADDRESS;
+            completionStatus = CompletionStatus.INVALID_ADDRESS;
             invalidFieldsCount++;
             break;
         }
 
         if (TextUtils.isEmpty(profile.getFullName())) {
-            completionStatus = INVALID_RECIPIENT;
+            completionStatus = CompletionStatus.INVALID_RECIPIENT;
             invalidFieldsCount++;
         }
 
         if (invalidFieldsCount > 1) {
-            completionStatus = INVALID_MULTIPLE_FIELDS;
+            completionStatus = CompletionStatus.INVALID_MULTIPLE_FIELDS;
         }
 
         return completionStatus;

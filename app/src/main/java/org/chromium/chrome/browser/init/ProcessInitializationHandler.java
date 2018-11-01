@@ -8,7 +8,6 @@ import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.SystemClock;
 import android.support.annotation.WorkerThread;
@@ -20,6 +19,7 @@ import android.view.inputmethod.InputMethodSubtype;
 import com.google.ipc.invalidation.external.client.android.service.AndroidLogger;
 
 import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.AsyncTask;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
@@ -41,6 +41,7 @@ import org.chromium.chrome.browser.DeferredStartupHandler;
 import org.chromium.chrome.browser.DevToolsServer;
 import org.chromium.chrome.browser.banners.AppBannerManager;
 import org.chromium.chrome.browser.bookmarkswidget.BookmarkWidgetProvider;
+import org.chromium.chrome.browser.contacts_picker.ContactsPickerDialog;
 import org.chromium.chrome.browser.crash.LogcatExtractionRunnable;
 import org.chromium.chrome.browser.crash.MinidumpUploadService;
 import org.chromium.chrome.browser.download.DownloadController;
@@ -51,6 +52,7 @@ import org.chromium.chrome.browser.identity.UuidBasedUniqueIdentificationGenerat
 import org.chromium.chrome.browser.invalidation.UniqueIdInvalidationClientNameGenerator;
 import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.media.MediaCaptureNotificationService;
+import org.chromium.chrome.browser.media.MediaViewerUtils;
 import org.chromium.chrome.browser.metrics.LaunchMetrics;
 import org.chromium.chrome.browser.metrics.PackageMetrics;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
@@ -60,7 +62,6 @@ import org.chromium.chrome.browser.ntp.NewTabPage;
 import org.chromium.chrome.browser.partnercustomizations.HomepageManager;
 import org.chromium.chrome.browser.partnercustomizations.PartnerBrowserCustomizations;
 import org.chromium.chrome.browser.photo_picker.PhotoPickerDialog;
-import org.chromium.chrome.browser.physicalweb.PhysicalWeb;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.profiles.ProfileManagerUtils;
@@ -69,17 +70,18 @@ import org.chromium.chrome.browser.searchwidget.SearchWidgetProvider;
 import org.chromium.chrome.browser.services.GoogleServicesManager;
 import org.chromium.chrome.browser.share.ShareHelper;
 import org.chromium.chrome.browser.sync.SyncController;
+import org.chromium.chrome.browser.util.ConversionUtils;
 import org.chromium.chrome.browser.webapps.WebApkVersionManager;
 import org.chromium.chrome.browser.webapps.WebappRegistry;
 import org.chromium.components.background_task_scheduler.BackgroundTaskSchedulerFactory;
 import org.chromium.components.minidump_uploader.CrashFileManager;
 import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.AccountsChangeObserver;
-import org.chromium.content.browser.ChildProcessLauncherHelper;
-import org.chromium.content.common.ContentSwitches;
-import org.chromium.device.geolocation.LocationProviderFactory;
+import org.chromium.content_public.browser.ChildProcessLauncherHelper;
+import org.chromium.content_public.common.ContentSwitches;
 import org.chromium.printing.PrintDocumentAdapterWrapper;
 import org.chromium.printing.PrintingControllerImpl;
+import org.chromium.ui.ContactsPickerListener;
 import org.chromium.ui.PhotoPickerListener;
 import org.chromium.ui.UiUtils;
 import org.chromium.ui.base.SelectFileDialog;
@@ -183,9 +185,6 @@ public class ProcessInitializationHandler {
         UniqueIdentificationGeneratorFactory.registerGenerator(SyncController.GENERATOR_ID,
                 new UuidBasedUniqueIdentificationGenerator(
                         application, SESSIONS_UUID_PREF_KEY), false);
-
-        // Indicate that we can use the GMS location provider.
-        LocationProviderFactory.useGmsCoreLocationProvider();
     }
 
     /**
@@ -196,6 +195,13 @@ public class ProcessInitializationHandler {
         if (mInitializedPostNative) return;
         handlePostNativeInitialization();
         mInitializedPostNative = true;
+    }
+
+    /**
+     * @return Whether post native initialization has been completed.
+     */
+    public final boolean postNativeInitializationComplete() {
+        return mInitializedPostNative;
     }
 
     /**
@@ -222,12 +228,32 @@ public class ProcessInitializationHandler {
                         boolean allowMultiple, List<String> mimeTypes) {
                     mDialog = new PhotoPickerDialog(context, listener, allowMultiple, mimeTypes);
                     mDialog.getWindow().getAttributes().windowAnimations =
-                            R.style.PhotoPickerDialogAnimation;
+                            R.style.PickerDialogAnimation;
                     mDialog.show();
                 }
 
                 @Override
                 public void onPhotoPickerDismissed() {
+                    mDialog = null;
+                }
+            });
+        }
+
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.NEW_CONTACTS_PICKER)) {
+            UiUtils.setContactsPickerDelegate(new UiUtils.ContactsPickerDelegate() {
+                private ContactsPickerDialog mDialog;
+
+                @Override
+                public void showContactsPicker(Context context, ContactsPickerListener listener,
+                        boolean allowMultiple, List<String> mimeTypes) {
+                    mDialog = new ContactsPickerDialog(context, listener, allowMultiple, mimeTypes);
+                    mDialog.getWindow().getAttributes().windowAnimations =
+                            R.style.PickerDialogAnimation;
+                    mDialog.show();
+                }
+
+                @Override
+                public void onContactsPickerDismissed() {
                     mDialog = null;
                 }
             });
@@ -308,14 +334,6 @@ public class ProcessInitializationHandler {
         deferredStartupHandler.addDeferredTask(new Runnable() {
             @Override
             public void run() {
-                // Start or stop Physical Web
-                PhysicalWeb.onChromeStart();
-            }
-        });
-
-        deferredStartupHandler.addDeferredTask(new Runnable() {
-            @Override
-            public void run() {
                 LocaleManager.getInstance().recordStartupMetrics();
             }
         });
@@ -326,6 +344,8 @@ public class ProcessInitializationHandler {
                 if (HomepageManager.shouldShowHomepageSetting()) {
                     RecordHistogram.recordBooleanHistogram("Settings.ShowHomeButtonPreferenceState",
                             HomepageManager.isHomepageEnabled());
+                    RecordHistogram.recordBooleanHistogram("Settings.HomePageIsCustomized",
+                            !HomepageManager.getInstance().getPrefHomepageUseDefaultUri());
                 }
             }
         });
@@ -417,12 +437,17 @@ public class ProcessInitializationHandler {
 
         deferredStartupHandler.addDeferredTask(
                 () -> { BuildHooksAndroid.maybeRecordResourceMetrics(); });
+
+        deferredStartupHandler.addDeferredTask(() -> {
+            MediaViewerUtils.updateMediaLauncherActivityEnabled(
+                    ContextUtils.getApplicationContext());
+        });
     }
 
     private void initChannelsAsync() {
-        new AsyncTask<Void, Void, Void>() {
+        new AsyncTask<Void>() {
             @Override
-            protected Void doInBackground(Void... params) {
+            protected Void doInBackground() {
                 ChannelsUpdater.getInstance().updateChannels();
                 return null;
             }
@@ -431,7 +456,7 @@ public class ProcessInitializationHandler {
     }
 
     private void initAsyncDiskTask(final Context context) {
-        new AsyncTask<Void, Void, Void>() {
+        new AsyncTask<Void>() {
             /**
              * The threshold after which it's no longer appropriate to try to attach logcat output
              * to a minidump file.
@@ -450,7 +475,7 @@ public class ProcessInitializationHandler {
             private long mAsyncTaskStartTime;
 
             @Override
-            protected Void doInBackground(Void... params) {
+            protected Void doInBackground() {
                 try {
                     TraceEvent.begin("ChromeBrowserInitializer.onDeferredStartup.doInBackground");
                     mAsyncTaskStartTime = SystemClock.uptimeMillis();
@@ -673,7 +698,7 @@ public class ProcessInitializationHandler {
                 ContextUtils.getApplicationContext().createDeviceProtectedStorageContext();
 
         // Must log async, as we're doing a file access.
-        new AsyncTask<Void, Void, Void>() {
+        new AsyncTask<Void>() {
             // Record file sizes between 1-2560KB. Expected range is 1-2048KB, so this gives
             // us a bit of buffer. These values cannot be changed, as doing so will alter
             // histogram bucketing and confuse the dashboard.
@@ -681,7 +706,7 @@ public class ProcessInitializationHandler {
             private static final int MAX_CACHE_FILE_SIZE_KB = 2560;
 
             @Override
-            protected Void doInBackground(Void... unused) {
+            protected Void doInBackground() {
                 File codeCacheDir = cacheContext.getCodeCacheDir();
                 if (codeCacheDir == null) {
                     return null;
@@ -692,7 +717,7 @@ public class ProcessInitializationHandler {
                 if (!cacheFile.exists()) {
                     return null;
                 }
-                long cacheFileSizeKb = cacheFile.length() / 1024;
+                long cacheFileSizeKb = ConversionUtils.bytesToKilobytes(cacheFile.length());
                 // Clamp size to [minFileSizeKb, maxFileSizeKb). This also guarantees that the
                 // int-cast below is safe.
                 if (cacheFileSizeKb < MIN_CACHE_FILE_SIZE_KB) {

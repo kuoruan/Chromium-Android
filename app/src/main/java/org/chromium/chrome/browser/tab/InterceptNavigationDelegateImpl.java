@@ -10,7 +10,6 @@ import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.AppHooks;
 import org.chromium.chrome.browser.ChromeActivity;
-import org.chromium.chrome.browser.datausage.DataUseTabUIManager;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationDelegateImpl;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationHandler;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationHandler.OverrideUrlLoadingResult;
@@ -24,8 +23,7 @@ import org.chromium.content_public.common.ConsoleMessageLevel;
 
 /**
  * Class that controls navigations and allows to intercept them. It is used on Android to 'convert'
- * certain navigations to Intents to 3rd party applications and to "pause" navigations when data use
- * tracking has ended.
+ * certain navigations to Intents to 3rd party applications.
  * Note the Intent is often created together with a new empty tab which then should be closed
  * immediately. Closing the tab will cancel the navigation that this delegate is running for,
  * hence can cause UAF error. It should be done in an asynchronous fashion to avoid it.
@@ -35,8 +33,8 @@ public class InterceptNavigationDelegateImpl implements InterceptNavigationDeleg
     private final Tab mTab;
     private final ExternalNavigationHandler mExternalNavHandler;
     private final AuthenticatorNavigationInterceptor mAuthenticatorHelper;
-    private ExternalNavigationHandler.OverrideUrlLoadingResult mLastOverrideUrlLoadingResult =
-            ExternalNavigationHandler.OverrideUrlLoadingResult.NO_OVERRIDE;
+    private @OverrideUrlLoadingResult int mLastOverrideUrlLoadingResult =
+            OverrideUrlLoadingResult.NO_OVERRIDE;
 
     /**
      * Whether forward history should be cleared after navigation is committed.
@@ -83,7 +81,7 @@ public class InterceptNavigationDelegateImpl implements InterceptNavigationDeleg
     }
 
     @VisibleForTesting
-    public OverrideUrlLoadingResult getLastOverrideUrlLoadingResultForTests() {
+    public @OverrideUrlLoadingResult int getLastOverrideUrlLoadingResultForTests() {
         return mLastOverrideUrlLoadingResult;
     }
 
@@ -96,10 +94,6 @@ public class InterceptNavigationDelegateImpl implements InterceptNavigationDeleg
 
         if (mAuthenticatorHelper != null && mAuthenticatorHelper.handleAuthenticatorUrl(url)) {
             return true;
-        }
-
-        if (navigationParams.suggestedFilename != null) {
-            return false;
         }
 
         TabRedirectHandler tabRedirectHandler = null;
@@ -130,34 +124,32 @@ public class InterceptNavigationDelegateImpl implements InterceptNavigationDeleg
         ExternalNavigationParams params = buildExternalNavigationParams(navigationParams,
                 tabRedirectHandler,
                 shouldCloseTab).build();
-        OverrideUrlLoadingResult result = mExternalNavHandler.shouldOverrideUrlLoading(params);
+        @OverrideUrlLoadingResult
+        int result = mExternalNavHandler.shouldOverrideUrlLoading(params);
         mLastOverrideUrlLoadingResult = result;
 
-        RecordHistogram.recordEnumeratedHistogram("Android.TabNavigationInterceptResult",
-                result.ordinal(), OverrideUrlLoadingResult.values().length);
+        RecordHistogram.recordEnumeratedHistogram("Android.TabNavigationInterceptResult", result,
+                OverrideUrlLoadingResult.NUM_ENTRIES);
         switch (result) {
-            case OVERRIDE_WITH_EXTERNAL_INTENT:
+            case OverrideUrlLoadingResult.OVERRIDE_WITH_EXTERNAL_INTENT:
                 assert mExternalNavHandler.canExternalAppHandleUrl(url);
-                if (navigationParams.isMainFrame) {
-                    onOverrideUrlLoadingAndLaunchIntent();
-                }
+                if (navigationParams.isMainFrame) onOverrideUrlLoadingAndLaunchIntent();
                 return true;
-            case OVERRIDE_WITH_CLOBBERING_TAB:
+            case OverrideUrlLoadingResult.OVERRIDE_WITH_CLOBBERING_TAB:
                 mShouldClearRedirectHistoryForTabClobbering = true;
                 return true;
-            case OVERRIDE_WITH_ASYNC_ACTION:
+            case OverrideUrlLoadingResult.OVERRIDE_WITH_ASYNC_ACTION:
                 if (!shouldCloseTab && navigationParams.isMainFrame) {
                     onOverrideUrlLoadingAndLaunchIntent();
                 }
                 return true;
-            case NO_OVERRIDE:
+            case OverrideUrlLoadingResult.NO_OVERRIDE:
             default:
                 if (navigationParams.isExternalProtocol) {
                     logBlockedNavigationToDevToolsConsole(url);
                     return true;
                 }
-                return DataUseTabUIManager.shouldOverrideUrlLoading(mTab.getActivity(), mTab, url,
-                        navigationParams.pageTransitionType, navigationParams.referrer);
+                return false;
         }
     }
 

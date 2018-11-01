@@ -9,14 +9,14 @@ import android.text.TextUtils;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.AutofillProfile;
-import org.chromium.chrome.browser.payments.ui.PaymentOption;
+import org.chromium.chrome.browser.widget.prefeditor.EditableOption;
 
 import javax.annotation.Nullable;
 
 /**
  * The locally stored contact details.
  */
-public class AutofillContact extends PaymentOption {
+public class AutofillContact extends EditableOption {
     private final AutofillProfile mProfile;
     private final Context mContext;
     private int mCompletionStatus;

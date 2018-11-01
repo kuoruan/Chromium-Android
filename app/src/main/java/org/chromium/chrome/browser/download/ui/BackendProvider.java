@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.download.ui;
 
 import org.chromium.chrome.browser.download.DownloadItem;
 import org.chromium.chrome.browser.download.DownloadManagerService;
+import org.chromium.chrome.browser.download.DownloadManagerService.DownloadObserver;
 import org.chromium.chrome.browser.widget.ThumbnailProvider;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate;
 import org.chromium.components.offline_items_collection.OfflineContentProvider;
@@ -17,11 +18,11 @@ public interface BackendProvider {
 
     /** Interacts with the Downloads backend. */
     public static interface DownloadDelegate {
-        /** See {@link DownloadManagerService#addDownloadHistoryAdapter}. */
-        void addDownloadHistoryAdapter(DownloadHistoryAdapter adapter);
+        /** See {@link DownloadManagerService#addDownloadObserver}. */
+        void addDownloadObserver(DownloadObserver observer);
 
-        /** See {@link DownloadManagerService#removeDownloadHistoryAdapter}. */
-        void removeDownloadHistoryAdapter(DownloadHistoryAdapter adapter);
+        /** See {@link DownloadManagerService#removeDownloadObserver}. */
+        void removeDownloadObserver(DownloadObserver observer);
 
         /** See {@link DownloadManagerService#getAllDownloads}. */
         void getAllDownloads(boolean isOffTheRecord);

@@ -13,7 +13,6 @@ import android.os.Build;
 import android.support.annotation.StringDef;
 
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeFeatureList;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -39,18 +38,7 @@ import java.util.Set;
  */
 @TargetApi(Build.VERSION_CODES.O)
 public class ChannelDefinitions {
-    public static final String CHANNEL_ID_BROWSER = "browser";
-    public static final String CHANNEL_ID_DOWNLOADS = "downloads";
-    public static final String CHANNEL_ID_INCOGNITO = "incognito";
-    public static final String CHANNEL_ID_MEDIA = "media";
-    public static final String CHANNEL_ID_SCREEN_CAPTURE = "screen_capture";
-    public static final String CHANNEL_ID_CONTENT_SUGGESTIONS = "content_suggestions";
-    public static final String CHANNEL_ID_WEBAPP_ACTIONS = "webapp_actions";
-    // TODO(crbug.com/700377): Deprecate the 'sites' channel.
-    public static final String CHANNEL_ID_SITES = "sites";
     public static final String CHANNEL_ID_PREFIX_SITES = "web:";
-    public static final String CHANNEL_GROUP_ID_SITES = "sites";
-    static final String CHANNEL_GROUP_ID_GENERAL = "general";
     /**
      * Version number identifying the current set of channels. This must be incremented whenever
      * the set of channels returned by {@link #getStartupChannelIds()} or
@@ -65,15 +53,28 @@ public class ChannelDefinitions {
      * Predefined Channels.MAP, and add the ID to the LEGACY_CHANNELS_ID array below.
      * See the README in this directory for more detailed instructions.
      */
-    @StringDef({CHANNEL_ID_BROWSER, CHANNEL_ID_DOWNLOADS, CHANNEL_ID_INCOGNITO, CHANNEL_ID_MEDIA,
-            CHANNEL_ID_SCREEN_CAPTURE, CHANNEL_ID_CONTENT_SUGGESTIONS, CHANNEL_ID_WEBAPP_ACTIONS,
-            CHANNEL_ID_SITES})
+    @StringDef({ChannelId.BROWSER, ChannelId.DOWNLOADS, ChannelId.INCOGNITO, ChannelId.MEDIA,
+            ChannelId.SCREEN_CAPTURE, ChannelId.CONTENT_SUGGESTIONS, ChannelId.WEBAPP_ACTIONS,
+            ChannelId.SITES})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface ChannelId {}
+    public @interface ChannelId {
+        String BROWSER = "browser";
+        String DOWNLOADS = "downloads";
+        String INCOGNITO = "incognito";
+        String MEDIA = "media";
+        String SCREEN_CAPTURE = "screen_capture";
+        String CONTENT_SUGGESTIONS = "content_suggestions";
+        String WEBAPP_ACTIONS = "webapp_actions";
+        // TODO(crbug.com/700377): Deprecate the 'sites' channel.
+        String SITES = "sites";
+    }
 
-    @StringDef({CHANNEL_GROUP_ID_GENERAL, CHANNEL_GROUP_ID_SITES})
+    @StringDef({ChannelGroupId.GENERAL, ChannelGroupId.SITES})
     @Retention(RetentionPolicy.SOURCE)
-    @interface ChannelGroupId {}
+    public @interface ChannelGroupId {
+        String SITES = "sites";
+        String GENERAL = "general";
+    }
 
     // Map defined in static inner class so it's only initialized lazily.
     @TargetApi(Build.VERSION_CODES.N) // for NotificationManager.IMPORTANCE_* constants
@@ -97,59 +98,56 @@ public class ChannelDefinitions {
             Map<String, PredefinedChannel> map = new HashMap<>();
             Set<String> startup = new HashSet<>();
 
-            map.put(CHANNEL_ID_BROWSER,
-                    new PredefinedChannel(CHANNEL_ID_BROWSER,
-                            R.string.notification_category_browser,
-                            NotificationManager.IMPORTANCE_LOW, CHANNEL_GROUP_ID_GENERAL));
-            startup.add(CHANNEL_ID_BROWSER);
+            map.put(ChannelId.BROWSER,
+                    new PredefinedChannel(ChannelId.BROWSER, R.string.notification_category_browser,
+                            NotificationManager.IMPORTANCE_LOW, ChannelGroupId.GENERAL));
+            startup.add(ChannelId.BROWSER);
 
-            map.put(CHANNEL_ID_DOWNLOADS,
-                    new PredefinedChannel(CHANNEL_ID_DOWNLOADS,
+            map.put(ChannelId.DOWNLOADS,
+                    new PredefinedChannel(ChannelId.DOWNLOADS,
                             R.string.notification_category_downloads,
-                            NotificationManager.IMPORTANCE_LOW, CHANNEL_GROUP_ID_GENERAL));
-            startup.add(CHANNEL_ID_DOWNLOADS);
+                            NotificationManager.IMPORTANCE_LOW, ChannelGroupId.GENERAL));
+            startup.add(ChannelId.DOWNLOADS);
 
-            map.put(CHANNEL_ID_INCOGNITO,
-                    new PredefinedChannel(CHANNEL_ID_INCOGNITO,
+            map.put(ChannelId.INCOGNITO,
+                    new PredefinedChannel(ChannelId.INCOGNITO,
                             R.string.notification_category_incognito,
-                            NotificationManager.IMPORTANCE_LOW, CHANNEL_GROUP_ID_GENERAL));
-            startup.add(CHANNEL_ID_INCOGNITO);
+                            NotificationManager.IMPORTANCE_LOW, ChannelGroupId.GENERAL));
+            startup.add(ChannelId.INCOGNITO);
 
-            map.put(CHANNEL_ID_MEDIA,
-                    new PredefinedChannel(CHANNEL_ID_MEDIA, R.string.notification_category_media,
-                            NotificationManager.IMPORTANCE_LOW, CHANNEL_GROUP_ID_GENERAL));
-            startup.add(CHANNEL_ID_MEDIA);
+            map.put(ChannelId.MEDIA,
+                    new PredefinedChannel(ChannelId.MEDIA, R.string.notification_category_media,
+                            NotificationManager.IMPORTANCE_LOW, ChannelGroupId.GENERAL));
+            startup.add(ChannelId.MEDIA);
 
-            // CHANNEL_ID_SCREEN_CAPTURE will be created on first use, instead of on startup,
+            // ChannelId.SCREEN_CAPTURE will be created on first use, instead of on startup,
             // so that it doesn't clutter the list for users who don't use this feature.
-            map.put(CHANNEL_ID_SCREEN_CAPTURE,
-                    new PredefinedChannel(CHANNEL_ID_SCREEN_CAPTURE,
+            map.put(ChannelId.SCREEN_CAPTURE,
+                    new PredefinedChannel(ChannelId.SCREEN_CAPTURE,
                             R.string.notification_category_screen_capture,
-                            NotificationManager.IMPORTANCE_HIGH, CHANNEL_GROUP_ID_GENERAL));
+                            NotificationManager.IMPORTANCE_HIGH, ChannelGroupId.GENERAL));
 
-            // Not adding sites channel to startup channels because we now use dynamic site
-            // channels by default, so notifications will only be posted to this channel if the
-            // SiteNotificationChannels flag is disabled. In that case, it's fine for the channel
-            // to only appear when the first notification is posted when the flag's disabled.
-            // TODO(crbug.com/758553) Deprecate this channel properly when the flag is removed.
-            map.put(CHANNEL_ID_SITES,
-                    new PredefinedChannel(CHANNEL_ID_SITES, R.string.notification_category_sites,
-                            NotificationManager.IMPORTANCE_DEFAULT, CHANNEL_GROUP_ID_GENERAL));
+            // Not adding sites channel to startup channels because notifications may be posted to
+            // this channel if no site-specific channel could be found.
+            // TODO(crbug.com/802380) Stop using this channel as a fallback and fully deprecate it.
+            map.put(ChannelId.SITES,
+                    new PredefinedChannel(ChannelId.SITES, R.string.notification_category_sites,
+                            NotificationManager.IMPORTANCE_DEFAULT, ChannelGroupId.GENERAL));
 
             // Not adding to startup channels because this channel is experimental and enabled only
             // through the associated feature (see
             // org.chromium.chrome.browser.ntp.ContentSuggestionsNotificationHelper).
-            map.put(CHANNEL_ID_CONTENT_SUGGESTIONS,
-                    new PredefinedChannel(CHANNEL_ID_CONTENT_SUGGESTIONS,
+            map.put(ChannelId.CONTENT_SUGGESTIONS,
+                    new PredefinedChannel(ChannelId.CONTENT_SUGGESTIONS,
                             R.string.notification_category_content_suggestions,
-                            NotificationManager.IMPORTANCE_LOW, CHANNEL_GROUP_ID_GENERAL));
+                            NotificationManager.IMPORTANCE_LOW, ChannelGroupId.GENERAL));
 
-            // Not adding to startup channels because we want CHANNEL_ID_WEBAPP_ACTIONS to be
+            // Not adding to startup channels because we want ChannelId.WEBAPP_ACTIONS to be
             // created on the first use, as not all users use installed web apps.
-            map.put(CHANNEL_ID_WEBAPP_ACTIONS,
-                    new PredefinedChannel(CHANNEL_ID_WEBAPP_ACTIONS,
+            map.put(ChannelId.WEBAPP_ACTIONS,
+                    new PredefinedChannel(ChannelId.WEBAPP_ACTIONS,
                             R.string.notification_category_fullscreen_controls,
-                            NotificationManager.IMPORTANCE_MIN, CHANNEL_GROUP_ID_GENERAL));
+                            NotificationManager.IMPORTANCE_MIN, ChannelGroupId.GENERAL));
 
             MAP = Collections.unmodifiableMap(map);
             STARTUP = Collections.unmodifiableSet(startup);
@@ -161,19 +159,19 @@ public class ChannelDefinitions {
      * added to this array so they can be deleted on upgrade.
      * We also want to keep track of old channel ids so they aren't accidentally reused.
      */
-    private static final String[] LEGACY_CHANNEL_IDS = {};
+    private static final String[] LEGACY_CHANNEL_IDS = {ChannelDefinitions.ChannelId.SITES};
 
     // Map defined in static inner class so it's only initialized lazily.
     private static class PredefinedChannelGroups {
         static final Map<String, PredefinedChannelGroup> MAP;
         static {
             Map<String, PredefinedChannelGroup> map = new HashMap<>();
-            map.put(CHANNEL_GROUP_ID_GENERAL,
-                    new PredefinedChannelGroup(CHANNEL_GROUP_ID_GENERAL,
-                            R.string.notification_category_group_general));
-            map.put(CHANNEL_GROUP_ID_SITES,
+            map.put(ChannelGroupId.GENERAL,
                     new PredefinedChannelGroup(
-                            CHANNEL_GROUP_ID_SITES, R.string.notification_category_sites));
+                            ChannelGroupId.GENERAL, R.string.notification_category_group_general));
+            map.put(ChannelGroupId.SITES,
+                    new PredefinedChannelGroup(
+                            ChannelGroupId.SITES, R.string.notification_category_sites));
             MAP = Collections.unmodifiableMap(map);
         }
     }
@@ -192,15 +190,6 @@ public class ChannelDefinitions {
      */
     static List<String> getLegacyChannelIds() {
         List<String> legacyChannels = new ArrayList<>(Arrays.asList(LEGACY_CHANNEL_IDS));
-        // When the SiteNotificationChannels feature is enabled, we use dynamically-created channels
-        // for different sites, so we no longer need the generic predefined 'Sites' channel.
-        // Err on the side of deleting it if we can't tell if the flag is enabled, because it will
-        // always be recreated if it is actually required.
-        // TODO(crbug.com/758553) Put CHANNEL_ID_SITES in LEGACY_CHANNEL_IDS once flag is gone.
-        if (!ChromeFeatureList.isInitialized()
-                || ChromeFeatureList.isEnabled(ChromeFeatureList.SITE_NOTIFICATION_CHANNELS)) {
-            legacyChannels.add(ChannelDefinitions.CHANNEL_ID_SITES);
-        }
         return legacyChannels;
     }
 

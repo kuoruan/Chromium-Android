@@ -10,18 +10,20 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.support.annotation.IntDef;
 import android.text.TextUtils;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
-import org.chromium.content.browser.BrowserStartupController;
+import org.chromium.content_public.browser.BrowserStartupController;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -41,22 +43,18 @@ public final class DefaultBrowserInfo {
      * Additions should be treated as APPEND ONLY to keep the UMA metric semantics the same over
      * time.
      */
-    @IntDef({
-            MobileDefaultBrowserState.NO_DEFAULT,
-            MobileDefaultBrowserState.CHROME_SYSTEM_DEFAULT,
+    @IntDef({MobileDefaultBrowserState.NO_DEFAULT, MobileDefaultBrowserState.CHROME_SYSTEM_DEFAULT,
             MobileDefaultBrowserState.CHROME_INSTALLED_DEFAULT,
             MobileDefaultBrowserState.OTHER_SYSTEM_DEFAULT,
-            MobileDefaultBrowserState.OTHER_INSTALLED_DEFAULT,
-
-            MobileDefaultBrowserState.BOUNDARY,
-    })
+            MobileDefaultBrowserState.OTHER_INSTALLED_DEFAULT})
+    @Retention(RetentionPolicy.SOURCE)
     private @interface MobileDefaultBrowserState {
         int NO_DEFAULT = 0;
         int CHROME_SYSTEM_DEFAULT = 1;
         int CHROME_INSTALLED_DEFAULT = 2;
         int OTHER_SYSTEM_DEFAULT = 3;
         int OTHER_INSTALLED_DEFAULT = 4;
-        int BOUNDARY = 5;
+        int NUM_ENTRIES = 5;
     }
 
     /**
@@ -75,7 +73,7 @@ public final class DefaultBrowserInfo {
     /** A lock to synchronize background tasks to retrieve browser information. */
     private static final Object sDirCreationLock = new Object();
 
-    private static AsyncTask<Void, Void, ArrayList<String>> sDefaultBrowserFetcher;
+    private static AsyncTask<ArrayList<String>> sDefaultBrowserFetcher;
 
     /** Don't instantiate me. */
     private DefaultBrowserInfo() {}
@@ -86,14 +84,14 @@ public final class DefaultBrowserInfo {
     public static void initBrowserFetcher() {
         synchronized (sDirCreationLock) {
             if (sDefaultBrowserFetcher == null) {
-                sDefaultBrowserFetcher = new AsyncTask<Void, Void, ArrayList<String>>() {
+                sDefaultBrowserFetcher = new AsyncTask<ArrayList<String>>() {
                     @Override
-                    protected ArrayList<String> doInBackground(Void... params) {
+                    protected ArrayList<String> doInBackground() {
                         Context context = ContextUtils.getApplicationContext();
                         ArrayList<String> menuTitles = new ArrayList<String>(2);
                         // Store the package label of current application.
-                        menuTitles.add(
-                                getTitleFromPackageLabel(context, BuildInfo.getPackageLabel()));
+                        menuTitles.add(getTitleFromPackageLabel(
+                                context, BuildInfo.getInstance().hostPackageLabel));
 
                         PackageManager pm = context.getPackageManager();
                         ResolveInfo info = getResolveInfoForViewIntent(pm);
@@ -102,8 +100,8 @@ public final class DefaultBrowserInfo {
                         boolean isDefault = info != null && info.match != 0
                                 && TextUtils.equals(
                                            context.getPackageName(), info.activityInfo.packageName);
-                        ChromePreferenceManager.getInstance().setCachedChromeDefaultBrowser(
-                                isDefault);
+                        ChromePreferenceManager.getInstance().writeBoolean(
+                                ChromePreferenceManager.CHROME_DEFAULT_BROWSER, isDefault);
 
                         // Check if there is a default handler for the Intent.  If so, store its
                         // label.
@@ -175,10 +173,10 @@ public final class DefaultBrowserInfo {
                 .isStartupSuccessfullyCompleted();
 
         try {
-            new AsyncTask<Context, Void, DefaultInfo>() {
+            new AsyncTask<DefaultInfo>() {
                 @Override
-                protected DefaultInfo doInBackground(Context... params) {
-                    Context context = params[0];
+                protected DefaultInfo doInBackground() {
+                    Context context = ContextUtils.getApplicationContext();
 
                     PackageManager pm = context.getPackageManager();
 
@@ -221,11 +219,10 @@ public final class DefaultBrowserInfo {
                     RecordHistogram.recordCount100Histogram(
                             getDefaultBrowserCountUmaName(info), info.browserCount);
                     RecordHistogram.recordEnumeratedHistogram("Mobile.DefaultBrowser.State",
-                            getDefaultBrowserUmaState(info), MobileDefaultBrowserState.BOUNDARY);
+                            getDefaultBrowserUmaState(info), MobileDefaultBrowserState.NUM_ENTRIES);
                 }
             }
-                    .executeOnExecutor(
-                            AsyncTask.THREAD_POOL_EXECUTOR, ContextUtils.getApplicationContext());
+                    .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         } catch (RejectedExecutionException ex) {
             // Fail silently here since this is not a critical task.
         }

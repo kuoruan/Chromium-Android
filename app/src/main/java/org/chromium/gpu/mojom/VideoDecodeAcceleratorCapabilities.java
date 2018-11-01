@@ -40,9 +40,6 @@ public final class VideoDecodeAcceleratorCapabilities extends org.chromium.mojo.
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static VideoDecodeAcceleratorCapabilities deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,9 +53,10 @@ public final class VideoDecodeAcceleratorCapabilities extends org.chromium.mojo.
         VideoDecodeAcceleratorCapabilities result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new VideoDecodeAcceleratorCapabilities(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new VideoDecodeAcceleratorCapabilities(elementsOrVersion);
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -69,11 +67,12 @@ public final class VideoDecodeAcceleratorCapabilities extends org.chromium.mojo.
                         result.supportedProfiles[i1] = VideoDecodeAcceleratorSupportedProfile.decode(decoder2);
                     }
                 }
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.flags = decoder0.readInt(16);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -96,36 +95,5 @@ public final class VideoDecodeAcceleratorCapabilities extends org.chromium.mojo.
         }
         
         encoder0.encode(this.flags, 16);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        VideoDecodeAcceleratorCapabilities other = (VideoDecodeAcceleratorCapabilities) object;
-        if (!java.util.Arrays.deepEquals(this.supportedProfiles, other.supportedProfiles))
-            return false;
-        if (this.flags!= other.flags)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + java.util.Arrays.deepHashCode(this.supportedProfiles);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.flags);
-        return result;
     }
 }

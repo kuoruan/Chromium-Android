@@ -200,19 +200,9 @@ public class ChildProcessLauncher {
                 Log.d(TAG, "Failed to allocate a child connection (no queuing).");
                 return false;
             }
-            // No connection is available at this time. Add a listener so when one becomes
-            // available we can create the service.
-            mConnectionAllocator.addListener(new ChildConnectionAllocator.Listener() {
-                @Override
-                public void onConnectionFreed(
-                        ChildConnectionAllocator allocator, ChildProcessConnection connection) {
-                    assert allocator == mConnectionAllocator;
-                    if (!allocator.isFreeConnectionAvailable()) return;
-                    allocator.removeListener(this);
-                    allocateAndSetupConnection(
-                            serviceCallback, setupConnection, queueIfNoFreeConnection);
-                }
-            });
+            mConnectionAllocator.queueAllocation(
+                    () -> allocateAndSetupConnection(
+                                    serviceCallback, setupConnection, queueIfNoFreeConnection));
             return false;
         }
 

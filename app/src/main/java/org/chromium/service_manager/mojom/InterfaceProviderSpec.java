@@ -40,9 +40,6 @@ public final class InterfaceProviderSpec extends org.chromium.mojo.bindings.Stru
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static InterfaceProviderSpec deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,9 +53,10 @@ public final class InterfaceProviderSpec extends org.chromium.mojo.bindings.Stru
         InterfaceProviderSpec result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new InterfaceProviderSpec(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new InterfaceProviderSpec(elementsOrVersion);
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                 {
                     decoder1.readDataHeaderForMap();
@@ -94,9 +92,9 @@ public final class InterfaceProviderSpec extends org.chromium.mojo.bindings.Stru
                         result.provides.put(keys0[index0],  values0[index0]);
                     }
                 }
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 {
                     decoder1.readDataHeaderForMap();
@@ -132,7 +130,8 @@ public final class InterfaceProviderSpec extends org.chromium.mojo.bindings.Stru
                         result.requires.put(keys0[index0],  values0[index0]);
                     }
                 }
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -205,36 +204,5 @@ public final class InterfaceProviderSpec extends org.chromium.mojo.bindings.Stru
                 }
             }
         }
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        InterfaceProviderSpec other = (InterfaceProviderSpec) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.provides, other.provides))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.requires, other.requires))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.provides);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.requires);
-        return result;
     }
 }

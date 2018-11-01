@@ -16,14 +16,18 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class GpuDevice extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 40;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
+    private static final int STRUCT_SIZE = 64;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(64, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public int vendorId;
     public int deviceId;
     public boolean active;
     public String vendorString;
     public String deviceString;
+    public String driverVendor;
+    public String driverVersion;
+    public String driverDate;
+    public int cudaComputeCapabilityMajor;
 
     private GpuDevice(int version) {
         super(STRUCT_SIZE, version);
@@ -43,9 +47,6 @@ public final class GpuDevice extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static GpuDevice deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -59,27 +60,45 @@ public final class GpuDevice extends org.chromium.mojo.bindings.Struct {
         GpuDevice result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new GpuDevice(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new GpuDevice(elementsOrVersion);
+                {
+                    
                 result.vendorId = decoder0.readInt(8);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.deviceId = decoder0.readInt(12);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.active = decoder0.readBoolean(16, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
+                result.cudaComputeCapabilityMajor = decoder0.readInt(20);
+                }
+                {
+                    
                 result.vendorString = decoder0.readString(24, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.deviceString = decoder0.readString(32, false);
-            }
+                }
+                {
+                    
+                result.driverVendor = decoder0.readString(40, false);
+                }
+                {
+                    
+                result.driverVersion = decoder0.readString(48, false);
+                }
+                {
+                    
+                result.driverDate = decoder0.readString(56, false);
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -97,48 +116,16 @@ public final class GpuDevice extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.active, 16, 0);
         
+        encoder0.encode(this.cudaComputeCapabilityMajor, 20);
+        
         encoder0.encode(this.vendorString, 24, false);
         
         encoder0.encode(this.deviceString, 32, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        GpuDevice other = (GpuDevice) object;
-        if (this.vendorId!= other.vendorId)
-            return false;
-        if (this.deviceId!= other.deviceId)
-            return false;
-        if (this.active!= other.active)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.vendorString, other.vendorString))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.deviceString, other.deviceString))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.vendorId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.deviceId);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.active);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.vendorString);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.deviceString);
-        return result;
+        
+        encoder0.encode(this.driverVendor, 40, false);
+        
+        encoder0.encode(this.driverVersion, 48, false);
+        
+        encoder0.encode(this.driverDate, 56, false);
     }
 }

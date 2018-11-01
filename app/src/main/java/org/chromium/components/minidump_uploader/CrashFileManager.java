@@ -57,6 +57,8 @@ public class CrashFileManager {
      */
     public static final String CRASH_DUMP_DIR = "Crash Reports";
 
+    private static final String CRASHPAD_DIR = "Crashpad";
+
     // This should mirror the C++ CrashUploadList::kReporterLogFilename variable.
     @VisibleForTesting
     public static final String CRASH_DUMP_LOGFILE = "uploads.log";
@@ -336,6 +338,28 @@ public class CrashFileManager {
     }
 
     /**
+     * Imports minidumps from Crashpad's database to the Crash Reports directory, converting them to
+     * MIME files.
+     **/
+    private void importCrashpadMinidumps() {
+        File crashpadDir = getCrashpadDirectory();
+        if (crashpadDir.exists() && ensureCrashDirExists()) {
+            File crashDir = getCrashDirectory();
+            CrashReportMimeWriter.rewriteMinidumpsAsMIMEs(crashpadDir, crashDir);
+        }
+    }
+
+    /**
+     * Returns the most recent minidump without a logcat for a given pid, or null if no such
+     * minidump exists.
+     */
+    public File getMinidumpSansLogcatForPid(int pid) {
+        File[] foundFiles = listCrashFiles(
+            Pattern.compile("\\.dmp" + Integer.toString(pid) + "\\z"));
+        return foundFiles.length > 0 ? foundFiles[0] : null;
+    }
+
+    /**
      * Returns all minidump files that definitely do not have logcat output, sorted by modification
      * time stamp. Note: This method does not provide an "if and only if" test: it may return omit
      * some files that lack logcat output, if logcat output has been intentionally skipped for those
@@ -450,6 +474,10 @@ public class CrashFileManager {
     @VisibleForTesting
     public File getCrashDirectory() {
         return new File(mCacheDir, CRASH_DUMP_DIR);
+    }
+
+    private File getCrashpadDirectory() {
+        return new File(mCacheDir, CRASHPAD_DIR);
     }
 
     public File createNewTempFile(String name) throws IOException {

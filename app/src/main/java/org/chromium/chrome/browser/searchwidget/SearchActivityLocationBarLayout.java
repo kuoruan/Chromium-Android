@@ -6,18 +6,23 @@ package org.chromium.chrome.browser.searchwidget;
 
 import android.content.Context;
 import android.os.Handler;
+import android.support.annotation.Nullable;
+import android.support.v4.view.ViewCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.WindowDelegate;
 import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.omnibox.LocationBarLayout;
+import org.chromium.chrome.browser.omnibox.LocationBarVoiceRecognitionHandler;
 import org.chromium.chrome.browser.omnibox.OmniboxSuggestion;
+import org.chromium.chrome.browser.omnibox.UrlBar;
+import org.chromium.chrome.browser.omnibox.UrlBarCoordinator.SelectionState;
+import org.chromium.chrome.browser.omnibox.UrlBarData;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.toolbar.ToolbarPhone;
 import org.chromium.ui.UiUtils;
-import org.chromium.ui.base.WindowAndroid;
 
 import java.util.List;
 
@@ -39,6 +44,25 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
     public SearchActivityLocationBarLayout(Context context, AttributeSet attrs) {
         super(context, attrs, R.layout.location_bar_base);
         setUrlBarFocusable(true);
+        setBackground(ToolbarPhone.createModernLocationBarBackground(getResources()));
+
+        // Now you might ask yourself what these paddings are doing? Great question, really glad
+        // you asked...OH MY...LOOK BEHIND YOU!!!
+        //
+        // <Sounds of original author running away>
+        //
+        // These numbers were chosen at a single snapshot in time where they roughly equated to
+        // the padding used in the modern tabbed mode focused omnibox.  There is minimal rhyme or
+        // reason to this, but using something that approximated the toolbar logic looked even
+        // worse.
+        //
+        // Shrug. Once that layout logic is cleaned up, this should be universally replaced with
+        // something sane.
+        int toolbarSidePadding = getResources().getDimensionPixelSize(R.dimen.toolbar_edge_padding);
+        int backgroundSidePadding = getResources().getDimensionPixelSize(
+                R.dimen.modern_toolbar_background_focused_left_margin);
+        ViewCompat.setPaddingRelative(this, backgroundSidePadding + toolbarSidePadding,
+                getPaddingTop(), backgroundSidePadding, getPaddingBottom());
         mPendingSearchPromoDecision = LocaleManager.getInstance().needToCheckForSearchEnginePromo();
     }
 
@@ -69,12 +93,6 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
     }
 
     @Override
-    public void initializeControls(WindowDelegate windowDelegate, WindowAndroid windowAndroid) {
-        super.initializeControls(windowDelegate, windowAndroid);
-        setShowCachedZeroSuggestResults(true);
-    }
-
-    @Override
     public void onNativeLibraryReady() {
         super.onNativeLibraryReady();
         setAutocompleteProfile(Profile.getLastUsedProfile().getOriginalProfile());
@@ -91,9 +109,14 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
 
     /** Called when the SearchActivity has finished initialization. */
     void onDeferredStartup(boolean isVoiceSearchIntent) {
-        SearchWidgetProvider.updateCachedVoiceSearchAvailability(isVoiceSearchEnabled());
+        if (mVoiceRecognitionHandler != null) {
+            SearchWidgetProvider.updateCachedVoiceSearchAvailability(
+                    mVoiceRecognitionHandler.isVoiceSearchEnabled());
+        }
         if (isVoiceSearchIntent && mUrlBar.isFocused()) onUrlFocusChange(true);
-        if (!TextUtils.isEmpty(mUrlBar.getText())) onTextChangedForAutocomplete();
+        if (!TextUtils.isEmpty(mUrlCoordinator.getTextWithAutocomplete())) {
+            onTextChangedForAutocomplete();
+        }
 
         assert !LocaleManager.getInstance().needToCheckForSearchEnginePromo();
         mPendingSearchPromoDecision = false;
@@ -109,16 +132,13 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
      * @param isVoiceSearchIntent Whether this is a voice search.
      * @param optionalText Prepopulate with a query, this may be null.
      * */
-    void beginQuery(boolean isVoiceSearchIntent, String optionalText) {
+    void beginQuery(boolean isVoiceSearchIntent, @Nullable String optionalText) {
         // Clear the text regardless of the promo decision.  This allows the user to enter text
         // before native has been initialized and have it not be cleared one the delayed beginQuery
         // logic is performed.
-        mUrlBar.setIgnoreTextChangesForAutocomplete(true);
-        mUrlBar.setUrl(optionalText == null ? "" : optionalText, null);
-        mUrlBar.setIgnoreTextChangesForAutocomplete(false);
-
-        mUrlBar.setCursorVisible(true);
-        mUrlBar.setSelection(0, mUrlBar.getText().length());
+        mUrlCoordinator.setUrlBarData(
+                UrlBarData.forNonUrlText(optionalText == null ? "" : optionalText),
+                UrlBar.ScrollType.NO_SCROLL, SelectionState.SELECT_ALL);
 
         if (mPendingSearchPromoDecision) {
             mPendingBeginQuery = true;
@@ -131,8 +151,10 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
     private void beginQueryInternal(boolean isVoiceSearchIntent) {
         assert !mPendingSearchPromoDecision;
 
-        if (isVoiceSearchEnabled() && isVoiceSearchIntent) {
-            startVoiceRecognition();
+        if (mVoiceRecognitionHandler != null && mVoiceRecognitionHandler.isVoiceSearchEnabled()
+                && isVoiceSearchIntent) {
+            mVoiceRecognitionHandler.startVoiceRecognition(
+                    LocationBarVoiceRecognitionHandler.VoiceInteractionSource.SEARCH_WIDGET);
         } else {
             focusTextBox();
         }
@@ -145,8 +167,12 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
         findViewById(R.id.url_action_container).setVisibility(View.VISIBLE);
     }
 
+    // TODO(tedchoc): Investigate focusing regardless of the search promo state and just ensure
+    //                we don't start processing non-cached suggestion requests until that state
+    //                is finalized after native has been initialized.
     private void focusTextBox() {
         if (!mUrlBar.hasFocus()) mUrlBar.requestFocus();
+        setShowCachedZeroSuggestResults(true);
 
         new Handler().post(new Runnable() {
             @Override
@@ -158,6 +184,6 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
 
     @Override
     public boolean useModernDesign() {
-        return false;
+        return true;
     }
 }

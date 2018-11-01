@@ -25,7 +25,7 @@ public interface UdpSocketReceiver extends org.chromium.mojo.bindings.Interface 
 
 
     void onReceived(
-int result, org.chromium.net.interfaces.IpEndPoint srcAddr, org.chromium.mojo.common.mojom.ReadOnlyBuffer data);
+int result, org.chromium.net.interfaces.IpEndPoint srcAddr, org.chromium.mojo_base.mojom.ReadOnlyBuffer data);
 
 
 }

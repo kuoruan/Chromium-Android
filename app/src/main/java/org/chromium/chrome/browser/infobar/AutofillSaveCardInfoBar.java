@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.infobar;
 import android.graphics.Bitmap;
 import android.text.SpannableString;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.text.style.ClickableSpan;
 import android.view.View;
 
@@ -82,9 +83,10 @@ public class AutofillSaveCardInfoBar extends ConfirmInfoBar {
 
     private final long mNativeAutofillSaveCardInfoBar;
     private final List<CardDetail> mCardDetails = new ArrayList<>();
-    private int mBrandIconId = -1;
+    private int mIconDrawableId = -1;
     private String mTitleText;
     private String mDescriptionText;
+    private boolean mIsGooglePayBrandingEnabled;
     private final LinkedList<LegalMessageLine> mLegalMessageLines =
             new LinkedList<LegalMessageLine>();
 
@@ -96,16 +98,22 @@ public class AutofillSaveCardInfoBar extends ConfirmInfoBar {
      *                         The ID must have been mapped using the ResourceMapper class before
      *                         passing it to this function.
      * @param iconBitmap Bitmap to use if there is no equivalent Java resource for enumeratedIconId.
-     * @param message Message to display to the user indicating what the InfoBar is for.
+     * @param message Title of the infobar to display along the icon.
      * @param linkText Link text to display in addition to the message.
      * @param buttonOk String to display on the OK button.
      * @param buttonCancel String to display on the Cancel button.
      */
     private AutofillSaveCardInfoBar(long nativeAutofillSaveCardInfoBar, int enumeratedIconId,
             Bitmap iconBitmap, String message, String linkText, String buttonOk,
-            String buttonCancel) {
-        super(ResourceId.mapToDrawableId(enumeratedIconId), iconBitmap, message, linkText,
-                buttonOk, buttonCancel);
+            String buttonCancel, boolean isGooglePayBrandingEnabled) {
+        // If Google Pay branding is enabled, no icon is specified here; it is rather added in
+        // |createContent|. This hides the ImageView that normally shows the icon and gets rid of
+        // the left padding of the infobar content.
+        super(isGooglePayBrandingEnabled ? 0 : ResourceId.mapToDrawableId(enumeratedIconId),
+                iconBitmap, message, linkText, buttonOk, buttonCancel);
+        mIconDrawableId = ResourceId.mapToDrawableId(enumeratedIconId);
+        mTitleText = message;
+        mIsGooglePayBrandingEnabled = isGooglePayBrandingEnabled;
         mNativeAutofillSaveCardInfoBar = nativeAutofillSaveCardInfoBar;
     }
 
@@ -117,7 +125,7 @@ public class AutofillSaveCardInfoBar extends ConfirmInfoBar {
      *                         The ID must have been mapped using the ResourceMapper class before
      *                         passing it to this function.
      * @param iconBitmap Bitmap to use if there is no equivalent Java resource for enumeratedIconId.
-     * @param message Message to display to the user indicating what the InfoBar is for.
+     * @param message Title of the infobar to display along the icon.
      * @param linkText Link text to display in addition to the message.
      * @param buttonOk String to display on the OK button.
      * @param buttonCancel String to display on the Cancel button.
@@ -126,9 +134,9 @@ public class AutofillSaveCardInfoBar extends ConfirmInfoBar {
     @CalledByNative
     private static AutofillSaveCardInfoBar create(long nativeAutofillSaveCardInfoBar,
             int enumeratedIconId, Bitmap iconBitmap, String message, String linkText,
-            String buttonOk, String buttonCancel) {
+            String buttonOk, String buttonCancel, boolean isGooglePayBrandingEnabled) {
         return new AutofillSaveCardInfoBar(nativeAutofillSaveCardInfoBar, enumeratedIconId,
-                iconBitmap, message, linkText, buttonOk, buttonCancel);
+                iconBitmap, message, linkText, buttonOk, buttonCancel, isGooglePayBrandingEnabled);
     }
 
     /**
@@ -156,26 +164,6 @@ public class AutofillSaveCardInfoBar extends ConfirmInfoBar {
     }
 
     /**
-     * Sets title text to the infobar.
-     *
-     * @param text Title text.
-     */
-    @CalledByNative
-    private void setTitleText(String text) {
-        mTitleText = text;
-    }
-
-    /**
-     * Sets Branding icon id to the infobar.
-     *
-     * @param enumeratedIconId ID corresponding to the Google Pay branding.
-     */
-    @CalledByNative
-    private void setBrandIconId(int enumeratedIconId) {
-        mBrandIconId = ResourceId.mapToDrawableId(enumeratedIconId);
-    }
-
-    /**
      * Adds a line of legal message plain text to the infobar.
      *
      * @param text The legal message plain text.
@@ -197,26 +185,22 @@ public class AutofillSaveCardInfoBar extends ConfirmInfoBar {
         mLegalMessageLines.getLast().links.add(new LegalMessageLine.Link(start, end, url));
     }
 
-    /**
-     * Whether Google Pay branding enabled or not.
-     */
-    private boolean isGooglePayBrandingEnabled() {
-        return mBrandIconId != -1;
-    }
-
     @Override
     public void createContent(InfoBarLayout layout) {
         super.createContent(layout);
-        if (isGooglePayBrandingEnabled()) {
+
+        // If Google Pay branding is enabled, add both the icon and the title message to the message
+        // container, since no icon was added to the ImageView that normally shows the icon.
+        if (mIsGooglePayBrandingEnabled) {
             UiUtils.removeViewFromParent(layout.getMessageTextView());
-            layout.getMessageLayout().addIconTitle(mBrandIconId, mTitleText);
+            layout.getMessageLayout().addIconTitle(mIconDrawableId, mTitleText);
         }
+
         InfoBarControlLayout control = layout.addControlLayout();
-        // Description text can be empty to simplify the prompt in future Finch
-        // experiments.
-        if (isGooglePayBrandingEnabled() && !mDescriptionText.isEmpty()) {
+        if (!TextUtils.isEmpty(mDescriptionText)) {
             control.addDescription(mDescriptionText);
         }
+
         for (int i = 0; i < mCardDetails.size(); i++) {
             CardDetail detail = mCardDetails.get(i);
             control.addIcon(detail.issuerIconDrawableId, 0, detail.label, detail.subLabel,

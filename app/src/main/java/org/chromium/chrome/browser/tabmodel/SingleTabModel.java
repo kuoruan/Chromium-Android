@@ -120,8 +120,13 @@ public class SingleTabModel implements TabModel {
     }
 
     @Override
-    public void setIndex(int i, final TabSelectionType type) {
+    public void setIndex(int i, final @TabSelectionType int type) {
         assert i == 0;
+    }
+
+    @Override
+    public boolean isCurrentModel() {
+        return true;
     }
 
     @Override
@@ -165,7 +170,7 @@ public class SingleTabModel implements TabModel {
     }
 
     @Override
-    public void addTab(Tab tab, int index, TabLaunchType type) {}
+    public void addTab(Tab tab, int index, @TabLaunchType int type) {}
 
     @Override
     public void removeTab(Tab tab) {

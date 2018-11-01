@@ -18,6 +18,7 @@ import android.os.Build;
 import android.os.Process;
 import android.preference.Preference;
 import android.provider.Settings;
+import android.support.annotation.IntDef;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
 
@@ -29,309 +30,185 @@ import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.ui.text.SpanApplier;
 import org.chromium.ui.text.SpanApplier.SpanInfo;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 /**
  * A base class for dealing with website settings categories.
  */
 public class SiteSettingsCategory {
-    // Valid values for passing to fromString() in this class.
-    public static final String CATEGORY_ALL_SITES = "all_sites";
-    public static final String CATEGORY_ADS = "ads";
-    public static final String CATEGORY_AUTOPLAY = "autoplay";
-    public static final String CATEGORY_BACKGROUND_SYNC = "background_sync";
-    public static final String CATEGORY_CAMERA = "camera";
-    public static final String CATEGORY_CLIPBOARD = "clipboard";
-    public static final String CATEGORY_COOKIES = "cookies";
-    public static final String CATEGORY_DEVICE_LOCATION = "device_location";
-    public static final String CATEGORY_JAVASCRIPT = "javascript";
-    public static final String CATEGORY_MICROPHONE = "microphone";
-    public static final String CATEGORY_NOTIFICATIONS = "notifications";
-    public static final String CATEGORY_POPUPS = "popups";
-    public static final String CATEGORY_PROTECTED_MEDIA = "protected_content";
-    public static final String CATEGORY_SOUND = "sound";
-    public static final String CATEGORY_USE_STORAGE = "use_storage";
-    public static final String CATEGORY_USB = "usb";
+    @IntDef({Type.ALL_SITES, Type.ADS, Type.AUTOPLAY, Type.BACKGROUND_SYNC, Type.CAMERA,
+            Type.CLIPBOARD, Type.COOKIES, Type.DEVICE_LOCATION, Type.JAVASCRIPT, Type.MICROPHONE,
+            Type.NOTIFICATIONS, Type.POPUPS, Type.PROTECTED_MEDIA, Type.SENSORS, Type.SOUND,
+            Type.USE_STORAGE, Type.USB})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Type {
+        // Values used to address array index. Should be enumerated from 0 and
+        // can't have gaps. After adding new value please increase NUM_CATEGORIES
+        // and update PREFERENCE_KEYS and CONTENT_TYPES.
+        int ALL_SITES = 0;
+        int ADS = 1;
+        int AUTOPLAY = 2;
+        int BACKGROUND_SYNC = 3;
+        int CAMERA = 4;
+        int CLIPBOARD = 5;
+        int COOKIES = 6;
+        int DEVICE_LOCATION = 7;
+        int JAVASCRIPT = 8;
+        int MICROPHONE = 9;
+        int NOTIFICATIONS = 10;
+        int POPUPS = 11;
+        int PROTECTED_MEDIA = 12;
+        int SENSORS = 13;
+        int SOUND = 14;
+        int USE_STORAGE = 15;
+        int USB = 16;
+        /**
+         * Number of handled categories used for calculating array sizes.
+         */
+        int NUM_ENTRIES = 17;
+    }
+
+    /**
+     * Mapping from Type to String used in preferences. Values are sorted like
+     * Type constants.
+     */
+    private static final String[] PREFERENCE_KEYS = {
+            "all_sites", // Type.ALL_SITES
+            "ads", // Type.ADS
+            "autoplay", // Type.AUTOPLAY
+            "background_sync", // Type.BACKGROUND_SYNC
+            "camera", // Type.CAMERA
+            "clipboard", // Type.CLIPBOARD
+            "cookies", // Type.COOKIES,
+            "device_location", // Type.DEVICE_LOCATION
+            "javascript", // Type.JAVASCRIPT
+            "microphone", // Type.MICROPHONE
+            "notifications", // Type.NOTIFICATIONS
+            "popups", // Type.POPUPS
+            "protected_content", // Type.PROTECTED_MEDIA
+            "sensors", // Type.SENSORS
+            "sound", // Type.SOUND
+            "use_storage", // Type.USE_STORAGE
+            "usb", // Type.USB
+    };
+
+    /**
+     * Mapping from Type to ContentSettingsType. Values are sorted like Type
+     * constants, -1 means unavailable conversion.
+     */
+    private static final int[] CONTENT_TYPES = {
+            // This comment ensures clang-format will keep first entry in separate line.
+            -1, // Type.ALL_SITES
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS, // Type.ADS
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY, // Type.AUTOPLAY
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC, // Type.BACKGROUND_SYNC
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA, // Type.CAMERA
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_READ, // Type.CLIPBOARD
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES, // Type.COOKIES
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION, // Type.DEVICE_LOCATION
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_JAVASCRIPT, // Type.JAVASCRIPT
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_MIC, // Type.MICROPHONE
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_NOTIFICATIONS, // Type.NOTIFICATIONS
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS, // Type.POPUPS
+            ContentSettingsType
+                    .CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER, // Type.PROTECTED_MEDIA
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_SENSORS, // Type.SENSORS
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND, // Type.SOUND
+            -1, // Type.USE_STORAGE
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_GUARD, // Type.USB
+    };
 
     // The id of this category.
-    private String mCategory;
+    private @Type int mCategory;
 
     // The id of a permission in Android M that governs this category. Can be blank if Android has
     // no equivalent permission for the category.
     private String mAndroidPermission;
-
-    // The content settings type that this category represents. Can be -1 if the category has no
-    // content settings type (such as All Sites).
-    private int mContentSettingsType = -1;
 
     /**
      * Construct a SiteSettingsCategory.
      * @param category The string id of the category to construct.
      * @param androidPermission A string containing the id of a toggle-able permission in Android
      *        that this category represents (or blank, if Android does not expose that permission).
-     * @param contentSettingsType The content settings type that this category represents (or -1
-     *        if the category does not have a contentSettingsType, such as All Sites).
      */
-    protected SiteSettingsCategory(
-            String category, String androidPermission, int contentSettingsType) {
+    protected SiteSettingsCategory(@Type int category, String androidPermission) {
+        assert Type.NUM_ENTRIES == PREFERENCE_KEYS.length;
+        assert Type.NUM_ENTRIES == CONTENT_TYPES.length;
+
         mCategory = category;
         mAndroidPermission = androidPermission;
-        mContentSettingsType = contentSettingsType;
     }
 
     /**
-     * Construct a SiteSettingsCategory from a string.
-     * @param category The string id of the category to construct. See valid values above.
+     * Construct a SiteSettingsCategory from a type.
      */
-    public static SiteSettingsCategory fromString(String category) {
-        assert !category.isEmpty();
-        if (CATEGORY_ALL_SITES.equals(category)) {
-            return new SiteSettingsCategory(CATEGORY_ALL_SITES, "", -1);
-        }
-        if (CATEGORY_ADS.equals(category) && adsCategoryEnabled()) {
-            return new SiteSettingsCategory(
-                    CATEGORY_ADS, "", ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS);
-        }
-        if (CATEGORY_AUTOPLAY.equals(category)) {
-            return new SiteSettingsCategory(CATEGORY_AUTOPLAY, "",
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY);
-        }
-        if (CATEGORY_BACKGROUND_SYNC.equals(category)) {
-            return new SiteSettingsCategory(CATEGORY_BACKGROUND_SYNC, "",
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC);
-        }
-        if (CATEGORY_CAMERA.equals(category)) {
-            return new SiteSettingsCategory(
-                    SiteSettingsCategory.CATEGORY_CAMERA,
-                    android.Manifest.permission.CAMERA,
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA);
-        }
-        if (CATEGORY_CLIPBOARD.equals(category)) {
-            return new SiteSettingsCategory(CATEGORY_CLIPBOARD, "",
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_READ);
-        }
-        if (CATEGORY_COOKIES.equals(category)) {
-            return new SiteSettingsCategory(CATEGORY_COOKIES, "",
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES);
-        }
-        if (CATEGORY_JAVASCRIPT.equals(category)) {
-            return new SiteSettingsCategory(CATEGORY_JAVASCRIPT, "",
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_JAVASCRIPT);
-        }
-        if (CATEGORY_DEVICE_LOCATION.equals(category)) {
-            return new LocationCategory();
-        }
-        if (CATEGORY_MICROPHONE.equals(category)) {
-            return new SiteSettingsCategory(
-                    SiteSettingsCategory.CATEGORY_MICROPHONE,
-                    android.Manifest.permission.RECORD_AUDIO,
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_MIC);
-        }
-        if (CATEGORY_NOTIFICATIONS.equals(category)) {
-            return new SiteSettingsCategory(CATEGORY_NOTIFICATIONS, "",
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_NOTIFICATIONS);
-        }
-        if (CATEGORY_POPUPS.equals(category)) {
-            return new SiteSettingsCategory(CATEGORY_POPUPS, "",
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS);
-        }
-        if (CATEGORY_PROTECTED_MEDIA.equals(category)) {
-            return new SiteSettingsCategory(CATEGORY_PROTECTED_MEDIA, "",
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER);
-        }
-        if (CATEGORY_SOUND.equals(category)) {
-            return new SiteSettingsCategory(
-                    CATEGORY_SOUND, "", ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND);
-        }
-        if (CATEGORY_USE_STORAGE.equals(category)) {
-            return new SiteSettingsCategory(CATEGORY_USE_STORAGE, "", -1);
-        }
-        if (CATEGORY_USB.equals(category)) {
-            return new SiteSettingsCategory(
-                    CATEGORY_USB, "", ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA);
-        }
+    public static SiteSettingsCategory createFromType(@Type int type) {
+        if (type == Type.DEVICE_LOCATION) return new LocationCategory();
+        if (type == Type.NOTIFICATIONS) return new NotificationCategory();
 
+        final String permission;
+        if (type == Type.CAMERA) {
+            permission = android.Manifest.permission.CAMERA;
+        } else if (type == Type.MICROPHONE) {
+            permission = android.Manifest.permission.RECORD_AUDIO;
+        } else {
+            permission = "";
+        }
+        return new SiteSettingsCategory(type, permission);
+    }
+
+    public static SiteSettingsCategory createFromContentSettingsType(
+            @ContentSettingsType int contentSettingsType) {
+        assert contentSettingsType != -1;
+        assert Type.ALL_SITES == 0;
+        for (@Type int i = Type.ALL_SITES; i < Type.NUM_ENTRIES; i++) {
+            if (CONTENT_TYPES[i] == contentSettingsType) return createFromType(i);
+        }
+        return null;
+    }
+
+    public static SiteSettingsCategory createFromPreferenceKey(String preferenceKey) {
+        assert Type.ALL_SITES == 0;
+        for (@Type int i = Type.ALL_SITES; i < Type.NUM_ENTRIES; i++) {
+            if (PREFERENCE_KEYS[i].equals(preferenceKey)) return createFromType(i);
+        }
         return null;
     }
 
     /**
-     * Construct a SiteSettingsCategory from a content settings type. Note that not all categories
-     * are associated with a content settings type (e.g. All Sites). Such categories must be created
-     * fromString().
+     * Convert Type into {@link ContentSettingsType}
      */
-    public static SiteSettingsCategory fromContentSettingsType(int contentSettingsType) {
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS) {
-            return fromString(CATEGORY_ADS);
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY) {
-            return fromString(CATEGORY_AUTOPLAY);
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC) {
-            return fromString(CATEGORY_BACKGROUND_SYNC);
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_READ) {
-            return fromString(CATEGORY_CLIPBOARD);
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES) {
-            return fromString(CATEGORY_COOKIES);
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION) {
-            return fromString(CATEGORY_DEVICE_LOCATION);
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_JAVASCRIPT) {
-            return fromString(CATEGORY_JAVASCRIPT);
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA) {
-            return fromString(CATEGORY_CAMERA);
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_MIC) {
-            return fromString(CATEGORY_MICROPHONE);
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_NOTIFICATIONS) {
-            return fromString(CATEGORY_NOTIFICATIONS);
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS) {
-            return fromString(CATEGORY_POPUPS);
-        }
-        if (contentSettingsType
-                == ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER) {
-            return fromString(CATEGORY_PROTECTED_MEDIA);
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND) {
-            return fromString(CATEGORY_SOUND);
-        }
-        if (contentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA) {
-            return fromString(CATEGORY_USB);
-        }
-
-        return null;
+    public static int contentSettingsType(@Type int type) {
+        return CONTENT_TYPES[type];
     }
 
     /**
-     * Returns the content settings type for this category, or -1 if no such type exists.
+     * Convert Type into preference String
      */
-    public int toContentSettingsType() {
-        return mContentSettingsType;
+    public static String preferenceKey(@Type int type) {
+        return PREFERENCE_KEYS[type];
     }
 
     /**
-     * Returns whether this category is the All Sites category.
+     * Returns the {@link ContentSettingsType} for this category, or -1 if no such type exists.
      */
-    public boolean showAllSites() {
-        return CATEGORY_ALL_SITES.equals(mCategory);
+    public @ContentSettingsType int getContentSettingsType() {
+        return CONTENT_TYPES[mCategory];
     }
 
     /**
-     * Returns whether this category is the Ads category.
+     * Returns whether this category is the specified type.
      */
-    public boolean showAdsSites() {
-        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS;
-    }
-
-    /**
-     * Returns whether this category is the Autoplay category.
-     */
-    public boolean showAutoplaySites() {
-        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY;
-    }
-
-    /**
-     * Returns whether this category is the Background Sync category.
-     */
-    public boolean showBackgroundSyncSites() {
-        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC;
-    }
-
-    /**
-     * Returns whether this category is the Camera category.
-     */
-    public boolean showCameraSites() {
-        return mContentSettingsType
-                == ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA;
-    }
-
-    /**
-     * Returns whether this category is the Clipboard category.
-     */
-    public boolean showClipboardSites() {
-        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_READ;
-    }
-
-    /**
-     * Returns whether this category is the Cookies category.
-     */
-    public boolean showCookiesSites() {
-        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES;
-    }
-
-    /**
-     * Returns whether this category is the Geolocation category.
-     */
-    public boolean showGeolocationSites() {
-        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION;
-    }
-
-    /**
-     * Returns whether this category is the JavaScript category.
-     */
-    public boolean showJavaScriptSites() {
-        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_JAVASCRIPT;
-    }
-
-    /**
-     * Returns whether this category is the Microphone category.
-     */
-    public boolean showMicrophoneSites() {
-        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_MIC;
-    }
-
-    /**
-     * Returns whether this category is the Notifications category.
-     */
-    public boolean showNotificationsSites() {
-        return mContentSettingsType
-                == ContentSettingsType.CONTENT_SETTINGS_TYPE_NOTIFICATIONS;
-    }
-
-    /**
-     * Returns whether this category is the Popup category.
-     */
-    public boolean showPopupSites() {
-        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS;
-    }
-
-    /**
-     * Returns whether this category is the Protected Media category.
-     */
-    public boolean showProtectedMediaSites() {
-        return mContentSettingsType
-                == ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER;
-    }
-
-    /**
-     * Returns whether this category is the Sound category.
-     */
-    public boolean showSoundSites() {
-        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND;
-    }
-
-    /**
-     * Returns whether this category is the Storage category.
-     */
-    public boolean showStorageSites() {
-        return CATEGORY_USE_STORAGE.equals(mCategory);
-    }
-
-    /**
-     * Returns whether this category is the USB category.
-     */
-    public boolean showUsbDevices() {
-        return mContentSettingsType == ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA;
+    public boolean showSites(@Type int type) {
+        return type == mCategory;
     }
 
     /**
      * Returns whether the Ads category is enabled via an experiment flag.
      */
     public static boolean adsCategoryEnabled() {
-        return ChromeFeatureList.isEnabled("SubresourceFilterExperimentalUI");
+        return ChromeFeatureList.isEnabled(ChromeFeatureList.SUBRESOURCE_FILTER);
     }
 
     /**
@@ -340,15 +217,21 @@ public class SiteSettingsCategory {
      */
     public boolean isManaged() {
         PrefServiceBridge prefs = PrefServiceBridge.getInstance();
-        if (showBackgroundSyncSites()) return prefs.isBackgroundSyncManaged();
-        if (showCookiesSites()) return !prefs.isAcceptCookiesUserModifiable();
-        if (showGeolocationSites()) {
+        if (showSites(Type.BACKGROUND_SYNC)) {
+            return prefs.isBackgroundSyncManaged();
+        } else if (showSites(Type.COOKIES)) {
+            return !prefs.isAcceptCookiesUserModifiable();
+        } else if (showSites(Type.DEVICE_LOCATION)) {
             return !prefs.isAllowLocationUserModifiable();
+        } else if (showSites(Type.JAVASCRIPT)) {
+            return prefs.javaScriptManaged();
+        } else if (showSites(Type.CAMERA)) {
+            return !prefs.isCameraUserModifiable();
+        } else if (showSites(Type.MICROPHONE)) {
+            return !prefs.isMicUserModifiable();
+        } else if (showSites(Type.POPUPS)) {
+            return prefs.isPopupsManaged();
         }
-        if (showJavaScriptSites()) return prefs.javaScriptManaged();
-        if (showCameraSites()) return !prefs.isCameraUserModifiable();
-        if (showMicrophoneSites()) return !prefs.isMicUserModifiable();
-        if (showPopupSites()) return prefs.isPopupsManaged();
         return false;
     }
 
@@ -358,14 +241,13 @@ public class SiteSettingsCategory {
      */
     public boolean isManagedByCustodian() {
         PrefServiceBridge prefs = PrefServiceBridge.getInstance();
-        if (showCookiesSites()) return prefs.isAcceptCookiesManagedByCustodian();
-        if (showGeolocationSites()) {
+        if (showSites(Type.COOKIES)) {
+            return prefs.isAcceptCookiesManagedByCustodian();
+        } else if (showSites(Type.DEVICE_LOCATION)) {
             return prefs.isAllowLocationManagedByCustodian();
-        }
-        if (showCameraSites()) {
+        } else if (showSites(Type.CAMERA)) {
             return prefs.isCameraManagedByCustodian();
-        }
-        if (showMicrophoneSites()) {
+        } else if (showSites(Type.MICROPHONE)) {
             return prefs.isMicManagedByCustodian();
         }
         return false;

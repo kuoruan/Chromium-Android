@@ -18,28 +18,28 @@ class FrameResourceReleaser_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<FrameResourceReleaser, FrameResourceReleaser.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<FrameResourceReleaser, FrameResourceReleaser.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::FrameResourceReleaser";
+            return "media.mojom.FrameResourceReleaser";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, FrameResourceReleaser impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public FrameResourceReleaser[] buildArray(int size) {
           return new FrameResourceReleaser[size];
@@ -74,12 +74,12 @@ class FrameResourceReleaser_Internal {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 FrameResourceReleaser_Internal.MANAGER, messageWithHeader);
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -99,12 +99,12 @@ class FrameResourceReleaser_Internal {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), FrameResourceReleaser_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
+
+
                     default:
                         return false;
                 }

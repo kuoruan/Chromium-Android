@@ -53,8 +53,9 @@ class TapWordEdgeSuppression extends ContextualSearchHeuristic {
     }
 
     @Override
-    protected void logRankerTapSuppression(ContextualSearchRankerLogger logger) {
-        logger.logFeature(ContextualSearchRankerLogger.Feature.IS_WORD_EDGE, mIsConditionSatisfied);
+    protected void logRankerTapSuppression(ContextualSearchInteractionRecorder logger) {
+        logger.logFeature(
+                ContextualSearchInteractionRecorder.Feature.IS_WORD_EDGE, mIsConditionSatisfied);
     }
 
     /**

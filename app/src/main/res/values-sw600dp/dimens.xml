@@ -31,7 +31,6 @@
     <dimen name="location_bar_icon_width">40dp</dimen>
 
     <!-- NTP dimensions -->
-    <dimen name="ntp_logo_height">180dp</dimen>
     <dimen name="ntp_search_box_transition_length">60dp</dimen>
 
     <!-- Recent tabs page -->
@@ -43,10 +42,6 @@
 
     <!-- Payments UI -->
     <dimen name="payments_ui_max_dialog_width">600dp</dimen>
-
-    <!-- Search widget dimensions -->
-    <dimen name="search_activity_location_bar_margin_start">0dp</dimen>
-    <dimen name="search_activity_location_bar_margin_end">4dp</dimen>
 
     <!-- Clear browsing data preferences dimensions -->
     <dimen name="clear_browsing_data_button_margin">16dp</dimen>

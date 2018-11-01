@@ -14,9 +14,9 @@ import org.chromium.base.Callback;
 import org.chromium.base.DiscardableReferencePool;
 import org.chromium.base.Promise;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.chrome.browser.NativePageHost;
 import org.chromium.chrome.browser.favicon.FaviconHelper;
 import org.chromium.chrome.browser.favicon.LargeIconBridge;
+import org.chromium.chrome.browser.native_page.NativePageHost;
 import org.chromium.chrome.browser.ntp.cards.CardsVariationParameters;
 import org.chromium.chrome.browser.ntp.snippets.FaviconFetchResult;
 import org.chromium.chrome.browser.ntp.snippets.SnippetArticle;
@@ -134,16 +134,17 @@ public class ImageFetcher {
             return;
         }
 
-        if (!suggestion.isArticle() || !SnippetsConfig.isFaviconsFromNewServerEnabled()) {
+        if (suggestion.isContextual()
+                || (suggestion.isArticle() && SnippetsConfig.isFaviconsFromNewServerEnabled())) {
+            // The new code path.
+            fetchFaviconFromLocalCacheOrGoogleServer(
+                    suggestion, faviconFetchStartTimeMs, faviconCallback);
+        } else {
             // The old code path. Currently, we have to use this for non-articles, due to privacy.
             // TODO(jkrcal): Remove this path when we completely switch to the new code on Stable.
             // https://crbug.com/751628
             fetchFaviconFromLocalCache(pageUrl, true, faviconFetchStartTimeMs, faviconSizePx,
                     suggestion, faviconCallback);
-        } else {
-            // The new code path.
-            fetchFaviconFromLocalCacheOrGoogleServer(
-                    suggestion, faviconFetchStartTimeMs, faviconCallback);
         }
     }
 

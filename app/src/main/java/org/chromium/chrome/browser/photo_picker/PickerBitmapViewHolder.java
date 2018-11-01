@@ -6,11 +6,11 @@ package org.chromium.chrome.browser.photo_picker;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.text.TextUtils;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 
@@ -55,8 +55,9 @@ public class PickerBitmapViewHolder
         if (mCategoryView.getLowResBitmaps().get(filePath) == null) {
             Resources resources = mItemView.getContext().getResources();
             new BitmapScalerTask(mCategoryView.getLowResBitmaps(), filePath,
-                    resources.getDimensionPixelSize(R.dimen.photo_picker_grainy_thumbnail_size))
-                    .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, bitmap);
+                    resources.getDimensionPixelSize(R.dimen.photo_picker_grainy_thumbnail_size),
+                    bitmap)
+                    .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         }
 
         if (!TextUtils.equals(mBitmapDetails.getFilePath(), filePath)) {
@@ -81,17 +82,17 @@ public class PickerBitmapViewHolder
         List<PickerBitmap> pickerBitmaps = mCategoryView.getPickerBitmaps();
         mBitmapDetails = pickerBitmaps.get(position);
 
-        if (mBitmapDetails.type() == PickerBitmap.CAMERA
-                || mBitmapDetails.type() == PickerBitmap.GALLERY) {
+        if (mBitmapDetails.type() == PickerBitmap.TileTypes.CAMERA
+                || mBitmapDetails.type() == PickerBitmap.TileTypes.GALLERY) {
             mItemView.initialize(mBitmapDetails, null, false);
-            return PickerAdapter.NO_ACTION;
+            return PickerAdapter.DecodeActions.NO_ACTION;
         }
 
         String filePath = mBitmapDetails.getFilePath();
         Bitmap original = mCategoryView.getHighResBitmaps().get(filePath);
         if (original != null) {
             mItemView.initialize(mBitmapDetails, original, false);
-            return PickerAdapter.FROM_CACHE;
+            return PickerAdapter.DecodeActions.FROM_CACHE;
         }
 
         int size = mCategoryView.getImageSize();
@@ -110,7 +111,7 @@ public class PickerBitmapViewHolder
         }
 
         mCategoryView.getDecoderServiceHost().decodeImage(filePath, size, this);
-        return PickerAdapter.DECODE;
+        return PickerAdapter.DecodeActions.DECODE;
     }
 
     /**

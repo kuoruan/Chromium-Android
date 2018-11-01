@@ -12,10 +12,7 @@
         android:paddingEnd="8dp"
         android:gravity="center_vertical"
         android:textAlignment="viewStart"
-        android:textAppearance="@android:style/TextAppearance.Medium"
-        android:textColor="@color/locationbar_status_color"
-        android:textSize="@dimen/location_bar_url_text_size"
-        android:text="@string/location_bar_verbose_status_offline"
+        android:textAppearance="@style/TextAppearance.OmniboxVerboseStatus"
         android:visibility="gone" />
 
     <!-- Separator is going to be shown or hidden together with the status defined above. -->

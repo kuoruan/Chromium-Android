@@ -29,13 +29,33 @@ NetworkServiceClient client);
 
 
 
+    void startNetLog(
+org.chromium.mojo_base.mojom.File file, org.chromium.mojo_base.mojom.DictionaryValue constants);
+
+
+
     void createNetworkContext(
 org.chromium.mojo.bindings.InterfaceRequest<NetworkContext> context, NetworkContextParams params);
 
 
 
+    void configureStubHostResolver(
+boolean stubResolverEnabled, DnsOverHttpsServer[] dnsOverHttpsServers);
+
+
+
     void disableQuic(
 );
+
+
+
+    void setUpHttpAuth(
+HttpAuthStaticParams httpAuthStaticParams);
+
+
+
+    void configureHttpAuthPrefs(
+HttpAuthDynamicParams httpAuthDynamicParams);
 
 
 
@@ -46,6 +66,39 @@ int processId, boolean allow);
 
     void getNetworkChangeManager(
 org.chromium.mojo.bindings.InterfaceRequest<NetworkChangeManager> networkChangeManager);
+
+
+
+    void getNetworkQualityEstimatorManager(
+org.chromium.mojo.bindings.InterfaceRequest<NetworkQualityEstimatorManager> networkQualityEstimatorManager);
+
+
+
+    void getTotalNetworkUsages(
+
+GetTotalNetworkUsagesResponse callback);
+
+    interface GetTotalNetworkUsagesResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<NetworkUsage[]> { }
+
+
+
+    void updateSignedTreeHead(
+SignedTreeHead signedTreeHead);
+
+
+
+    void updateCrlSet(
+org.chromium.mojo_base.mojom.ReadOnlyBuffer crlSet);
+
+
+
+    void addCorbExceptionForPlugin(
+int processId);
+
+
+
+    void removeCorbExceptionForPlugin(
+int processId);
 
 
 }

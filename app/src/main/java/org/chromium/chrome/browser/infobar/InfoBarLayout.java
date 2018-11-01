@@ -218,7 +218,8 @@ public final class InfoBarLayout extends ViewGroup implements View.OnClickListen
                     getContext(), false, secondaryText, this);
         }
 
-        setBottomViews(primaryText, secondaryButton, DualControlLayout.ALIGN_END);
+        setBottomViews(
+                primaryText, secondaryButton, DualControlLayout.DualControlLayoutAlignment.END);
     }
 
     /**
@@ -501,12 +502,7 @@ public final class InfoBarLayout extends ViewGroup implements View.OnClickListen
     }
 
     private NoUnderlineClickableSpan createClickableSpan() {
-        return new NoUnderlineClickableSpan() {
-            @Override
-            public void onClick(View view) {
-                mInfoBarView.onLinkClicked();
-            }
-        };
+        return new NoUnderlineClickableSpan((view) -> mInfoBarView.onLinkClicked());
     }
 
     /**

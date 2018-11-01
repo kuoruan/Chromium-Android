@@ -20,8 +20,9 @@ import org.chromium.ui.base.WindowAndroid;
  * JNI call glue for password generation between native and Java objects.
  */
 @JNINamespace("autofill")
-public class PasswordGenerationPopupBridge implements AdapterView.OnItemClickListener,
-        PopupWindow.OnDismissListener, PasswordGenerationAdapter.Delegate {
+public class PasswordGenerationPopupBridge
+        implements AdapterView.OnItemClickListener, PopupWindow.OnDismissListener,
+                   PasswordGenerationAdapter.Delegate {
     private final long mNativePasswordGenerationPopupViewAndroid;
     private final Context mContext;
     private final DropdownPopupWindow mPopup;
@@ -54,7 +55,7 @@ public class PasswordGenerationPopupBridge implements AdapterView.OnItemClickLis
             mPopup = null;
             // Prevent destroying the native counterpart when it's about to derefence its own
             // members in UpdateBoundsAndRedrawPopup().
-            new Handler().post(() -> onDismiss());
+            new Handler().post(this::onDismiss);
         } else {
             mPopup = new DropdownPopupWindow(mContext, anchorView);
             mPopup.setOnItemClickListener(this);

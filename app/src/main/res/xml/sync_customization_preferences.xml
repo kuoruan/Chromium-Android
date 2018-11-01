@@ -52,7 +52,7 @@
         <org.chromium.chrome.browser.preferences.ChromeBaseCheckBoxPreference
             android:persistent="false"
             android:key="payments_integration"
-            android:title="@string/payments_integration"/>
+            android:title="@string/payments_integration_legacy"/>
     </PreferenceCategory>
     <Preference
         android:key="encryption"

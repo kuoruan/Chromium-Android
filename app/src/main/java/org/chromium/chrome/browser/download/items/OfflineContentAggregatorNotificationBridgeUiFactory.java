@@ -30,10 +30,10 @@ public class OfflineContentAggregatorNotificationBridgeUiFactory {
             DownloadNotifier ui =
                     DownloadManagerService.getDownloadManagerService().getDownloadNotifier();
 
-            sBridgeUi = new OfflineContentAggregatorNotificationBridgeUi(provider, ui);
-
             // TODO(shaktisahu): Move the offline page initialization to native.
             OfflinePageDownloadBridge.getInstance();
+
+            sBridgeUi = new OfflineContentAggregatorNotificationBridgeUi(provider, ui);
         }
 
         return sBridgeUi;

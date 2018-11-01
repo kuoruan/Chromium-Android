@@ -5,9 +5,9 @@
 package org.chromium.chrome.browser.feedback;
 
 import android.content.Context;
-import android.os.AsyncTask;
-import android.os.AsyncTask.Status;
 
+import org.chromium.base.AsyncTask;
+import org.chromium.base.AsyncTask.Status;
 import org.chromium.base.ContextUtils;
 
 import java.util.concurrent.ExecutionException;
@@ -23,7 +23,7 @@ import java.util.concurrent.ExecutionException;
 public abstract class AsyncFeedbackSourceAdapter<Result> implements AsyncFeedbackSource {
     private Worker mWorker;
 
-    private class Worker extends AsyncTask<Context, Void, Result> {
+    private class Worker extends AsyncTask<Result> {
         private final Runnable mCallback;
 
         public Worker(Runnable callback) {
@@ -32,14 +32,13 @@ public abstract class AsyncFeedbackSourceAdapter<Result> implements AsyncFeedbac
 
         // AsyncTask implementation.
         @Override
-        protected Result doInBackground(Context... params) {
-            return AsyncFeedbackSourceAdapter.this.doInBackground(params[0]);
+        protected Result doInBackground() {
+            return AsyncFeedbackSourceAdapter.this.doInBackground(
+                    ContextUtils.getApplicationContext());
         }
 
         @Override
         protected void onPostExecute(Result result) {
-            super.onPostExecute(result);
-
             mCallback.run();
         }
     }
@@ -75,7 +74,6 @@ public abstract class AsyncFeedbackSourceAdapter<Result> implements AsyncFeedbac
     public final void start(Runnable callback) {
         if (mWorker != null) return;
         mWorker = new Worker(callback);
-        mWorker.executeOnExecutor(
-                AsyncTask.THREAD_POOL_EXECUTOR, ContextUtils.getApplicationContext());
+        mWorker.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 }

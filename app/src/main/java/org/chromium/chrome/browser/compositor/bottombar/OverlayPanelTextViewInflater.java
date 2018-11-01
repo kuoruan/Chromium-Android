@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.compositor.bottombar;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.LayoutDirection;
 import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnLayoutChangeListener;
@@ -79,10 +78,7 @@ public abstract class OverlayPanelTextViewInflater
     private void adjustViewDirection(TextView textView) {
         float textWidth = textView.getPaint().measureText(textView.getText().toString());
         if (textWidth < SHORTNESS_FACTOR * textView.getWidth()) {
-            int layoutDirection =
-                    LocalizationUtils.isLayoutRtl() ? LayoutDirection.RTL : LayoutDirection.LTR;
-            if (layoutDirection == LayoutDirection.LTR) textView.setGravity(Gravity.LEFT);
-            if (layoutDirection == LayoutDirection.RTL) textView.setGravity(Gravity.RIGHT);
+            textView.setGravity(LocalizationUtils.isLayoutRtl() ? Gravity.RIGHT : Gravity.LEFT);
         }
     }
 }

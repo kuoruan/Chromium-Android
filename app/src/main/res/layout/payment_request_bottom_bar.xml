@@ -6,11 +6,12 @@
 <!-- Sits at the bottom of the payment request UI. -->
 <org.chromium.chrome.browser.payments.ui.PaymentRequestBottomBar
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/bottom_bar"
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
-    android:padding="@dimen/payments_section_large_spacing"
+    android:padding="@dimen/editor_dialog_section_large_spacing"
     android:background="@android:color/white"
     android:visibility="gone" >
 
@@ -19,14 +20,14 @@
         android:layout_width="72dp"
         android:layout_height="20dp"
         android:src="@drawable/product_logo_name"
-        android:contentDescription="@null" />
+        tools:ignore="ContentDescription" />
 
     <ImageView
         android:id="@+id/logo"
         android:layout_width="20dp"
         android:layout_height="20dp"
         android:src="@drawable/fre_product_logo"
-        android:contentDescription="@null" />
+        tools:ignore="ContentDescription" />
 
     <Space
         android:id="@+id/space"
@@ -35,22 +36,16 @@
 
     <Button
         android:id="@+id/button_secondary"
-        style="@style/ButtonCompatBorderless"
         android:layout_width="wrap_content"
         android:layout_height="36dp"
-        android:text="@string/payments_edit_button"
-        android:textAllCaps="true"
-        android:textColor="@color/light_active_color"
-        android:textSize="14sp" />
+        android:text="@string/payments_edit_button" />
 
     <org.chromium.ui.widget.ButtonCompat
         android:id="@+id/button_primary"
         android:layout_width="wrap_content"
         android:layout_height="36dp"
         android:text="@string/payments_pay_button"
-        android:textAllCaps="true"
-        android:textColor="@android:color/white"
-        android:textSize="14sp"
-        chrome:buttonColor="@color/light_active_color"
-        chrome:buttonRaised="false" />
+        android:textAppearance="@style/WhiteButtonText"
+        app:buttonColor="@color/light_active_color"
+        app:buttonRaised="false" />
 </org.chromium.chrome.browser.payments.ui.PaymentRequestBottomBar>

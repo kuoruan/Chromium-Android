@@ -167,6 +167,11 @@ public abstract class InfoBar implements InfoBarView {
     }
 
     @Override
+    public boolean isBottomMostInfoBar() {
+        return false;
+    }
+
+    @Override
     @InfoBarIdentifier
     public int getInfoBarIdentifier() {
         if (mNativeInfoBarPtr == 0) return InfoBarIdentifier.INVALID;

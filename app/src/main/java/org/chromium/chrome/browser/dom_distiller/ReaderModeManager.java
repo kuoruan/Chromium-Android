@@ -29,7 +29,6 @@ import org.chromium.components.dom_distiller.content.DistillablePageUtils;
 import org.chromium.components.dom_distiller.core.DomDistillerUrlUtils;
 import org.chromium.components.navigation_interception.InterceptNavigationDelegate;
 import org.chromium.components.navigation_interception.NavigationParams;
-import org.chromium.content_public.browser.ContentViewCore;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.NavigationController;
 import org.chromium.content_public.browser.NavigationEntry;
@@ -118,8 +117,8 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
             return;
         }
 
-        ContentViewCore cvc = tab.getContentViewCore();
-        if (cvc == null) return;
+        WebContents webContents = tab.getWebContents();
+        if (webContents == null) return;
 
         mCustomTabNavigationDelegate = new InterceptNavigationDelegate() {
             @Override
@@ -143,7 +142,7 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
         };
 
         DomDistillerTabUtils.setInterceptNavigationDelegate(
-                mCustomTabNavigationDelegate, cvc.getWebContents());
+                mCustomTabNavigationDelegate, webContents);
     }
 
     @Override
@@ -268,7 +267,7 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
     /**
      * Notify the manager that the panel has completely closed.
      */
-    public void onClosed(StateChangeReason reason) {
+    public void onClosed(@StateChangeReason int reason) {
         if (mTabModelSelector == null) return;
 
         RecordHistogram.recordBooleanHistogram("DomDistiller.InfoBarUsage", false);
@@ -451,7 +450,7 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
         if (info != null) info.onStartedReaderMode();
 
         // Make sure to exit fullscreen mode before navigating.
-        mTabModelSelector.getCurrentTab().toggleFullscreenMode(false);
+        mTabModelSelector.getCurrentTab().exitFullscreenMode();
         DomDistillerTabUtils.distillCurrentPageAndView(getBasePageWebContents());
     }
 
@@ -498,10 +497,7 @@ public class ReaderModeManager extends TabModelSelectorTabObserver {
         if (mTabModelSelector == null) return;
 
         Tab currentTab = mTabModelSelector.getTabById(tabId);
-        if (currentTab == null || currentTab.getWebContents() == null
-                || currentTab.getContentViewCore() == null) {
-            return;
-        }
+        if (currentTab == null || currentTab.getWebContents() == null) return;
 
         DistillablePageUtils.setDelegate(
                 currentTab.getWebContents(), (isDistillable, isLast, isMobileOptimized) -> {

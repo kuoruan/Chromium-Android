@@ -28,7 +28,7 @@ public class FileSizeUtil {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             // Only add spans for numbers which will be displayed as bytes. KB, MB etc are spoken
             // correctly by the TTS.
-            if (bytes / 1024 < 1) {
+            if (ConversionUtils.bytesToKilobytes(bytes) < 1) {
                 TtsSpan ttsSpan =
                         new TtsSpan.MeasureBuilder().setNumber(bytes).setUnit("byte").build();
                 Spannable phraseSpannable = new SpannableString(phrase);

@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 package org.chromium.chrome.browser.preferences;
 
-import android.accounts.Account;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.PorterDuff;
@@ -14,6 +13,7 @@ import android.util.AttributeSet;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.BuildInfo;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.sync.GoogleServiceAuthError;
 import org.chromium.chrome.browser.sync.ProfileSyncService;
 import org.chromium.components.signin.ChromeSigninController;
@@ -43,8 +43,8 @@ public class SyncPreference extends Preference {
             // Sets preference icon and tints it to blue.
             Drawable icon = ApiCompatibilityUtils.getDrawable(
                     getContext().getResources(), R.drawable.permission_background_sync);
-            icon.setColorFilter(ApiCompatibilityUtils.getColor(
-                                        getContext().getResources(), R.color.light_active_color),
+            icon.setColorFilter(ApiCompatibilityUtils.getColor(getContext().getResources(),
+                                        R.color.default_icon_color_blue),
                     PorterDuff.Mode.SRC_IN);
             setIcon(icon);
         }
@@ -55,7 +55,7 @@ public class SyncPreference extends Preference {
      * of error, passphrase required or disabled in Android.
      */
     static boolean showSyncErrorIcon(Context context) {
-        if (!AndroidSyncSettings.isMasterSyncEnabled(context)) {
+        if (!AndroidSyncSettings.isMasterSyncEnabled()) {
             return true;
         }
 
@@ -87,7 +87,7 @@ public class SyncPreference extends Preference {
         ProfileSyncService profileSyncService = ProfileSyncService.get();
         Resources res = context.getResources();
 
-        if (!AndroidSyncSettings.isMasterSyncEnabled(context)) {
+        if (!AndroidSyncSettings.isMasterSyncEnabled()) {
             return res.getString(R.string.sync_android_master_sync_disabled);
         }
 
@@ -96,20 +96,22 @@ public class SyncPreference extends Preference {
         }
 
         if (profileSyncService.getAuthError() != GoogleServiceAuthError.State.NONE) {
-            return res.getString(profileSyncService.getAuthError().getMessage());
+            return res.getString(
+                    GoogleServiceAuthError.getMessageID(profileSyncService.getAuthError()));
         }
 
         if (profileSyncService.getProtocolErrorClientAction()
                 == ProtocolErrorClientAction.UPGRADE_CLIENT) {
-            return res.getString(R.string.sync_error_upgrade_client, BuildInfo.getPackageLabel());
+            return res.getString(
+                    R.string.sync_error_upgrade_client, BuildInfo.getInstance().hostPackageLabel);
         }
 
         if (profileSyncService.hasUnrecoverableError()) {
             return res.getString(R.string.sync_error_generic);
         }
 
-        boolean syncEnabled = AndroidSyncSettings.isSyncEnabled(context);
-
+        String accountName = ChromeSigninController.get().getSignedInAccountName();
+        boolean syncEnabled = AndroidSyncSettings.isSyncEnabled();
         if (syncEnabled) {
             if (!profileSyncService.isSyncActive()) {
                 return res.getString(R.string.sync_setup_progress);
@@ -118,12 +120,12 @@ public class SyncPreference extends Preference {
             if (profileSyncService.isPassphraseRequiredForDecryption()) {
                 return res.getString(R.string.sync_need_passphrase);
             }
-
-            Account account = ChromeSigninController.get().getSignedInUser();
-            return String.format(
-                    context.getString(R.string.account_management_sync_summary), account.name);
+            return context.getString(R.string.account_management_sync_summary, accountName);
         }
 
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.UNIFIED_CONSENT)) {
+            return context.getString(R.string.account_management_sync_off_summary, accountName);
+        }
         return context.getString(R.string.sync_is_disabled);
     }
 }

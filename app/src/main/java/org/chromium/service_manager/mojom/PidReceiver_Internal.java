@@ -18,28 +18,28 @@ class PidReceiver_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<PidReceiver, PidReceiver.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<PidReceiver, PidReceiver.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "service_manager::mojom::PIDReceiver";
+            return "service_manager.mojom.PIDReceiver";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, PidReceiver impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public PidReceiver[] buildArray(int size) {
           return new PidReceiver[size];
@@ -93,25 +93,25 @@ int pid) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 PidReceiver_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case SET_PID_ORDINAL: {
-            
+
                         PidReceiverSetPidParams data =
                                 PidReceiverSetPidParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().setPid(data.pid);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -131,14 +131,14 @@ int pid) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), PidReceiver_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -152,37 +152,34 @@ int pid) {
 
     
     static final class PidReceiverSetPidParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int pid;
-    
+
         private PidReceiverSetPidParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public PidReceiverSetPidParams() {
             this(0);
         }
-    
+
         public static PidReceiverSetPidParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static PidReceiverSetPidParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static PidReceiverSetPidParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -192,51 +189,25 @@ int pid) {
             PidReceiverSetPidParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new PidReceiverSetPidParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new PidReceiverSetPidParams(elementsOrVersion);
+                    {
+                        
                     result.pid = decoder0.readInt(8);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.pid, 8);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            PidReceiverSetPidParams other = (PidReceiverSetPidParams) object;
-            if (this.pid!= other.pid)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pid);
-            return result;
         }
     }
 

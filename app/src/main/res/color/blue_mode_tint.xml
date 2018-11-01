@@ -4,5 +4,5 @@
      found in the LICENSE file.
 -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:color="@color/light_active_color"/>
+    <item android:color="@color/default_icon_color_blue"/>
 </selector>

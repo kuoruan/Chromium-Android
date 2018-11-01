@@ -371,14 +371,14 @@ public class PickerBitmapView extends SelectableItemView<PickerBitmap> {
     }
 
     private boolean isGalleryTile() {
-        return mBitmapDetails.type() == PickerBitmap.GALLERY;
+        return mBitmapDetails.type() == PickerBitmap.TileTypes.GALLERY;
     }
 
     private boolean isCameraTile() {
-        return mBitmapDetails.type() == PickerBitmap.CAMERA;
+        return mBitmapDetails.type() == PickerBitmap.TileTypes.CAMERA;
     }
 
     private boolean isPictureTile() {
-        return mBitmapDetails.type() == PickerBitmap.PICTURE;
+        return mBitmapDetails.type() == PickerBitmap.TileTypes.PICTURE;
     }
 }

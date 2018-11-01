@@ -19,25 +19,15 @@ public final class RunOrClosePipeInput extends org.chromium.mojo.bindings.Union 
     public static final class Tag {
         public static final int RequireVersion = 0;
     };
-
-    private int mTag_ = -1;
     private RequireVersion mRequireVersion;
 
-    public int which() {
-      return mTag_;
-    }
-
-    public boolean isUnknown() {
-      return mTag_ == -1;
-    }
-
     public void setRequireVersion(RequireVersion requireVersion) {
-        this.mTag_ = Tag.RequireVersion;
+        this.mTag = Tag.RequireVersion;
         this.mRequireVersion = requireVersion;
     }
 
     public RequireVersion getRequireVersion() {
-        assert this.mTag_ == Tag.RequireVersion;
+        assert this.mTag == Tag.RequireVersion;
         return this.mRequireVersion;
     }
 
@@ -45,8 +35,8 @@ public final class RunOrClosePipeInput extends org.chromium.mojo.bindings.Union 
     @Override
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder0, int offset) {
         encoder0.encode(org.chromium.mojo.bindings.BindingsHelper.UNION_SIZE, offset);
-        encoder0.encode(this.mTag_, offset + 4);
-        switch (mTag_) {
+        encoder0.encode(this.mTag, offset + 4);
+        switch (mTag) {
             case Tag.RequireVersion: {
                 
                 encoder0.encode(this.mRequireVersion, offset + 8, false);
@@ -73,50 +63,7 @@ public final class RunOrClosePipeInput extends org.chromium.mojo.bindings.Union 
                 
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(offset + org.chromium.mojo.bindings.DataHeader.HEADER_SIZE, false);
                 result.mRequireVersion = RequireVersion.decode(decoder1);
-                result.mTag_ = Tag.RequireVersion;
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        RunOrClosePipeInput other = (RunOrClosePipeInput) object;
-        if (this.mTag_ != other.mTag_)
-            return false;
-        switch (this.mTag_) {
-            case Tag.RequireVersion:
-                return org.chromium.mojo.bindings.BindingsHelper.equals(this.mRequireVersion, other.mRequireVersion);
-            default:
-                break;
-        }
-        return false;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(mTag_);
-        switch (this.mTag_) {
-            case Tag.RequireVersion: {
-                result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mRequireVersion);
+                result.mTag = Tag.RequireVersion;
                 break;
             }
             default: {

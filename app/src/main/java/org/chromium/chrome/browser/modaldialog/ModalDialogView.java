@@ -14,10 +14,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.widget.FadingEdgeScrollView;
+import org.chromium.ui.UiUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -79,13 +82,25 @@ public class ModalDialogView implements View.OnClickListener {
          * must be null if negativeButtonTextId is not zero
          */
         public String negativeButtonText;
+
+        /**
+         * Optional: If true the dialog gets cancelled when the user touches outside of the dialog.
+         */
+        public boolean cancelOnTouchOutside;
+
+        /**
+         * Optional: If true, the dialog title is scrollable with the message. Note that the
+         * {@link #customView} will have height WRAP_CONTENT if this is set to true.
+         */
+        public boolean titleScrollable;
     }
 
-    @IntDef({BUTTON_POSITIVE, BUTTON_NEGATIVE})
+    @IntDef({ButtonType.POSITIVE, ButtonType.NEGATIVE})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface ButtonType {}
-    public static final int BUTTON_POSITIVE = 0;
-    public static final int BUTTON_NEGATIVE = 1;
+    public @interface ButtonType {
+        int POSITIVE = 0;
+        int NEGATIVE = 1;
+    }
 
     private final Controller mController;
     private final Params mParams;
@@ -114,7 +129,8 @@ public class ModalDialogView implements View.OnClickListener {
         mParams = params;
 
         mDialogView = LayoutInflater.from(getContext()).inflate(R.layout.modal_dialog_view, null);
-        mTitleView = mDialogView.findViewById(R.id.title);
+        mTitleView = mDialogView.findViewById(
+                mParams.titleScrollable ? R.id.scrollable_title : R.id.title);
         mMessageView = mDialogView.findViewById(R.id.message);
         mCustomView = mDialogView.findViewById(R.id.custom);
         mPositiveButton = mDialogView.findViewById(R.id.positive_button);
@@ -124,9 +140,9 @@ public class ModalDialogView implements View.OnClickListener {
     @Override
     public void onClick(View view) {
         if (view == mPositiveButton) {
-            mController.onClick(BUTTON_POSITIVE);
+            mController.onClick(ButtonType.POSITIVE);
         } else if (view == mNegativeButton) {
-            mController.onClick(BUTTON_NEGATIVE);
+            mController.onClick(ButtonType.NEGATIVE);
         }
     }
 
@@ -134,23 +150,26 @@ public class ModalDialogView implements View.OnClickListener {
      * Prepare the contents before showing the dialog.
      */
     protected void prepareBeforeShow() {
-        if (TextUtils.isEmpty(mParams.title)) {
-            mTitleView.setVisibility(View.GONE);
-        } else {
+        FadingEdgeScrollView scrollView = mDialogView.findViewById(R.id.modal_dialog_scroll_view);
+
+        if (!TextUtils.isEmpty(mParams.title)) {
             mTitleView.setText(mParams.title);
+            mTitleView.setVisibility(View.VISIBLE);
         }
 
         if (TextUtils.isEmpty(mParams.message)) {
-            ((View) mMessageView.getParent()).setVisibility(View.GONE);
+            if (mParams.titleScrollable && mTitleView.getVisibility() != View.GONE) {
+                mMessageView.setVisibility(View.GONE);
+            } else {
+                scrollView.setVisibility(View.GONE);
+            }
         } else {
-            assert mParams.customView == null;
+            assert mParams.titleScrollable || mParams.customView == null;
             mMessageView.setText(mParams.message);
         }
 
         if (mParams.customView != null) {
-            if (mParams.customView.getParent() != null) {
-                ((ViewGroup) mParams.customView.getParent()).removeView(mParams.customView);
-            }
+            UiUtils.removeViewFromParent(mParams.customView);
             mCustomView.addView(mParams.customView);
         } else {
             mCustomView.setVisibility(View.GONE);
@@ -177,6 +196,16 @@ public class ModalDialogView implements View.OnClickListener {
         } else {
             mNegativeButton.setVisibility(View.GONE);
         }
+
+        if (mParams.titleScrollable) {
+            LayoutParams layoutParams = (LayoutParams) mCustomView.getLayoutParams();
+            layoutParams.height = LayoutParams.WRAP_CONTENT;
+            layoutParams.weight = 0;
+            mCustomView.setLayoutParams(layoutParams);
+        } else {
+            scrollView.setEdgeVisibility(
+                    FadingEdgeScrollView.EdgeType.NONE, FadingEdgeScrollView.EdgeType.NONE);
+        }
     }
 
     /**
@@ -187,9 +216,47 @@ public class ModalDialogView implements View.OnClickListener {
     }
 
     /**
+     * @return The button that was added to the dialog using {@link Params}.
+     * @param button indicates which button should be returned.
+     */
+    public Button getButton(@ButtonType int button) {
+        if (button == ButtonType.POSITIVE) {
+            return mPositiveButton;
+        } else if (button == ButtonType.NEGATIVE) {
+            return mNegativeButton;
+        }
+        assert false;
+        return null;
+    }
+
+    /**
      * @return The controller that controls the actions on the dialogs.
      */
     public Controller getController() {
         return mController;
+    }
+
+    /**
+     * @return The content description of the dialog view.
+     */
+    public String getContentDescription() {
+        return mParams.title;
+    }
+
+    /**
+     * TODO(huayinz): Should we consider adding a model change processor now that the params are
+     * mutable
+     *
+     * @param title Updates the title string to the new title.
+     */
+    public void setTitle(String title) {
+        mTitleView.setText(title);
+    }
+
+    /**
+     * @return Returns true if the dialog is dismissed when the user touches outside of the dialog.
+     */
+    public boolean getCancelOnTouchOutside() {
+        return mParams.cancelOnTouchOutside;
     }
 }

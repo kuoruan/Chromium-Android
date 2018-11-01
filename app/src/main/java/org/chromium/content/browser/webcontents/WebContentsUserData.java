@@ -4,9 +4,8 @@
 
 package org.chromium.content.browser.webcontents;
 
+import org.chromium.content.browser.webcontents.WebContentsImpl.UserDataFactory;
 import org.chromium.content_public.browser.WebContents;
-
-import java.util.Map;
 
 /**
  * Holds an object to be stored in {@code userDataMap} in {@link WebContents} for those
@@ -23,35 +22,14 @@ import java.util.Map;
  * </code>
  */
 public final class WebContentsUserData {
-    /**
-     * Factory interface passed to {@link #fromWebContents()} for instantiation of
-     * class to be managed bu {@link WebContentsUserData}.
-     *
-     * Constructor method reference comes handy for class Foo to provide the factory.
-     * Use lazy initialization to avoid having to generate too many anonymous reference.
-     *
-     * <code>
-     * public class Foo {
-     *     static final class FoofactoryLazyHolder {
-     *         private static final UserDataFactory<Foo> INSTANCE = Foo::new;
-     *     }
-     *
-     *     static Foo fromWebContents(WebContents webContents) {
-     *         return WebContentsUserData.fromWebContents(
-     *                 webContents, Foo.class, FooFactoryLazyHolder.INSTANCE);
-     *     }
-     *     ....
-     * }
-     * </code>
-     *
-     * @param <T> Class to instantiate.
-     */
-    public interface UserDataFactory<T> { T create(WebContents webContents); }
-
     private final Object mObject;
 
-    private WebContentsUserData(Object object) {
+    WebContentsUserData(Object object) {
         mObject = object;
+    }
+
+    Object getObject() {
+        return mObject;
     }
 
     /**
@@ -59,30 +37,15 @@ public final class WebContentsUserData {
      *
      * @param webContents The web contents for which to lookup the object.
      * @param key Class instance of the object used as the key.
-     * @param userDataFactory Factory that creates an object of the generic class. Create a new
-     * instance if the object is not available and the factory is non-null.
-     * @return The object (possibly null) of the given web contents.
+     * @param userDataFactory Factory that creates an object of the generic class. Creates a new
+     *        instance and returns it if not created yet.
+     * @return The object of the given web contents. Can be null if the object was not set,
+     *         the user data map is already garbage-collected, or {@link WebContents#initialize()}
+     *         is not called yet.
+     *
      */
-    @SuppressWarnings("unchecked")
     public static <T> T fromWebContents(
             WebContents webContents, Class<T> key, UserDataFactory<T> userDataFactory) {
-        // Casting to WebContentsImpl is safe since it's the actual implementation.
-        WebContentsImpl webContentsImpl = (WebContentsImpl) webContents;
-        Map<Class, WebContentsUserData> userDataMap = webContentsImpl.getUserDataMap();
-
-        // Map can be null after WebView gets gc'ed on it wasy to destruction.
-        if (userDataMap == null) return null;
-
-        WebContentsUserData data = userDataMap.get(key);
-        if (data == null && userDataFactory != null) {
-            T object = userDataFactory.create(webContents);
-            assert key.isInstance(object);
-            webContentsImpl.setUserData(key, new WebContentsUserData(object));
-            // Retrieves from the map again to return null in case |setUserData| fails
-            // to store the object.
-            data = webContentsImpl.getUserData(key);
-        }
-        // Casting Object to T is safe since we make sure the object was of type T upon creation.
-        return data != null ? (T) data.mObject : null;
+        return ((WebContentsImpl) webContents).getOrSetUserData(key, userDataFactory);
     }
 }

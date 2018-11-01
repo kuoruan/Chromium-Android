@@ -8,8 +8,9 @@ import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.PanelState;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchHeuristics;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchIPH;
-import org.chromium.chrome.browser.contextualsearch.ContextualSearchRankerLogger;
+import org.chromium.chrome.browser.contextualsearch.ContextualSearchInteractionRecorder;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchUma;
+import org.chromium.chrome.browser.contextualsearch.EngagementSuppression;
 import org.chromium.chrome.browser.contextualsearch.QuickActionCategory;
 import org.chromium.chrome.browser.profiles.Profile;
 
@@ -55,10 +56,9 @@ public class ContextualSearchPanelMetrics {
     private long mPanelOpenedBeyondPeekDurationMs;
     // The current set of heuristics that should be logged with results seen when the panel closes.
     private ContextualSearchHeuristics mResultsSeenExperiments;
-    // The current set of heuristics to be logged through ranker with results seen when the panel
-    // closes.
-    private ContextualSearchRankerLogger mRankerLogger;
-    // Whether Ranker Outcomes are valid, because we showed the panel.
+    // The interaction recorder to use to record results seen when the panel closes.
+    private ContextualSearchInteractionRecorder mInteractionRecorder;
+    // Whether interaction Outcomes are valid, because we showed the panel.
     private boolean mAreOutcomesValid;
 
     /**
@@ -68,8 +68,8 @@ public class ContextualSearchPanelMetrics {
      * @param reason The reason for the state change.
      * @param profile The current {@link Profile}.
      */
-    public void onPanelStateChanged(
-            PanelState fromState, PanelState toState, StateChangeReason reason, Profile profile) {
+    public void onPanelStateChanged(PanelState fromState, PanelState toState,
+            @StateChangeReason int reason, Profile profile) {
         // Note: the logging within this function includes the promo, unless specifically
         // excluded.
         boolean isStartingSearch = isStartingNewContextualSearch(toState, reason);
@@ -121,12 +121,15 @@ public class ContextualSearchPanelMetrics {
 
             if (mWasContextualCardsDataShown) {
                 ContextualSearchUma.logContextualCardsResultsSeen(mWasSearchContentViewSeen);
+                EngagementSuppression.registerContextualCardsImpression(mWasSearchContentViewSeen);
             }
             if (mWasQuickActionShown) {
                 ContextualSearchUma.logQuickActionResultsSeen(mWasSearchContentViewSeen,
                         mQuickActionCategory);
                 ContextualSearchUma.logQuickActionClicked(mWasQuickActionClicked,
                         mQuickActionCategory);
+                EngagementSuppression.registerQuickActionImpression(
+                        mWasSearchContentViewSeen, mWasQuickActionClicked);
             }
 
             if (mResultsSeenExperiments != null) {
@@ -144,13 +147,15 @@ public class ContextualSearchPanelMetrics {
                         mWasSearchContentViewSeen, wasAnySuppressionHeuristicSatisfied);
                 ContextualSearchUma.logSelectionLengthResultsSeen(
                         mWasSearchContentViewSeen, mSelectionLength);
+                ContextualSearchUma.logTapResultsSeen(mWasSearchContentViewSeen);
             }
+            ContextualSearchUma.logAllResultsSeen(mWasSearchContentViewSeen);
 
             // Notifications to Feature Engagement.
             ContextualSearchIPH.doSearchFinishedNotifications(profile, mWasSearchContentViewSeen,
                     mWasActivatedByTap, mWasContextualCardsDataShown);
 
-            writeRankerLoggerOutcomesAndReset();
+            writeInteractionOutcomesAndReset();
         }
 
         if (isStartingSearch) {
@@ -171,8 +176,8 @@ public class ContextualSearchPanelMetrics {
         // CLOSED (TAB_PROMOTION). For the purpose of logging, the reason for the second transition
         // is reinterpreted to SERP_NAVIGATION, in order to distinguish it from a tab promotion
         // caused when tapping on the Search Bar when the Panel is maximized.
-        StateChangeReason reasonForLogging =
-                mIsSerpNavigation ? StateChangeReason.SERP_NAVIGATION : reason;
+        @StateChangeReason
+        int reasonForLogging = mIsSerpNavigation ? StateChangeReason.SERP_NAVIGATION : reason;
         if (isStartingSearch || isEndingSearch
                 || (!mHasExpanded && toState == PanelState.EXPANDED)
                 || (!mHasMaximized && toState == PanelState.MAXIMIZED)) {
@@ -321,37 +326,38 @@ public class ContextualSearchPanelMetrics {
 
     /**
      * Sets up logging through Ranker for outcomes.
-     * @param rankerLogger The {@link ContextualSearchRankerLogger} currently being used to measure
-     *                     or suppress the UI by Ranker.
+     * @param interactionRecorder The {@link ContextualSearchInteractionRecorder} currently being
+     * used to measure to recorder user interaction outcomes.
      */
-    public void setRankerLogger(ContextualSearchRankerLogger rankerLogger) {
-        mRankerLogger = rankerLogger;
+    public void setInteractionRecorder(ContextualSearchInteractionRecorder interactionRecorder) {
+        mInteractionRecorder = interactionRecorder;
         mAreOutcomesValid = false;
     }
 
     /**
-     * Writes all the outcome features to the Ranker Logger and resets the logger.
+     * Writes all the outcome features to the Interaction Recorder and resets it.
      */
-    public void writeRankerLoggerOutcomesAndReset() {
-        if (mRankerLogger != null && mWasActivatedByTap && mAreOutcomesValid) {
+    public void writeInteractionOutcomesAndReset() {
+        if (mInteractionRecorder != null && mWasActivatedByTap && mAreOutcomesValid) {
             // Tell Ranker about the primary outcome.
-            mRankerLogger.logOutcome(ContextualSearchRankerLogger.Feature.OUTCOME_WAS_PANEL_OPENED,
+            mInteractionRecorder.logOutcome(
+                    ContextualSearchInteractionRecorder.Feature.OUTCOME_WAS_PANEL_OPENED,
                     mWasSearchContentViewSeen);
-            ContextualSearchUma.logRankerInference(
-                    mWasSearchContentViewSeen, mRankerLogger.getPredictionForTapSuppression());
-            mRankerLogger.logOutcome(
-                    ContextualSearchRankerLogger.Feature.OUTCOME_WAS_CARDS_DATA_SHOWN,
+            ContextualSearchUma.logRankerInference(mWasSearchContentViewSeen,
+                    mInteractionRecorder.getPredictionForTapSuppression());
+            mInteractionRecorder.logOutcome(
+                    ContextualSearchInteractionRecorder.Feature.OUTCOME_WAS_CARDS_DATA_SHOWN,
                     mWasContextualCardsDataShown);
             if (mWasQuickActionShown) {
-                mRankerLogger.logOutcome(
-                        ContextualSearchRankerLogger.Feature.OUTCOME_WAS_QUICK_ACTION_CLICKED,
+                mInteractionRecorder.logOutcome(ContextualSearchInteractionRecorder.Feature
+                                                        .OUTCOME_WAS_QUICK_ACTION_CLICKED,
                         mWasQuickActionClicked);
             }
             if (mResultsSeenExperiments != null) {
-                mResultsSeenExperiments.logRankerTapSuppressionOutcome(mRankerLogger);
+                mResultsSeenExperiments.logRankerTapSuppressionOutcome(mInteractionRecorder);
             }
-            mRankerLogger.writeLogAndReset();
-            mRankerLogger = null;
+            mInteractionRecorder.writeLogAndReset();
+            mInteractionRecorder = null;
         }
     }
 
@@ -361,7 +367,8 @@ public class ContextualSearchPanelMetrics {
      * @param reason The reason for the search state transition.
      * @return Whether a new contextual search is starting.
      */
-    private boolean isStartingNewContextualSearch(PanelState toState, StateChangeReason reason) {
+    private boolean isStartingNewContextualSearch(
+            PanelState toState, @StateChangeReason int reason) {
         return toState == PanelState.PEEKED
                 && (reason == StateChangeReason.TEXT_SELECT_TAP
                         || reason == StateChangeReason.TEXT_SELECT_LONG_PRESS);

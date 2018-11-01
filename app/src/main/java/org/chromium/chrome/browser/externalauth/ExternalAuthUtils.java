@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.StrictMode;
 import android.os.SystemClock;
@@ -19,7 +18,6 @@ import android.text.TextUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
-import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
@@ -167,11 +165,8 @@ public class ExternalAuthUtils {
      */
     public boolean isGooglePlayServicesMissing(final Context context) {
         final int resultCode = checkGooglePlayServicesAvailable(context);
-        if (resultCode == ConnectionResult.SERVICE_MISSING
-                || resultCode == ConnectionResult.SERVICE_INVALID) {
-            return true;
-        }
-        return false;
+        return (resultCode == ConnectionResult.SERVICE_MISSING
+                || resultCode == ConnectionResult.SERVICE_INVALID);
     }
 
     /**
@@ -189,9 +184,7 @@ public class ExternalAuthUtils {
         Context context = ContextUtils.getApplicationContext();
         final int resultCode = checkGooglePlayServicesAvailable(context);
         recordConnectionResult(resultCode);
-        if (resultCode == ConnectionResult.SUCCESS) {
-            return true;
-        }
+        if (resultCode == ConnectionResult.SUCCESS) return true;
         // resultCode is some kind of error.
         Log.v(TAG, "Unable to use Google Play Services: %s", describeError(resultCode));
         if (isUserRecoverableError(resultCode)) {
@@ -245,31 +238,6 @@ public class ExternalAuthUtils {
     public static boolean canUseFirstPartyGooglePlayServices() {
         return sInstance.canUseFirstPartyGooglePlayServices(
                 new UserRecoverableErrorHandler.Silent());
-    }
-
-    /**
-     * Same as {@link #canUseFirstPartyGooglePlayServices(UserRecoverableErrorHandler)},
-     * but completes the task in the background to avoid any potentially slow calls blocking the
-     * UI thread.
-     * @param userRecoverableErrorHandler How to handle user-recoverable errors from Google
-     * Play Services; must be non-null.
-     * @param callback Callback to receive whether or not first party Play Services are available.
-     */
-    public void canUseFirstPartyGooglePlayServices(
-            UserRecoverableErrorHandler userRecoverableErrorHandler, Callback<Boolean> callback) {
-        new AsyncTask<Void, Void, Boolean>() {
-            @Override
-            protected Boolean doInBackground(Void... voids) {
-                return canUseGooglePlayServices(userRecoverableErrorHandler)
-                        && isChromeGoogleSigned();
-            }
-
-            @Override
-            protected void onPostExecute(Boolean canUseFirstPartyGooglePlayServices) {
-                callback.onResult(canUseFirstPartyGooglePlayServices);
-            }
-        }
-                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**

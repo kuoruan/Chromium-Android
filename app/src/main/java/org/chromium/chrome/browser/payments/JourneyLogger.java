@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.payments;
 
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.content_public.browser.WebContents;
 
 /**
  * A class used to record journey metrics for the Payment Request feature.
@@ -19,10 +20,10 @@ public class JourneyLogger {
     private boolean mWasPaymentRequestTriggered;
     private boolean mHasRecorded;
 
-    public JourneyLogger(boolean isIncognito, String url) {
+    public JourneyLogger(boolean isIncognito, WebContents webContents) {
         // Note that this pointer could leak the native object. The called must call destroy() to
         // ensure that the native object is destroyed.
-        mJourneyLoggerAndroid = nativeInitJourneyLoggerAndroid(isIncognito, url);
+        mJourneyLoggerAndroid = nativeInitJourneyLoggerAndroid(isIncognito, webContents);
     }
 
     /** Will destroy the native object. This class shouldn't be used afterwards. */
@@ -176,7 +177,8 @@ public class JourneyLogger {
         }
     }
 
-    private native long nativeInitJourneyLoggerAndroid(boolean isIncognito, String url);
+    private native long nativeInitJourneyLoggerAndroid(
+            boolean isIncognito, WebContents webContents);
     private native void nativeDestroy(long nativeJourneyLoggerAndroid);
     private native void nativeSetNumberOfSuggestionsShown(long nativeJourneyLoggerAndroid,
             int section, int number, boolean hasCompleteSuggestion);

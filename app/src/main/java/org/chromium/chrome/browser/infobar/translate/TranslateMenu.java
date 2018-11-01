@@ -55,28 +55,20 @@ public final class TranslateMenu {
     public static final int ID_OVERFLOW_NEVER_LANGUAGE = 3;
     public static final int ID_OVERFLOW_NOT_THIS_LANGUAGE = 4;
 
-    private static final List<MenuItem> OVERFLOW_MENU = new ArrayList<MenuItem>();
-
     /**
      * Build overflow menu item list.
      */
-    static List<MenuItem> getOverflowMenu() {
-        // Load overflow menu item if it's empty.
-        synchronized (OVERFLOW_MENU) {
-            if (OVERFLOW_MENU.isEmpty()) {
-                OVERFLOW_MENU.add(
-                        new MenuItem(ITEM_CHECKBOX_OPTION, ID_OVERFLOW_MORE_LANGUAGE, true));
-                OVERFLOW_MENU.add(
-                        new MenuItem(ITEM_CHECKBOX_OPTION, ID_OVERFLOW_ALWAYS_TRANSLATE, false));
-                OVERFLOW_MENU.add(
-                        new MenuItem(ITEM_CHECKBOX_OPTION, ID_OVERFLOW_NEVER_LANGUAGE, false));
-                OVERFLOW_MENU.add(
-                        new MenuItem(ITEM_CHECKBOX_OPTION, ID_OVERFLOW_NEVER_SITE, false));
-                OVERFLOW_MENU.add(
-                        new MenuItem(ITEM_CHECKBOX_OPTION, ID_OVERFLOW_NOT_THIS_LANGUAGE, false));
-            }
+    static List<MenuItem> getOverflowMenu(boolean isIncognito) {
+        List<MenuItem> menu = new ArrayList<MenuItem>();
+        menu.add(new MenuItem(ITEM_CHECKBOX_OPTION, ID_OVERFLOW_MORE_LANGUAGE, true));
+        if (!isIncognito) {
+            // "Always translate" does nothing in incognito mode, so just hide it.
+            menu.add(new MenuItem(ITEM_CHECKBOX_OPTION, ID_OVERFLOW_ALWAYS_TRANSLATE, false));
         }
-        return OVERFLOW_MENU;
+        menu.add(new MenuItem(ITEM_CHECKBOX_OPTION, ID_OVERFLOW_NEVER_LANGUAGE, false));
+        menu.add(new MenuItem(ITEM_CHECKBOX_OPTION, ID_OVERFLOW_NEVER_SITE, false));
+        menu.add(new MenuItem(ITEM_CHECKBOX_OPTION, ID_OVERFLOW_NOT_THIS_LANGUAGE, false));
+        return menu;
     }
 
     private TranslateMenu() {}

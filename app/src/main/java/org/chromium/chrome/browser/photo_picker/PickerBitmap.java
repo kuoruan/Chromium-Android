@@ -18,12 +18,13 @@ import java.util.Date;
  */
 public class PickerBitmap implements Comparable<PickerBitmap> {
     // The possible types of tiles involved in the viewer.
-    @IntDef({PICTURE, CAMERA, GALLERY})
+    @IntDef({TileTypes.PICTURE, TileTypes.CAMERA, TileTypes.GALLERY})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface TileTypes {}
-    public static final int PICTURE = 0;
-    public static final int CAMERA = 1;
-    public static final int GALLERY = 2;
+    public @interface TileTypes {
+        int PICTURE = 0;
+        int CAMERA = 1;
+        int GALLERY = 2;
+    }
 
     // The file path to the bitmap to show.
     private String mFilePath;

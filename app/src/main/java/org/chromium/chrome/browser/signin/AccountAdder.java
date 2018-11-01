@@ -5,9 +5,9 @@
 package org.chromium.chrome.browser.signin;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.Intent;
 import android.provider.Settings;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 
 import org.chromium.base.VisibleForTesting;

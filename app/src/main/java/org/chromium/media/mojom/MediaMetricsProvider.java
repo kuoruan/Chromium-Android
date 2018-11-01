@@ -25,7 +25,7 @@ public interface MediaMetricsProvider extends org.chromium.mojo.bindings.Interfa
 
 
     void initialize(
-boolean isMse, boolean isTopFrame, org.chromium.url.mojom.Origin untrustedTopOrigin);
+boolean isMse, int urlScheme);
 
 
 
@@ -40,17 +40,22 @@ int status);
 
 
     void setTimeToMetadata(
-org.chromium.mojo.common.mojom.TimeDelta elapsed);
+org.chromium.mojo_base.mojom.TimeDelta elapsed);
 
 
 
     void setTimeToFirstFrame(
-org.chromium.mojo.common.mojom.TimeDelta elapsed);
+org.chromium.mojo_base.mojom.TimeDelta elapsed);
 
 
 
     void setTimeToPlayReady(
-org.chromium.mojo.common.mojom.TimeDelta elapsed);
+org.chromium.mojo_base.mojom.TimeDelta elapsed);
+
+
+
+    void setContainerName(
+int containerName);
 
 
 

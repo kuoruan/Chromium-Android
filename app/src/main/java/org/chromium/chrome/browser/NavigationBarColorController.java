@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -22,12 +23,15 @@ import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorObserver;
 import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.browser.vr.VrModeObserver;
+import org.chromium.chrome.browser.vr.VrModuleProvider;
+import org.chromium.ui.UiUtils;
 
 /**
  * Controls the bottom system navigation bar color for the provided {@link Window}.
  */
 @TargetApi(Build.VERSION_CODES.O_MR1)
-public class NavigationBarColorController {
+public class NavigationBarColorController implements VrModeObserver {
     private final Window mWindow;
     private final ViewGroup mRootView;
     private final Resources mResources;
@@ -90,6 +94,8 @@ public class NavigationBarColorController {
         mOverviewModeBehavior.addOverviewModeObserver(mOverviewModeObserver);
 
         updateNavigationBarColor();
+
+        VrModuleProvider.registerVrModeObserver(this);
     }
 
     /**
@@ -98,12 +104,32 @@ public class NavigationBarColorController {
     public void destroy() {
         mTabModelSelector.removeObserver(mTabModelSelectorObserver);
         mOverviewModeBehavior.removeOverviewModeObserver(mOverviewModeObserver);
+        VrModuleProvider.unregisterVrModeObserver(this);
     }
+
+    @Override
+    public void onExitVr() {
+        // The platform ignores the light navigation bar system UI flag when launching an Activity
+        // in VR mode, so we need to restore it when VR is exited.
+        updateSystemUiVisibility(mUseLightNavigation);
+    }
+
+    @Override
+    public void onEnterVr() {}
 
     private void updateNavigationBarColor() {
         boolean overviewVisible = mOverviewModeBehavior.overviewVisible() && !mOverviewModeHiding;
-        boolean useLightNavigation = !mTabModelSelector.isIncognitoSelected() && !overviewVisible;
-        if (FeatureUtilities.isChromeModernDesignEnabled()) useLightNavigation |= overviewVisible;
+
+        boolean useLightNavigation;
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.HORIZONTAL_TAB_SWITCHER_ANDROID)) {
+            useLightNavigation = !mTabModelSelector.isIncognitoSelected();
+        } else if (FeatureUtilities.isChromeModernDesignEnabled()) {
+            useLightNavigation = !mTabModelSelector.isIncognitoSelected() || overviewVisible;
+        } else {
+            useLightNavigation = !mTabModelSelector.isIncognitoSelected() && !overviewVisible;
+        }
+
+        useLightNavigation &= !UiUtils.isSystemUiThemingDisabled();
 
         if (mUseLightNavigation == useLightNavigation) return;
 
@@ -114,6 +140,22 @@ public class NavigationBarColorController {
                                   mResources, R.color.bottom_system_nav_color)
                         : Color.BLACK);
 
+        setNavigationBarColor(useLightNavigation);
+
+        updateSystemUiVisibility(useLightNavigation);
+    }
+
+    @SuppressLint("NewApi")
+    private void setNavigationBarColor(boolean useLightNavigation) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            mWindow.setNavigationBarDividerColor(useLightNavigation
+                            ? ApiCompatibilityUtils.getColor(
+                                      mResources, R.color.bottom_system_nav_divider_color)
+                            : Color.BLACK);
+        }
+    }
+
+    private void updateSystemUiVisibility(boolean useLightNavigation) {
         int visibility = mRootView.getSystemUiVisibility();
         if (useLightNavigation) {
             visibility |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;

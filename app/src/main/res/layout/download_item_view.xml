@@ -6,7 +6,7 @@
 <!-- Represents a single item in the DownloadHistoryAdapterView. -->
 <view class="org.chromium.chrome.browser.download.ui.DownloadItemView"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content" >
 
@@ -17,7 +17,8 @@
 
         <org.chromium.chrome.browser.widget.TintedImageView
             android:id="@+id/icon_view"
-            style="@style/DownloadIconView" />
+            style="@style/DownloadIconView"
+            app:chrometint="@color/dark_mode_tint" />
 
         <!-- Shown for completed downloads. -->
         <RelativeLayout
@@ -68,9 +69,9 @@
                     android:layout_below="@+id/filename_progress_view"
                     android:layout_alignParentStart="true"
                     android:layout_toStartOf="@+id/pause_button"
-                    chrome:colorBackground="@color/google_grey_400"
-                    chrome:colorProgress="@color/light_active_color"
-                    chrome:colorSecondaryProgress="@color/google_grey_600" />
+                    app:colorBackground="@color/downloads_progress_bar_background_blue"
+                    app:colorProgress="@color/light_active_color"
+                    app:colorSecondaryProgress="@color/modern_grey_600" />
 
             <TextView
                     android:id="@+id/status_view"
@@ -101,7 +102,7 @@
                     android:background="?attr/selectableItemBackground"
                     android:contentDescription="@string/download_notification_pause_button"
                     android:src="@drawable/ic_pause_white_24dp"
-                    chrome:chrometint="@color/google_grey_600" />
+                    app:chrometint="@color/default_icon_color" />
 
             <org.chromium.chrome.browser.widget.TintedImageButton
                     android:id="@+id/cancel_button"
@@ -115,7 +116,7 @@
                     android:background="?attr/selectableItemBackground"
                     android:contentDescription="@string/download_notification_cancel_button"
                     android:src="@drawable/btn_close"
-                    chrome:chrometint="@color/google_grey_600" />
+                    app:chrometint="@color/default_icon_color" />
         </RelativeLayout>
     </LinearLayout>
 </view>

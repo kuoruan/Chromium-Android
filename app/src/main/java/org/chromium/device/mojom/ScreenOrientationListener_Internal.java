@@ -18,28 +18,28 @@ class ScreenOrientationListener_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<ScreenOrientationListener, ScreenOrientationListener.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<ScreenOrientationListener, ScreenOrientationListener.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "device::mojom::ScreenOrientationListener";
+            return "device.mojom.ScreenOrientationListener";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, ScreenOrientationListener impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public ScreenOrientationListener[] buildArray(int size) {
           return new ScreenOrientationListener[size];
@@ -130,38 +130,38 @@ IsAutoRotateEnabledByUserResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 ScreenOrientationListener_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case START_ORDINAL: {
-            
+
                         ScreenOrientationListenerStartParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().start();
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case STOP_ORDINAL: {
-            
+
                         ScreenOrientationListenerStopParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().stop();
                         return true;
                     }
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -181,30 +181,30 @@ IsAutoRotateEnabledByUserResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), ScreenOrientationListener_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
                     case IS_AUTO_ROTATE_ENABLED_BY_USER_ORDINAL: {
-            
+
                         ScreenOrientationListenerIsAutoRotateEnabledByUserParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().isAutoRotateEnabledByUser(new ScreenOrientationListenerIsAutoRotateEnabledByUserResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -218,36 +218,33 @@ IsAutoRotateEnabledByUserResponse callback) {
 
     
     static final class ScreenOrientationListenerStartParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private ScreenOrientationListenerStartParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ScreenOrientationListenerStartParams() {
             this(0);
         }
-    
+
         public static ScreenOrientationListenerStartParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ScreenOrientationListenerStartParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ScreenOrientationListenerStartParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -257,41 +254,19 @@ IsAutoRotateEnabledByUserResponse callback) {
             ScreenOrientationListenerStartParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ScreenOrientationListenerStartParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ScreenOrientationListenerStartParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -299,36 +274,33 @@ IsAutoRotateEnabledByUserResponse callback) {
 
     
     static final class ScreenOrientationListenerStopParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private ScreenOrientationListenerStopParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ScreenOrientationListenerStopParams() {
             this(0);
         }
-    
+
         public static ScreenOrientationListenerStopParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ScreenOrientationListenerStopParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ScreenOrientationListenerStopParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -338,41 +310,19 @@ IsAutoRotateEnabledByUserResponse callback) {
             ScreenOrientationListenerStopParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ScreenOrientationListenerStopParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ScreenOrientationListenerStopParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -380,36 +330,33 @@ IsAutoRotateEnabledByUserResponse callback) {
 
     
     static final class ScreenOrientationListenerIsAutoRotateEnabledByUserParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private ScreenOrientationListenerIsAutoRotateEnabledByUserParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ScreenOrientationListenerIsAutoRotateEnabledByUserParams() {
             this(0);
         }
-    
+
         public static ScreenOrientationListenerIsAutoRotateEnabledByUserParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ScreenOrientationListenerIsAutoRotateEnabledByUserParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ScreenOrientationListenerIsAutoRotateEnabledByUserParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -419,41 +366,19 @@ IsAutoRotateEnabledByUserResponse callback) {
             ScreenOrientationListenerIsAutoRotateEnabledByUserParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ScreenOrientationListenerIsAutoRotateEnabledByUserParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ScreenOrientationListenerIsAutoRotateEnabledByUserParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -461,37 +386,34 @@ IsAutoRotateEnabledByUserResponse callback) {
 
     
     static final class ScreenOrientationListenerIsAutoRotateEnabledByUserResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean enabled;
-    
+
         private ScreenOrientationListenerIsAutoRotateEnabledByUserResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ScreenOrientationListenerIsAutoRotateEnabledByUserResponseParams() {
             this(0);
         }
-    
+
         public static ScreenOrientationListenerIsAutoRotateEnabledByUserResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ScreenOrientationListenerIsAutoRotateEnabledByUserResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ScreenOrientationListenerIsAutoRotateEnabledByUserResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -501,51 +423,25 @@ IsAutoRotateEnabledByUserResponse callback) {
             ScreenOrientationListenerIsAutoRotateEnabledByUserResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ScreenOrientationListenerIsAutoRotateEnabledByUserResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ScreenOrientationListenerIsAutoRotateEnabledByUserResponseParams(elementsOrVersion);
+                    {
+                        
                     result.enabled = decoder0.readBoolean(8, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.enabled, 8, 0);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ScreenOrientationListenerIsAutoRotateEnabledByUserResponseParams other = (ScreenOrientationListenerIsAutoRotateEnabledByUserResponseParams) object;
-            if (this.enabled!= other.enabled)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.enabled);
-            return result;
         }
     }
 

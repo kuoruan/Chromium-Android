@@ -19,7 +19,8 @@ import android.widget.FrameLayout;
 import org.chromium.base.SysUtils;
 
 /**
- * Toast wrapper, makes sure toasts are not HW accelerated on low-end devices.
+ * Toast wrapper, makes sure toasts are not HW accelerated on low-end devices and presented
+ * correctly (i.e. use VrToast while in virtual reality).
  *
  * Can (and should) also be used for Chromium-related additions and extensions.
  */
@@ -32,7 +33,7 @@ public class Toast {
     private ViewGroup mSWLayout;
 
     public Toast(Context context) {
-        this(context, new android.widget.Toast(context));
+        this(context, UiWidgetFactory.getInstance().createToast(context));
     }
 
     private Toast(Context context, android.widget.Toast toast) {
@@ -147,12 +148,11 @@ public class Toast {
 
     @SuppressLint("ShowToast")
     public static Toast makeText(Context context, CharSequence text, int duration) {
-        return new Toast(context, android.widget.Toast.makeText(context, text, duration));
+        return new Toast(context, UiWidgetFactory.getInstance().makeToast(context, text, duration));
     }
 
-    @SuppressLint("ShowToast")
     public static Toast makeText(Context context, int resId, int duration)
             throws Resources.NotFoundException {
-        return new Toast(context, android.widget.Toast.makeText(context, resId, duration));
+        return makeText(context, context.getResources().getText(resId), duration);
     }
 }

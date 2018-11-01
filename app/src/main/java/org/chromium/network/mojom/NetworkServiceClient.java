@@ -25,15 +25,12 @@ public interface NetworkServiceClient extends org.chromium.mojo.bindings.Interfa
 
 
     void onAuthRequired(
-int processId, int routingId, org.chromium.url.mojom.Url url, boolean firstAuthAttempt, AuthChallengeInfo authInfo, 
-OnAuthRequiredResponse callback);
-
-    interface OnAuthRequiredResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<AuthCredentials> { }
+int processId, int routingId, int requestId, org.chromium.url.mojom.Url url, org.chromium.url.mojom.Url siteForCookies, boolean firstAuthAttempt, AuthChallengeInfo authInfo, int resourceType, UrlResponseHead head, AuthChallengeResponder authChallengeResponder);
 
 
 
     void onCertificateRequested(
-int processId, int routingId, SslCertRequestInfo certInfo, 
+int processId, int routingId, int requestId, SslCertRequestInfo certInfo, 
 OnCertificateRequestedResponse callback);
 
     interface OnCertificateRequestedResponse extends org.chromium.mojo.bindings.Callbacks.Callback4<X509Certificate, short[], SslPrivateKey, Boolean> { }
@@ -41,10 +38,44 @@ OnCertificateRequestedResponse callback);
 
 
     void onSslCertificateError(
-int resourceType, org.chromium.url.mojom.Url url, int processId, int routingId, SslInfo sslInfo, boolean fatal, 
+int processId, int routingId, int requestId, int resourceType, org.chromium.url.mojom.Url url, SslInfo sslInfo, boolean fatal, 
 OnSslCertificateErrorResponse callback);
 
     interface OnSslCertificateErrorResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Integer> { }
+
+
+
+    void onFileUploadRequested(
+int processId, boolean async, org.chromium.mojo_base.mojom.FilePath[] filePaths, 
+OnFileUploadRequestedResponse callback);
+
+    interface OnFileUploadRequestedResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Integer, org.chromium.mojo_base.mojom.File[]> { }
+
+
+
+    void onCookieChange(
+int processId, int routingId, org.chromium.url.mojom.Url url, org.chromium.url.mojom.Url frameUrl, CanonicalCookie cookie, boolean blockedByPolicy);
+
+
+
+    void onCookiesRead(
+int processId, int routingId, org.chromium.url.mojom.Url url, org.chromium.url.mojom.Url frameUrl, CanonicalCookie[] cookieList, boolean blockedByPolicy);
+
+
+
+    void onLoadingStateUpdate(
+LoadInfo[] infos, 
+OnLoadingStateUpdateResponse callback);
+
+    interface OnLoadingStateUpdateResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
+
+
+
+    void onClearSiteData(
+int processId, int routingId, org.chromium.url.mojom.Url url, String headerValue, int loadFlags, 
+OnClearSiteDataResponse callback);
+
+    interface OnClearSiteDataResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
 
 
 }

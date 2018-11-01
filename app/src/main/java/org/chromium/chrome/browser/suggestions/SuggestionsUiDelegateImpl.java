@@ -7,7 +7,7 @@ package org.chromium.chrome.browser.suggestions;
 import android.support.annotation.Nullable;
 
 import org.chromium.base.DiscardableReferencePool;
-import org.chromium.chrome.browser.NativePageHost;
+import org.chromium.chrome.browser.native_page.NativePageHost;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;

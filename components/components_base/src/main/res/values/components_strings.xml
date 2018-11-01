@@ -18,10 +18,16 @@
 <string name="autofill_card_unmask_prompt_error_try_again_expiration_year">"Check your expiration year and try again"</string>
 <string name="autofill_card_unmask_prompt_storage_checkbox">"Keep a copy of this card on this device"</string>
 <string name="autofill_card_unmask_prompt_storage_tooltip">"If checked, Chromium will store a copy of your card on this device for faster form filling."</string>
-<string name="autofill_card_unmask_verification_in_progress">"Confirming card"</string>
+<string name="autofill_card_unmask_verification_in_progress">"Confirming card…"</string>
 <string name="autofill_card_unmask_verification_success">"Your card is confirmed"</string>
 <string name="autofill_card_unmask_expiration_date_separator">"/"</string>
-<string name="autofill_card_unmask_new_card_link">"New card?"</string>
+<string name="autofill_card_unmask_new_card_link">"Update card"</string>
+<string name="autofill_enable_profiles_toggle_sublabel">"Includes information like phone numbers, email addresses, and shipping addresses"</string>
+<string name="autofill_enable_credit_cards_toggle_sublabel">"Makes it faster to pay for things online"</string>
+<string name="autofill_addresses_settings_title">"Addresses and more"</string>
+<string name="autofill_payment_methods">"Payment methods"</string>
+<string name="autofill_enable_profiles_toggle_label">"Save and fill addresses"</string>
+<string name="autofill_enable_credit_cards_toggle_label">"Save and fill payment methods"</string>
 <string name="autofill_wallet_management_link_text">"Edit"</string>
 <string name="autofill_from_google_account_long">"From Google Pay"</string>
 <string name="http_post_warning">"The page that you\'re looking for used information that you entered. Returning to that page might cause any action you took to be repeated. Do you want to continue?"</string>
@@ -37,10 +43,12 @@
 <string name="sad_tab_reload_title">"Can\'t open this page"</string>
 <string name="sad_tab_reload_try">"Try the following tips:"</string>
 <string name="sad_tab_reload_incognito">"Open page in a new Incognito tab"</string>
+<string name="sad_tab_reload_private">"Open page in a new Private tab"</string>
 <string name="sad_tab_reload_restart_browser">"Restart Chromium"</string>
 <string name="sad_tab_reload_restart_device">"Restart your device"</string>
 <string name="sad_tab_reload_learn_more">"Learn more"</string>
 <string name="new_tab_otr_title">"You’ve gone incognito"</string>
+<string name="new_tab_private_title">"You’ve gone private"</string>
 <string name="new_tab_otr_subtitle">"Now you can browse privately, and other people who use this device won’t see your activity. However, downloads and bookmarks will be saved."</string>
 <string name="new_tab_otr_not_saved">"Chrome &lt;em&gt;won’t save&lt;/em&gt; the following information:
         &lt;ul&gt;
@@ -55,6 +63,7 @@
           &lt;li&gt;Your internet service provider
         &lt;/ul&gt;"</string>
 <string name="ntp_title_no_suggestions">"That’s all for now"</string>
+<string name="ntp_article_suggestions_section_header">"Articles for you"</string>
 <string name="page_info_permission_ads_subtitle">"Site tends to show intrusive ads"</string>
 <string name="payments_method_of_payment_label">"Payment method"</string>
 <string name="payments_contact_details_label">"Contact info"</string>
@@ -109,6 +118,7 @@
 <string name="payments_card_and_address_settings">"You can manage cards and addresses in BEGIN_LINKSettingsEND_LINK."</string>
 <string name="payments_card_and_address_settings_signed_in">"Cards and addresses are from Chrome and your Google Account (%1$s). You can manage them in BEGIN_LINKSettingsEND_LINK."</string>
 <string name="payments_card_and_address_settings_signed_out">"Cards and addresses are from Chrome. You can manage them in BEGIN_LINKSettingsEND_LINK."</string>
+<string name="settings_can_make_payment_toggle_label">"Allow sites to check if you have payment methods saved"</string>
 <string name="payments_required_field_message">"* Field is required"</string>
 <string name="payments_phone_invalid_validation_message">"Enter a valid phone number"</string>
 <string name="payments_email_invalid_validation_message">"Enter a valid email address"</string>
@@ -122,7 +132,7 @@
 <string name="payments_recipient_required">"Name required"</string>
 <string name="payments_email_required">"Email required"</string>
 <string name="payments_name_required">"Name required"</string>
-<string name="payments_field_required_validation_message">"Required field"</string>
+<string name="pref_edit_dialog_field_required_validation_message">"Required field"</string>
 <string name="payments_select_shipping_address_for_shipping_methods">"To see shipping methods and requirements, select an address"</string>
 <string name="payments_unsupported_shipping_address">"Can’t ship to this address. Select a different address."</string>
 <string name="payments_select_delivery_address_for_delivery_methods">"To see delivery methods and requirements, select an address"</string>
@@ -131,5 +141,6 @@
 <string name="payments_unsupported_pickup_address">"Can’t pick up from this address. Select a different address."</string>
 <string name="payments_android_app_error">"Can’t open payment app"</string>
 <string name="external_payment_app_leave_incognito_warning">"Leaving incognito mode to pay via an external application. Continue?"</string>
+<string name="external_payment_app_leave_private_warning">"Leaving private mode to pay via an external application. Continue?"</string>
 <string name="choose">"Choose"</string>
 </resources>

@@ -25,7 +25,7 @@ public interface VideoFrameHandleReleaser extends org.chromium.mojo.bindings.Int
 
 
     void releaseVideoFrame(
-org.chromium.mojo.common.mojom.UnguessableToken releaseToken, org.chromium.gpu.mojom.SyncToken releaseSyncToken);
+org.chromium.mojo_base.mojom.UnguessableToken releaseToken, org.chromium.gpu.mojom.SyncToken releaseSyncToken);
 
 
 }

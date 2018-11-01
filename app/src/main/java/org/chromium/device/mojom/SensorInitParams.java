@@ -22,6 +22,7 @@ public final class SensorInitParams extends org.chromium.mojo.bindings.Struct {
 
     
     public static final long READ_BUFFER_SIZE_FOR_TESTS = (long) 48L;
+
     public Sensor sensor;
     public org.chromium.mojo.bindings.InterfaceRequest<SensorClient> clientRequest;
     public org.chromium.mojo.system.SharedBufferHandle memory;
@@ -50,9 +51,6 @@ public final class SensorInitParams extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static SensorInitParams deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -66,41 +64,43 @@ public final class SensorInitParams extends org.chromium.mojo.bindings.Struct {
         SensorInitParams result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new SensorInitParams(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new SensorInitParams(elementsOrVersion);
+                {
+                    
                 result.sensor = decoder0.readServiceInterface(8, false, Sensor.MANAGER);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.clientRequest = decoder0.readInterfaceRequest(16, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.memory = decoder0.readSharedBufferHandle(20, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.bufferOffset = decoder0.readLong(24);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.mode = decoder0.readInt(32);
                     ReportingMode.validate(result.mode);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(40, false);
                 result.defaultConfiguration = SensorConfiguration.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.maximumFrequency = decoder0.readDouble(48);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.minimumFrequency = decoder0.readDouble(56);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -127,54 +127,5 @@ public final class SensorInitParams extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.maximumFrequency, 48);
         
         encoder0.encode(this.minimumFrequency, 56);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        SensorInitParams other = (SensorInitParams) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.sensor, other.sensor))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.clientRequest, other.clientRequest))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.memory, other.memory))
-            return false;
-        if (this.bufferOffset!= other.bufferOffset)
-            return false;
-        if (this.mode!= other.mode)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.defaultConfiguration, other.defaultConfiguration))
-            return false;
-        if (this.maximumFrequency!= other.maximumFrequency)
-            return false;
-        if (this.minimumFrequency!= other.minimumFrequency)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.sensor);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.clientRequest);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.memory);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bufferOffset);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.mode);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.defaultConfiguration);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.maximumFrequency);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.minimumFrequency);
-        return result;
     }
 }

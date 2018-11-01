@@ -7,7 +7,6 @@ package org.chromium.content.browser.selection;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.LocaleList;
@@ -17,6 +16,7 @@ import android.view.textclassifier.TextClassificationManager;
 import android.view.textclassifier.TextClassifier;
 import android.view.textclassifier.TextSelection;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.content_public.browser.SelectionClient;
 import org.chromium.ui.base.WindowAndroid;
 
@@ -112,11 +112,11 @@ public class SmartSelectionProvider {
 
         mClassificationTask =
                 new ClassificationTask(classifier, requestType, text, start, end, locales);
-        mClassificationTask.execute();
+        mClassificationTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
     }
 
     @TargetApi(Build.VERSION_CODES.O)
-    private class ClassificationTask extends AsyncTask<Void, Void, SelectionClient.Result> {
+    private class ClassificationTask extends AsyncTask<SelectionClient.Result> {
         private final TextClassifier mTextClassifier;
         private final int mRequestType;
         private final CharSequence mText;
@@ -135,7 +135,7 @@ public class SmartSelectionProvider {
         }
 
         @Override
-        protected SelectionClient.Result doInBackground(Void... params) {
+        protected SelectionClient.Result doInBackground() {
             int start = mOriginalStart;
             int end = mOriginalEnd;
 

@@ -18,28 +18,28 @@ class ProvisionFetcher_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<ProvisionFetcher, ProvisionFetcher.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<ProvisionFetcher, ProvisionFetcher.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::ProvisionFetcher";
+            return "media.mojom.ProvisionFetcher";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, ProvisionFetcher impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public ProvisionFetcher[] buildArray(int size) {
           return new ProvisionFetcher[size];
@@ -100,14 +100,14 @@ RetrieveResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 ProvisionFetcher_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -127,27 +127,27 @@ RetrieveResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), ProvisionFetcher_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case RETRIEVE_ORDINAL: {
-            
+
                         ProvisionFetcherRetrieveParams data =
                                 ProvisionFetcherRetrieveParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().retrieve(data.defaultUrl, data.requestData, new ProvisionFetcherRetrieveResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -161,38 +161,35 @@ RetrieveResponse callback) {
 
     
     static final class ProvisionFetcherRetrieveParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public String defaultUrl;
         public String requestData;
-    
+
         private ProvisionFetcherRetrieveParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ProvisionFetcherRetrieveParams() {
             this(0);
         }
-    
+
         public static ProvisionFetcherRetrieveParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ProvisionFetcherRetrieveParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ProvisionFetcherRetrieveParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -202,21 +199,23 @@ RetrieveResponse callback) {
             ProvisionFetcherRetrieveParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ProvisionFetcherRetrieveParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ProvisionFetcherRetrieveParams(elementsOrVersion);
+                    {
+                        
                     result.defaultUrl = decoder0.readString(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.requestData = decoder0.readString(16, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -226,75 +225,41 @@ RetrieveResponse callback) {
             
             encoder0.encode(this.requestData, 16, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ProvisionFetcherRetrieveParams other = (ProvisionFetcherRetrieveParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.defaultUrl, other.defaultUrl))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.requestData, other.requestData))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.defaultUrl);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.requestData);
-            return result;
-        }
     }
 
 
 
     
     static final class ProvisionFetcherRetrieveResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean result;
         public String response;
-    
+
         private ProvisionFetcherRetrieveResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public ProvisionFetcherRetrieveResponseParams() {
             this(0);
         }
-    
+
         public static ProvisionFetcherRetrieveResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static ProvisionFetcherRetrieveResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static ProvisionFetcherRetrieveResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -304,21 +269,23 @@ RetrieveResponse callback) {
             ProvisionFetcherRetrieveResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new ProvisionFetcherRetrieveResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ProvisionFetcherRetrieveResponseParams(elementsOrVersion);
+                    {
+                        
                     result.result = decoder0.readBoolean(8, 0);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.response = decoder0.readString(16, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -327,37 +294,6 @@ RetrieveResponse callback) {
             encoder0.encode(this.result, 8, 0);
             
             encoder0.encode(this.response, 16, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            ProvisionFetcherRetrieveResponseParams other = (ProvisionFetcherRetrieveResponseParams) object;
-            if (this.result!= other.result)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.response, other.response))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.result);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.response);
-            return result;
         }
     }
 

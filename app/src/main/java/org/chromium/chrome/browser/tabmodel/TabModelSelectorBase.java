@@ -45,13 +45,13 @@ public abstract class TabModelSelectorBase implements TabModelSelector {
 
         TabModelObserver tabModelObserver = new EmptyTabModelObserver() {
             @Override
-            public void didAddTab(Tab tab, TabLaunchType type) {
+            public void didAddTab(Tab tab, @TabLaunchType int type) {
                 notifyChanged();
                 notifyNewTabCreated(tab);
             }
 
             @Override
-            public void didSelectTab(Tab tab, TabSelectionType type, int lastId) {
+            public void didSelectTab(Tab tab, @TabSelectionType int type, int lastId) {
                 notifyChanged();
             }
 

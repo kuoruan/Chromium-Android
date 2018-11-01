@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.IntDef;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ApplicationStatus;
@@ -19,6 +20,8 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.invalidation.DelayedInvalidationsController;
 import org.chromium.chrome.browser.omaha.OmahaBase;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -50,10 +53,14 @@ public class PowerBroadcastReceiver extends BroadcastReceiver {
      */
     @VisibleForTesting
     public static class ServiceRunnable implements Runnable {
-        static final int STATE_UNINITIALIZED = 0;
-        static final int STATE_POSTED = 1;
-        static final int STATE_CANCELED = 2;
-        static final int STATE_COMPLETED = 3;
+        @IntDef({State.UNINITIALIZED, State.POSTED, State.CANCELED, State.COMPLETED})
+        @Retention(RetentionPolicy.SOURCE)
+        public @interface State {
+            int UNINITIALIZED = 0;
+            int POSTED = 1;
+            int CANCELED = 2;
+            int COMPLETED = 3;
+        }
 
         /**
          * ANRs are triggered if the app fails to respond to a touch event within 5 seconds. Posting
@@ -63,33 +70,33 @@ public class PowerBroadcastReceiver extends BroadcastReceiver {
         private static final long MS_DELAY_TO_RUN = 5000;
         private final Handler mHandler = new Handler(Looper.getMainLooper());
 
-        private int mState = STATE_UNINITIALIZED;
+        private @State int mState = State.UNINITIALIZED;
 
         public int getState() {
             return mState;
         }
 
         public void post() {
-            if (mState == STATE_POSTED) return;
-            setState(STATE_POSTED);
+            if (mState == State.POSTED) return;
+            setState(State.POSTED);
             mHandler.postDelayed(this, getDelayToRun());
         }
 
         public void cancel() {
-            if (mState != STATE_POSTED) return;
-            setState(STATE_CANCELED);
+            if (mState != State.POSTED) return;
+            setState(State.CANCELED);
             mHandler.removeCallbacks(this);
         }
 
         /** Unless testing, do not override this function. */
         @Override
         public void run() {
-            if (mState != STATE_POSTED) return;
-            setState(STATE_COMPLETED);
+            if (mState != State.POSTED) return;
+            setState(State.COMPLETED);
             runActions();
         }
 
-        public void setState(int state) {
+        public void setState(@State int state) {
             mState = state;
         }
 
@@ -99,7 +106,7 @@ public class PowerBroadcastReceiver extends BroadcastReceiver {
         public void runActions() {
             Context context = ContextUtils.getApplicationContext();
             OmahaBase.onForegroundSessionStart(context);
-            DelayedInvalidationsController.getInstance().notifyPendingInvalidations(context);
+            DelayedInvalidationsController.getInstance().notifyPendingInvalidations();
         }
 
         public long getDelayToRun() {

@@ -8,6 +8,7 @@ import android.text.TextUtils;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.widget.prefeditor.EditableOption;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,8 +33,9 @@ public class SectionInformation {
     public static final int INVALID_SELECTION = -2;
 
     @PaymentRequestUI.DataType private final int mDataType;
-    protected ArrayList<PaymentOption> mItems;
+    protected ArrayList<EditableOption> mItems;
     private int mSelectedItem;
+    private boolean mDisplayInSingleLineInNormalMode = true;
     public String mErrorMessage;
     @Nullable
     public String mAddditionalText;
@@ -50,8 +52,8 @@ public class SectionInformation {
      *
      * @param defaultItem The only item. It is selected by default.
      */
-    public SectionInformation(@PaymentRequestUI.DataType int sectionType,
-            @Nullable PaymentOption defaultItem) {
+    public SectionInformation(
+            @PaymentRequestUI.DataType int sectionType, @Nullable EditableOption defaultItem) {
         this(sectionType, 0, defaultItem == null ? null : Arrays.asList(defaultItem));
     }
 
@@ -63,7 +65,7 @@ public class SectionInformation {
      * @param itemCollection The items in the section.
      */
     public SectionInformation(@PaymentRequestUI.DataType int sectionType, int selection,
-            Collection<? extends PaymentOption> itemCollection) {
+            Collection<? extends EditableOption> itemCollection) {
         mDataType = sectionType;
         updateItemsWithCollection(selection, itemCollection);
     }
@@ -102,7 +104,7 @@ public class SectionInformation {
      * @param position The index of the item to return.
      * @return The item in the given position or null.
      */
-    public PaymentOption getItem(int position) {
+    public EditableOption getItem(int position) {
         if (mItems == null || mItems.isEmpty() || position < 0 || position >= mItems.size()) {
             return null;
         }
@@ -126,7 +128,7 @@ public class SectionInformation {
      * @param selectedItem The currently selected item, or null of a selection has not yet been
      *                     made.
      */
-    public void setSelectedItem(PaymentOption selectedItem) {
+    public void setSelectedItem(EditableOption selectedItem) {
         if (mItems == null) return;
         for (int i = 0; i < mItems.size(); i++) {
             if (mItems.get(i) == selectedItem) {
@@ -151,7 +153,7 @@ public class SectionInformation {
      *
      * @return The selected item or null if none selected.
      */
-    public PaymentOption getSelectedItem() {
+    public EditableOption getSelectedItem() {
         return getItem(getSelectedItemIndex());
     }
 
@@ -160,7 +162,7 @@ public class SectionInformation {
      *
      * @param item The item to add.
      */
-    public void addAndSelectItem(PaymentOption item) {
+    public void addAndSelectItem(EditableOption item) {
         if (mItems == null) mItems = new ArrayList<>();
         mItems.add(0, item);
         mSelectedItem = 0;
@@ -172,7 +174,7 @@ public class SectionInformation {
      *
      * @param item The item to add or update.
      */
-    public void addAndSelectOrUpdateItem(PaymentOption item) {
+    public void addAndSelectOrUpdateItem(EditableOption item) {
         if (mItems == null) mItems = new ArrayList<>();
         int i = 0;
         for (; i < mItems.size(); i++) {
@@ -222,11 +224,11 @@ public class SectionInformation {
      * @return ID if the user can add a new option, or 0 if they can't.
      */
     public int getAddStringId() {
-        if (mDataType == PaymentRequestUI.TYPE_SHIPPING_ADDRESSES) {
+        if (mDataType == PaymentRequestUI.DataType.SHIPPING_ADDRESSES) {
             return R.string.payments_add_address;
-        } else if (mDataType == PaymentRequestUI.TYPE_CONTACT_DETAILS) {
+        } else if (mDataType == PaymentRequestUI.DataType.CONTACT_DETAILS) {
             return R.string.payments_add_contact;
-        } else if (mDataType == PaymentRequestUI.TYPE_PAYMENT_METHODS) {
+        } else if (mDataType == PaymentRequestUI.DataType.PAYMENT_METHODS) {
             return R.string.payments_add_card;
         }
         return 0;
@@ -239,13 +241,13 @@ public class SectionInformation {
      */
     public int getPreviewStringResourceId() {
         switch (mDataType) {
-            case PaymentRequestUI.TYPE_SHIPPING_ADDRESSES:
+            case PaymentRequestUI.DataType.SHIPPING_ADDRESSES:
                 return R.plurals.payment_request_shipping_addresses_preview;
-            case PaymentRequestUI.TYPE_SHIPPING_OPTIONS:
+            case PaymentRequestUI.DataType.SHIPPING_OPTIONS:
                 return R.plurals.payment_request_shipping_options_preview;
-            case PaymentRequestUI.TYPE_PAYMENT_METHODS:
+            case PaymentRequestUI.DataType.PAYMENT_METHODS:
                 return R.plurals.payment_request_payment_methods_preview;
-            case PaymentRequestUI.TYPE_CONTACT_DETAILS:
+            case PaymentRequestUI.DataType.CONTACT_DETAILS:
                 return R.plurals.payment_request_contacts_preview;
             default:
                 assert false : "unknown data type";
@@ -280,7 +282,7 @@ public class SectionInformation {
      * @return List of items in the section.
      */
     @VisibleForTesting
-    public List<PaymentOption> getItemsForTesting() {
+    public List<EditableOption> getItemsForTesting() {
         return mItems;
     }
 
@@ -291,7 +293,7 @@ public class SectionInformation {
      * @param itemCollection The items in the section.
      */
     protected void updateItemsWithCollection(
-            int selection, @Nullable Collection<? extends PaymentOption> itemCollection) {
+            int selection, @Nullable Collection<? extends EditableOption> itemCollection) {
         if (itemCollection == null || itemCollection.isEmpty()) {
             mSelectedItem = NO_SELECTION;
             mItems = null;
@@ -299,5 +301,24 @@ public class SectionInformation {
             mSelectedItem = selection;
             mItems = new ArrayList<>(itemCollection);
         }
+    }
+
+    /**
+     * Set whether display the selected item summary in single line in
+     * PaymentRequestSection.DISPLAY_MODE_NORMAL.
+     *
+     * @param singleLine whether display in single line, note that the default value is true.
+     */
+    public void setDisplaySelectedItemSummaryInSingleLineInNormalMode(boolean singleLine) {
+        mDisplayInSingleLineInNormalMode = singleLine;
+    }
+
+    /**
+     * Get whether display the selected item summary in single line in
+     * PaymentRequestSection.DISPLAY_MODE_NORMAL.
+     *
+     */
+    public boolean getDisplaySelectedItemSummaryInSingleLineInNormalMode() {
+        return mDisplayInSingleLineInNormalMode;
     }
 }

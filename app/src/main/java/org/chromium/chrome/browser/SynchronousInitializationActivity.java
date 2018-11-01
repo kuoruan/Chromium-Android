@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser;
 
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.support.v7.app.AppCompatActivity;
 
 import org.chromium.base.Log;
@@ -22,6 +23,7 @@ import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 public abstract class SynchronousInitializationActivity extends AppCompatActivity {
     private static final String TAG = "SyncInitActivity";
 
+    @CallSuper
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

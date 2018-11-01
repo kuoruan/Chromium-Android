@@ -26,7 +26,9 @@ public class BookmarkAddActivity extends AsyncInitializationActivity {
     private BookmarkModel mModel;
 
     @Override
-    protected void setContentView() {}
+    protected void triggerLayoutInflation() {
+        onInitialLayoutInflationComplete();
+    }
 
     @Override
     public void finishNativeInitialization() {

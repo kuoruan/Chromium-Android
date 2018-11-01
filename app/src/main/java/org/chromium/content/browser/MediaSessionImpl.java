@@ -75,6 +75,11 @@ public class MediaSessionImpl extends MediaSession {
         nativeDidReceiveAction(mNativeMediaSessionAndroid, action);
     }
 
+    @Override
+    public void requestSystemAudioFocus() {
+        nativeRequestSystemAudioFocus(mNativeMediaSessionAndroid);
+    }
+
     @CalledByNative
     private boolean hasObservers() {
         return !mObservers.isEmpty();
@@ -133,6 +138,7 @@ public class MediaSessionImpl extends MediaSession {
     private native void nativeSeekForward(long nativeMediaSessionAndroid, long millis);
     private native void nativeSeekBackward(long nativeMediaSessionAndroid, long millis);
     private native void nativeDidReceiveAction(long nativeMediaSessionAndroid, int action);
+    private native void nativeRequestSystemAudioFocus(long nativeMediaSessionAndroid);
     private static native MediaSessionImpl nativeGetMediaSessionFromWebContents(
             WebContents contents);
 }

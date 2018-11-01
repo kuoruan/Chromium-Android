@@ -18,28 +18,28 @@ class GeolocationConfig_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<GeolocationConfig, GeolocationConfig.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<GeolocationConfig, GeolocationConfig.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "device::mojom::GeolocationConfig";
+            return "device.mojom.GeolocationConfig";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, GeolocationConfig impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public GeolocationConfig[] buildArray(int size) {
           return new GeolocationConfig[size];
@@ -96,14 +96,14 @@ IsHighAccuracyLocationBeingCapturedResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 GeolocationConfig_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -123,26 +123,26 @@ IsHighAccuracyLocationBeingCapturedResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), GeolocationConfig_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case IS_HIGH_ACCURACY_LOCATION_BEING_CAPTURED_ORDINAL: {
-            
+
                         GeolocationConfigIsHighAccuracyLocationBeingCapturedParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().isHighAccuracyLocationBeingCaptured(new GeolocationConfigIsHighAccuracyLocationBeingCapturedResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -156,36 +156,33 @@ IsHighAccuracyLocationBeingCapturedResponse callback) {
 
     
     static final class GeolocationConfigIsHighAccuracyLocationBeingCapturedParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private GeolocationConfigIsHighAccuracyLocationBeingCapturedParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public GeolocationConfigIsHighAccuracyLocationBeingCapturedParams() {
             this(0);
         }
-    
+
         public static GeolocationConfigIsHighAccuracyLocationBeingCapturedParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static GeolocationConfigIsHighAccuracyLocationBeingCapturedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static GeolocationConfigIsHighAccuracyLocationBeingCapturedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -195,41 +192,19 @@ IsHighAccuracyLocationBeingCapturedResponse callback) {
             GeolocationConfigIsHighAccuracyLocationBeingCapturedParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new GeolocationConfigIsHighAccuracyLocationBeingCapturedParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new GeolocationConfigIsHighAccuracyLocationBeingCapturedParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -237,37 +212,34 @@ IsHighAccuracyLocationBeingCapturedResponse callback) {
 
     
     static final class GeolocationConfigIsHighAccuracyLocationBeingCapturedResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean highAccuracy;
-    
+
         private GeolocationConfigIsHighAccuracyLocationBeingCapturedResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public GeolocationConfigIsHighAccuracyLocationBeingCapturedResponseParams() {
             this(0);
         }
-    
+
         public static GeolocationConfigIsHighAccuracyLocationBeingCapturedResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static GeolocationConfigIsHighAccuracyLocationBeingCapturedResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static GeolocationConfigIsHighAccuracyLocationBeingCapturedResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -277,51 +249,25 @@ IsHighAccuracyLocationBeingCapturedResponse callback) {
             GeolocationConfigIsHighAccuracyLocationBeingCapturedResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new GeolocationConfigIsHighAccuracyLocationBeingCapturedResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new GeolocationConfigIsHighAccuracyLocationBeingCapturedResponseParams(elementsOrVersion);
+                    {
+                        
                     result.highAccuracy = decoder0.readBoolean(8, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.highAccuracy, 8, 0);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            GeolocationConfigIsHighAccuracyLocationBeingCapturedResponseParams other = (GeolocationConfigIsHighAccuracyLocationBeingCapturedResponseParams) object;
-            if (this.highAccuracy!= other.highAccuracy)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.highAccuracy);
-            return result;
         }
     }
 

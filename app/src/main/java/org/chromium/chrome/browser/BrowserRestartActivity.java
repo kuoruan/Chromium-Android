@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Process;
 
 import org.chromium.base.ContextUtils;
+import org.chromium.base.annotations.MainDex;
 import org.chromium.chrome.browser.util.IntentUtils;
 
 /**
@@ -24,6 +25,7 @@ import org.chromium.chrome.browser.util.IntentUtils;
  * process' Activities.  It works around an Android framework issue for alarms set via the
  * AlarmManager, which requires a minimum alarm duration of 5 seconds: https://crbug.com/515919.
  */
+@MainDex // Runs in a separate process.
 public class BrowserRestartActivity extends Activity {
     public static final String EXTRA_MAIN_PID =
             "org.chromium.chrome.browser.BrowserRestartActivity.main_pid";

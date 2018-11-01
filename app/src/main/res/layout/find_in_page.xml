@@ -5,6 +5,7 @@
 
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
@@ -45,17 +46,20 @@
         style="@style/ToolbarButton"
         android:layout_height="match_parent"
         android:src="@drawable/ic_expand_less_black_24dp"
-        android:contentDescription="@string/accessibility_find_toolbar_btn_prev" />
+        android:contentDescription="@string/accessibility_find_toolbar_btn_prev"
+        app:chrometint="@color/dark_mode_tint" />
     <org.chromium.chrome.browser.widget.TintedImageButton
         android:id="@+id/find_next_button"
         style="@style/ToolbarButton"
         android:layout_height="match_parent"
         android:src="@drawable/ic_expand_more_black_24dp"
-        android:contentDescription="@string/accessibility_find_toolbar_btn_next" />
+        android:contentDescription="@string/accessibility_find_toolbar_btn_next"
+        app:chrometint="@color/dark_mode_tint" />
     <org.chromium.chrome.browser.widget.TintedImageButton
         android:id="@+id/close_find_button"
         style="@style/ToolbarButton"
         android:layout_height="match_parent"
         android:src="@drawable/btn_close"
-        android:contentDescription="@string/close" />
+        android:contentDescription="@string/close"
+        app:chrometint="@color/dark_mode_tint" />
 </LinearLayout>

@@ -37,8 +37,6 @@ import javax.annotation.concurrent.NotThreadSafe;
  */
 @NotThreadSafe
 public class ExponentialBackoffScheduler {
-    private static final String TAG = "omaha";
-
     private static final String PREFERENCE_DELAY = "delay";
     private static final String PREFERENCE_FAILED_ATTEMPTS = "backoffFailedAttempts";
 
@@ -144,12 +142,12 @@ public class ExponentialBackoffScheduler {
      */
     @VisibleForTesting
     protected void setAlarm(AlarmManager am, long timestamp, PendingIntent retryPIntent) {
-        Log.d(TAG, "now(" + new Date(getCurrentTime()) + ") refiringAt("
-                + new Date(timestamp) + ")");
+        Log.d(OmahaBase.TAG,
+                "now(" + new Date(getCurrentTime()) + ") refiringAt(" + new Date(timestamp) + ")");
         try {
             am.set(AlarmManager.RTC, timestamp, retryPIntent);
         } catch (SecurityException e) {
-            Log.e(TAG, "Failed to set backoff alarm.");
+            Log.e(OmahaBase.TAG, "Failed to set backoff alarm.");
         }
     }
 

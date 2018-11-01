@@ -87,10 +87,10 @@ public interface MediaRouteProvider {
     void sendStringMessage(String routeId, String message, int nativeCallbackId);
 
     /**
-     * Returns a MediaController for the given route ID.
-     * Returns null if no MediaController can be retrieved from the given route ID.
+     * Returns a FlingingController for the given route ID.
+     * Returns null if no FlingingController can be retrieved from the given route ID.
      * @param routeId The id of the route.
      */
     @Nullable
-    MediaController getMediaController(String routeId);
+    FlingingController getFlingingController(String routeId);
 }

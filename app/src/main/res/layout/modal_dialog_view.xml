@@ -6,31 +6,46 @@
 <!-- TODO(huayinz): rename menu_bg or change the dialog background to the desired one. -->
 <org.chromium.chrome.browser.widget.BoundedLinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/menu_bg"
-    chrome:maxWidth="@dimen/dialog_max_width">
+    app:maxWidthLandscape="@dimen/abc_dialog_min_width_major"
+    app:maxWidthPortrait="@dimen/abc_dialog_min_width_minor" >
 
     <android.support.v7.widget.DialogTitle
         android:id="@+id/title"
         android:textAppearance="@style/BlackHeadline2"
+        android:visibility="gone"
         style="@style/AlertDialogContent" />
 
-    <ScrollView
+    <org.chromium.chrome.browser.widget.FadingEdgeScrollView
+        android:id="@+id/modal_dialog_scroll_view"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        style="@style/AlertDialogContent">
+        android:fadeScrollbars="false">
 
-        <org.chromium.ui.widget.TextViewWithLeading
-            android:id="@+id/message"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/BlackBody"
-            chrome:leading="20sp" />
+            android:orientation="vertical">
 
-    </ScrollView>
+            <android.support.v7.widget.DialogTitle
+                android:id="@+id/scrollable_title"
+                android:textAppearance="@style/BlackHeadline2"
+                android:visibility="gone"
+                style="@style/AlertDialogContent" />
+
+            <org.chromium.ui.widget.TextViewWithLeading
+                android:id="@+id/message"
+                android:textAppearance="@style/BlackBody"
+                app:leading="20sp"
+                style="@style/AlertDialogContent" />
+
+        </LinearLayout>
+
+    </org.chromium.chrome.browser.widget.FadingEdgeScrollView>
 
     <FrameLayout
         android:id="@+id/custom"
@@ -41,15 +56,15 @@
     <android.support.v7.widget.ButtonBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        style="?attr/buttonBarStyle" >
+        style="?attr/buttonBarStyle">
 
-        <Button
+        <android.support.v7.widget.AppCompatButton
             android:id="@+id/negative_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             style="?attr/buttonBarNegativeButtonStyle" />
 
-        <Button
+        <android.support.v7.widget.AppCompatButton
             android:id="@+id/positive_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

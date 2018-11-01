@@ -39,9 +39,6 @@ public final class MutableNetworkTrafficAnnotationTag extends org.chromium.mojo.
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static MutableNetworkTrafficAnnotationTag deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -55,11 +52,13 @@ public final class MutableNetworkTrafficAnnotationTag extends org.chromium.mojo.
         MutableNetworkTrafficAnnotationTag result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new MutableNetworkTrafficAnnotationTag(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new MutableNetworkTrafficAnnotationTag(elementsOrVersion);
+                {
+                    
                 result.uniqueIdHashCode = decoder0.readInt(8);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -72,33 +71,5 @@ public final class MutableNetworkTrafficAnnotationTag extends org.chromium.mojo.
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
         encoder0.encode(this.uniqueIdHashCode, 8);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        MutableNetworkTrafficAnnotationTag other = (MutableNetworkTrafficAnnotationTag) object;
-        if (this.uniqueIdHashCode!= other.uniqueIdHashCode)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.uniqueIdHashCode);
-        return result;
     }
 }

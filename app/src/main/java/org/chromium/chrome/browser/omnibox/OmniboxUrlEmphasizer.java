@@ -94,8 +94,7 @@ public class OmniboxUrlEmphasizer {
      * Denotes that a span is used for emphasizing the URL.
      */
     @VisibleForTesting
-    interface UrlEmphasisSpan {
-    }
+    public interface UrlEmphasisSpan {}
 
     /**
      * Used for emphasizing the URL text by changing the text color.
@@ -103,12 +102,25 @@ public class OmniboxUrlEmphasizer {
     @VisibleForTesting
     static class UrlEmphasisColorSpan extends ForegroundColorSpan
             implements UrlEmphasisSpan {
+        private int mEmphasisColor;
 
         /**
          * @param color The color to set the text.
          */
         public UrlEmphasisColorSpan(int color) {
             super(color);
+            mEmphasisColor = color;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof UrlEmphasisColorSpan)) return false;
+            return ((UrlEmphasisColorSpan) obj).mEmphasisColor == mEmphasisColor;
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getName() + ", color: " + mEmphasisColor;
         }
     }
 
@@ -118,6 +130,10 @@ public class OmniboxUrlEmphasizer {
     @VisibleForTesting
     static class UrlEmphasisSecurityErrorSpan extends StrikethroughSpan
             implements UrlEmphasisSpan {
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof UrlEmphasisSecurityErrorSpan;
+        }
     }
 
     /**

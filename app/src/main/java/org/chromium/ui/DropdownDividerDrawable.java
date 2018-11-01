@@ -11,8 +11,10 @@ import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 
-class DropdownDividerDrawable extends Drawable {
-
+/**
+ * A drawable divider to be used by dropdown adapters.
+ */
+public class DropdownDividerDrawable extends Drawable {
     private final Paint mPaint;
     private final Rect mDividerRect;
     private final Integer mBackgroundColor;

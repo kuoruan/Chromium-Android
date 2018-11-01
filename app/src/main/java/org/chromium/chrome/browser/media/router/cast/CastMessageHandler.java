@@ -14,6 +14,9 @@ import org.json.JSONObject;
 
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.browser.media.router.CastRequestIdGenerator;
+import org.chromium.chrome.browser.media.router.CastSessionUtil;
+import org.chromium.chrome.browser.media.router.ClientRecord;
 
 import java.util.ArrayDeque;
 import java.util.Arrays;
@@ -27,6 +30,7 @@ import java.util.Queue;
  * dispatch the messages accordingly. The handler talks to the Cast SDK via CastSession, and
  * talks to the pages via the media router.
  */
+// Migrated to CafMessageHandler. See https://crbug.com/711860.
 public class CastMessageHandler {
     private static final String TAG = "MediaRouter";
 
@@ -198,8 +202,7 @@ public class CastMessageHandler {
         }
 
         if ("SET_VOLUME".equals(messageType)) {
-            CastSession.HandleVolumeMessageResult result =
-                    mSession.handleVolumeMessage(
+            CastSession.HandleVolumeMessageResult result = mSession.handleVolumeMessage(
                     jsonCastMessage.getJSONObject("volume"), clientId, sequenceNumber);
             if (!result.mSucceeded) return false;
 

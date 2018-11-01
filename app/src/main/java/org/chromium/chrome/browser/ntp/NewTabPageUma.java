@@ -88,71 +88,36 @@ public final class NewTabPageUma {
     private static final int MAX_SUGGESTIONS_PER_SECTION = 20;
 
     /**
-     * Possible results when sizing the NewTabPageLayout.
-     * Do not remove or change existing values other than NUM_NTP_LAYOUT_RESULTS.
-     */
-    @IntDef({NTP_LAYOUT_DOES_NOT_FIT, NTP_LAYOUT_DOES_NOT_FIT_PUSH_MOST_LIKELY,
-            NTP_LAYOUT_FITS_NO_FIELD_TRIAL, NTP_LAYOUT_FITS_WITHOUT_FIELD_TRIAL,
-            NTP_LAYOUT_FITS_WITH_FIELD_TRIAL, NTP_LAYOUT_CONDENSED, NUM_NTP_LAYOUT_RESULTS})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface NTPLayoutResult {}
-
-    /** The NewTabPageLayout does not fit above the fold and it is displayed as is. */
-    public static final int NTP_LAYOUT_DOES_NOT_FIT = 0;
-
-    /**
-     * The NewTabPageLayout does not fit above the fold, but we added some extra space so that
-     * Most Likely is cut off, indicating to the user they can scroll.
-     */
-    public static final int NTP_LAYOUT_DOES_NOT_FIT_PUSH_MOST_LIKELY = 1;
-
-    /** The NewTabPageLayout fits above the fold, the field trial is not enabled. */
-    public static final int NTP_LAYOUT_FITS_NO_FIELD_TRIAL = 2;
-
-    /**
-     * The NewTabPageLayout fits above the fold, but cannot allow space for the field trial
-     * experiment.
-     */
-    public static final int NTP_LAYOUT_FITS_WITHOUT_FIELD_TRIAL = 3;
-
-    /** The NewTabPageLayout fits above the fold allowing space for the field trial experiment. */
-    public static final int NTP_LAYOUT_FITS_WITH_FIELD_TRIAL = 4;
-
-    /** The NewTabPageLayout is condensed to take up minimal space. */
-    public static final int NTP_LAYOUT_CONDENSED = 5;
-
-    /** The number of possible results for the NewTabPageLayout calculations. */
-    public static final int NUM_NTP_LAYOUT_RESULTS = 6;
-
-    /**
      * Possible results when updating content suggestions list in the UI. Keep in sync with the
      * ContentSuggestionsUIUpdateResult enum in histograms.xml. Do not remove or change existing
      * values other than NUM_UI_UPDATE_RESULTS.
      */
-    @IntDef({UI_UPDATE_SUCCESS_APPENDED, UI_UPDATE_SUCCESS_REPLACED, UI_UPDATE_FAIL_ALL_SEEN,
-            UI_UPDATE_FAIL_DISABLED})
+    @IntDef({ContentSuggestionsUIUpdateResult.SUCCESS_APPENDED,
+            ContentSuggestionsUIUpdateResult.SUCCESS_REPLACED,
+            ContentSuggestionsUIUpdateResult.FAIL_ALL_SEEN,
+            ContentSuggestionsUIUpdateResult.FAIL_DISABLED})
     @Retention(RetentionPolicy.SOURCE)
-    public @interface ContentSuggestionsUIUpdateResult {}
+    public @interface ContentSuggestionsUIUpdateResult {
+        /**
+         * The content suggestions are successfully appended (because they are set for the first
+         * time or explicitly marked to be appended).
+         */
+        int SUCCESS_APPENDED = 0;
 
-    /**
-     * The content suggestions are successfully appended (because they are set for the first time
-     * or explicitly marked to be appended).
-     */
-    public static final int UI_UPDATE_SUCCESS_APPENDED = 0;
+        /**
+         * Update successful, suggestions were replaced (some of them possibly seen, the exact
+         * number reported in a separate histogram).
+         */
+        int SUCCESS_REPLACED = 1;
 
-    /**
-     * Update successful, suggestions were replaced (some of them possibly seen, the exact number
-     * reported in a separate histogram).
-     */
-    public static final int UI_UPDATE_SUCCESS_REPLACED = 1;
+        /** Update failed, all previous content suggestions have been seen (and kept). */
+        int FAIL_ALL_SEEN = 2;
 
-    /** Update failed, all previous content suggestions have been seen (and kept). */
-    public static final int UI_UPDATE_FAIL_ALL_SEEN = 2;
+        /** Update failed, because it is disabled by a variation parameter. */
+        int FAIL_DISABLED = 3;
 
-    /** Update failed, because it is disabled by a variation parameter. */
-    public static final int UI_UPDATE_FAIL_DISABLED = 3;
-
-    private static final int NUM_UI_UPDATE_RESULTS = 4;
+        int NUM_ENTRIES = 4;
+    }
 
     /** The NTP was loaded in a cold startup. */
     private static final int LOAD_TYPE_COLD_START = 0;
@@ -216,22 +181,13 @@ public final class NewTabPageUma {
     }
 
     /**
-     * Records how the NewTabPageLayout fits on the user's screen.
-     * @param result result key, one of {@link NTPLayoutResult}'s values.
-     */
-    public static void recordNTPLayoutResult(@NTPLayoutResult int result) {
-        RecordHistogram.recordEnumeratedHistogram(
-                "NewTabPage.Layout", result, NUM_NTP_LAYOUT_RESULTS);
-    }
-
-    /**
      * Records how content suggestions have been updated in the UI.
      * @param result result key, one of {@link ContentSuggestionsUIUpdateResult}'s values.
      */
     public static void recordUIUpdateResult(
             @ContentSuggestionsUIUpdateResult int result) {
-        RecordHistogram.recordEnumeratedHistogram(
-                "NewTabPage.ContentSuggestions.UIUpdateResult2", result, NUM_UI_UPDATE_RESULTS);
+        RecordHistogram.recordEnumeratedHistogram("NewTabPage.ContentSuggestions.UIUpdateResult2",
+                result, ContentSuggestionsUIUpdateResult.NUM_ENTRIES);
     }
 
     /**

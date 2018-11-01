@@ -18,7 +18,6 @@ import org.chromium.chrome.browser.contextmenu.ChromeContextMenuPopulator;
 import org.chromium.chrome.browser.contextmenu.ContextMenuPopulator;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationDelegateImpl;
 import org.chromium.chrome.browser.externalnav.ExternalNavigationHandler;
-import org.chromium.chrome.browser.fullscreen.BrowserStateBrowserControlsVisibilityDelegate;
 import org.chromium.chrome.browser.fullscreen.ComposedBrowserControlsVisibilityDelegate;
 import org.chromium.chrome.browser.multiwindow.MultiWindowUtils;
 import org.chromium.chrome.browser.tab.BrowserControlsVisibilityDelegate;
@@ -184,7 +183,7 @@ public class CustomTabDelegateFactory extends TabDelegateFactory {
 
     private final boolean mShouldHideBrowserControls;
     private final boolean mIsOpenedByChrome;
-    private final BrowserStateBrowserControlsVisibilityDelegate mBrowserStateVisibilityDelegate;
+    private final BrowserControlsVisibilityDelegate mBrowserStateVisibilityDelegate;
 
     private ExternalNavigationDelegateImpl mNavigationDelegate;
     private ExternalNavigationHandler mNavigationHandler;
@@ -196,7 +195,7 @@ public class CustomTabDelegateFactory extends TabDelegateFactory {
      *                           with browser actions (as opposed to tab state).
      */
     public CustomTabDelegateFactory(boolean shouldHideBrowserControls, boolean isOpenedByChrome,
-            BrowserStateBrowserControlsVisibilityDelegate visibilityDelegate) {
+            BrowserControlsVisibilityDelegate visibilityDelegate) {
         mShouldHideBrowserControls = shouldHideBrowserControls;
         mIsOpenedByChrome = isOpenedByChrome;
         mBrowserStateVisibilityDelegate = visibilityDelegate;
@@ -236,7 +235,7 @@ public class CustomTabDelegateFactory extends TabDelegateFactory {
     @Override
     public ContextMenuPopulator createContextMenuPopulator(Tab tab) {
         return new ChromeContextMenuPopulator(new TabContextMenuItemDelegate(tab),
-                ChromeContextMenuPopulator.CUSTOM_TAB_MODE);
+                ChromeContextMenuPopulator.ContextMenuMode.CUSTOM_TAB);
     }
 
     /**

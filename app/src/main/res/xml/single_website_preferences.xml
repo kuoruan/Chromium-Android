@@ -3,7 +3,10 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <org.chromium.chrome.browser.preferences.ChromeBasePreference
         android:key="os_permissions_warning" />
     <org.chromium.chrome.browser.preferences.ChromeBasePreference
@@ -14,7 +17,8 @@
     <org.chromium.chrome.browser.preferences.TextMessagePreference
         android:key="intrusive_ads_info"
         android:title="@string/intrusive_ads_information"
-        android:icon="@drawable/btn_info" />
+        android:icon="@drawable/btn_info"
+        app:iconTint="@color/default_icon_color" />
     <Preference
         android:key="intrusive_ads_info_divider"
         android:layout="@layout/divider_preference" />

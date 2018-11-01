@@ -61,14 +61,14 @@ public class WebApkInstallService {
         Context context = ContextUtils.getApplicationContext();
         ChromeNotificationBuilder notificationBuilder =
                 NotificationBuilderFactory.createChromeNotificationBuilder(
-                        false /* preferCompat */, ChannelDefinitions.CHANNEL_ID_BROWSER);
+                        false /* preferCompat */, ChannelDefinitions.ChannelId.BROWSER);
         notificationBuilder.setContentTitle(shortName)
                 .setContentText(message)
                 .setLargeIcon(icon)
                 .setSmallIcon(R.drawable.ic_chrome)
                 .setContentIntent(clickPendingIntent)
                 .setWhen(System.currentTimeMillis())
-                .setSubText(UrlFormatter.formatUrlForSecurityDisplay(url, false /* showScheme */))
+                .setSubText(UrlFormatter.formatUrlForSecurityDisplayOmitScheme(url))
                 .setAutoCancel(true);
 
         NotificationManager notificationManager =

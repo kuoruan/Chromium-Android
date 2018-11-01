@@ -53,7 +53,7 @@ public interface ContextualSearchManagementDelegate {
      * Notifies that the Contextual Search Panel did get closed.
      * @param reason The reason the panel is closing.
      */
-    void onCloseContextualSearch(StateChangeReason reason);
+    void onCloseContextualSearch(@StateChangeReason int reason);
 
     /**
      * @return An OverlayContentDelegate to watch events on the panel's content.

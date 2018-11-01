@@ -65,7 +65,7 @@ public class FloatingPastePopupMenu implements PastePopupMenu {
                 new ActionModeCallback(), ActionMode.TYPE_FLOATING);
         if (actionMode != null) {
             // crbug.com/651706
-            LGEmailActionModeWorkaround.runIfNecessary(mContext, actionMode);
+            LGEmailActionModeWorkaroundImpl.runIfNecessary(mContext, actionMode);
 
             assert actionMode.getType() == ActionMode.TYPE_FLOATING;
             mActionMode = actionMode;
@@ -81,7 +81,7 @@ public class FloatingPastePopupMenu implements PastePopupMenu {
         }
 
         private void createPasteMenu(ActionMode mode, Menu menu) {
-            mode.setTitle(DeviceFormFactor.isTablet()
+            mode.setTitle(DeviceFormFactor.isNonMultiDisplayContextOnTablet(mContext)
                             ? mContext.getString(R.string.actionbar_textselection_title)
                             : null);
             mode.setSubtitle(null);

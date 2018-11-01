@@ -11,9 +11,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
-import android.graphics.Canvas;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.os.StrictMode;
 import android.support.annotation.BinderThread;
@@ -33,15 +30,14 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkModelObserver;
 import org.chromium.chrome.browser.bookmarks.BookmarkModel;
-import org.chromium.chrome.browser.bookmarks.BookmarkUtils;
 import org.chromium.chrome.browser.favicon.IconType;
 import org.chromium.chrome.browser.favicon.LargeIconBridge;
 import org.chromium.chrome.browser.favicon.LargeIconBridge.LargeIconCallback;
 import org.chromium.chrome.browser.init.ChromeBrowserInitializer;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.util.IntentUtils;
+import org.chromium.chrome.browser.util.ViewUtils;
 import org.chromium.chrome.browser.widget.RoundedIconGenerator;
-import org.chromium.chrome.browser.widget.TintedDrawable;
 import org.chromium.components.bookmarks.BookmarkId;
 
 import java.util.ArrayList;
@@ -169,7 +165,6 @@ public class BookmarkWidgetService extends RemoteViewsService {
         private RoundedIconGenerator mIconGenerator;
         private int mMinIconSizeDp;
         private int mDisplayedIconSize;
-        private int mCornerRadius;
         private int mRemainingTaskCount;
 
         @UiThread
@@ -182,12 +177,7 @@ public class BookmarkWidgetService extends RemoteViewsService {
                     Profile.getLastUsedProfile().getOriginalProfile());
             mMinIconSizeDp = (int) res.getDimension(R.dimen.default_favicon_min_size);
             mDisplayedIconSize = res.getDimensionPixelSize(R.dimen.default_favicon_size);
-            mCornerRadius = res.getDimensionPixelSize(R.dimen.default_favicon_corner_radius);
-            int textSize = res.getDimensionPixelSize(R.dimen.default_favicon_icon_text_size);
-            int iconColor =
-                    ApiCompatibilityUtils.getColor(res, R.color.default_favicon_background_color);
-            mIconGenerator = new RoundedIconGenerator(mDisplayedIconSize, mDisplayedIconSize,
-                    mCornerRadius, iconColor, textSize);
+            mIconGenerator = ViewUtils.createDefaultRoundedIconGenerator(false);
 
             mRemainingTaskCount = 1;
             mBookmarkModel = new BookmarkModel();
@@ -284,19 +274,21 @@ public class BookmarkWidgetService extends RemoteViewsService {
         private final Context mContext;
         private final int mWidgetId;
         private final SharedPreferences mPreferences;
+        private final int mIconColor;
 
         // Accessed only on the UI thread
         private BookmarkModel mBookmarkModel;
 
         // Accessed only on binder threads.
         private BookmarkFolder mCurrentFolder;
-        private Bitmap mFolderBitmap;
 
         @UiThread
         public BookmarkAdapter(Context context, int widgetId) {
             mContext = context;
             mWidgetId = widgetId;
             mPreferences = getWidgetState(mContext, mWidgetId);
+            mIconColor = ApiCompatibilityUtils.getColor(
+                    mContext.getResources(), R.color.default_icon_color);
         }
 
         @UiThread
@@ -365,7 +357,6 @@ public class BookmarkWidgetService extends RemoteViewsService {
                 }
             });
             deleteWidgetState(mContext, mWidgetId);
-            mFolderBitmap = null;
         }
 
         @BinderThread
@@ -499,11 +490,14 @@ public class BookmarkWidgetService extends RemoteViewsService {
             views.setTextViewText(R.id.title, TextUtils.isEmpty(title) ? url : title);
 
             if (bookmark == mCurrentFolder.folder) {
-                views.setImageViewResource(R.id.favicon, R.drawable.back_normal);
+                views.setInt(R.id.favicon, "setColorFilter", mIconColor);
+                views.setImageViewResource(R.id.favicon, R.drawable.ic_arrow_back_white_24dp);
             } else if (bookmark.isFolder) {
-                if (mFolderBitmap == null) generateFolderBitmap();
-                views.setImageViewBitmap(R.id.favicon, mFolderBitmap);
+                views.setInt(R.id.favicon, "setColorFilter", mIconColor);
+                views.setImageViewResource(R.id.favicon, R.drawable.ic_folder_blue_24dp);
             } else {
+                // Clear any color filter so that it doesn't cover the favicon bitmap.
+                views.setInt(R.id.favicon, "setColorFilter", 0);
                 views.setImageViewBitmap(R.id.favicon, bookmark.favicon);
             }
 
@@ -523,26 +517,6 @@ public class BookmarkWidgetService extends RemoteViewsService {
             }
             views.setOnClickFillInIntent(R.id.list_item, fillIn);
             return views;
-        }
-
-        @BinderThread
-        private void generateFolderBitmap() {
-            // RemoteView does not inherently support tinting icons, and while
-            // BookmarkUtils#getFolderIcon() returns a TintedDrawable, Drawable#getBitmap() does
-            // not return a Bitmap with the tint applied. Programatically draw the drawable into a
-            // canvas backed by a bitmap that can be set as the RemoveView's ImageView bitmap.
-            TintedDrawable drawable = BookmarkUtils.getFolderIcon(mContext.getResources());
-            int width = drawable.getIntrinsicWidth();
-            int height = drawable.getIntrinsicHeight();
-            drawable.setBounds(new Rect(0, 0, width, height));
-
-            // Use the solid color equivalent of dark_mode_tint since bookmark widget has a
-            // translucent background.
-            drawable.setTint(ApiCompatibilityUtils.getColorStateList(
-                    mContext.getResources(), R.color.light_normal_color));
-
-            mFolderBitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
-            drawable.draw(new Canvas(mFolderBitmap));
         }
     }
 }

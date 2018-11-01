@@ -31,6 +31,8 @@ public class AppBannerUiDelegateAndroid
 
     private AddToHomescreenDialog mDialog;
 
+    private boolean mAddedToHomescreen;
+
     private AppBannerUiDelegateAndroid(long nativePtr, Tab tab) {
         mNativePointer = nativePtr;
         mTab = tab;
@@ -38,23 +40,29 @@ public class AppBannerUiDelegateAndroid
 
     @Override
     public void addToHomescreen(String title) {
+        mAddedToHomescreen = true;
         // The title is ignored for app banners as we respect the developer-provided title.
-        nativeAddToHomescreen(mNativePointer);
-    }
-
-    @Override
-    public void onDialogCancelled() {
-        nativeOnUiCancelled(mNativePointer);
+        if (mNativePointer != 0) {
+            nativeAddToHomescreen(mNativePointer);
+        }
     }
 
     @Override
     public void onNativeAppDetailsRequested() {
-        nativeShowNativeAppDetails(mNativePointer);
+        if (mNativePointer != 0) {
+            nativeShowNativeAppDetails(mNativePointer);
+        }
     }
 
     @Override
     public void onDialogDismissed() {
-        destroy();
+        if (!mAddedToHomescreen && mNativePointer != 0) {
+            nativeOnUiCancelled(mNativePointer);
+        }
+
+        mDialog = null;
+        mInstallerDelegate = null;
+        mAddedToHomescreen = false;
     }
 
     @Override
@@ -79,12 +87,18 @@ public class AppBannerUiDelegateAndroid
     }
 
     @CalledByNative
+    private AddToHomescreenDialog getDialogForTesting() {
+        return mDialog;
+    }
+
+    @CalledByNative
     private void destroy() {
         if (mInstallerDelegate != null) {
             mInstallerDelegate.destroy();
         }
         mInstallerDelegate = null;
         mNativePointer = 0;
+        mAddedToHomescreen = false;
     }
 
     @CalledByNative
@@ -102,7 +116,7 @@ public class AppBannerUiDelegateAndroid
         createInstallerDelegate(this);
         mDialog = new AddToHomescreenDialog(mTab.getActivity(), this);
         mDialog.show();
-        mDialog.onUserTitleAvailable(title, appData.rating());
+        mDialog.onUserTitleAvailable(title, appData.installButtonText(), appData.rating());
         mDialog.onIconAvailable(iconBitmap);
         return true;
     }

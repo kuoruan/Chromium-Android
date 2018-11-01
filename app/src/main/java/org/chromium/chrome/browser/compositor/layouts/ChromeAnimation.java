@@ -119,8 +119,8 @@ public class ChromeAnimation<T> {
      * @param object   object to find animations to be aborted. If null, matches all the animations.
      * @param property property to find animations to be aborted.
      */
-    public <V extends Enum<?>> void cancel(T object, V property) {
-        for (int  i = mAnimations.size() - 1; i >= 0; i--) {
+    public void cancel(T object, int property) {
+        for (int i = mAnimations.size() - 1; i >= 0; i--) {
             Animation<T> animation = mAnimations.get(i);
             if ((object == null || animation.getAnimatedObject() == object)
                     && animation.checkProperty(property)) {
@@ -171,9 +171,7 @@ public class ChromeAnimation<T> {
             finished &= mAnimations.get(i).finished();
         }
 
-        if (finished) {
-            updateAndFinish();
-        }
+        if (finished) updateAndFinish();
         return false;
     }
 
@@ -181,14 +179,10 @@ public class ChromeAnimation<T> {
      * @return Whether or not this ChromeAnimation is finished animating.
      */
     public boolean finished() {
-        if (mFinishCalled.get()) {
-            return true;
-        }
+        if (mFinishCalled.get()) return true;
 
         for (int i = 0; i < mAnimations.size(); ++i) {
-            if (!mAnimations.get(i).finished()) {
-                return false;
-            }
+            if (!mAnimations.get(i).finished()) return false;
         }
 
         return true;
@@ -324,9 +318,7 @@ public class ChromeAnimation<T> {
             // Bound our time here so that our scale never goes above 1.0.
             mCurrentTime = Math.min(mCurrentTime, mDuration + mStartDelay);
 
-            if (mDelayStartValue && mCurrentTime < mStartDelay) {
-                return;
-            }
+            if (mDelayStartValue && mCurrentTime < mStartDelay) return;
 
             // Figure out the relative fraction of time we need to animate.
             long relativeTime = MathUtils.clamp(mCurrentTime - mStartDelay, 0, mDuration);
@@ -363,7 +355,7 @@ public class ChromeAnimation<T> {
         /**
          * Checks if the given property is being animated.
          */
-        public <V extends Enum<?>> boolean checkProperty(V prop) {
+        public boolean checkProperty(int prop) {
             return true;
         }
 
@@ -384,36 +376,29 @@ public class ChromeAnimation<T> {
 
     /**
      * Provides a interface for updating animatible properties.
-     *
-     * @param <T> The {@link Enum} of animatable properties.
      */
-    public static interface Animatable<T extends Enum<?>> {
-
+    public static interface Animatable {
         /**
          * Updates an animatable property.
          *
          * @param prop The property to update
          * @param val The new value
          */
-        public void setProperty(T prop, float val);
+        public void setProperty(int prop, float val);
 
         /**
          * Notifies that the animation for a certain property has finished.
          *
          * @param prop The property that has finished animating.
          */
-        public void onPropertyAnimationFinished(T prop);
+        public void onPropertyAnimationFinished(int prop);
     }
 
     /**
      * An animation that can be applied to {@link ChromeAnimation.Animatable} objects.
-     *
-     * @param <V> The type of {@link ChromeAnimation.Animatable} object to animate.
      */
-    public static class AnimatableAnimation<V extends Enum<?>> extends
-            Animation<Animatable<V>> {
-
-        private final V mProperty;
+    public static class AnimatableAnimation extends Animation<Animatable> {
+        private final int mProperty;
 
         /**
          * @param animatable The object being animated
@@ -424,7 +409,7 @@ public class ChromeAnimation<T> {
          * @param startTime The time at which this animation should start.
          * @param interpolator The interpolator to use for the animation
          */
-        public AnimatableAnimation(Animatable<V> animatable, V property, float start, float end,
+        public AnimatableAnimation(Animatable animatable, int property, float start, float end,
                 long duration, long startTime, Interpolator interpolator) {
             super(animatable, start, end, duration, startTime, interpolator);
             mProperty = property;
@@ -444,7 +429,6 @@ public class ChromeAnimation<T> {
          * Helper method to add an {@link ChromeAnimation.AnimatableAnimation}
          * to a {@link ChromeAnimation}
          *
-         * @param <T> The Enum type of the Property being used
          * @param set The set to add the animation to
          * @param object The object being animated
          * @param prop The property being animated
@@ -453,9 +437,8 @@ public class ChromeAnimation<T> {
          * @param duration The duration of the animation in ms
          * @param startTime The start time in ms
          */
-        public static <T extends Enum<?>> void addAnimation(ChromeAnimation<Animatable<?>> set,
-                Animatable<T> object, T prop, float start, float end, long duration,
-                long startTime) {
+        public static void addAnimation(ChromeAnimation<Animatable> set, Animatable object,
+                int prop, float start, float end, long duration, long startTime) {
             addAnimation(set, object, prop, start, end, duration, startTime, false);
         }
 
@@ -463,7 +446,6 @@ public class ChromeAnimation<T> {
          * Helper method to add an {@link ChromeAnimation.AnimatableAnimation}
          * to a {@link ChromeAnimation}
          *
-         * @param <T> The Enum type of the Property being used
          * @param set The set to add the animation to
          * @param object The object being animated
          * @param prop The property being animated
@@ -474,8 +456,8 @@ public class ChromeAnimation<T> {
          * @param setStartValueAfterStartDelay See
          *            {@link ChromeAnimation.Animation#setStartValueAfterStartDelay(boolean)}
          */
-        public static <T extends Enum<?>> void addAnimation(ChromeAnimation<Animatable<?>> set,
-                Animatable<T> object, T prop, float start, float end, long duration, long startTime,
+        public static void addAnimation(ChromeAnimation<Animatable> set, Animatable object,
+                int prop, float start, float end, long duration, long startTime,
                 boolean setStartValueAfterStartDelay) {
             addAnimation(set, object, prop, start, end, duration, startTime,
                     setStartValueAfterStartDelay, getDecelerateInterpolator());
@@ -485,7 +467,6 @@ public class ChromeAnimation<T> {
          * Helper method to add an {@link ChromeAnimation.AnimatableAnimation}
          * to a {@link ChromeAnimation}
          *
-         * @param <T> The Enum type of the Property being used
          * @param set The set to add the animation to
          * @param object The object being animated
          * @param prop The property being animated
@@ -497,19 +478,18 @@ public class ChromeAnimation<T> {
          *            {@link ChromeAnimation.Animation#setStartValueAfterStartDelay(boolean)}
          * @param interpolator The interpolator to use for the animation
          */
-        public static <T extends Enum<?>> void addAnimation(ChromeAnimation<Animatable<?>> set,
-                Animatable<T> object, T prop, float start, float end, long duration, long startTime,
+        public static void addAnimation(ChromeAnimation<Animatable> set, Animatable object,
+                int prop, float start, float end, long duration, long startTime,
                 boolean setStartValueAfterStartDelay, Interpolator interpolator) {
             if (duration <= 0) return;
-            Animation<Animatable<?>> animation = createAnimation(object, prop, start, end,
-                    duration, startTime, setStartValueAfterStartDelay, interpolator);
+            Animation<Animatable> animation = createAnimation(object, prop, start, end, duration,
+                    startTime, setStartValueAfterStartDelay, interpolator);
             set.add(animation);
         }
 
         /**
          * Helper method to create an {@link ChromeAnimation.AnimatableAnimation}
          *
-         * @param <T> The Enum type of the Property being used
          * @param object The object being animated
          * @param prop The property being animated
          * @param start The starting value of the animation
@@ -520,11 +500,11 @@ public class ChromeAnimation<T> {
          *            {@link ChromeAnimation.Animation#setStartValueAfterStartDelay(boolean)}
          * @param interpolator The interpolator to use for the animation
          */
-        public static <T extends Enum<?>> Animation<Animatable<?>> createAnimation(
-                Animatable<T> object, T prop, float start, float end, long duration,
-                long startTime, boolean setStartValueAfterStartDelay, Interpolator interpolator) {
-            Animation<Animatable<?>> animation = new AnimatableAnimation(object, prop, start, end,
-                    duration, startTime, interpolator);
+        public static Animation<Animatable> createAnimation(Animatable object, int prop,
+                float start, float end, long duration, long startTime,
+                boolean setStartValueAfterStartDelay, Interpolator interpolator) {
+            Animation<Animatable> animation = new AnimatableAnimation(
+                    object, prop, start, end, duration, startTime, interpolator);
             animation.setStartValueAfterStartDelay(setStartValueAfterStartDelay);
             return animation;
         }
@@ -533,7 +513,7 @@ public class ChromeAnimation<T> {
          * Checks if the given property is being animated.
          */
         @Override
-        public <V extends Enum<?>> boolean checkProperty(V prop) {
+        public boolean checkProperty(int prop) {
             return mProperty == prop;
         }
     }

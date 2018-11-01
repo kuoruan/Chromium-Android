@@ -42,9 +42,6 @@ public final class NativePixmapPlane extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static NativePixmapPlane deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -58,23 +55,25 @@ public final class NativePixmapPlane extends org.chromium.mojo.bindings.Struct {
         NativePixmapPlane result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new NativePixmapPlane(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new NativePixmapPlane(elementsOrVersion);
+                {
+                    
                 result.stride = decoder0.readInt(8);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.offset = decoder0.readInt(12);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.size = decoder0.readLong(16);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.modifier = decoder0.readLong(24);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -93,42 +92,5 @@ public final class NativePixmapPlane extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.size, 16);
         
         encoder0.encode(this.modifier, 24);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        NativePixmapPlane other = (NativePixmapPlane) object;
-        if (this.stride!= other.stride)
-            return false;
-        if (this.offset!= other.offset)
-            return false;
-        if (this.size!= other.size)
-            return false;
-        if (this.modifier!= other.modifier)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.stride);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.offset);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.size);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.modifier);
-        return result;
     }
 }

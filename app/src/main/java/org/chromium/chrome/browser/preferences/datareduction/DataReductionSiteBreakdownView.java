@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.preferences.datareduction;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.ColorInt;
 import android.text.format.Formatter;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -40,14 +39,12 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
     private int mNumDataUseItemsToDisplay = 10;
 
     private TableLayout mTableLayout;
+    private TextView mDetailsTitle;
+    private TextView mHostnameTitle;
     private TextView mDataUsedTitle;
     private TextView mDataSavedTitle;
     private List<DataReductionDataUseItem> mDataUseItems;
     private boolean mTextViewsNeedAttributesSet;
-    @ColorInt
-    private int mTextColor;
-    @ColorInt
-    private int mLightTextColor;
 
     public DataReductionSiteBreakdownView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -57,21 +54,37 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
     protected void onFinishInflate() {
         super.onFinishInflate();
         mTableLayout = (TableLayout) findViewById(R.id.data_reduction_proxy_breakdown_table);
+        mDetailsTitle = (TextView) findViewById(R.id.data_reduction_data_usage_breakdown_title);
+        mHostnameTitle = (TextView) findViewById(R.id.data_reduction_breakdown_site_title);
         mDataUsedTitle = (TextView) findViewById(R.id.data_reduction_breakdown_used_title);
         mDataSavedTitle = (TextView) findViewById(R.id.data_reduction_breakdown_saved_title);
-        mTextColor = ApiCompatibilityUtils.getColor(
-                getContext().getResources(), R.color.data_reduction_breakdown_text_color);
-        mLightTextColor = ApiCompatibilityUtils.getColor(
-                getContext().getResources(), R.color.data_reduction_breakdown_light_text_color);
+
+        mHostnameTitle.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DataReductionProxyUma.dataReductionProxyUIAction(
+                        DataReductionProxyUma.ACTION_SITE_BREAKDOWN_SORTED_BY_HOSTNAME);
+                setTextViewUnsortedAttributes(mDataSavedTitle);
+                setTextViewUnsortedAttributes(mDataUsedTitle);
+                setTextViewSortedAttributes(mHostnameTitle);
+                Collections.sort(mDataUseItems, new HostnameComparator());
+                mDetailsTitle.setContentDescription(
+                        getContext().getString(R.string.data_reduction_breakdown_hostname_sorted));
+                updateSiteBreakdown();
+            }
+        });
 
         mDataUsedTitle.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 DataReductionProxyUma.dataReductionProxyUIAction(
                         DataReductionProxyUma.ACTION_SITE_BREAKDOWN_SORTED_BY_DATA_USED);
+                setTextViewUnsortedAttributes(mHostnameTitle);
                 setTextViewUnsortedAttributes(mDataSavedTitle);
                 setTextViewSortedAttributes(mDataUsedTitle);
                 Collections.sort(mDataUseItems, new DataUsedComparator());
+                mDetailsTitle.setContentDescription(
+                        getContext().getString(R.string.data_reduction_breakdown_data_used_sorted));
                 updateSiteBreakdown();
             }
         });
@@ -81,9 +94,12 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
             public void onClick(View v) {
                 DataReductionProxyUma.dataReductionProxyUIAction(
                         DataReductionProxyUma.ACTION_SITE_BREAKDOWN_SORTED_BY_DATA_SAVED);
+                setTextViewUnsortedAttributes(mHostnameTitle);
                 setTextViewUnsortedAttributes(mDataUsedTitle);
                 setTextViewSortedAttributes(mDataSavedTitle);
                 Collections.sort(mDataUseItems, new DataSavedComparator());
+                mDetailsTitle.setContentDescription(getContext().getString(
+                        R.string.data_reduction_breakdown_data_saved_sorted));
                 updateSiteBreakdown();
             }
         });
@@ -94,6 +110,7 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         if (mTextViewsNeedAttributesSet) {
             mTextViewsNeedAttributesSet = false;
+            setTextViewUnsortedAttributes(mHostnameTitle);
             setTextViewUnsortedAttributes(mDataUsedTitle);
             setTextViewSortedAttributes(mDataSavedTitle);
         }
@@ -105,9 +122,12 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
      */
     public void setAndDisplayDataUseItems(List<DataReductionDataUseItem> items) {
         mDataUseItems = items;
+        setTextViewUnsortedAttributes(mHostnameTitle);
         setTextViewUnsortedAttributes(mDataUsedTitle);
         setTextViewSortedAttributes(mDataSavedTitle);
         Collections.sort(mDataUseItems, new DataSavedComparator());
+        mDetailsTitle.setContentDescription(
+                getContext().getString(R.string.data_reduction_breakdown_data_saved_sorted));
         if (mDataUseItems.size() == 0) {
             setVisibility(GONE);
         } else {
@@ -119,7 +139,6 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
     }
 
     private void setTextViewSortedAttributes(TextView textView) {
-        textView.setTextColor(mTextColor);
         Drawable arrowDrawable = getStartCompoundDrawable(textView);
         // If the drawable has not been created yet, set mTextViewsNeedAttributesSet so that
         // onMeasure will set the attributes after the drawable is created.
@@ -127,12 +146,14 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
             mTextViewsNeedAttributesSet = true;
             return;
         }
+        // Expose the arrow for this sorted column using its text color.
         arrowDrawable.mutate();
         arrowDrawable.setAlpha(255);
+        arrowDrawable.setColorFilter(new android.graphics.PorterDuffColorFilter(
+                textView.getCurrentTextColor(), android.graphics.PorterDuff.Mode.SRC_IN));
     }
 
     private void setTextViewUnsortedAttributes(TextView textView) {
-        textView.setTextColor(mLightTextColor);
         Drawable arrowDrawable = getStartCompoundDrawable(textView);
         // If the drawable has not been created yet, set mTextViewsNeedAttributesSet so that
         // onMeasure will set the attributes after the drawable is created.
@@ -140,8 +161,10 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
             mTextViewsNeedAttributesSet = true;
             return;
         }
+        // Clear the arrow from this unsorted column.
         arrowDrawable.mutate();
         arrowDrawable.setAlpha(0);
+        arrowDrawable.clearColorFilter();
     }
 
     private Drawable getStartCompoundDrawable(TextView textView) {
@@ -151,6 +174,23 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
             return drawables[0];
         }
         return drawables[2];
+    }
+
+    /**
+     * Sorts the DataReductionDataUseItems by hostname.
+     */
+    private static final class HostnameComparator
+            implements Comparator<DataReductionDataUseItem>, Serializable {
+        @Override
+        public int compare(DataReductionDataUseItem lhs, DataReductionDataUseItem rhs) {
+            // Force the 'Other' category to the bottom of the list.
+            if (OTHER_HOST_NAME.equals(lhs.getHostname())) {
+                return 1;
+            } else if (OTHER_HOST_NAME.equals(rhs.getHostname())) {
+                return -1;
+            }
+            return lhs.getHostname().compareTo(rhs.getHostname());
+        }
     }
 
     /**
@@ -226,8 +266,18 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
                             R.string.data_reduction_breakdown_other_host_name);
                 }
                 hostnameView.setText(hostName);
-                dataUsedView.setText(mDataUseItems.get(i).getFormattedDataUsed(getContext()));
-                dataSavedView.setText(mDataUseItems.get(i).getFormattedDataSaved(getContext()));
+
+                final CharSequence dataUsed =
+                        mDataUseItems.get(i).getFormattedDataUsed(getContext());
+                dataUsedView.setText(dataUsed);
+                dataUsedView.setContentDescription(getResources().getString(
+                        R.string.data_reduction_breakdown_used_content_description, dataUsed));
+
+                final CharSequence dataSaved =
+                        mDataUseItems.get(i).getFormattedDataSaved(getContext());
+                dataSavedView.setText(dataSaved);
+                dataSavedView.setContentDescription(getResources().getString(
+                        R.string.data_reduction_breakdown_saved_content_description, dataSaved));
 
                 mTableLayout.addView(row, i + 1);
             } else {
@@ -251,12 +301,12 @@ public class DataReductionSiteBreakdownView extends LinearLayout {
             dataSavedView.setText(
                     Formatter.formatFileSize(getContext(), everythingElseDataSavings));
 
-            int lightActiveColor = ApiCompatibilityUtils.getColor(
-                    getContext().getResources(), R.color.light_active_color);
+            int textColorLink = ApiCompatibilityUtils.getColor(
+                    getContext().getResources(), R.color.default_text_color_link);
 
-            hostnameView.setTextColor(lightActiveColor);
-            dataUsedView.setTextColor(lightActiveColor);
-            dataSavedView.setTextColor(lightActiveColor);
+            hostnameView.setTextColor(textColorLink);
+            dataUsedView.setTextColor(textColorLink);
+            dataSavedView.setTextColor(textColorLink);
 
             row.setOnClickListener(new OnClickListener() {
                 @Override

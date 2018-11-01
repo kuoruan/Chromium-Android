@@ -10,6 +10,7 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.browser.background_task_scheduler.NativeBackgroundTask;
+import org.chromium.chrome.browser.background_task_scheduler.NativeBackgroundTask.StartBeforeNativeResult;
 import org.chromium.chrome.browser.offlinepages.DeviceConditions;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.components.background_task_scheduler.BackgroundTask.TaskFinishedCallback;
@@ -47,7 +48,7 @@ public class PrefetchBackgroundTask extends NativeBackgroundTask {
     }
 
     @Override
-    public int onStartTaskBeforeNativeLoaded(
+    public @StartBeforeNativeResult int onStartTaskBeforeNativeLoaded(
             Context context, TaskParameters taskParameters, TaskFinishedCallback callback) {
         // Ensure that the conditions are right to do work.  If the maximum time to
         // wait is reached, it is possible the task will fire even if network conditions are
@@ -59,18 +60,24 @@ public class PrefetchBackgroundTask extends NativeBackgroundTask {
         mTaskFinishedCallback = callback;
         mLimitlessPrefetchingEnabled = taskParameters.getExtras().getBoolean(LIMITLESS_BUNDLE_KEY);
 
-        if (sSkipConditionCheckingForTesting) return NativeBackgroundTask.LOAD_NATIVE;
-
-        // Check current device conditions.
-        DeviceConditions deviceConditions = DeviceConditions.getCurrentConditions(context);
-
-        if (!areBatteryConditionsMet(deviceConditions)
-                || !areNetworkConditionsMet(context, deviceConditions)
-                || deviceConditions.inPowerSaveMode()) {
-            return NativeBackgroundTask.RESCHEDULE;
+        // Check current device conditions. They might be set to null when testing and for some
+        // specific Android devices.
+        final DeviceConditions deviceConditions;
+        if (!sSkipConditionCheckingForTesting) {
+            deviceConditions = DeviceConditions.getCurrent(context);
+        } else {
+            deviceConditions = null;
         }
 
-        return NativeBackgroundTask.LOAD_NATIVE;
+        // Note: when |deviceConditions| is null native is always loaded because with the evidence
+        // we have so far only specific devices that do not run on batteries actually return null.
+        if (deviceConditions == null
+                || (areBatteryConditionsMet(deviceConditions)
+                           && areNetworkConditionsMet(deviceConditions))) {
+            return StartBeforeNativeResult.LOAD_NATIVE;
+        }
+
+        return StartBeforeNativeResult.RESCHEDULE;
     }
 
     /**
@@ -141,18 +148,19 @@ public class PrefetchBackgroundTask extends NativeBackgroundTask {
 
     /** Whether battery conditions (on power or enough battery percentage) are met. */
     private boolean areBatteryConditionsMet(DeviceConditions deviceConditions) {
-        return deviceConditions.isPowerConnected()
-                || (deviceConditions.getBatteryPercentage()
-                           >= MINIMUM_BATTERY_PERCENTAGE_FOR_PREFETCHING)
+        return (!deviceConditions.isInPowerSaveMode()
+                       && (deviceConditions.isPowerConnected()
+                                  || (deviceConditions.getBatteryPercentage()
+                                             >= MINIMUM_BATTERY_PERCENTAGE_FOR_PREFETCHING)))
                 || mLimitlessPrefetchingEnabled;
     }
 
     /** Whether network conditions are met. */
-    private boolean areNetworkConditionsMet(Context context, DeviceConditions deviceConditions) {
+    private boolean areNetworkConditionsMet(DeviceConditions deviceConditions) {
         if (mLimitlessPrefetchingEnabled) {
             return deviceConditions.getNetConnectionType() != ConnectionType.CONNECTION_NONE;
         }
-        return !DeviceConditions.isActiveNetworkMetered(context)
+        return !deviceConditions.isActiveNetworkMetered()
                 && deviceConditions.getNetConnectionType() == ConnectionType.CONNECTION_WIFI;
     }
 

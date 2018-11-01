@@ -29,7 +29,7 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="6dp"
         android:ellipsize="end"
-        android:maxLines="1"
+        android:singleLine="true"
         android:text="@string/signin_promo_continue_as"/>
 
     <Button
@@ -42,6 +42,6 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="6dp"
         android:ellipsize="end"
-        android:maxLines="1"
+        android:singleLine="true"
         android:text="@string/signin_promo_choose_account"/>
 </merge>

@@ -105,7 +105,7 @@ public class ContextReporter {
             assert !selector.getModels().isEmpty();
             mModelObserver = new TabModelSelectorTabModelObserver(selector) {
                 @Override
-                public void didSelectTab(Tab tab, TabSelectionType type, int lastId) {
+                public void didSelectTab(Tab tab, @TabSelectionType int type, int lastId) {
                     reportUsageOfCurrentContextIfPossible(tab, false, null);
                 }
             };

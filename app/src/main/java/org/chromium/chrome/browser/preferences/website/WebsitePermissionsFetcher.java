@@ -102,40 +102,43 @@ public class WebsitePermissionsFetcher {
         TaskQueue queue = new TaskQueue();
         // Populate features from more specific to less specific.
         // Geolocation lookup permission is per-origin and per-embedder.
-        queue.add(new GeolocationInfoFetcher());
+        queue.add(new PermissionInfoFetcher(PermissionInfo.Type.GEOLOCATION));
         // Midi sysex access permission is per-origin and per-embedder.
-        queue.add(new MidiInfoFetcher());
+        queue.add(new PermissionInfoFetcher(PermissionInfo.Type.MIDI));
         // Cookies are stored per-host.
-        queue.add(new CookieExceptionInfoFetcher());
+        queue.add(new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES));
         // Local storage info is per-origin.
         queue.add(new LocalStorageInfoFetcher());
         // Website storage is per-host.
         queue.add(new WebStorageInfoFetcher());
         // Popup exceptions are host-based patterns (unless we start
         // synchronizing popup exceptions with desktop Chrome).
-        queue.add(new PopupExceptionInfoFetcher());
+        queue.add(new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS));
         // Ads exceptions are host-based.
-        queue.add(new AdsExceptionInfoFetcher());
+        queue.add(new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS));
         // JavaScript exceptions are host-based patterns.
-        queue.add(new JavaScriptExceptionInfoFetcher());
+        queue.add(new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_JAVASCRIPT));
         // Sound exceptions are host-based patterns.
-        queue.add(new SoundExceptionInfoFetcher());
+        queue.add(new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND));
         // Protected media identifier permission is per-origin and per-embedder.
-        queue.add(new ProtectedMediaIdentifierInfoFetcher());
+        queue.add(new PermissionInfoFetcher(PermissionInfo.Type.PROTECTED_MEDIA_IDENTIFIER));
         // Notification permission is per-origin.
-        queue.add(new NotificationInfoFetcher());
+        queue.add(new PermissionInfoFetcher(PermissionInfo.Type.NOTIFICATION));
         // Camera capture permission is per-origin and per-embedder.
-        queue.add(new CameraCaptureInfoFetcher());
+        queue.add(new PermissionInfoFetcher(PermissionInfo.Type.CAMERA));
         // Micropohone capture permission is per-origin and per-embedder.
-        queue.add(new MicrophoneCaptureInfoFetcher());
+        queue.add(new PermissionInfoFetcher(PermissionInfo.Type.MICROPHONE));
         // Background sync permission is per-origin.
-        queue.add(new BackgroundSyncExceptionInfoFetcher());
+        queue.add(new ExceptionInfoFetcher(
+                ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC));
         // Autoplay permission is per-origin.
-        queue.add(new AutoplayExceptionInfoFetcher());
+        queue.add(new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY));
         // USB device permission is per-origin and per-embedder.
         queue.add(new UsbInfoFetcher());
         // Clipboard info is per-origin.
-        queue.add(new ClipboardInfoFetcher());
+        queue.add(new PermissionInfoFetcher(PermissionInfo.Type.CLIPBOARD));
+        // Sensors permission is per-origin.
+        queue.add(new PermissionInfoFetcher(PermissionInfo.Type.SENSORS));
 
         queue.add(new PermissionsAvailableCallbackRunner());
 
@@ -148,61 +151,66 @@ public class WebsitePermissionsFetcher {
      * @param catgory A category to fetch.
      */
     public void fetchPreferencesForCategory(SiteSettingsCategory category) {
-        if (category.showAllSites()) {
+        if (category.showSites(SiteSettingsCategory.Type.ALL_SITES)) {
             fetchAllPreferences();
             return;
         }
 
         TaskQueue queue = new TaskQueue();
         // Populate features from more specific to less specific.
-        if (category.showGeolocationSites()) {
+        if (category.showSites(SiteSettingsCategory.Type.DEVICE_LOCATION)) {
             // Geolocation lookup permission is per-origin and per-embedder.
-            queue.add(new GeolocationInfoFetcher());
-        } else if (category.showCookiesSites()) {
+            queue.add(new PermissionInfoFetcher(PermissionInfo.Type.GEOLOCATION));
+        } else if (category.showSites(SiteSettingsCategory.Type.COOKIES)) {
             // Cookies exceptions are patterns.
-            queue.add(new CookieExceptionInfoFetcher());
-        } else if (category.showStorageSites()) {
+            queue.add(new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES));
+        } else if (category.showSites(SiteSettingsCategory.Type.USE_STORAGE)) {
             // Local storage info is per-origin.
             queue.add(new LocalStorageInfoFetcher());
             // Website storage is per-host.
             queue.add(new WebStorageInfoFetcher());
-        } else if (category.showCameraSites()) {
+        } else if (category.showSites(SiteSettingsCategory.Type.CAMERA)) {
             // Camera capture permission is per-origin and per-embedder.
-            queue.add(new CameraCaptureInfoFetcher());
-        } else if (category.showMicrophoneSites()) {
+            queue.add(new PermissionInfoFetcher(PermissionInfo.Type.CAMERA));
+        } else if (category.showSites(SiteSettingsCategory.Type.MICROPHONE)) {
             // Micropohone capture permission is per-origin and per-embedder.
-            queue.add(new MicrophoneCaptureInfoFetcher());
-        } else if (category.showPopupSites()) {
+            queue.add(new PermissionInfoFetcher(PermissionInfo.Type.MICROPHONE));
+        } else if (category.showSites(SiteSettingsCategory.Type.POPUPS)) {
             // Popup exceptions are host-based patterns (unless we start
             // synchronizing popup exceptions with desktop Chrome.)
-            queue.add(new PopupExceptionInfoFetcher());
-        } else if (category.showAdsSites()) {
+            queue.add(new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS));
+        } else if (category.showSites(SiteSettingsCategory.Type.ADS)) {
             // Ads exceptions are host-based.
-            queue.add(new AdsExceptionInfoFetcher());
-        } else if (category.showJavaScriptSites()) {
+            queue.add(new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS));
+        } else if (category.showSites(SiteSettingsCategory.Type.JAVASCRIPT)) {
             // JavaScript exceptions are host-based patterns.
-            queue.add(new JavaScriptExceptionInfoFetcher());
-        } else if (category.showSoundSites()) {
+            queue.add(
+                    new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_JAVASCRIPT));
+        } else if (category.showSites(SiteSettingsCategory.Type.SOUND)) {
             // Sound exceptions are host-based patterns.
-            queue.add(new SoundExceptionInfoFetcher());
-        } else if (category.showNotificationsSites()) {
+            queue.add(new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND));
+        } else if (category.showSites(SiteSettingsCategory.Type.NOTIFICATIONS)) {
             // Push notification permission is per-origin.
-            queue.add(new NotificationInfoFetcher());
-        } else if (category.showBackgroundSyncSites()) {
+            queue.add(new PermissionInfoFetcher(PermissionInfo.Type.NOTIFICATION));
+        } else if (category.showSites(SiteSettingsCategory.Type.BACKGROUND_SYNC)) {
             // Background sync info is per-origin.
-            queue.add(new BackgroundSyncExceptionInfoFetcher());
-        } else if (category.showProtectedMediaSites()) {
+            queue.add(new ExceptionInfoFetcher(
+                    ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC));
+        } else if (category.showSites(SiteSettingsCategory.Type.PROTECTED_MEDIA)) {
             // Protected media identifier permission is per-origin and per-embedder.
-            queue.add(new ProtectedMediaIdentifierInfoFetcher());
-        } else if (category.showAutoplaySites()) {
+            queue.add(new PermissionInfoFetcher(PermissionInfo.Type.PROTECTED_MEDIA_IDENTIFIER));
+        } else if (category.showSites(SiteSettingsCategory.Type.AUTOPLAY)) {
             // Autoplay permission is per-origin.
-            queue.add(new AutoplayExceptionInfoFetcher());
-        } else if (category.showUsbDevices()) {
+            queue.add(new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY));
+        } else if (category.showSites(SiteSettingsCategory.Type.USB)) {
             // USB device permission is per-origin.
             queue.add(new UsbInfoFetcher());
-        } else if (category.showClipboardSites()) {
+        } else if (category.showSites(SiteSettingsCategory.Type.CLIPBOARD)) {
             // Clipboard permission is per-origin.
-            queue.add(new ClipboardInfoFetcher());
+            queue.add(new PermissionInfoFetcher(PermissionInfo.Type.CLIPBOARD));
+        } else if (category.showSites(SiteSettingsCategory.Type.SENSORS)) {
+            // Sensors permission is per-origin.
+            queue.add(new PermissionInfoFetcher(PermissionInfo.Type.SENSORS));
         }
         queue.add(new PermissionsAvailableCallbackRunner());
         queue.next();
@@ -228,25 +236,28 @@ public class WebsitePermissionsFetcher {
             Website site = findOrCreateSite(address, null);
             switch (contentSettingsType) {
                 case ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS:
-                    site.setAdsException(exception);
+                    site.setContentSettingException(ContentSettingException.Type.ADS, exception);
                     break;
                 case ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY:
-                    site.setAutoplayException(exception);
+                    site.setContentSettingException(
+                            ContentSettingException.Type.AUTOPLAY, exception);
                     break;
                 case ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC:
-                    site.setBackgroundSyncException(exception);
+                    site.setContentSettingException(
+                            ContentSettingException.Type.BACKGROUND_SYNC, exception);
                     break;
                 case ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES:
-                    site.setCookieException(exception);
+                    site.setContentSettingException(ContentSettingException.Type.COOKIE, exception);
                     break;
                 case ContentSettingsType.CONTENT_SETTINGS_TYPE_JAVASCRIPT:
-                    site.setJavaScriptException(exception);
+                    site.setContentSettingException(
+                            ContentSettingException.Type.JAVASCRIPT, exception);
                     break;
                 case ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS:
-                    site.setPopupException(exception);
+                    site.setContentSettingException(ContentSettingException.Type.POPUP, exception);
                     break;
                 case ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND:
-                    site.setSoundException(exception);
+                    site.setContentSettingException(ContentSettingException.Type.SOUND, exception);
                     break;
                 default:
                     assert false : "Unexpected content setting type received: "
@@ -284,81 +295,49 @@ public class WebsitePermissionsFetcher {
         }
     }
 
-    private class AutoplayExceptionInfoFetcher extends Task {
-        @Override
-        public void run() {
-            setException(ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY);
-        }
-    }
+    private class PermissionInfoFetcher extends Task {
+        final @PermissionInfo.Type int mType;
 
-    private class ClipboardInfoFetcher extends Task {
+        public PermissionInfoFetcher(@PermissionInfo.Type int type) {
+            mType = type;
+        }
+
         @Override
         public void run() {
-            for (ClipboardInfo info : WebsitePreferenceBridge.getClipboardInfo()) {
+            for (PermissionInfo info : WebsitePreferenceBridge.getPermissionInfo(mType)) {
                 WebsiteAddress origin = WebsiteAddress.create(info.getOrigin());
                 if (origin == null) continue;
-                WebsiteAddress embedder = WebsiteAddress.create(info.getEmbedder());
-                findOrCreateSite(origin, embedder).setClipboardInfo(info);
+                WebsiteAddress embedder = mType == PermissionInfo.Type.SENSORS
+                        ? null
+                        : WebsiteAddress.create(info.getEmbedder());
+                findOrCreateSite(origin, embedder).setPermissionInfo(info);
             }
         }
     }
 
-    private class GeolocationInfoFetcher extends Task {
+    private class UsbInfoFetcher extends Task {
         @Override
         public void run() {
-            for (GeolocationInfo info : WebsitePreferenceBridge.getGeolocationInfo()) {
+            for (ChosenObjectInfo info : WebsitePreferenceBridge.getChosenObjectInfo(
+                         ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA)) {
                 WebsiteAddress origin = WebsiteAddress.create(info.getOrigin());
                 if (origin == null) continue;
                 WebsiteAddress embedder = WebsiteAddress.create(info.getEmbedder());
-                findOrCreateSite(origin, embedder).setGeolocationInfo(info);
+                findOrCreateSite(origin, embedder).addChosenObjectInfo(info);
             }
         }
     }
 
-    private class MidiInfoFetcher extends Task {
-        @Override
-        public void run() {
-            for (MidiInfo info : WebsitePreferenceBridge.getMidiInfo()) {
-                WebsiteAddress origin = WebsiteAddress.create(info.getOrigin());
-                if (origin == null) continue;
-                WebsiteAddress embedder = WebsiteAddress.create(info.getEmbedder());
-                findOrCreateSite(origin, embedder).setMidiInfo(info);
-            }
-        }
-    }
+    private class ExceptionInfoFetcher extends Task {
+        final int mContentSettingsType;
 
-    private class PopupExceptionInfoFetcher extends Task {
-        @Override
-        public void run() {
-            setException(ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS);
+        public ExceptionInfoFetcher(int contentSettingsType) {
+            mContentSettingsType = contentSettingsType;
         }
-    }
 
-    private class AdsExceptionInfoFetcher extends Task {
         @Override
         public void run() {
-            setException(ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS);
-        }
-    }
-
-    private class JavaScriptExceptionInfoFetcher extends Task {
-        @Override
-        public void run() {
-            setException(ContentSettingsType.CONTENT_SETTINGS_TYPE_JAVASCRIPT);
-        }
-    }
-
-    private class SoundExceptionInfoFetcher extends Task {
-        @Override
-        public void run() {
-            setException(ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND);
-        }
-    }
-
-    private class CookieExceptionInfoFetcher extends Task {
-        @Override
-        public void run() {
-            setException(ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES);
+            setException(mContentSettingsType);
         }
     }
 
@@ -399,74 +378,6 @@ public class WebsitePermissionsFetcher {
                     queue.next();
                 }
             });
-        }
-    }
-
-    private class ProtectedMediaIdentifierInfoFetcher extends Task {
-        @Override
-        public void run() {
-            for (ProtectedMediaIdentifierInfo info :
-                    WebsitePreferenceBridge.getProtectedMediaIdentifierInfo()) {
-                WebsiteAddress origin = WebsiteAddress.create(info.getOrigin());
-                if (origin == null) continue;
-                WebsiteAddress embedder = WebsiteAddress.create(info.getEmbedder());
-                findOrCreateSite(origin, embedder).setProtectedMediaIdentifierInfo(info);
-            }
-        }
-    }
-
-    private class NotificationInfoFetcher extends Task {
-        @Override
-        public void run() {
-            for (NotificationInfo info : WebsitePreferenceBridge.getNotificationInfo()) {
-                WebsiteAddress origin = WebsiteAddress.create(info.getOrigin());
-                if (origin == null) continue;
-                WebsiteAddress embedder = WebsiteAddress.create(info.getEmbedder());
-                findOrCreateSite(origin, embedder).setNotificationInfo(info);
-            }
-        }
-    }
-
-    private class CameraCaptureInfoFetcher extends Task {
-        @Override
-        public void run() {
-            for (CameraInfo info : WebsitePreferenceBridge.getCameraInfo()) {
-                WebsiteAddress origin = WebsiteAddress.create(info.getOrigin());
-                if (origin == null) continue;
-                WebsiteAddress embedder = WebsiteAddress.create(info.getEmbedder());
-                findOrCreateSite(origin, embedder).setCameraInfo(info);
-            }
-        }
-    }
-
-    private class MicrophoneCaptureInfoFetcher extends Task {
-        @Override
-        public void run() {
-            for (MicrophoneInfo info : WebsitePreferenceBridge.getMicrophoneInfo()) {
-                WebsiteAddress origin = WebsiteAddress.create(info.getOrigin());
-                if (origin == null) continue;
-                WebsiteAddress embedder = WebsiteAddress.create(info.getEmbedder());
-                findOrCreateSite(origin, embedder).setMicrophoneInfo(info);
-            }
-        }
-    }
-
-    private class BackgroundSyncExceptionInfoFetcher extends Task {
-        @Override
-        public void run() {
-            setException(ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC);
-        }
-    }
-
-    private class UsbInfoFetcher extends Task {
-        @Override
-        public void run() {
-            for (UsbInfo info : WebsitePreferenceBridge.getUsbInfo()) {
-                WebsiteAddress origin = WebsiteAddress.create(info.getOrigin());
-                if (origin == null) continue;
-                WebsiteAddress embedder = WebsiteAddress.create(info.getEmbedder());
-                findOrCreateSite(origin, embedder).addUsbInfo(info);
-            }
         }
     }
 

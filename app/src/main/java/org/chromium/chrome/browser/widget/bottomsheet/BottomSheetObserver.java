@@ -44,10 +44,11 @@ public interface BottomSheetObserver {
      * An event for when the sheet's offset from the bottom of the screen changes.
      *
      * @param heightFraction The fraction of the way to the fully expanded state that the sheet
-     *                       is. This will be 0.0f when the sheet is peeking and 1.0f when the
-     *                       sheet is completely expanded.
+     *                       is. This will be 0.0f when the sheet is hidden or scrolled off-screen
+     *                       and 1.0f when the sheet is completely expanded.
+     * @param offsetPx The offset of the top of the sheet from the bottom of the screen in pixels.
      */
-    void onSheetOffsetChanged(float heightFraction);
+    void onSheetOffsetChanged(float heightFraction, float offsetPx);
 
     /**
      * An event for when the sheet is transitioning from the peeking state to the half expanded
@@ -67,6 +68,13 @@ public interface BottomSheetObserver {
      * @param newState The new sheet state. See {@link SheetState}.
      */
     void onSheetStateChanged(@SheetState int newState);
+
+    /**
+     * An event for when the sheet reaches its full peeking height. This is called when the sheet
+     * is finished being scrolled back on-screen or finishes animating to its peeking state. This
+     * is also called when going back to the peeking state after the sheet has been opened.
+     */
+    void onSheetFullyPeeked();
 
     /**
      * An event for when the sheet content changes.

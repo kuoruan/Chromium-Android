@@ -9,12 +9,10 @@ import static org.chromium.chrome.browser.util.ViewUtils.dpToPx;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.support.annotation.ColorRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.StringRes;
 import android.text.Layout;
 import android.text.SpannableString;
-import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.BulletSpan;
 import android.text.style.ForegroundColorSpan;
@@ -28,7 +26,6 @@ import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.ui.text.NoUnderlineClickableSpan;
 import org.chromium.ui.text.SpanApplier;
 
@@ -53,7 +50,6 @@ public class IncognitoNewTabPageViewMD extends IncognitoNewTabPageView {
     private static final int BULLETPOINTS_HORIZONTAL_SPACING_DP = 40;
     private static final int CONTENT_WIDTH_DP = 600;
     private static final int WIDE_LAYOUT_THRESHOLD_DP = 720;
-    private static final int CHROME_HOME_LEARN_MORE_BOTTOM_PADDING_DP = 8;
 
     private static class IncognitoBulletSpan extends BulletSpan {
         public IncognitoBulletSpan() {
@@ -65,27 +61,6 @@ public class IncognitoNewTabPageViewMD extends IncognitoNewTabPageView {
                 int bottom, CharSequence text, int start, int end, boolean first, Layout l) {
             // Do not draw the standard bullet point. We will include the Unicode bullet point
             // symbol in the text instead.
-        }
-    }
-
-    private static class IncognitoClickableSpan extends NoUnderlineClickableSpan {
-        private final @ColorRes int mColor;
-        private final IncognitoNewTabPageManager mManager;
-
-        public IncognitoClickableSpan(Context context, IncognitoNewTabPageManager manager) {
-            mColor =
-                    ApiCompatibilityUtils.getColor(context.getResources(), R.color.google_blue_300);
-            mManager = manager;
-        }
-
-        @Override
-        public void onClick(View view) {
-            mManager.loadIncognitoLearnMore();
-        }
-
-        @Override
-        public void updateDrawState(TextPaint drawState) {
-            drawState.setColor(mColor);
         }
     }
 
@@ -203,18 +178,10 @@ public class IncognitoNewTabPageViewMD extends IncognitoNewTabPageView {
 
         boolean bulletpointsArrangedHorizontally;
 
-        boolean usingChromeHome = FeatureUtilities.isChromeHomeEnabled();
-        if (mWidthDp <= WIDE_LAYOUT_THRESHOLD_DP || usingChromeHome) {
+        if (mWidthDp <= WIDE_LAYOUT_THRESHOLD_DP) {
             // Small padding.
-            // Set the padding to a default for Chrome Home, since we want less padding in this
-            // case.
-            if (usingChromeHome) {
-                paddingHorizontalDp = 16;
-                paddingVerticalDp = 0;
-            } else {
-                paddingHorizontalDp = mWidthDp <= 240 ? 24 : 32;
-                paddingVerticalDp = (mHeightDp <= 600) ? 32 : 72;
-            }
+            paddingHorizontalDp = mWidthDp <= 240 ? 24 : 32;
+            paddingVerticalDp = (mHeightDp <= 600) ? 32 : 72;
 
             // Align left.
             mContainer.setGravity(Gravity.START);
@@ -271,14 +238,7 @@ public class IncognitoNewTabPageViewMD extends IncognitoNewTabPageView {
         // Set up paddings and margins.
         int paddingTop;
         int paddingBottom;
-        if (usingChromeHome) {
-            // Preserve the intentional padding given to the new tab view in Chrome Home to
-            // accomodate the bottom navigation menu.
-            paddingTop = mContainer.getPaddingTop();
-            paddingBottom = mContainer.getPaddingBottom();
-        } else {
-            paddingTop = paddingBottom = dpToPx(mContext, paddingVerticalDp);
-        }
+        paddingTop = paddingBottom = dpToPx(mContext, paddingVerticalDp);
         mContainer.setPadding(dpToPx(mContext, paddingHorizontalDp), paddingTop,
                 dpToPx(mContext, paddingHorizontalDp), paddingBottom);
 
@@ -327,14 +287,6 @@ public class IncognitoNewTabPageViewMD extends IncognitoNewTabPageView {
         mSubtitle.setClickable(learnMoreInSubtitle);
         mLearnMore.setVisibility(learnMoreInSubtitle ? View.GONE : View.VISIBLE);
 
-        if (FeatureUtilities.isChromeHomeEnabled()) {
-            // Additional padding below "Learn More" helps keep distance from the bottom navigation
-            // menu making it easier to tap.
-            mLearnMore.setPadding(mLearnMore.getPaddingLeft(), mLearnMore.getPaddingTop(),
-                    mLearnMore.getPaddingBottom(),
-                    dpToPx(mContext, CHROME_HOME_LEARN_MORE_BOTTOM_PADDING_DP));
-        }
-
         if (!learnMoreInSubtitle) {
             // Revert to the original text.
             mSubtitle.setText(subtitleText);
@@ -349,8 +301,10 @@ public class IncognitoNewTabPageViewMD extends IncognitoNewTabPageView {
         concatenatedText.append(mContext.getResources().getString(R.string.learn_more));
         SpannableString textWithLearnMoreLink = new SpannableString(concatenatedText.toString());
 
-        textWithLearnMoreLink.setSpan(new IncognitoClickableSpan(mContext, getManager()),
-                subtitleText.length() + 1, textWithLearnMoreLink.length(), 0 /* flags */);
+        NoUnderlineClickableSpan span = new NoUnderlineClickableSpan(
+                R.color.modern_blue_300, (view) -> getManager().loadIncognitoLearnMore());
+        textWithLearnMoreLink.setSpan(
+                span, subtitleText.length() + 1, textWithLearnMoreLink.length(), 0 /* flags */);
         mSubtitle.setText(textWithLearnMoreLink);
         mSubtitle.setMovementMethod(LinkMovementMethod.getInstance());
     }

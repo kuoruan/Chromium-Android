@@ -17,36 +17,28 @@ import java.lang.annotation.RetentionPolicy;
  * Tracks metrics caused by a particular Activity stopping.
  */
 public class ActivityStopMetrics {
+    // NUM_ENTRIES is intentionally included into @IntDef.
+    @IntDef({StopReason.UNKNOWN, StopReason.BACK_BUTTON,
+            StopReason.OTHER_CHROME_ACTIVITY_IN_FOREGROUND, StopReason.NUM_ENTRIES})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({
-        STOP_REASON_UNKNOWN,
-        STOP_REASON_BACK_BUTTON,
-        STOP_REASON_OTHER_CHROME_ACTIVITY_IN_FOREGROUND,
-        STOP_REASON_COUNT
-    })
-    public @interface StopReason{}
+    public @interface StopReason {
+        /** Activity stopped for unknown reasons. */
+        int UNKNOWN = 0;
+        /** Activity stopped after the user hit the back button. */
+        int BACK_BUTTON = 1;
+        // Obsolete -- Activity stopped after the user hit the close/return UI button.
+        // int RETURN_BUTTON = 2;
+        // Obsolete --  Activity stopped because it launched a {@link CustomTabActivity} on top of
+        //              itself.
+        // int CUSTOM_TAB_STARTED = 3;
+        // Obsolete -- Activity stopped because its child {@link CustomTabActivity} stopped itself.
+        // int CUSTOM_TAB_STOPPED = 4;
+        /** Activity stopped because another of Chrome Activities came into focus. */
+        int OTHER_CHROME_ACTIVITY_IN_FOREGROUND = 5;
 
-    /** Activity stopped for unknown reasons. */
-    public static final int STOP_REASON_UNKNOWN = 0;
-
-    /** Activity stopped after the user hit the back button. */
-    public static final int STOP_REASON_BACK_BUTTON = 1;
-
-    // Obsolete -- Activity stopped after the user hit the close/return UI button.
-    // public static final int STOP_REASON_RETURN_BUTTON = 2;
-
-    // Obsolete --  Activity stopped because it launched a {@link CustomTabActivity} on top of
-    //              itself.
-    // public static final int STOP_REASON_CUSTOM_TAB_STARTED = 3;
-
-    // Obsolete -- Activity stopped because its child {@link CustomTabActivity} stopped itself.
-    // public static final int STOP_REASON_CUSTOM_TAB_STOPPED = 4;
-
-    /** Activity stopped because another of Chrome Activities came into focus. */
-    public static final int STOP_REASON_OTHER_CHROME_ACTIVITY_IN_FOREGROUND = 5;
-
-    /** Boundary.  Shouldn't ever be passed to the metrics service. */
-    public static final int STOP_REASON_COUNT = 6;
+        /** Boundary. Shouldn't ever be passed to the metrics service. */
+        int NUM_ENTRIES = 6;
+    }
 
     /** Name of the histogram that will be recorded. */
     private static final String HISTOGRAM_NAME = "Android.Activity.ChromeTabbedActivity.StopReason";
@@ -58,7 +50,7 @@ public class ActivityStopMetrics {
      * Constructs an {@link ActivityStopMetrics} instance.
      */
     public ActivityStopMetrics() {
-        mStopReason = STOP_REASON_COUNT;
+        mStopReason = StopReason.NUM_ENTRIES;
     }
 
     /**
@@ -66,16 +58,17 @@ public class ActivityStopMetrics {
      * @param parent Activity that owns this {@link ActivityStopMetrics} instance.
      */
     public void onStopWithNative(Activity parent) {
-        if (mStopReason == STOP_REASON_COUNT) {
+        if (mStopReason == StopReason.NUM_ENTRIES) {
             if (parent != ApplicationStatus.getLastTrackedFocusedActivity()
                     && ApplicationStatus.hasVisibleActivities()) {
-                mStopReason = STOP_REASON_OTHER_CHROME_ACTIVITY_IN_FOREGROUND;
+                mStopReason = StopReason.OTHER_CHROME_ACTIVITY_IN_FOREGROUND;
             } else {
-                mStopReason = STOP_REASON_UNKNOWN;
+                mStopReason = StopReason.UNKNOWN;
             }
         }
-        RecordHistogram.recordEnumeratedHistogram(HISTOGRAM_NAME, mStopReason, STOP_REASON_COUNT);
-        mStopReason = STOP_REASON_COUNT;
+        RecordHistogram.recordEnumeratedHistogram(
+                HISTOGRAM_NAME, mStopReason, StopReason.NUM_ENTRIES);
+        mStopReason = StopReason.NUM_ENTRIES;
     }
 
     /**
@@ -83,7 +76,7 @@ public class ActivityStopMetrics {
      * @param reason Reason the Activity was stopped (see {@link StopReason}).
      */
     public void setStopReason(@StopReason int reason) {
-        if (mStopReason != STOP_REASON_COUNT) return;
+        if (mStopReason != StopReason.NUM_ENTRIES) return;
         mStopReason = reason;
     }
 }

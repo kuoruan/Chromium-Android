@@ -20,6 +20,8 @@ public final class LandmarkType {
 
     public static final int EYE = MOUTH + 1;
 
+    public static final int NOSE = EYE + 1;
+
 
     private static final boolean IS_EXTENSIBLE = false;
 
@@ -27,6 +29,7 @@ public final class LandmarkType {
         switch (value) {
             case 0:
             case 1:
+            case 2:
                 return true;
         }
         return false;

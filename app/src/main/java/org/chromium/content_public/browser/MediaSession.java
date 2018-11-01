@@ -59,4 +59,9 @@ public abstract class MediaSession {
      * Notify the media session that an action has been performed.
      */
     public abstract void didReceiveAction(int action);
+
+    /**
+     * Request audio focus from the system.
+     */
+    public abstract void requestSystemAudioFocus();
 }

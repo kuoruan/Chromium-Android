@@ -21,7 +21,6 @@ import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.BlackHoleEventFilter;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilter;
 import org.chromium.chrome.browser.compositor.layouts.phone.stack.Stack;
-import org.chromium.chrome.browser.compositor.layouts.phone.stack.StackAnimation;
 import org.chromium.chrome.browser.compositor.scene_layer.SceneLayer;
 import org.chromium.chrome.browser.compositor.scene_layer.TabListSceneLayer;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
@@ -47,6 +46,9 @@ public class SimpleAnimationLayout extends Layout {
 
     /** The animation for a tab being created in the background. */
     private AnimatorSet mTabCreatedBackgroundAnimation;
+
+    /** Fraction to scale tabs by during animation. */
+    public static final float SCALE_FRACTION = 0.90f;
 
     /** Duration of the first step of the background animation: zooming out, rotating in */
     private static final long BACKGROUND_STEP1_DURATION = 300;
@@ -88,7 +90,7 @@ public class SimpleAnimationLayout extends Layout {
     }
 
     @Override
-    public ViewportMode getViewportMode() {
+    public @ViewportMode int getViewportMode() {
         return ViewportMode.USE_PREVIOUS_BROWSER_CONTROLS_STATE;
     }
 
@@ -231,7 +233,7 @@ public class SimpleAnimationLayout extends Layout {
         forceAnimationToFinish();
 
         newLayoutTab.setBorderAlpha(0.0f);
-        final float scale = StackAnimation.SCALE_AMOUNT;
+        final float scale = SCALE_FRACTION;
         final float margin = Math.min(getWidth(), getHeight()) * (1.0f - scale) / 2.0f;
 
         CompositorAnimationHandler handler = getAnimationHandler();

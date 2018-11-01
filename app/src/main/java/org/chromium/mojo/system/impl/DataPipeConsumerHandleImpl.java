@@ -14,7 +14,6 @@ import java.nio.ByteBuffer;
  * Implementation of {@link ConsumerHandle}.
  */
 class DataPipeConsumerHandleImpl extends HandleBase implements ConsumerHandle {
-
     /**
      * @see HandleBase#HandleBase(CoreImpl, int)
      */
@@ -68,5 +67,4 @@ class DataPipeConsumerHandleImpl extends HandleBase implements ConsumerHandle {
     public void endReadData(int numBytesRead) {
         mCore.endReadData(this, numBytesRead);
     }
-
 }

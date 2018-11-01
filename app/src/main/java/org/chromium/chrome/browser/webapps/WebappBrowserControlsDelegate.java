@@ -47,8 +47,8 @@ class WebappBrowserControlsDelegate extends TabStateBrowserControlsVisibilityDel
      * @param twaVerificationFailed Whether a verification attempt for TWA to client has failed.
      * @return Whether the browser controls should be shown for {@code url}.
      */
-    static boolean shouldShowBrowserControls(WebappScopePolicy scopePolicy, WebappInfo info,
-            String url, int securityLevel, boolean twaVerificationFailed) {
+    static boolean shouldShowBrowserControls(@WebappScopePolicy.Type int scopePolicy,
+            WebappInfo info, String url, int securityLevel, boolean twaVerificationFailed) {
         // Do not show browser controls when URL is not ready yet.
         if (TextUtils.isEmpty(url)) return false;
 
@@ -82,8 +82,8 @@ class WebappBrowserControlsDelegate extends TabStateBrowserControlsVisibilityDel
      * {@code url}.
      */
     private static boolean shouldShowBrowserControlsForUrl(
-            WebappScopePolicy scopePolicy, WebappInfo webappInfo, String url) {
-        return !scopePolicy.isUrlInScope(webappInfo, url);
+            @WebappScopePolicy.Type int scopePolicy, WebappInfo webappInfo, String url) {
+        return !WebappScopePolicy.isUrlInScope(scopePolicy, webappInfo, url);
     }
 
     private static boolean shouldShowBrowserControlsForSecurityLevel(int securityLevel) {

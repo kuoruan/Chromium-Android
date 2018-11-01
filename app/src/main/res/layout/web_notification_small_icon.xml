@@ -3,9 +3,11 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+<ImageView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="16dp"
     android:layout_height="16dp"
     android:scaleType="centerInside"
-    android:contentDescription="@null"
+    tools:ignore="ContentDescription"
     style="@style/WebNotificationSmallIcon"/>

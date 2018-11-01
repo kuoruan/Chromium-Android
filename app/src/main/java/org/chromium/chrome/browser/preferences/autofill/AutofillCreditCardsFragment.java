@@ -8,6 +8,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceFragment;
 import android.support.v7.content.res.AppCompatResources;
 
@@ -15,6 +16,7 @@ import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.autofill.PersonalDataManager;
 import org.chromium.chrome.browser.autofill.PersonalDataManager.CreditCard;
+import org.chromium.chrome.browser.preferences.ChromeSwitchPreference;
 import org.chromium.chrome.browser.preferences.PreferenceUtils;
 
 /**
@@ -22,12 +24,15 @@ import org.chromium.chrome.browser.preferences.PreferenceUtils;
  */
 public class AutofillCreditCardsFragment
         extends PreferenceFragment implements PersonalDataManager.PersonalDataManagerObserver {
+    private static final String PREF_AUTOFILL_ENABLE_CREDIT_CARDS_TOGGLE_LABEL =
+            "autofill_enable_credit_cards_toggle_label";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         PreferenceUtils.addPreferencesFromResource(
                 this, R.xml.autofill_and_payments_preference_fragment_screen);
-        getActivity().setTitle(R.string.autofill_credit_cards_title);
+        getActivity().setTitle(R.string.autofill_payment_methods);
     }
 
     @Override
@@ -42,6 +47,21 @@ public class AutofillCreditCardsFragment
     private void rebuildCreditCardList() {
         getPreferenceScreen().removeAll();
         getPreferenceScreen().setOrderingAsAdded(true);
+
+        ChromeSwitchPreference autofillSwitch = new ChromeSwitchPreference(getActivity(), null);
+        autofillSwitch.setTitle(R.string.autofill_enable_credit_cards_toggle_label);
+        autofillSwitch.setSummary(
+                getActivity().getString(R.string.autofill_enable_credit_cards_toggle_sublabel));
+        autofillSwitch.setKey(PREF_AUTOFILL_ENABLE_CREDIT_CARDS_TOGGLE_LABEL); // For testing.
+        autofillSwitch.setChecked(PersonalDataManager.isAutofillCreditCardEnabled());
+        autofillSwitch.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                PersonalDataManager.setAutofillCreditCardEnabled((boolean) newValue);
+                return true;
+            }
+        });
+        getPreferenceScreen().addPreference(autofillSwitch);
 
         for (CreditCard card : PersonalDataManager.getInstance().getCreditCardsForSettings()) {
             // Add a preference for the credit card.
@@ -74,6 +94,7 @@ public class AutofillCreditCardsFragment
         pref.setIcon(plusIcon);
         pref.setTitle(R.string.autofill_create_credit_card);
         pref.setFragment(AutofillLocalCardEditor.class.getName());
+        pref.setEnabled(PersonalDataManager.isAutofillCreditCardEnabled());
         getPreferenceScreen().addPreference(pref);
     }
 

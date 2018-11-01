@@ -21,13 +21,14 @@
 
         <org.chromium.chrome.browser.widget.TintedImageView
             android:id="@+id/article_thumbnail"
-            android:layout_width="@dimen/snippets_thumbnail_size_modern"
-            android:layout_height="@dimen/snippets_thumbnail_size_modern"
+            android:layout_width="@dimen/snippets_thumbnail_size"
+            android:layout_height="@dimen/snippets_thumbnail_size"
             android:layout_alignParentTop="true"
             android:layout_alignParentStart="true"
             android:scaleType="centerCrop"
-            android:contentDescription="@null"
+            tools:ignore="ContentDescription"
             android:src="@null"
+            app:chrometint="@color/dark_mode_tint"
             tools:src="@drawable/ic_snippet_thumbnail_placeholder" />
 
         <ImageView
@@ -71,8 +72,7 @@
                 style="@style/SuggestionCardTitleModern"
                 android:id="@+id/article_headline"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
+                android:layout_height="wrap_content"
                 tools:text="Article headline" />
 
             <LinearLayout
@@ -101,8 +101,7 @@
                     android:maxLines="1"
                     android:singleLine="true"
                     android:ellipsize="end"
-                    android:textSize="12sp"
-                    android:textColor="@color/snippets_publisher_name_color"
+                    android:textAppearance="@style/BlackCaption"
                     android:textDirection="locale"
                     tools:text="chromium.org"/>
                 <TextView
@@ -110,10 +109,23 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:maxLines="1"
-                    android:textSize="12sp"
-                    android:textColor="@color/snippets_publisher_name_color"
+                    android:textAppearance="@style/BlackCaption"
                     android:textDirection="locale"
                     tools:text=" - 3 hours ago" />
+
+                <!-- We can't add this ImageView as a CompoundDrawable to the TextView because we
+                     want to have different paddings between the favicon (which is a compound
+                     drawable on the TextView) and the offline icon. -->
+                <!--  TODO(twellington): Remove this if the simplified NTP ships -->
+                <ImageView
+                    android:id="@+id/offline_icon_publisher_row"
+                    android:layout_width="@dimen/snippets_offline_icon_size"
+                    android:layout_height="@dimen/snippets_offline_icon_size"
+                    android:layout_marginStart="6dp"
+                    android:src="@drawable/offline_pin_round"
+                    android:contentDescription="@string/accessibility_ntp_offline_badge"
+                    android:visibility="gone"
+                    tools:tint="@color/default_icon_color" />
             </LinearLayout>
         </LinearLayout>
     </RelativeLayout>
@@ -126,7 +138,7 @@
         android:layout_height="@dimen/content_suggestions_card_modern_corner_radius"
         android:layout_alignTop="@id/card_contents"
         android:layout_alignParentStart="true"
-        android:contentDescription="@null"
+        tools:ignore="ContentDescription"
         android:scaleX="@integer/automirror_scale_x"
         app:srcCompat="@drawable/content_suggestions_card_corner_top" />
 
@@ -136,7 +148,7 @@
         android:layout_height="@dimen/content_suggestions_card_modern_corner_radius"
         android:layout_alignBottom="@id/card_contents"
         android:layout_alignParentStart="true"
-        android:contentDescription="@null"
+        tools:ignore="ContentDescription"
         android:scaleX="@integer/automirror_scale_x"
         app:srcCompat="@drawable/content_suggestions_card_corner_bottom" />
 

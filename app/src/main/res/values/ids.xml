@@ -11,8 +11,7 @@
     <item name="bookmark_page" type="id"/>
     <item name="foreground_drawable" type="id"/>
     <item name="fre_pager" type="id"/>
-    <item name="permission_intent_override" type="id" />
-    <item name="permission_type" type="id"/>
+    <item name="page_info_click_callback" type="id" />
     <item name="refine_view_id" type="id"/>
     <item name="tabswitcher_multiple_drawable" type="id"/>
     <item name="tabswitcher_single_drawable" type="id"/>
@@ -58,13 +57,15 @@
     <item type="id" name="show_menu" />
     <item type="id" name="open_recently_closed_tab" />
 
+    <!-- Editor dialog -->
+    <item type="id" name="editor_dialog_done_button" />
+
     <!-- PaymentRequest -->
     <item type="id" name="payments_section" />
     <item type="id" name="payments_left_summary_label" />
     <item type="id" name="payments_first_radio_button" />
     <item type="id" name="payments_add_option_button" />
     <item type="id" name="payments_edit_cancel_button" />
-    <item type="id" name="payments_edit_done_button" />
     <item type="id" name="payments_edit_checkbox" />
 
     <!-- Password update prompt -->
@@ -127,5 +128,6 @@
 
     <!-- Tags -->
     <item type="id" name="highlight_state" />
-
+    <item type="id" name="item_animator" />
+    <item type="id" name="highlight_color" />
 </resources>

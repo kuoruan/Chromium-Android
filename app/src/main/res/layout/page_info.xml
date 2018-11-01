@@ -7,11 +7,10 @@
 -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="8dp"
-    android:background="#ffffff"
     android:orientation="vertical" >
 
     <LinearLayout
@@ -22,7 +21,7 @@
         android:paddingEnd="@dimen/page_info_popup_padding_sides"
         android:paddingStart="@dimen/page_info_popup_padding_sides" >
 
-        <view class="org.chromium.chrome.browser.page_info.PageInfoPopup$ElidedUrlTextView"
+        <view class="org.chromium.chrome.browser.page_info.PageInfoView$ElidedUrlTextView"
             android:id="@+id/page_info_url"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -30,8 +29,7 @@
             android:lineSpacingExtra="6dp"
             android:paddingTop="16dp"
             android:textAlignment="viewStart"
-            android:textColor="@color/url_emphasis_default_text"
-            android:textSize="16sp"/>
+            android:textAppearance="@style/BlackTitle1" />
 
         <TextView
             android:id="@+id/page_info_connection_summary"
@@ -63,10 +61,9 @@
         android:paddingEnd="@dimen/page_info_popup_button_padding_sides"
         android:paddingStart="@dimen/page_info_popup_button_padding_sides"
         android:text="@string/page_info_instant_app_button"
-        android:textSize="14sp"
-        android:textColor="@android:color/white"
-        chrome:buttonRaised="false"
-        chrome:buttonColor="@color/app_banner_install_button_bg" />
+        android:textAppearance="@style/WhiteButtonText"
+        app:buttonRaised="false"
+        app:buttonColor="@color/app_banner_install_button_bg" />
 
     <LinearLayout
         android:id="@+id/page_info_permissions_list"
@@ -87,9 +84,7 @@
         android:layout_marginTop="8dp"
         android:paddingEnd="@dimen/page_info_popup_button_padding_sides"
         android:paddingStart="@dimen/page_info_popup_button_padding_sides"
-        android:text="@string/page_info_site_settings_button"
-        android:textColor="@color/light_active_color"
-        style="@style/ButtonCompatBorderless" />
+        android:text="@string/page_info_site_settings_button" />
 
     <Button
         android:id="@+id/page_info_open_online_button"
@@ -101,7 +96,5 @@
         android:layout_marginTop="8dp"
         android:paddingEnd="@dimen/page_info_popup_button_padding_sides"
         android:paddingStart="@dimen/page_info_popup_button_padding_sides"
-        android:text="@string/page_info_open_online_button"
-        android:textColor="@color/light_active_color"
-        style="@style/ButtonCompatBorderless" />
+        android:text="@string/page_info_open_online_button" />
 </LinearLayout>

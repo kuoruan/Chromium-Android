@@ -4,26 +4,34 @@
 
 package org.chromium.chrome.browser.feedback;
 
-import android.os.Handler;
-
-import org.chromium.base.CollectionUtil;
+import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
-import org.chromium.content_public.browser.ChildProcessUtils;
+import org.chromium.content_public.common.ContentSwitches;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /** Grabs feedback about the current system. */
 @JNINamespace("chrome::android")
 public class ProcessIdFeedbackSource implements AsyncFeedbackSource {
-    private boolean mComplete;
+    // Process types used for feedback report. These should be in sync with the enum
+    // in //content/public/common/process_type.h
+    private static final int PROCESS_TYPE_RENDERER = 3;
+    private static final int PROCESS_TYPE_UTILITY = 6;
+    private static final int PROCESS_TYPE_GPU = 9;
+
+    private static final Map<String, Integer> PROCESS_TYPES = new HashMap<>();
+    static {
+        PROCESS_TYPES.put(ContentSwitches.SWITCH_RENDERER_PROCESS, PROCESS_TYPE_RENDERER);
+        PROCESS_TYPES.put(ContentSwitches.SWITCH_UTILITY_PROCESS, PROCESS_TYPE_UTILITY);
+        PROCESS_TYPES.put(ContentSwitches.SWITCH_GPU_PROCESS, PROCESS_TYPE_GPU);
+    }
 
     /**
-     * A map of process type -> list of PIDs for that type.  See
-     * {@link ChildProcessUtils#getProcessIdsByType(org.chromium.base.Callback)} for more details.
+     * A map of process type -> list of PIDs for that type.  Can be {@code null}.
      */
-    private Map<String, List<Integer>> mProcessMap;
+    private Map<String, String> mProcessMap;
+    private boolean mIsReady;
 
     ProcessIdFeedbackSource() {}
 
@@ -34,37 +42,38 @@ public class ProcessIdFeedbackSource implements AsyncFeedbackSource {
     // AsyncFeedbackSource implementation.
     @Override
     public void start(final Runnable callback) {
-        ChildProcessUtils.getProcessIdsByType(results -> {
-            mProcessMap = results;
-            mComplete = true;
-            new Handler().post(callback);
-        });
+        nativeStart(this);
+    }
+
+    @CalledByNative
+    private void prepareCompleted(long nativeSource) {
+        mProcessMap = new HashMap<>();
+        for (Map.Entry<String, Integer> entry : PROCESS_TYPES.entrySet()) {
+            long[] pids = nativeGetProcessIdsForType(nativeSource, entry.getValue());
+            if (pids.length == 0) continue;
+            StringBuilder spids = new StringBuilder();
+            for (long pid : pids) {
+                if (spids.length() > 0) spids.append(", ");
+                spids.append(String.valueOf(pid));
+            }
+            mProcessMap.put(processTypeToFeedbackKey(entry.getKey()), spids.toString());
+        }
+        mProcessMap.put(processTypeToFeedbackKey("browser"), Long.toString(nativeGetCurrentPid()));
+        mIsReady = true;
     }
 
     @Override
     public boolean isReady() {
-        return mComplete;
+        return mIsReady;
     }
 
     @Override
     public Map<String, String> getFeedback() {
-        Map<String, String> feedback = new HashMap<>();
-        if (mProcessMap != null) {
-            CollectionUtil.forEach(mProcessMap, entry -> {
-                String key = processTypeToFeedbackKey(entry.getKey());
-                StringBuilder pids = new StringBuilder();
-                for (Integer pid : entry.getValue()) {
-                    if (pids.length() > 0) pids.append(", ");
-                    pids.append(pid.toString());
-                }
-                feedback.put(key, pids.toString());
-            });
-        }
-
-        feedback.put(processTypeToFeedbackKey("browser"), Long.toString(nativeGetCurrentPid()));
-
-        return feedback;
+        return mProcessMap;
     }
 
     private static native long nativeGetCurrentPid();
+    private static native void nativeStart(ProcessIdFeedbackSource source);
+    private native long[] nativeGetProcessIdsForType(
+            long nativeProcessIdFeedbackSource, int processType);
 }

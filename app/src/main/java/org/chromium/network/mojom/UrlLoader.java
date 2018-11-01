@@ -22,6 +22,7 @@ public interface UrlLoader extends org.chromium.mojo.bindings.Interface {
 
 
 
+
     public interface Proxy extends UrlLoader, org.chromium.mojo.bindings.Interface.Proxy {
     }
 
@@ -29,7 +30,7 @@ public interface UrlLoader extends org.chromium.mojo.bindings.Interface {
 
 
     void followRedirect(
-);
+String[] toBeRemovedRequestHeaders, HttpRequestHeaders modifiedRequestHeaders);
 
 
 

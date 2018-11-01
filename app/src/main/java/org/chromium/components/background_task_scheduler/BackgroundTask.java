@@ -12,7 +12,8 @@ import android.support.annotation.MainThread;
  * Entry point for callbacks from {@link BackgroundTaskScheduler}. Any classes implementing
  * this interface must have a public constructor which takes no arguments.
  * The callbacks will be executed on the main thread, which means that execution logic must be
- * offloaded to another {@link Thread}, {@link android.os.Handler} or {@link android.os.AsyncTask}.
+ * offloaded to another {@link Thread}, {@link android.os.Handler} or {@link
+ * org.chromium.base.AsyncTask}.
  */
 public interface BackgroundTask {
     /**
@@ -36,10 +37,11 @@ public interface BackgroundTask {
      * from this method when you are done processing. If this is a long-running task, you should
      * return true from this method, and instead invoke the {@link TaskFinishedCallback} when the
      * processing is finished on some other {@link Thread}, {@link android.os.Handler} or
-     * {@link android.os.AsyncTask}. While this method is running the system holds a wakelock. If
-     * false is returned from this method, the wakelock is immediately released, but if this method
-     * returns true, the wakelock is not released until either the {@link TaskFinishedCallback} is
-     * invoked, or the system calls {@link #onStopTask(Context, TaskParameters)}.
+     * {@link org.chromium.base.AsyncTask}. While this method is running the
+     * system holds a wakelock. If false is returned from this method, the wakelock is immediately
+     * released, but if this method returns true, the wakelock is not released until either the
+     * {@link TaskFinishedCallback} is invoked, or the system calls {@link #onStopTask(Context,
+     * TaskParameters)}.
      *
      * @param context the current context.
      * @param taskParameters the data passed in as {@link TaskInfo} when the task was scheduled.

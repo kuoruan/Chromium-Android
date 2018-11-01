@@ -128,6 +128,7 @@ class CustomTabToolbarAnimationDelegate {
         mUrlBar.getLocationInWindow(oldLoc);
 
         mUrlBar.requestLayout();
+
         mUrlBar.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
             @Override
             public void onLayoutChange(View v, int left, int top, int right, int bottom,

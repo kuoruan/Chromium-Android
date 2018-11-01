@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.ntp.cards;
 
 import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
@@ -33,8 +32,8 @@ public class Footer extends OptionalLeaf {
     }
 
     @Override
-    public void visitOptionalItem(NodeVisitor visitor) {
-        visitor.visitFooter();
+    public String describeForTesting() {
+        return "FOOTER";
     }
 
     public void setVisible(boolean visible) {
@@ -49,12 +48,8 @@ public class Footer extends OptionalLeaf {
             super(LayoutInflater.from(root.getContext())
                             .inflate(R.layout.new_tab_page_footer, root, false));
 
-            NoUnderlineClickableSpan link = new NoUnderlineClickableSpan() {
-                @Override
-                public void onClick(View view) {
-                    navigationDelegate.navigateToHelpPage();
-                }
-            };
+            NoUnderlineClickableSpan link =
+                    new NoUnderlineClickableSpan((view) -> navigationDelegate.navigateToHelpPage());
 
             TextView textView = (TextView) itemView.findViewById(R.id.text);
             textView.setText(SpanApplier.applySpans(
@@ -65,10 +60,10 @@ public class Footer extends OptionalLeaf {
             if (SuggestionsConfig.useModernLayout()) {
                 itemView.setPadding(itemView.getPaddingLeft(),
                         root.getResources().getDimensionPixelSize(
-                                R.dimen.chrome_home_suggestions_footer_padding_top),
+                                R.dimen.modern_suggestions_footer_padding_top),
                         itemView.getPaddingRight(),
                         root.getResources().getDimensionPixelSize(
-                                R.dimen.chrome_home_suggestions_footer_padding_bottom));
+                                R.dimen.modern_suggestions_footer_padding_bottom));
             }
         }
     }

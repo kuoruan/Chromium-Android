@@ -24,7 +24,7 @@ public class EdgeSwipeHandlerLayoutDelegate extends EmptyEdgeSwipeHandler {
     }
 
     @Override
-    public void swipeStarted(ScrollDirection direction, float x, float y) {
+    public void swipeStarted(@ScrollDirection int direction, float x, float y) {
         if (mLayoutProvider.getActiveLayout() == null) return;
         mLayoutProvider.getActiveLayout().swipeStarted(LayoutManager.time(), direction, x, y);
     }

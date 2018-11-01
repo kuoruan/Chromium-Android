@@ -25,13 +25,15 @@ import java.lang.annotation.RetentionPolicy;
     ModelType.APP_NOTIFICATIONS, ModelType.HISTORY_DELETE_DIRECTIVES,
     ModelType.SYNCED_NOTIFICATIONS, ModelType.SYNCED_NOTIFICATION_APP_INFO, ModelType.DICTIONARY,
     ModelType.FAVICON_IMAGES, ModelType.FAVICON_TRACKING, ModelType.DEVICE_INFO,
-    ModelType.PRIORITY_PREFERENCES, ModelType.SUPERVISED_USER_SETTINGS, ModelType.SUPERVISED_USERS,
-    ModelType.SUPERVISED_USER_SHARED_SETTINGS, ModelType.ARTICLES, ModelType.APP_LIST,
-    ModelType.WIFI_CREDENTIALS, ModelType.SUPERVISED_USER_WHITELISTS, ModelType.ARC_PACKAGE,
-    ModelType.PRINTERS, ModelType.READING_LIST, ModelType.USER_EVENTS, ModelType.PROXY_TABS,
-    ModelType.FIRST_PROXY_TYPE, ModelType.LAST_PROXY_TYPE, ModelType.LAST_USER_MODEL_TYPE,
-    ModelType.NIGORI, ModelType.FIRST_CONTROL_MODEL_TYPE, ModelType.EXPERIMENTS,
-    ModelType.LAST_CONTROL_MODEL_TYPE, ModelType.LAST_REAL_MODEL_TYPE, ModelType.MODEL_TYPE_COUNT
+    ModelType.PRIORITY_PREFERENCES, ModelType.SUPERVISED_USER_SETTINGS,
+    ModelType.DEPRECATED_SUPERVISED_USERS, ModelType.DEPRECATED_SUPERVISED_USER_SHARED_SETTINGS,
+    ModelType.DEPRECATED_ARTICLES, ModelType.APP_LIST, ModelType.WIFI_CREDENTIALS,
+    ModelType.SUPERVISED_USER_WHITELISTS, ModelType.ARC_PACKAGE, ModelType.PRINTERS,
+    ModelType.READING_LIST, ModelType.USER_EVENTS, ModelType.MOUNTAIN_SHARES,
+    ModelType.USER_CONSENTS, ModelType.PROXY_TABS, ModelType.FIRST_PROXY_TYPE,
+    ModelType.LAST_PROXY_TYPE, ModelType.LAST_USER_MODEL_TYPE, ModelType.NIGORI,
+    ModelType.FIRST_CONTROL_MODEL_TYPE, ModelType.EXPERIMENTS, ModelType.LAST_CONTROL_MODEL_TYPE,
+    ModelType.LAST_REAL_MODEL_TYPE, ModelType.MODEL_TYPE_COUNT
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface ModelType {
@@ -149,24 +151,18 @@ public @interface ModelType {
    */
   int PRIORITY_PREFERENCES = 25;
   /**
-   * Supervised user settings.
+   * Supervised user settings. Cannot be encrypted.
    */
   int SUPERVISED_USER_SETTINGS = 26;
   /**
-   * Supervised users. Every supervised user is a profile that is configured remotely by this user
-   * and can have restrictions applied. SUPERVISED_USERS and SUPERVISED_USER_SETTINGS can not be
-   * encrypted.
+   * Deprecated supervised user types that are not used anymore.
    */
-  int SUPERVISED_USERS = 27;
-  /**
-   * Supervised user shared settings. Shared settings can be modified both by the manager and the
-   * supervised user.
-   */
-  int SUPERVISED_USER_SHARED_SETTINGS = 28;
+  int DEPRECATED_SUPERVISED_USERS = 27;
+  int DEPRECATED_SUPERVISED_USER_SHARED_SETTINGS = 28;
   /**
    * Distilled articles.
    */
-  int ARTICLES = 29;
+  int DEPRECATED_ARTICLES = 29;
   /**
    * App List items
    */
@@ -197,32 +193,33 @@ public @interface ModelType {
    */
   int USER_EVENTS = 36;
   /**
+   * Shares in project Mountain.
+   */
+  int MOUNTAIN_SHARES = 37;
+  /**
+   * Commit only user consents.
+   */
+  int USER_CONSENTS = 38;
+  /**
    * ---- Proxy types ---- Proxy types are excluded from the sync protocol, but are still considered
    * real user types. By convention, we prefix them with 'PROXY_' to distinguish them from normal
    * protocol types. Tab sync. This is a placeholder type, so that Sessions can be implicitly
    * enabled for history sync and tabs sync.
    */
-  int PROXY_TABS = 37;
-  int FIRST_PROXY_TYPE = 37;
-  int LAST_PROXY_TYPE = 37;
-  int LAST_USER_MODEL_TYPE = 37;
+  int PROXY_TABS = 39;
+  int FIRST_PROXY_TYPE = 39;
+  int LAST_PROXY_TYPE = 39;
+  int LAST_USER_MODEL_TYPE = 39;
   /**
    * ---- Control Types ---- An object representing a set of Nigori keys.
    */
-  int NIGORI = 38;
-  int FIRST_CONTROL_MODEL_TYPE = 38;
+  int NIGORI = 40;
+  int FIRST_CONTROL_MODEL_TYPE = 40;
   /**
    * Flags to enable experimental features.
    */
-  int EXPERIMENTS = 39;
-  int LAST_CONTROL_MODEL_TYPE = 39;
-  int LAST_REAL_MODEL_TYPE = 39;
-  /**
-   * If you are adding a new sync datatype that is exposed to the user via the sync preferences UI,
-   * be sure to update the list in components/sync/driver/user_selectable_sync_type.h so that the
-   * UMA histograms for sync include your new type.  In this case, be sure to also update the
-   * UserSelectableTypes() definition in sync/syncable/model_type.cc. Additionally, enum
-   * SyncModelTypes and suffix SyncModelType need to be updated in histograms.xml for all new types.
-   */
-  int MODEL_TYPE_COUNT = 40;
+  int EXPERIMENTS = 41;
+  int LAST_CONTROL_MODEL_TYPE = 41;
+  int LAST_REAL_MODEL_TYPE = 41;
+  int MODEL_TYPE_COUNT = 42;
 }

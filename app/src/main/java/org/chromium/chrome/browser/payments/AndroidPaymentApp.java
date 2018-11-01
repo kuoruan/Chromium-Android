@@ -25,6 +25,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.components.url_formatter.UrlFormatter;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.payments.mojom.PaymentCurrencyAmount;
@@ -79,8 +80,8 @@ public class AndroidPaymentApp
     private static final String EXTRA_MODIFIERS = "modifiers";
     private static final String EXTRA_PAYMENT_REQUEST_ID = "paymentRequestId";
     private static final String EXTRA_PAYMENT_REQUEST_ORIGIN = "paymentRequestOrigin";
-    private static final String EXTRA_TOP_LEVEL_CERTIFICATE_CHAIN = "topLevelCertificateChain";
-    private static final String EXTRA_TOP_LEVEL_ORIGIN = "topLevelOrigin";
+    private static final String EXTRA_TOP_CERTIFICATE_CHAIN = "topLevelCertificateChain";
+    private static final String EXTRA_TOP_ORIGIN = "topLevelOrigin";
     private static final String EXTRA_TOTAL = "total";
 
     // Response from the payment app.
@@ -102,6 +103,7 @@ public class AndroidPaymentApp
     @Nullable
     private URI mCanDedupedApplicationId;
     private boolean mIsReadyToPayQueried;
+    private boolean mIsServiceConnected;
 
     /**
      * Builds the point of interaction with a locally installed 3rd party native Android payment
@@ -160,6 +162,7 @@ public class AndroidPaymentApp
         mServiceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
+                mIsServiceConnected = true;
                 IsReadyToPayService isReadyToPayService =
                         IsReadyToPayService.Stub.asInterface(service);
                 if (isReadyToPayService == null) {
@@ -170,7 +173,9 @@ public class AndroidPaymentApp
             }
 
             @Override
-            public void onServiceDisconnected(ComponentName name) {}
+            public void onServiceDisconnected(ComponentName name) {
+                mIsServiceConnected = false;
+            }
         };
 
         mIsReadyToPayIntent.putExtras(buildExtras(null /* id */, null /* merchantName */,
@@ -194,7 +199,10 @@ public class AndroidPaymentApp
 
     private void respondToGetInstrumentsQuery(final PaymentInstrument instrument) {
         if (mServiceConnection != null) {
-            ContextUtils.getApplicationContext().unbindService(mServiceConnection);
+            if (mIsServiceConnected) {
+                ContextUtils.getApplicationContext().unbindService(mServiceConnection);
+                mIsServiceConnected = false;
+            }
             mServiceConnection = null;
         }
 
@@ -289,12 +297,14 @@ public class AndroidPaymentApp
 
         new AlertDialog.Builder(activity, R.style.AlertDialogTheme)
                 .setTitle(R.string.external_app_leave_incognito_warning_title)
-                .setMessage(R.string.external_payment_app_leave_incognito_warning)
+                .setMessage(ChromeFeatureList.isEnabled(ChromeFeatureList.INCOGNITO_STRINGS)
+                                ? R.string.external_payment_app_leave_private_warning
+                                : R.string.external_payment_app_leave_incognito_warning)
                 .setPositiveButton(R.string.ok,
-                        (OnClickListener) (dialog, which) -> launchPaymentApp(id, merchantName,
-                                schemelessOrigin,
-                                schemelessIframeOrigin, certificateChain, methodDataMap,
-                                total, displayItems, modifiers))
+                        (OnClickListener) (dialog, which)
+                                -> launchPaymentApp(id, merchantName, schemelessOrigin,
+                                        schemelessIframeOrigin, certificateChain, methodDataMap,
+                                        total, displayItems, modifiers))
                 .setNegativeButton(R.string.cancel,
                         (OnClickListener) (dialog, which) -> notifyErrorInvokingPaymentApp())
                 .setOnCancelListener(dialog -> notifyErrorInvokingPaymentApp())
@@ -302,7 +312,7 @@ public class AndroidPaymentApp
     }
 
     private static String removeUrlScheme(String url) {
-        return UrlFormatter.formatUrlForSecurityDisplay(url, false /* omit scheme */);
+        return UrlFormatter.formatUrlForSecurityDisplayOmitScheme(url);
     }
 
     private void launchPaymentApp(String id, String merchantName, String origin,
@@ -346,15 +356,14 @@ public class AndroidPaymentApp
 
         if (merchantName != null) extras.putString(EXTRA_MERCHANT_NAME, merchantName);
 
-        extras.putString(EXTRA_TOP_LEVEL_ORIGIN, origin);
+        extras.putString(EXTRA_TOP_ORIGIN, origin);
 
         extras.putString(EXTRA_PAYMENT_REQUEST_ORIGIN, iframeOrigin);
 
         Parcelable[] serializedCertificateChain = null;
         if (certificateChain != null && certificateChain.length > 0) {
             serializedCertificateChain = buildCertificateChain(certificateChain);
-            extras.putParcelableArray(
-                    EXTRA_TOP_LEVEL_CERTIFICATE_CHAIN, serializedCertificateChain);
+            extras.putParcelableArray(EXTRA_TOP_CERTIFICATE_CHAIN, serializedCertificateChain);
         }
 
         extras.putStringArrayList(EXTRA_METHOD_NAMES, new ArrayList<>(methodDataMap.keySet()));
@@ -522,11 +531,11 @@ public class AndroidPaymentApp
         }
         // }}} total
 
+        // TODO(https://crbug.com/754779): The supportedMethods field was already changed from array
+        // to string but we should keep backward-compatibility for now.
         // supportedMethods {{{
         json.name("supportedMethods").beginArray();
-        for (String method : modifier.methodData.supportedMethods) {
-            json.value(method);
-        }
+        json.value(modifier.methodData.supportedMethod);
         json.endArray();
         // }}} supportedMethods
 

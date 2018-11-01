@@ -13,19 +13,24 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnAttachStateChangeListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.HeaderViewListAdapter;
+import android.widget.ImageView;
 import android.widget.ListPopupWindow;
+import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.favicon.FaviconHelper;
 import org.chromium.chrome.browser.favicon.FaviconHelper.FaviconImageCallback;
+import org.chromium.chrome.browser.history.HistoryManagerUtils;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.content_public.browser.NavigationController;
 import org.chromium.content_public.browser.NavigationEntry;
@@ -41,11 +46,12 @@ import java.util.Set;
 public class NavigationPopup extends ListPopupWindow implements AdapterView.OnItemClickListener {
 
     private static final int MAXIMUM_HISTORY_ITEMS = 8;
+    private static final int FULL_HISTORY_ENTRY_INDEX = -1;
 
     private final Profile mProfile;
     private final Context mContext;
     private final NavigationController mNavigationController;
-    private final NavigationHistory mHistory;
+    private NavigationHistory mHistory;
     private final NavigationAdapter mAdapter;
     private final ListItemFactory mListItemFactory;
 
@@ -54,8 +60,8 @@ public class NavigationPopup extends ListPopupWindow implements AdapterView.OnIt
     private Bitmap mDefaultFavicon;
 
     /**
-      * Loads the favicons asynchronously.
-      */
+     * Loads the favicons asynchronously.
+     */
     private FaviconHelper mFaviconHelper;
 
     private boolean mInitialized;
@@ -76,31 +82,36 @@ public class NavigationPopup extends ListPopupWindow implements AdapterView.OnIt
         mNavigationController = navigationController;
         mHistory = mNavigationController.getDirectedNavigationHistory(
                 isForward, MAXIMUM_HISTORY_ITEMS);
-        mAdapter = new NavigationAdapter();
 
-        mFaviconSize = mContext.getResources().getDimensionPixelSize(R.dimen.default_favicon_size);
+        mHistory.addEntry(new NavigationEntry(FULL_HISTORY_ENTRY_INDEX, UrlConstants.HISTORY_URL,
+                null, null, mContext.getResources().getString(R.string.show_full_history), null,
+                null, 0));
+
+        setBackgroundDrawable(
+                ApiCompatibilityUtils.getDrawable(mContext.getResources(), R.drawable.popup_bg));
+
+        if (ChromeFeatureList.isInitialized()
+                && ChromeFeatureList.isEnabled(ChromeFeatureList.LONG_PRESS_BACK_NEW_DESIGN)) {
+            mAdapter = new NewNavigationAdapter();
+        } else {
+            mAdapter = new NavigationAdapter();
+        }
 
         setModal(true);
         setInputMethodMode(PopupWindow.INPUT_METHOD_NOT_NEEDED);
         setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
         setOnItemClickListener(this);
+        setAdapter(mAdapter);
 
-        setAdapter(new HeaderViewListAdapter(null, null, mAdapter));
-
+        mFaviconSize = mContext.getResources().getDimensionPixelSize(R.dimen.default_favicon_size);
         mListItemFactory = new ListItemFactory(context);
-    }
-
-    /**
-     * @return Whether a navigation popup is valid for the given page.
-     */
-    public boolean shouldBeShown() {
-        return mHistory.getEntryCount() > 0;
     }
 
     @Override
     public void show() {
         if (!mInitialized) initialize();
         super.show();
+        if (mAdapter.mInReverseOrder) scrollToBottom();
     }
 
     @Override
@@ -108,6 +119,28 @@ public class NavigationPopup extends ListPopupWindow implements AdapterView.OnIt
         if (mInitialized) mFaviconHelper.destroy();
         mInitialized = false;
         super.dismiss();
+    }
+
+    private void scrollToBottom() {
+        getListView().addOnAttachStateChangeListener(new OnAttachStateChangeListener() {
+            @Override
+            public void onViewDetachedFromWindow(View v) {
+                if (v != null) v.removeOnAttachStateChangeListener(this);
+            }
+
+            @Override
+            public void onViewAttachedToWindow(View v) {
+                ((ListView) v).smoothScrollToPosition(mHistory.getEntryCount() - 1);
+            }
+        });
+    }
+
+    /**
+     * Reverses the history order for visual purposes only. This does not pull from the beginning of
+     * the navigation history, but only reverses the list that would have normally been retrieved.
+     */
+    public void reverseHistoryOrder() {
+        mAdapter.reverseOrder();
     }
 
     private void initialize() {
@@ -129,12 +162,6 @@ public class NavigationPopup extends ListPopupWindow implements AdapterView.OnIt
                 requestedUrls.add(pageUrl);
             }
         }
-
-        FaviconImageCallback historyImageCallback =
-                (bitmap, iconUrl) -> NavigationPopup.this.onFaviconAvailable(
-                        UrlConstants.HISTORY_URL, bitmap);
-        mFaviconHelper.getLocalFaviconImageForURL(
-                mProfile, UrlConstants.HISTORY_URL, mFaviconSize, historyImageCallback);
     }
 
     /**
@@ -160,7 +187,14 @@ public class NavigationPopup extends ListPopupWindow implements AdapterView.OnIt
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         NavigationEntry entry = (NavigationEntry) parent.getItemAtPosition(position);
-        mNavigationController.goToNavigationIndex(entry.getIndex());
+        if (entry.getIndex() == FULL_HISTORY_ENTRY_INDEX) {
+            assert mContext instanceof ChromeActivity;
+            ChromeActivity activity = (ChromeActivity) mContext;
+            HistoryManagerUtils.showHistoryManager(activity, activity.getActivityTab());
+        } else {
+            mNavigationController.goToNavigationIndex(entry.getIndex());
+        }
+
         dismiss();
     }
 
@@ -226,6 +260,12 @@ public class NavigationPopup extends ListPopupWindow implements AdapterView.OnIt
     }
 
     private class NavigationAdapter extends BaseAdapter {
+        boolean mInReverseOrder;
+
+        public void reverseOrder() {
+            mInReverseOrder = true;
+        }
+
         @Override
         public int getCount() {
             return mHistory.getEntryCount();
@@ -233,6 +273,7 @@ public class NavigationPopup extends ListPopupWindow implements AdapterView.OnIt
 
         @Override
         public Object getItem(int position) {
+            position = mInReverseOrder ? getCount() - position - 1 : position;
             return mHistory.getEntryAtIndex(position);
         }
 
@@ -250,14 +291,61 @@ public class NavigationPopup extends ListPopupWindow implements AdapterView.OnIt
                 view = mListItemFactory.createListItem();
             }
             NavigationEntry entry = (NavigationEntry) getItem(position);
-
-            String entryText = entry.getTitle();
-            if (TextUtils.isEmpty(entryText)) entryText = entry.getVirtualUrl();
-            if (TextUtils.isEmpty(entryText)) entryText = entry.getUrl();
-            view.setText(entryText);
+            setViewText(entry, view);
             updateBitmapForTextView(view, entry.getFavicon());
 
             return view;
         }
+    }
+
+    private class NewNavigationAdapter extends NavigationAdapter {
+        private Integer mTopPadding;
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            EntryViewHolder viewHolder;
+            if (convertView == null) {
+                LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+                convertView = inflater.inflate(R.layout.navigation_popup_item, parent, false);
+                viewHolder = new EntryViewHolder();
+                viewHolder.mContainer = convertView;
+                viewHolder.mImageView = convertView.findViewById(R.id.favicon_img);
+                viewHolder.mTextView = convertView.findViewById(R.id.entry_title);
+                convertView.setTag(viewHolder);
+            } else {
+                viewHolder = (EntryViewHolder) convertView.getTag();
+            }
+
+            NavigationEntry entry = (NavigationEntry) getItem(position);
+            setViewText(entry, viewHolder.mTextView);
+            viewHolder.mImageView.setImageBitmap(entry.getFavicon());
+
+            if (mInReverseOrder) {
+                View container = viewHolder.mContainer;
+                if (mTopPadding == null) {
+                    mTopPadding = container.getResources().getDimensionPixelSize(
+                            R.dimen.navigation_popup_top_padding);
+                }
+                viewHolder.mContainer.setPadding(container.getPaddingLeft(),
+                        position == 0 ? mTopPadding : 0, container.getPaddingRight(),
+                        container.getPaddingBottom());
+            }
+
+            return convertView;
+        }
+    }
+
+    private static class EntryViewHolder {
+        View mContainer;
+        ImageView mImageView;
+        TextView mTextView;
+    }
+
+    private static void setViewText(NavigationEntry entry, TextView view) {
+        String entryText = entry.getTitle();
+        if (TextUtils.isEmpty(entryText)) entryText = entry.getVirtualUrl();
+        if (TextUtils.isEmpty(entryText)) entryText = entry.getUrl();
+
+        view.setText(entryText);
     }
 }

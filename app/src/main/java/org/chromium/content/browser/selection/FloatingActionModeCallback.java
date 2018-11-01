@@ -18,7 +18,7 @@ import org.chromium.content_public.browser.ActionModeCallbackHelper;
  * A class thatextends ActionMode.Callback2 to support floating ActionModes.
  */
 @TargetApi(Build.VERSION_CODES.M)
-class FloatingActionModeCallback extends ActionMode.Callback2 {
+public class FloatingActionModeCallback extends ActionMode.Callback2 {
     private final ActionModeCallbackHelper mHelper;
     private final ActionMode.Callback mCallback;
 

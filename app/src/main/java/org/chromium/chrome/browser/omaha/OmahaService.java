@@ -8,10 +8,10 @@ import android.annotation.TargetApi;
 import android.app.IntentService;
 import android.app.job.JobService;
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.Nullable;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
@@ -26,8 +26,6 @@ import org.chromium.components.background_task_scheduler.TaskParameters;
  * Delegates out to either an {@link IntentService} or {@link JobService}, as necessary.
  */
 public class OmahaService extends OmahaBase implements BackgroundTask {
-    private static final String TAG = "omaha";
-
     private static class OmahaClientDelegate extends OmahaDelegateBase {
         public OmahaClientDelegate(Context context) {
             super(context);
@@ -37,16 +35,16 @@ public class OmahaService extends OmahaBase implements BackgroundTask {
         public void scheduleService(long currentTimestampMs, long nextTimestampMs) {
             if (Build.VERSION.SDK_INT < OmahaBase.MIN_API_JOB_SCHEDULER) {
                 getScheduler().createAlarm(OmahaClient.createIntent(getContext()), nextTimestampMs);
-                Log.i(TAG, "Scheduled using AlarmManager and IntentService");
+                Log.i(OmahaBase.TAG, "Scheduled using AlarmManager and IntentService");
             } else {
                 final long delay = nextTimestampMs - currentTimestampMs;
                 ThreadUtils.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         if (scheduleJobService(getContext(), delay)) {
-                            Log.i(TAG, "Scheduled using JobService");
+                            Log.i(OmahaBase.TAG, "Scheduled using JobService");
                         } else {
-                            Log.e(TAG, "Failed to schedule job");
+                            Log.e(OmahaBase.TAG, "Failed to schedule job");
                         }
                     }
                 });
@@ -65,7 +63,7 @@ public class OmahaService extends OmahaBase implements BackgroundTask {
         }
     }
 
-    private AsyncTask<Void, Void, Void> mJobServiceTask;
+    private AsyncTask<Void> mJobServiceTask;
 
     /** Used only by {@link BackgroundTaskScheduler}. */
     public OmahaService() {
@@ -88,13 +86,16 @@ public class OmahaService extends OmahaBase implements BackgroundTask {
         }
     }
 
+    // Incorrectly infers that this is called on a worker thread because of AsyncTask doInBackground
+    // overriding.
+    @SuppressWarnings("WrongThread")
     @Override
     @TargetApi(Build.VERSION_CODES.M)
     public boolean onStartTask(
             Context context, TaskParameters parameters, final TaskFinishedCallback callback) {
-        mJobServiceTask = new AsyncTask<Void, Void, Void>() {
+        mJobServiceTask = new AsyncTask<Void>() {
             @Override
-            public Void doInBackground(Void... params) {
+            public Void doInBackground() {
                 run();
                 return null;
             }

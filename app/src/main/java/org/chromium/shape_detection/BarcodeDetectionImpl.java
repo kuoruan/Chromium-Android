@@ -8,8 +8,6 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.util.SparseArray;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
@@ -19,9 +17,9 @@ import org.chromium.base.Log;
 import org.chromium.gfx.mojom.PointF;
 import org.chromium.gfx.mojom.RectF;
 import org.chromium.mojo.system.MojoException;
-import org.chromium.services.service_manager.InterfaceFactory;
 import org.chromium.shape_detection.mojom.BarcodeDetection;
 import org.chromium.shape_detection.mojom.BarcodeDetectionResult;
+import org.chromium.shape_detection.mojom.BarcodeDetectorOptions;
 
 /**
  * Implementation of mojo BarcodeDetection, using Google Play Services vision package.
@@ -31,7 +29,10 @@ public class BarcodeDetectionImpl implements BarcodeDetection {
 
     private BarcodeDetector mBarcodeDetector;
 
-    public BarcodeDetectionImpl() {
+    public BarcodeDetectionImpl(BarcodeDetectorOptions options) {
+        // TODO(mcasas): extract the barcode formats to hunt for out of
+        // |options| and use them for building |mBarcodeDetector|.
+        // https://crbug.com/582266.
         mBarcodeDetector =
                 new BarcodeDetector.Builder(ContextUtils.getApplicationContext()).build();
     }
@@ -87,23 +88,5 @@ public class BarcodeDetectionImpl implements BarcodeDetection {
     @Override
     public void onConnectionError(MojoException e) {
         close();
-    }
-
-    /**
-     * A factory class to register BarcodeDetection interface.
-     */
-    public static class Factory implements InterfaceFactory<BarcodeDetection> {
-        public Factory() {}
-
-        @Override
-        public BarcodeDetection createImpl() {
-            if (GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(
-                        ContextUtils.getApplicationContext())
-                    != ConnectionResult.SUCCESS) {
-                Log.e(TAG, "Google Play Services not available");
-                return null;
-            }
-            return new BarcodeDetectionImpl();
-        }
     }
 }

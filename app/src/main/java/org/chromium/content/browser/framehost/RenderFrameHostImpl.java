@@ -60,6 +60,10 @@ public class RenderFrameHostImpl implements RenderFrameHost {
         return mDelegate;
     }
 
+    public long getNativePtr() {
+        return mNativeRenderFrameHostAndroid;
+    }
+
     @Override
     public String getLastCommittedURL() {
         if (mNativeRenderFrameHostAndroid == 0) return null;
@@ -81,19 +85,18 @@ public class RenderFrameHostImpl implements RenderFrameHost {
     }
 
     /**
-     * Returns whether we're in incognito mode.
-     *
      * TODO(timloh): This function shouldn't really be on here. If we end up
      * needing more logic from the native BrowserContext, we should add a
      * wrapper for that and move this function there.
      */
+    @Override
     public boolean isIncognito() {
         return mIncognito;
     }
 
     @Override
-    public void setHasReceivedUserGesture() {
-        nativeSetHasReceivedUserGesture(mNativeRenderFrameHostAndroid);
+    public void notifyUserActivation() {
+        nativeNotifyUserActivation(mNativeRenderFrameHostAndroid);
     }
 
     /**
@@ -109,5 +112,5 @@ public class RenderFrameHostImpl implements RenderFrameHost {
             long nativeRenderFrameHostAndroid, Callback<String> callback);
     private native UnguessableToken nativeGetAndroidOverlayRoutingToken(
             long nativeRenderFrameHostAndroid);
-    private native void nativeSetHasReceivedUserGesture(long nativeRenderFrameHostAndroid);
+    private native void nativeNotifyUserActivation(long nativeRenderFrameHostAndroid);
 }

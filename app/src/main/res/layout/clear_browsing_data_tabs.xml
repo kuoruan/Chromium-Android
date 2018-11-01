@@ -13,8 +13,7 @@
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        android:layout_height="wrap_content" >
 
         <!-- RTL is handled manually in ClearBrowsingDataTabsFragment because
              it is not working correctly with a ViewPager -->
@@ -23,6 +22,8 @@
             android:layoutDirection="ltr"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:tabTextColor="@color/disabled_text_color"
+            app:tabSelectedTextColor="@color/clear_browsing_data_selected_tab_color"
             app:tabMode="fixed"
             app:tabMaxWidth="0dp"
             app:tabGravity="fill" />

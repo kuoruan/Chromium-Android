@@ -18,6 +18,40 @@ public interface NetworkServiceTest extends org.chromium.mojo.bindings.Interface
 
 
 
+    public static final class ShouldRequireCt {
+
+
+        public static final int RESET = (int) (0L);
+
+        public static final int REQUIRE = (int) (1L);
+
+        public static final int DONT_REQUIRE = (int) (2L);
+
+
+        private static final boolean IS_EXTENSIBLE = false;
+
+        public static boolean isKnownValue(int value) {
+            switch (value) {
+                case 0:
+                case 1:
+                case 2:
+                    return true;
+            }
+            return false;
+        }
+
+        public static void validate(int value) {
+            if (IS_EXTENSIBLE || isKnownValue(value))
+                return;
+
+            throw new DeserializationException("Invalid enum value.");
+        }
+
+        private ShouldRequireCt() {}
+
+    }
+
+
     public interface Proxy extends NetworkServiceTest, org.chromium.mojo.bindings.Interface.Proxy {
     }
 
@@ -40,6 +74,14 @@ SimulateNetworkChangeResponse callback);
 
 
 
+    void simulateNetworkQualityChange(
+int type, 
+SimulateNetworkQualityChangeResponse callback);
+
+    interface SimulateNetworkQualityChangeResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
+
+
+
     void simulateCrash(
 );
 
@@ -58,6 +100,19 @@ X509Certificate cert, String hostPattern, CertVerifyResult verifyResult, int rv,
 MockCertVerifierAddResultForCertAndHostResponse callback);
 
     interface MockCertVerifierAddResultForCertAndHostResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
+
+
+
+    void setShouldRequireCt(
+int required, 
+SetShouldRequireCtResponse callback);
+
+    interface SetShouldRequireCtResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
+
+
+
+    void crashOnResolveHost(
+String host);
 
 
 }

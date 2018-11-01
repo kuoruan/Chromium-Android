@@ -3,16 +3,46 @@
      Use of this source code is governed by a BSD-style license that can be
      found in the LICENSE file. -->
 
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_height="wrap_content"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/recent_tabs_list_item_layout"
+    android:layout_height="@dimen/recent_tabs_foreign_session_group_item_height"
     android:layout_width="match_parent"
-    android:layout_gravity="center_vertical"
     android:background="?attr/selectableItemBackground"
-    android:paddingStart="56dp"
-    android:paddingEnd="16dp"
-    android:drawablePadding="16dp"
-    android:gravity="center_vertical"
-    android:minHeight="@dimen/ntp_list_item_min_height"
-    android:singleLine="true"
-    android:textAlignment="viewStart"
-    android:textAppearance="@style/BlackTitle1" />
+    android:paddingStart="@dimen/recent_tabs_list_item_side_padding"
+    android:paddingEnd="@dimen/recent_tabs_list_item_side_padding">
+
+    <ImageView
+        android:id="@+id/recent_tabs_favicon"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        tools:ignore="ContentDescription"
+        style="@style/ListItemStartIcon" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/recent_tabs_favicon"
+        android:orientation="vertical"
+        android:layout_centerVertical="true" >
+
+        <TextView
+            android:id="@+id/title_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:textAppearance="@style/BlackTitle1"
+            android:singleLine="true"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/domain_row"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textAppearance="@style/BlackBody"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</RelativeLayout>

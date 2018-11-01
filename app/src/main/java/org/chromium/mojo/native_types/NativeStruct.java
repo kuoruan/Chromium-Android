@@ -40,9 +40,6 @@ public final class NativeStruct extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static NativeStruct deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,13 +53,14 @@ public final class NativeStruct extends org.chromium.mojo.bindings.Struct {
         NativeStruct result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new NativeStruct(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new NativeStruct(elementsOrVersion);
+                {
+                    
                 result.data = decoder0.readBytes(8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, true);
                 if (decoder1 == null) {
                     result.handles = null;
@@ -75,7 +73,8 @@ public final class NativeStruct extends org.chromium.mojo.bindings.Struct {
                         result.handles[i1] = SerializedHandle.decode(decoder2);
                     }
                 }
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -98,36 +97,5 @@ public final class NativeStruct extends org.chromium.mojo.bindings.Struct {
                 encoder1.encode(this.handles[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        NativeStruct other = (NativeStruct) object;
-        if (!java.util.Arrays.equals(this.data, other.data))
-            return false;
-        if (!java.util.Arrays.deepEquals(this.handles, other.handles))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + java.util.Arrays.hashCode(this.data);
-        result = prime * result + java.util.Arrays.deepHashCode(this.handles);
-        return result;
     }
 }

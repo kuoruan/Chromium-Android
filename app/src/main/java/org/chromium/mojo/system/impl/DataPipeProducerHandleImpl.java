@@ -14,7 +14,6 @@ import java.nio.ByteBuffer;
  * Implementation of {@link ProducerHandle}.
  */
 class DataPipeProducerHandleImpl extends HandleBase implements ProducerHandle {
-
     /**
      * @see HandleBase#HandleBase(CoreImpl, int)
      */
@@ -60,5 +59,4 @@ class DataPipeProducerHandleImpl extends HandleBase implements ProducerHandle {
     public void endWriteData(int numBytesWritten) {
         mCore.endWriteData(this, numBytesWritten);
     }
-
 }

@@ -12,6 +12,7 @@ import android.provider.Browser;
 import android.provider.ContactsContract;
 import android.support.customtabs.CustomTabsIntent;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.DefaultBrowserInfo;
 import org.chromium.chrome.browser.IntentHandler;
@@ -224,9 +225,17 @@ public class TabContextMenuItemDelegate implements ContextMenuItemDelegate {
 
     @Override
     public void onOpenInChrome(String linkUrl, String pageUrl) {
+        Context applicationContext = ContextUtils.getApplicationContext();
         Intent chromeIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(linkUrl));
-        chromeIntent.setPackage(mTab.getApplicationContext().getPackageName());
+        chromeIntent.setPackage(applicationContext.getPackageName());
         chromeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (applicationContext.getPackageManager()
+                        .queryIntentActivities(chromeIntent, 0)
+                        .isEmpty()) {
+            // If Chrome can't handle intent fallback to using any other VIEW handlers.
+            chromeIntent.setPackage(null);
+        }
+
         // For "Open in Chrome" from the context menu in FullscreenActivity we want to bypass
         // CustomTab, and this flag ensures we open in TabbedChrome.
         chromeIntent.putExtra(LaunchIntentDispatcher.EXTRA_IS_ALLOWED_TO_RETURN_TO_PARENT, false);
@@ -247,7 +256,7 @@ public class TabContextMenuItemDelegate implements ContextMenuItemDelegate {
 
         if (!activityStarted) {
             Context context = mTab.getActivity();
-            if (context == null) context = mTab.getApplicationContext();
+            if (context == null) context = applicationContext;
             context.startActivity(chromeIntent);
             activityStarted = true;
         }

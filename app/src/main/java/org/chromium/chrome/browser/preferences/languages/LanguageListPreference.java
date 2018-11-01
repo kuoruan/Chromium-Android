@@ -94,13 +94,15 @@ public class LanguageListPreference extends Preference {
                         boolean state = (item.getEndIconId() == 0);
                         PrefServiceBridge.getInstance().setLanguageBlockedState(
                                 info.getCode(), !state);
-                        LanguagesManager.recordAction(
-                                state ? LanguagesManager.ACTION_ENABLE_TRANSLATE_FOR_SINGLE_LANGUAGE
-                                      : LanguagesManager
-                                                .ACTION_DISABLE_TRANSLATE_FOR_SINGLE_LANGUAGE);
+                        LanguagesManager.recordAction(state
+                                        ? LanguagesManager.LanguageSettingsActionType
+                                                  .ENABLE_TRANSLATE_FOR_SINGLE_LANGUAGE
+                                        : LanguagesManager.LanguageSettingsActionType
+                                                  .DISABLE_TRANSLATE_FOR_SINGLE_LANGUAGE);
                     } else if (item.getTextId() == R.string.remove) {
                         LanguagesManager.getInstance().removeFromAcceptLanguages(info.getCode());
-                        LanguagesManager.recordAction(LanguagesManager.ACTION_LANGUAGE_REMOVED);
+                        LanguagesManager.recordAction(
+                                LanguagesManager.LanguageSettingsActionType.LANGUAGE_REMOVED);
                     } else if (item.getTextId() == R.string.languages_item_option_move_up) {
                         LanguagesManager.getInstance().moveLanguagePosition(
                                 info.getCode(), -1, true);
@@ -144,11 +146,12 @@ public class LanguageListPreference extends Preference {
         mAddLanguageButton = (TextView) mView.findViewById(R.id.add_language);
         ApiCompatibilityUtils.setCompoundDrawablesRelativeWithIntrinsicBounds(mAddLanguageButton,
                 TintedDrawable.constructTintedDrawable(
-                        getContext().getResources(), R.drawable.plus, R.color.pref_accent_color),
+                        getContext(), R.drawable.plus, R.color.pref_accent_color),
                 null, null, null);
         mAddLanguageButton.setOnClickListener(view -> {
             mLauncher.launchAddLanguage();
-            LanguagesManager.recordAction(LanguagesManager.ACTION_CLICK_ON_ADD_LANGUAGE);
+            LanguagesManager.recordAction(
+                    LanguagesManager.LanguageSettingsActionType.CLICK_ON_ADD_LANGUAGE);
         });
 
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.language_list);

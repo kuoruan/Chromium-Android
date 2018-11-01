@@ -17,6 +17,7 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.toolbar.Toolbar;
 import org.chromium.chrome.browser.toolbar.ToolbarActionModeCallback;
 import org.chromium.chrome.browser.toolbar.ToolbarDataProvider;
+import org.chromium.chrome.browser.widget.ScrimView;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
 import org.chromium.ui.base.WindowAndroid;
 
@@ -139,11 +140,6 @@ public interface LocationBar extends UrlBarDelegate {
     void revertChanges();
 
     /**
-     * @return The timestamp for the {@link UrlBar} gaining focus for the first time.
-     */
-    long getFirstUrlBarFocusTime();
-
-    /**
      * Updates the security icon displayed in the LocationBar.
      */
     void updateSecurityIcon();
@@ -187,4 +183,15 @@ public interface LocationBar extends UrlBarDelegate {
      * @return Whether the location bar is allowed to use Chrome modern design.
      */
     boolean useModernDesign();
+
+    /**
+     * @return The margin to be applied to the URL bar based on the buttons currently visible next
+     *         to it, used to avoid text overlapping the buttons and vice versa.
+     */
+    int getUrlContainerMarginEnd();
+
+    /**
+     * @param scrim The scrim for this location bar to use.
+     */
+    void setScrim(ScrimView scrim);
 }

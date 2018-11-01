@@ -5,9 +5,6 @@
      found in the LICENSE file.
 -->
 <resources>
-    <!-- Text colors of warning messages for credit card and password forms. -->
-    <color name="http_bad_warning_message_text">#C53929</color>
+    <!-- Text colors of warning messages for credit card forms. -->
     <color name="insecure_context_payment_disabled_message_text">#646464</color>
-
-    <color name="keyboard_accessory_hint_icon">#4285F4</color>
 </resources>

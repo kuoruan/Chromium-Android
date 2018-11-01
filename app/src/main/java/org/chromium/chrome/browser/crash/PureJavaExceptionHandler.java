@@ -48,6 +48,7 @@ public class PureJavaExceptionHandler implements Thread.UncaughtExceptionHandler
         // all the handlers before mParent. In order to disable this handler, globally setting a
         // flag to ignore it seems to be the easiest way.
         sIsDisabled = true;
+        CrashKeys.getInstance().flushToNative();
     }
 
     private void reportJavaException(Throwable e) {

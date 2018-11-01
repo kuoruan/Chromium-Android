@@ -42,9 +42,6 @@ public final class Rect extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static Rect deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -58,23 +55,25 @@ public final class Rect extends org.chromium.mojo.bindings.Struct {
         Rect result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new Rect(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new Rect(elementsOrVersion);
+                {
+                    
                 result.x = decoder0.readInt(8);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.y = decoder0.readInt(12);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.width = decoder0.readInt(16);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.height = decoder0.readInt(20);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -93,42 +92,5 @@ public final class Rect extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.width, 16);
         
         encoder0.encode(this.height, 20);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        Rect other = (Rect) object;
-        if (this.x!= other.x)
-            return false;
-        if (this.y!= other.y)
-            return false;
-        if (this.width!= other.width)
-            return false;
-        if (this.height!= other.height)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.x);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.y);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.width);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.height);
-        return result;
     }
 }

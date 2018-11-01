@@ -4,14 +4,14 @@
 
 package org.chromium.chrome.browser.bookmarks;
 
-import android.app.Activity;
 import android.view.View;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.BasicNativePage;
-import org.chromium.chrome.browser.NativePageHost;
+import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.native_page.BasicNativePage;
+import org.chromium.chrome.browser.native_page.NativePageHost;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarManageable;
 
 /**
@@ -26,12 +26,12 @@ public class BookmarkPage extends BasicNativePage {
      * @param activity The activity to get context and manage fragments.
      * @param host A NativePageHost to load urls.
      */
-    public BookmarkPage(Activity activity, NativePageHost host) {
+    public BookmarkPage(ChromeActivity activity, NativePageHost host) {
         super(activity, host);
     }
 
     @Override
-    protected void initialize(Activity activity, NativePageHost host) {
+    protected void initialize(ChromeActivity activity, NativePageHost host) {
         mManager = new BookmarkManager(
                 activity, false, ((SnackbarManageable) activity).getSnackbarManager());
         mManager.setBasicNativePage(this);

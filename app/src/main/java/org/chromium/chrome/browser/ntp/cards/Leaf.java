@@ -4,17 +4,15 @@
 
 package org.chromium.chrome.browser.ntp.cards;
 
-import org.chromium.base.Callback;
-
-import java.util.Collections;
-import java.util.Set;
+import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder.PartialBindCallback;
 
 /**
  * A permanent leaf in the tree, i.e. a single item.
  * If the leaf is not to be a permanent member of the tree, see {@link OptionalLeaf} for an
  * implementation that will take care of hiding or showing the item.
  */
-public abstract class Leaf extends ChildNode {
+public abstract class Leaf
+        extends ChildNode<NewTabPageViewHolder, PartialBindCallback> implements PartiallyBindable {
     protected Leaf() {
         // Initialize the item count to 1 (at this point the parent is null, so no notification will
         // be sent).
@@ -40,19 +38,17 @@ public abstract class Leaf extends ChildNode {
     }
 
     @Override
-    public Set<Integer> getItemDismissalGroup(int position) {
-        return Collections.emptySet();
+    public String describeItemForTesting(int position) {
+        if (position != 0) throw new IndexOutOfBoundsException();
+        return describeForTesting();
     }
 
-    @Override
-    public void dismissItem(int position, Callback<String> itemRemovedCallback) {
-        assert false;
-    }
+    protected abstract String describeForTesting();
 
     /**
      * Display the data for this item.
      * @param holder The view holder that should be updated.
-     * @see #onBindViewHolder(NewTabPageViewHolder, int)
+     * @see #onBindViewHolder
      * @see android.support.v7.widget.RecyclerView.Adapter#onBindViewHolder
      */
     protected abstract void onBindViewHolder(NewTabPageViewHolder holder);

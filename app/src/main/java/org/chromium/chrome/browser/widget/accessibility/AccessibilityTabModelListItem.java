@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.os.Handler;
+import android.support.v7.content.res.AppCompatResources;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
@@ -23,7 +24,6 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -60,6 +60,7 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
     private final int mDefaultLevel;
     private final int mIncognitoLevel;
     private final ColorStateList mDarkIconColor;
+    private final ColorStateList mLightIconColor;
     private final ColorStateList mDarkCloseIconColor;
     private final ColorStateList mLightCloseIconColor;
 
@@ -73,7 +74,7 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
     private LinearLayout mTabContents;
     private TextView mTitleView;
     private TextView mDescriptionView;
-    private ImageView mFaviconView;
+    private TintedImageView mFaviconView;
     private TintedImageButton mCloseButton;
 
     // The children on the undo view.
@@ -215,12 +216,11 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
 
         mDefaultHeight =
                 context.getResources().getDimensionPixelOffset(R.dimen.accessibility_tab_height);
-        mDarkIconColor =
-                ApiCompatibilityUtils.getColorStateList(getResources(), R.color.dark_mode_tint);
-        mDarkCloseIconColor =
-                ApiCompatibilityUtils.getColorStateList(getResources(), R.color.black_alpha_38);
+        mDarkIconColor = AppCompatResources.getColorStateList(context, R.color.dark_mode_tint);
+        mLightIconColor = AppCompatResources.getColorStateList(context, R.color.white_mode_tint);
+        mDarkCloseIconColor = AppCompatResources.getColorStateList(context, R.color.black_alpha_38);
         mLightCloseIconColor =
-                ApiCompatibilityUtils.getColorStateList(getResources(), R.color.white_alpha_70);
+                AppCompatResources.getColorStateList(context, R.color.white_alpha_70);
         mDefaultLevel = getResources().getInteger(R.integer.list_item_level_default);
         mIncognitoLevel = getResources().getInteger(R.integer.list_item_level_incognito);
 
@@ -242,7 +242,7 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
         } else {
             mTabContents = (LinearLayout) findViewById(R.id.tab_contents);
             mTitleView = (TextView) findViewById(R.id.tab_title);
-            mFaviconView = (ImageView) findViewById(R.id.tab_favicon);
+            mFaviconView = findViewById(R.id.tab_favicon);
             mCloseButton = (TintedImageButton) findViewById(R.id.close_btn);
         }
         mTabContents.setVisibility(View.VISIBLE);
@@ -349,13 +349,14 @@ public class AccessibilityTabModelListItem extends FrameLayout implements OnClic
         if (mTab != null) {
             Bitmap bitmap = mTab.getFavicon();
             if (bitmap != null) {
+                // Don't tint favicon bitmaps.
+                mFaviconView.setTint(null);
                 mFaviconView.setImageBitmap(bitmap);
             } else {
                 mFaviconView.setImageResource(R.drawable.ic_globe_24dp);
-            }
-
-            if (FeatureUtilities.isChromeModernDesignEnabled()) {
-                ((TintedImageView) mFaviconView).setTint(bitmap != null ? null : mDarkIconColor);
+                mFaviconView.setTint(FeatureUtilities.isChromeModernDesignEnabled()
+                                ? mDarkIconColor
+                                : mLightIconColor);
             }
         }
     }

@@ -12,7 +12,6 @@ import android.preference.PreferenceFragment;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.metrics.UmaSessionStats;
 import org.chromium.chrome.browser.preferences.ChromeSwitchPreference;
-import org.chromium.chrome.browser.preferences.ManagedPreferenceDelegate;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.PreferenceUtils;
 
@@ -28,7 +27,7 @@ public class UsageAndCrashReportsPreferenceFragment extends PreferenceFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         PreferenceUtils.addPreferencesFromResource(this, R.xml.usage_and_crash_reports_preferences);
-        getActivity().setTitle(R.string.usage_and_crash_reports_title);
+        getActivity().setTitle(R.string.usage_and_crash_reports_title_legacy);
         initUsageAndCrashReportsSwitch();
     }
 
@@ -47,11 +46,7 @@ public class UsageAndCrashReportsPreferenceFragment extends PreferenceFragment {
             }
         });
 
-        usageAndCrashReportsSwitch.setManagedPreferenceDelegate(new ManagedPreferenceDelegate() {
-            @Override
-            public boolean isPreferenceControlledByPolicy(Preference preference) {
-                return PrefServiceBridge.getInstance().isMetricsReportingManaged();
-            }
-        });
+        usageAndCrashReportsSwitch.setManagedPreferenceDelegate(
+                preference -> PrefServiceBridge.getInstance().isMetricsReportingManaged());
     }
 }

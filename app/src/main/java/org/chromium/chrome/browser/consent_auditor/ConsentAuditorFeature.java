@@ -18,6 +18,7 @@ import java.lang.annotation.RetentionPolicy;
 @IntDef({
     ConsentAuditorFeature.CHROME_SYNC, ConsentAuditorFeature.PLAY_STORE,
     ConsentAuditorFeature.BACKUP_AND_RESTORE, ConsentAuditorFeature.GOOGLE_LOCATION_SERVICE,
+    ConsentAuditorFeature.CHROME_UNIFIED_CONSENT, ConsentAuditorFeature.ASSISTANT_ACTIVITY_CONTROL,
     ConsentAuditorFeature.FEATURE_LAST
 })
 @Retention(RetentionPolicy.SOURCE)
@@ -26,5 +27,7 @@ public @interface ConsentAuditorFeature {
   int PLAY_STORE = 1;
   int BACKUP_AND_RESTORE = 2;
   int GOOGLE_LOCATION_SERVICE = 3;
-  int FEATURE_LAST = GOOGLE_LOCATION_SERVICE;
+  int CHROME_UNIFIED_CONSENT = 4;
+  int ASSISTANT_ACTIVITY_CONTROL = 5;
+  int FEATURE_LAST = ASSISTANT_ACTIVITY_CONTROL;
 }

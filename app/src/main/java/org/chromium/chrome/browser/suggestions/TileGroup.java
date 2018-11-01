@@ -24,6 +24,8 @@ import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
 import org.chromium.chrome.browser.offlinepages.OfflinePageItem;
 import org.chromium.ui.mojom.WindowOpenDisposition;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -117,6 +119,7 @@ public class TileGroup implements MostVisitedSites.Observer {
      */
     @VisibleForTesting
     @IntDef({TileTask.FETCH_DATA, TileTask.SCHEDULE_ICON_FETCH, TileTask.FETCH_ICON})
+    @Retention(RetentionPolicy.SOURCE)
     @interface TileTask {
         /**
          * An event that should result in new data being loaded happened.
@@ -438,6 +441,16 @@ public class TileGroup implements MostVisitedSites.Observer {
         return mTileSetupDelegate;
     }
 
+    @Nullable
+    public SiteSuggestion getHomepageTileData() {
+        for (Tile tile : mTileSections.get(TileSectionType.PERSONALIZED)) {
+            if (tile.getSource() == TileSource.HOMEPAGE) {
+                return tile.getData();
+            }
+        }
+        return null;
+    }
+
     private static SparseArray<List<Tile>> createEmptyTileData() {
         SparseArray<List<Tile>> newTileData = new SparseArray<>();
 
@@ -487,6 +500,7 @@ public class TileGroup implements MostVisitedSites.Observer {
     public class TileInteractionDelegate
             implements ContextMenuManager.Delegate, OnClickListener, OnCreateContextMenuListener {
         private final SiteSuggestion mSuggestion;
+        private Runnable mOnClickRunnable;
 
         public TileInteractionDelegate(SiteSuggestion suggestion) {
             mSuggestion = suggestion;
@@ -498,6 +512,7 @@ public class TileGroup implements MostVisitedSites.Observer {
             if (tile == null) return;
 
             SuggestionsMetrics.recordTileTapped();
+            if (mOnClickRunnable != null) mOnClickRunnable.run();
             mTileGroupDelegate.openMostVisitedItem(WindowOpenDisposition.CURRENT_TAB, tile);
         }
 
@@ -528,7 +543,7 @@ public class TileGroup implements MostVisitedSites.Observer {
         @Override
         public boolean isItemSupported(@ContextMenuItemId int menuItemId) {
             // Personalized tiles are the only tiles that can be removed.
-            return !(menuItemId == ContextMenuManager.ID_REMOVE
+            return !(menuItemId == ContextMenuManager.ContextMenuItemId.REMOVE
                     && mSuggestion.sectionType != TileSectionType.PERSONALIZED);
         }
 
@@ -539,6 +554,15 @@ public class TileGroup implements MostVisitedSites.Observer {
         public void onCreateContextMenu(
                 ContextMenu contextMenu, View view, ContextMenuInfo contextMenuInfo) {
             mContextMenuManager.createContextMenu(contextMenu, view, this);
+        }
+
+        /**
+         * Set a runnable for click events on the tile. This is primarily used to track interaction
+         * with the tile used by feature engagement purposes.
+         * @param clickRunnable The {@link Runnable} to be executed when tile is clicked.
+         */
+        public void setOnClickRunnable(Runnable clickRunnable) {
+            mOnClickRunnable = clickRunnable;
         }
     }
 

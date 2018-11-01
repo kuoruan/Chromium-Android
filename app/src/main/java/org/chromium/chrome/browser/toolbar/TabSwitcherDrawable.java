@@ -4,17 +4,17 @@
 
 package org.chromium.chrome.browser.toolbar;
 
+import android.content.Context;
 import android.content.res.ColorStateList;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint.Align;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.support.v7.content.res.AppCompatResources;
 import android.text.TextPaint;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
@@ -40,27 +40,26 @@ public class TabSwitcherDrawable extends TintedDrawable {
 
     /**
      * Creates a {@link TabSwitcherDrawable}.
-     * @param resources A {@link Resources} instance.
+     * @param context A {@link Context} instance.
      * @param useLight  Whether or not to use light or dark textures and text colors.
      * @return          A {@link TabSwitcherDrawable} instance.
      */
-    public static TabSwitcherDrawable createTabSwitcherDrawable(
-            Resources resources, boolean useLight) {
-        Bitmap icon = BitmapFactory.decodeResource(resources,
+    public static TabSwitcherDrawable createTabSwitcherDrawable(Context context, boolean useLight) {
+        Bitmap icon = BitmapFactory.decodeResource(context.getResources(),
                 FeatureUtilities.isChromeModernDesignEnabled() && !DeviceFormFactor.isTablet()
                         ? R.drawable.btn_tabswitcher_modern
                         : R.drawable.btn_tabswitcher);
-        return new TabSwitcherDrawable(resources, useLight, icon);
+        return new TabSwitcherDrawable(context, useLight, icon);
     }
 
-    private TabSwitcherDrawable(Resources resources, boolean useLight, Bitmap bitmap) {
-        super(resources, bitmap);
-        setTint(ApiCompatibilityUtils.getColorStateList(resources,
-                useLight ? R.color.light_mode_tint : R.color.dark_mode_tint));
+    private TabSwitcherDrawable(Context context, boolean useLight, Bitmap bitmap) {
+        super(context, bitmap);
+        int id = useLight ? R.color.light_mode_tint : R.color.dark_mode_tint;
+        setTint(AppCompatResources.getColorStateList(context, id));
         mSingleDigitTextSize =
-                resources.getDimension(R.dimen.toolbar_tab_count_text_size_1_digit);
+                context.getResources().getDimension(R.dimen.toolbar_tab_count_text_size_1_digit);
         mDoubleDigitTextSize =
-                resources.getDimension(R.dimen.toolbar_tab_count_text_size_2_digit);
+                context.getResources().getDimension(R.dimen.toolbar_tab_count_text_size_2_digit);
 
         mTextPaint = new TextPaint();
         mTextPaint.setAntiAlias(true);

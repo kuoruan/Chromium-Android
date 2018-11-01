@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.tabmodel;
 
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
+import org.chromium.chrome.browser.incognito.IncognitoUtils;
 import org.chromium.chrome.browser.tabmodel.IncognitoTabModel.IncognitoTabModelDelegate;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager.TabCreator;
 
@@ -56,6 +57,6 @@ class IncognitoTabModelImplCreator implements IncognitoTabModelDelegate {
 
     @Override
     public boolean doIncognitoTabsExist() {
-        return !TabWindowManager.getInstance().canDestroyIncognitoProfile();
+        return IncognitoUtils.doIncognitoTabsExist();
     }
 }

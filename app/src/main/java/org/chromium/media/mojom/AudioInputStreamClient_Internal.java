@@ -18,28 +18,28 @@ class AudioInputStreamClient_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<AudioInputStreamClient, AudioInputStreamClient.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<AudioInputStreamClient, AudioInputStreamClient.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::AudioInputStreamClient";
+            return "media.mojom.AudioInputStreamClient";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, AudioInputStreamClient impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public AudioInputStreamClient[] buildArray(int size) {
           return new AudioInputStreamClient[size];
@@ -110,37 +110,37 @@ boolean isMuted) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 AudioInputStreamClient_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_ERROR_ORDINAL: {
-            
+
                         AudioInputStreamClientOnErrorParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onError();
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_MUTED_STATE_CHANGED_ORDINAL: {
-            
+
                         AudioInputStreamClientOnMutedStateChangedParams data =
                                 AudioInputStreamClientOnMutedStateChangedParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onMutedStateChanged(data.isMuted);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -160,16 +160,16 @@ boolean isMuted) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), AudioInputStreamClient_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -183,36 +183,33 @@ boolean isMuted) {
 
     
     static final class AudioInputStreamClientOnErrorParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private AudioInputStreamClientOnErrorParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public AudioInputStreamClientOnErrorParams() {
             this(0);
         }
-    
+
         public static AudioInputStreamClientOnErrorParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static AudioInputStreamClientOnErrorParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static AudioInputStreamClientOnErrorParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -222,41 +219,19 @@ boolean isMuted) {
             AudioInputStreamClientOnErrorParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new AudioInputStreamClientOnErrorParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new AudioInputStreamClientOnErrorParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -264,37 +239,34 @@ boolean isMuted) {
 
     
     static final class AudioInputStreamClientOnMutedStateChangedParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean isMuted;
-    
+
         private AudioInputStreamClientOnMutedStateChangedParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public AudioInputStreamClientOnMutedStateChangedParams() {
             this(0);
         }
-    
+
         public static AudioInputStreamClientOnMutedStateChangedParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static AudioInputStreamClientOnMutedStateChangedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static AudioInputStreamClientOnMutedStateChangedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -304,51 +276,25 @@ boolean isMuted) {
             AudioInputStreamClientOnMutedStateChangedParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new AudioInputStreamClientOnMutedStateChangedParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new AudioInputStreamClientOnMutedStateChangedParams(elementsOrVersion);
+                    {
+                        
                     result.isMuted = decoder0.readBoolean(8, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.isMuted, 8, 0);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            AudioInputStreamClientOnMutedStateChangedParams other = (AudioInputStreamClientOnMutedStateChangedParams) object;
-            if (this.isMuted!= other.isMuted)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isMuted);
-            return result;
         }
     }
 

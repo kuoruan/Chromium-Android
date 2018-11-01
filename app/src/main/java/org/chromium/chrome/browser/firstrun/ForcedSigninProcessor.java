@@ -17,6 +17,7 @@ import org.chromium.chrome.browser.signin.AccountManagementFragment;
 import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.components.signin.AccountManagerFacade;
+import org.chromium.components.signin.ChildAccountStatus;
 import org.chromium.components.signin.ChromeSigninController;
 
 import javax.annotation.Nullable;
@@ -52,7 +53,7 @@ public final class ForcedSigninProcessor {
             @Override
             public void onParametersReady() {
                 boolean isAndroidEduDevice = isAndroidEduDevice();
-                boolean hasChildAccount = hasChildAccount();
+                boolean hasChildAccount = ChildAccountStatus.isChild(getChildAccountStatus());
                 // If neither a child account or and EDU device, we return.
                 if (!isAndroidEduDevice && !hasChildAccount) return;
                 // Child account and EDU device at the same time is not supported.
@@ -111,7 +112,6 @@ public final class ForcedSigninProcessor {
     // TODO(bauerb): Once external dependencies reliably use policy to force sign-in,
     // consider removing the child account / EDU checks.
     public static void checkCanSignIn(final ChromeActivity activity) {
-        final Context appContext = activity.getApplicationContext();
         if (SigninManager.get().isForceSigninEnabled()) {
             ExternalAuthUtils.getInstance().canUseGooglePlayServices(
                     new UserRecoverableErrorHandler.ModalDialog(activity, false));

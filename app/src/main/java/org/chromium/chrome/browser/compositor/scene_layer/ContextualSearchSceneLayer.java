@@ -125,8 +125,7 @@ public class ContextualSearchSceneLayer extends SceneOverlayLayer {
         float touchHighlightXOffset = searchBarControl.getTouchHighlightXOffsetPx();
         float touchHighlightWidth = searchBarControl.getTouchHighlightWidthPx();
 
-        WebContents panelWebContents = panel.getContentViewCore() != null
-                ? panel.getContentViewCore().getWebContents() : null;
+        WebContents panelWebContents = panel.getWebContents();
 
         nativeUpdateContextualSearchLayer(mNativePtr, R.drawable.contextual_search_bar_background,
                 searchContextViewId, searchTermViewId, searchCaptionViewId,

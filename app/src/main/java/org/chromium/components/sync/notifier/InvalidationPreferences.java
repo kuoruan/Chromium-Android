@@ -176,7 +176,11 @@ public class InvalidationPreferences {
         if (base64State == null) {
             return null;
         }
-        return Base64.decode(base64State, Base64.DEFAULT);
+        try {
+            return Base64.decode(base64State, Base64.DEFAULT);
+        } catch (java.lang.IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /** Sets the notification client internal state to {@code state}. */

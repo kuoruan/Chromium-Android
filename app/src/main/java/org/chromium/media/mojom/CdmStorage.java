@@ -19,17 +19,17 @@ public interface CdmStorage extends org.chromium.mojo.bindings.Interface {
 
 
     public static final class Status {
-    
-    
+
+
         public static final int SUCCESS = 0;
-    
+
         public static final int IN_USE = SUCCESS + 1;
-    
+
         public static final int FAILURE = IN_USE + 1;
-    
-    
+
+
         private static final boolean IS_EXTENSIBLE = false;
-    
+
         public static boolean isKnownValue(int value) {
             switch (value) {
                 case 0:
@@ -39,16 +39,16 @@ public interface CdmStorage extends org.chromium.mojo.bindings.Interface {
             }
             return false;
         }
-    
+
         public static void validate(int value) {
             if (IS_EXTENSIBLE || isKnownValue(value))
                 return;
-    
+
             throw new DeserializationException("Invalid enum value.");
         }
-    
+
         private Status() {}
-    
+
     }
 
 
@@ -62,7 +62,7 @@ public interface CdmStorage extends org.chromium.mojo.bindings.Interface {
 String fileName, 
 OpenResponse callback);
 
-    interface OpenResponse extends org.chromium.mojo.bindings.Callbacks.Callback3<Integer, org.chromium.mojo.common.mojom.File, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported> { }
+    interface OpenResponse extends org.chromium.mojo.bindings.Callbacks.Callback3<Integer, org.chromium.mojo_base.mojom.File, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported> { }
 
 
 }

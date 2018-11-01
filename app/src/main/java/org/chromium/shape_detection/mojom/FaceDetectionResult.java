@@ -40,9 +40,6 @@ public final class FaceDetectionResult extends org.chromium.mojo.bindings.Struct
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static FaceDetectionResult deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,14 +53,15 @@ public final class FaceDetectionResult extends org.chromium.mojo.bindings.Struct
         FaceDetectionResult result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new FaceDetectionResult(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new FaceDetectionResult(elementsOrVersion);
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                 result.boundingBox = org.chromium.gfx.mojom.RectF.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -74,7 +72,8 @@ public final class FaceDetectionResult extends org.chromium.mojo.bindings.Struct
                         result.landmarks[i1] = Landmark.decode(decoder2);
                     }
                 }
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -97,36 +96,5 @@ public final class FaceDetectionResult extends org.chromium.mojo.bindings.Struct
                 encoder1.encode(this.landmarks[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
             }
         }
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        FaceDetectionResult other = (FaceDetectionResult) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.boundingBox, other.boundingBox))
-            return false;
-        if (!java.util.Arrays.deepEquals(this.landmarks, other.landmarks))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.boundingBox);
-        result = prime * result + java.util.Arrays.deepHashCode(this.landmarks);
-        return result;
     }
 }

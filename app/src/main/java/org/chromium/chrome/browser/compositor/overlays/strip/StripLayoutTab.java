@@ -266,6 +266,9 @@ public class StripLayoutTab implements VirtualView {
      */
     public void setVisible(boolean visible) {
         mVisible = visible;
+        if (!visible) {
+            mUpdateHost.releaseResourcesForTab(mId);
+        }
         for (Observer observer : mObservers) {
             observer.onVisibilityChanged(mVisible);
         }

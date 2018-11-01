@@ -30,9 +30,7 @@ import org.chromium.ui.text.SpanApplier.SpanInfo;
  * Dialog to ask the user to enter a new custom passphrase.
  */
 public class PassphraseCreationDialogFragment extends DialogFragment {
-    interface Listener {
-        void onPassphraseCreated(String passphrase);
-    }
+    public interface Listener { void onPassphraseCreated(String passphrase); }
 
     private EditText mEnterPassphrase;
     private EditText mConfirmPassphrase;

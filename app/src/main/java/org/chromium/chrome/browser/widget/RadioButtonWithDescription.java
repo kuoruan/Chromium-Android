@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -25,9 +26,15 @@ import java.util.List;
  * A RadioButton with a title and descriptive text to the right.
  */
 public class RadioButtonWithDescription extends RelativeLayout implements OnClickListener {
+    /**
+     * Interface to listen to radio button changes.
+     */
+    public interface OnCheckedChangeListener { abstract void onCheckedChanged(); }
+
     private RadioButton mRadioButton;
     private TextView mTitle;
     private TextView mDescription;
+    private OnCheckedChangeListener mOnCheckedChangeListener;
 
     private List<RadioButtonWithDescription> mGroup;
 
@@ -71,6 +78,10 @@ public class RadioButtonWithDescription extends RelativeLayout implements OnClic
         }
 
         setChecked(true);
+
+        if (mOnCheckedChangeListener != null) {
+            mOnCheckedChangeListener.onCheckedChanged();
+        }
     }
 
     /**
@@ -85,6 +96,7 @@ public class RadioButtonWithDescription extends RelativeLayout implements OnClic
      */
     public void setDescriptionText(CharSequence text) {
         mDescription.setText(text);
+        mDescription.setVisibility(TextUtils.isEmpty(text) ? View.GONE : View.VISIBLE);
     }
 
     /**
@@ -99,6 +111,10 @@ public class RadioButtonWithDescription extends RelativeLayout implements OnClic
      */
     public void setChecked(boolean checked) {
         mRadioButton.setChecked(checked);
+    }
+
+    public void setOnCheckedChangeListener(OnCheckedChangeListener listener) {
+        mOnCheckedChangeListener = listener;
     }
 
     /**

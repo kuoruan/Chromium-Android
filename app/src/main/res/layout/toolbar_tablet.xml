@@ -8,6 +8,8 @@
 
 <org.chromium.chrome.browser.toolbar.ToolbarTablet
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/toolbar"
     android:layout_width="match_parent"
     android:layout_height="@dimen/toolbar_height_no_shadow"
@@ -25,25 +27,29 @@
             style="@style/ToolbarButton"
             android:src="@drawable/btn_toolbar_home"
             android:contentDescription="@string/accessibility_toolbar_btn_home"
-            android:visibility="gone" />
+            android:visibility="gone"
+            app:chrometint="@color/dark_mode_tint" />
 
         <org.chromium.chrome.browser.widget.TintedImageButton
             android:id="@+id/back_button"
             style="@style/ToolbarButton"
             android:src="@drawable/btn_back"
-            android:contentDescription="@string/accessibility_toolbar_btn_back" />
+            android:contentDescription="@string/accessibility_toolbar_btn_back"
+            app:chrometint="@color/dark_mode_tint" />
 
         <org.chromium.chrome.browser.widget.TintedImageButton
             android:id="@+id/forward_button"
             style="@style/ToolbarButton"
             android:src="@drawable/btn_forward"
-            android:contentDescription="@string/accessibility_toolbar_btn_forward" />
+            android:contentDescription="@string/accessibility_toolbar_btn_forward"
+            app:chrometint="@color/dark_mode_tint" />
 
         <org.chromium.chrome.browser.widget.TintedImageButton
             android:id="@+id/refresh_button"
             style="@style/ToolbarButton"
             android:src="@drawable/btn_reload_stop"
-            android:contentDescription="@string/accessibility_btn_refresh" />
+            android:contentDescription="@string/accessibility_btn_refresh"
+            app:chrometint="@color/dark_mode_tint" />
 
         <org.chromium.chrome.browser.omnibox.LocationBarTablet
             android:id="@+id/location_bar"
@@ -72,13 +78,14 @@
                 android:id="@+id/menu_button"
                 style="@style/ToolbarMenuButtonTablet"
                 android:src="@drawable/ic_more_vert_black_24dp"
-                android:contentDescription="@string/accessibility_toolbar_btn_menu" />
+                android:contentDescription="@string/accessibility_toolbar_btn_menu"
+                app:chrometint="@color/dark_mode_tint" />
 
             <ImageView
                 android:id="@+id/menu_badge"
                 style="@style/ToolbarMenuButtonTablet"
                 android:src="@drawable/badge_update_dark"
-                android:contentDescription="@null"
+                tools:ignore="ContentDescription"
                 android:importantForAccessibility="no"
                 android:visibility="invisible" />
 

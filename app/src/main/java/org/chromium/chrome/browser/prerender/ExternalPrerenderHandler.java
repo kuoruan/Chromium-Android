@@ -101,20 +101,6 @@ public class ExternalPrerenderHandler {
     }
 
     /**
-     * Check whether a given url has been prerendering for the given profile and session id for the
-     * given web contents, and has finished loading.
-     * @param profile The profile to check for prerendering.
-     * @param url The url to check for prerender.
-     * @param webContents The {@link WebContents} for which to compare the session info.
-     * @return Whether the given url was prerendered and has finished loading.
-     */
-    @VisibleForTesting
-    public static boolean hasPrerenderedAndFinishedLoadingUrl(
-            Profile profile, String url, WebContents webContents) {
-        return nativeHasPrerenderedAndFinishedLoadingUrl(profile, url, webContents);
-    }
-
-    /**
      * Provides an estimate of the contents size.
      *
      * The estimate is likely to be incorrect. This is not a problem, as the aim
@@ -154,6 +140,16 @@ public class ExternalPrerenderHandler {
         return screenBounds;
     }
 
+    @VisibleForTesting
+    public static boolean hasRecentlyPrefetchedUrlForTesting(Profile profile, String url) {
+        return nativeHasRecentlyPrefetchedUrlForTesting(profile, url);
+    }
+
+    @VisibleForTesting
+    public static void clearPrefetchInformationForTesting(Profile profile) {
+        nativeClearPrefetchInformationForTesting(profile);
+    }
+
     private static native long nativeInit();
     private static native WebContents nativeAddPrerender(
             long nativeExternalPrerenderHandlerAndroid, Profile profile,
@@ -161,8 +157,9 @@ public class ExternalPrerenderHandler {
             int top, int left, int bottom, int right, boolean prerenderOnCellular);
     private static native boolean nativeHasPrerenderedUrl(
             Profile profile, String url, WebContents webContents);
-    private static native boolean nativeHasPrerenderedAndFinishedLoadingUrl(
-            Profile profile, String url, WebContents webContents);
     private static native void nativeCancelCurrentPrerender(
             long nativeExternalPrerenderHandlerAndroid);
+    private static native boolean nativeHasRecentlyPrefetchedUrlForTesting(
+            Profile profile, String url);
+    private static native void nativeClearPrefetchInformationForTesting(Profile profile);
 }

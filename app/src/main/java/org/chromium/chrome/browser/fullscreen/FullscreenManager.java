@@ -51,6 +51,11 @@ public abstract class FullscreenManager {
     public abstract int getTopControlsHeight();
 
     /**
+     * @return The height of the bottom controls in pixels.
+     */
+    public abstract int getBottomControlsHeight();
+
+    /**
      * @return The ratio that the browser controls are off screen; this will be a number [0,1]
      *         where 1 is completely hidden and 0 is completely shown.
      */
@@ -122,13 +127,24 @@ public abstract class FullscreenManager {
     }
 
     /**
-     * Enters or exits persistent fullscreen mode.  In this mode, the browser controls will be
+     * Enters persistent fullscreen mode.  In this mode, the browser controls will be
      * permanently hidden until this mode is exited.
-     *
-     * @param enabled Whether to enable persistent fullscreen mode.
      */
-    public void setPersistentFullscreenMode(boolean enabled) {
-        mHtmlApiHandler.setPersistentFullscreenMode(enabled);
+    public void enterPersistentFullscreenMode(FullscreenOptions options) {
+        mHtmlApiHandler.enterPersistentFullscreenMode(options);
+
+        Tab tab = getTab();
+        if (tab != null) {
+            tab.updateFullscreenEnabledState();
+        }
+    }
+
+    /**
+     * Exits persistent fullscreen mode.  In this mode, the browser controls will be
+     * permanently hidden until this mode is exited.
+     */
+    public void exitPersistentFullscreenMode() {
+        mHtmlApiHandler.exitPersistentFullscreenMode();
 
         Tab tab = getTab();
         if (tab != null) {

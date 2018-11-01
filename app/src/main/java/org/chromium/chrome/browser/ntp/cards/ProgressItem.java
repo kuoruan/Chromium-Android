@@ -24,8 +24,8 @@ class ProgressItem extends OptionalLeaf {
     }
 
     @Override
-    protected void visitOptionalItem(NodeVisitor visitor) {
-        visitor.visitProgressItem();
+    public String describeForTesting() {
+        return "PROGRESS";
     }
 
     public void setVisible(boolean visible) {

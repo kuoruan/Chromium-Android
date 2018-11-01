@@ -18,28 +18,28 @@ class CookieManager_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<CookieManager, CookieManager.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<CookieManager, CookieManager.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "network::mojom::CookieManager";
+            return "network.mojom.CookieManager";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, CookieManager impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public CookieManager[] buildArray(int size) {
           return new CookieManager[size];
@@ -53,15 +53,23 @@ class CookieManager_Internal {
 
     private static final int SET_CANONICAL_COOKIE_ORDINAL = 2;
 
-    private static final int DELETE_COOKIES_ORDINAL = 3;
+    private static final int DELETE_CANONICAL_COOKIE_ORDINAL = 3;
 
-    private static final int ADD_COOKIE_CHANGE_LISTENER_ORDINAL = 4;
+    private static final int DELETE_COOKIES_ORDINAL = 4;
 
-    private static final int ADD_GLOBAL_CHANGE_LISTENER_ORDINAL = 5;
+    private static final int ADD_COOKIE_CHANGE_LISTENER_ORDINAL = 5;
 
-    private static final int CLONE_INTERFACE_ORDINAL = 6;
+    private static final int ADD_GLOBAL_CHANGE_LISTENER_ORDINAL = 6;
 
-    private static final int FLUSH_COOKIE_STORE_ORDINAL = 7;
+    private static final int CLONE_INTERFACE_ORDINAL = 7;
+
+    private static final int FLUSH_COOKIE_STORE_ORDINAL = 8;
+
+    private static final int SET_CONTENT_SETTINGS_ORDINAL = 9;
+
+    private static final int SET_FORCE_KEEP_SESSION_STATE_ORDINAL = 10;
+
+    private static final int BLOCK_THIRD_PARTY_COOKIES_ORDINAL = 11;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements CookieManager.Proxy {
@@ -138,6 +146,28 @@ SetCanonicalCookieResponse callback) {
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
                                     0)),
                     new CookieManagerSetCanonicalCookieResponseParamsForwardToCallback(callback));
+
+        }
+
+
+        @Override
+        public void deleteCanonicalCookie(
+CanonicalCookie cookie, 
+DeleteCanonicalCookieResponse callback) {
+
+            CookieManagerDeleteCanonicalCookieParams _message = new CookieManagerDeleteCanonicalCookieParams();
+
+            _message.cookie = cookie;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    DELETE_CANONICAL_COOKIE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new CookieManagerDeleteCanonicalCookieResponseParamsForwardToCallback(callback));
 
         }
 
@@ -239,6 +269,55 @@ FlushCookieStoreResponse callback) {
         }
 
 
+        @Override
+        public void setContentSettings(
+org.chromium.content_settings.mojom.ContentSettingPatternSource[] settings) {
+
+            CookieManagerSetContentSettingsParams _message = new CookieManagerSetContentSettingsParams();
+
+            _message.settings = settings;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(SET_CONTENT_SETTINGS_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void setForceKeepSessionState(
+) {
+
+            CookieManagerSetForceKeepSessionStateParams _message = new CookieManagerSetForceKeepSessionStateParams();
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(SET_FORCE_KEEP_SESSION_STATE_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void blockThirdPartyCookies(
+boolean block) {
+
+            CookieManagerBlockThirdPartyCookiesParams _message = new CookieManagerBlockThirdPartyCookiesParams();
+
+            _message.block = block;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(BLOCK_THIRD_PARTY_COOKIES_ORDINAL)));
+
+        }
+
+
     }
 
     static final class Stub extends org.chromium.mojo.bindings.Interface.Stub<CookieManager> {
@@ -257,61 +336,101 @@ FlushCookieStoreResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 CookieManager_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                     case ADD_COOKIE_CHANGE_LISTENER_ORDINAL: {
-            
+
                         CookieManagerAddCookieChangeListenerParams data =
                                 CookieManagerAddCookieChangeListenerParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().addCookieChangeListener(data.url, data.name, data.listener);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ADD_GLOBAL_CHANGE_LISTENER_ORDINAL: {
-            
+
                         CookieManagerAddGlobalChangeListenerParams data =
                                 CookieManagerAddGlobalChangeListenerParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().addGlobalChangeListener(data.notificationPointer);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case CLONE_INTERFACE_ORDINAL: {
-            
+
                         CookieManagerCloneInterfaceParams data =
                                 CookieManagerCloneInterfaceParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().cloneInterface(data.newInterface);
                         return true;
                     }
-            
-            
-            
-            
+
+
+
+
+
+
+
+                    case SET_CONTENT_SETTINGS_ORDINAL: {
+
+                        CookieManagerSetContentSettingsParams data =
+                                CookieManagerSetContentSettingsParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().setContentSettings(data.settings);
+                        return true;
+                    }
+
+
+
+
+
+                    case SET_FORCE_KEEP_SESSION_STATE_ORDINAL: {
+
+                        CookieManagerSetForceKeepSessionStateParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().setForceKeepSessionState();
+                        return true;
+                    }
+
+
+
+
+
+                    case BLOCK_THIRD_PARTY_COOKIES_ORDINAL: {
+
+                        CookieManagerBlockThirdPartyCookiesParams data =
+                                CookieManagerBlockThirdPartyCookiesParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().blockThirdPartyCookies(data.block);
+                        return true;
+                    }
+
+
                     default:
                         return false;
                 }
@@ -331,91 +450,112 @@ FlushCookieStoreResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), CookieManager_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case GET_ALL_COOKIES_ORDINAL: {
-            
+
                         CookieManagerGetAllCookiesParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().getAllCookies(new CookieManagerGetAllCookiesResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case GET_COOKIE_LIST_ORDINAL: {
-            
+
                         CookieManagerGetCookieListParams data =
                                 CookieManagerGetCookieListParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().getCookieList(data.url, data.cookieOptions, new CookieManagerGetCookieListResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case SET_CANONICAL_COOKIE_ORDINAL: {
-            
+
                         CookieManagerSetCanonicalCookieParams data =
                                 CookieManagerSetCanonicalCookieParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().setCanonicalCookie(data.cookie, data.secureSource, data.modifyHttpOnly, new CookieManagerSetCanonicalCookieResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+                    case DELETE_CANONICAL_COOKIE_ORDINAL: {
+
+                        CookieManagerDeleteCanonicalCookieParams data =
+                                CookieManagerDeleteCanonicalCookieParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().deleteCanonicalCookie(data.cookie, new CookieManagerDeleteCanonicalCookieResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
+
+
+
+
+
                     case DELETE_COOKIES_ORDINAL: {
-            
+
                         CookieManagerDeleteCookiesParams data =
                                 CookieManagerDeleteCookiesParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().deleteCookies(data.filter, new CookieManagerDeleteCookiesResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
+
+
                     case FLUSH_COOKIE_STORE_ORDINAL: {
-            
+
                         CookieManagerFlushCookieStoreParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().flushCookieStore(new CookieManagerFlushCookieStoreResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
+
+
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -429,36 +569,33 @@ FlushCookieStoreResponse callback) {
 
     
     static final class CookieManagerGetAllCookiesParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private CookieManagerGetAllCookiesParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerGetAllCookiesParams() {
             this(0);
         }
-    
+
         public static CookieManagerGetAllCookiesParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerGetAllCookiesParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerGetAllCookiesParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -468,41 +605,19 @@ FlushCookieStoreResponse callback) {
             CookieManagerGetAllCookiesParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerGetAllCookiesParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerGetAllCookiesParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -510,37 +625,34 @@ FlushCookieStoreResponse callback) {
 
     
     static final class CookieManagerGetAllCookiesResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public CanonicalCookie[] cookies;
-    
+
         private CookieManagerGetAllCookiesResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerGetAllCookiesResponseParams() {
             this(0);
         }
-    
+
         public static CookieManagerGetAllCookiesResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerGetAllCookiesResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerGetAllCookiesResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -550,9 +662,10 @@ FlushCookieStoreResponse callback) {
             CookieManagerGetAllCookiesResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerGetAllCookiesResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerGetAllCookiesResponseParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     {
                         org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -563,13 +676,14 @@ FlushCookieStoreResponse callback) {
                             result.cookies[i1] = CanonicalCookie.decode(decoder2);
                         }
                     }
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -584,34 +698,6 @@ FlushCookieStoreResponse callback) {
                     encoder1.encode(this.cookies[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
                 }
             }
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CookieManagerGetAllCookiesResponseParams other = (CookieManagerGetAllCookiesResponseParams) object;
-            if (!java.util.Arrays.deepEquals(this.cookies, other.cookies))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + java.util.Arrays.deepHashCode(this.cookies);
-            return result;
         }
     }
 
@@ -680,38 +766,35 @@ FlushCookieStoreResponse callback) {
 
     
     static final class CookieManagerGetCookieListParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.url.mojom.Url url;
         public CookieOptions cookieOptions;
-    
+
         private CookieManagerGetCookieListParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerGetCookieListParams() {
             this(0);
         }
-    
+
         public static CookieManagerGetCookieListParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerGetCookieListParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerGetCookieListParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -721,23 +804,25 @@ FlushCookieStoreResponse callback) {
             CookieManagerGetCookieListParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerGetCookieListParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerGetCookieListParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.url = org.chromium.url.mojom.Url.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.cookieOptions = CookieOptions.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -747,74 +832,40 @@ FlushCookieStoreResponse callback) {
             
             encoder0.encode(this.cookieOptions, 16, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CookieManagerGetCookieListParams other = (CookieManagerGetCookieListParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.url, other.url))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.cookieOptions, other.cookieOptions))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.url);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cookieOptions);
-            return result;
-        }
     }
 
 
 
     
     static final class CookieManagerGetCookieListResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public CanonicalCookie[] cookies;
-    
+
         private CookieManagerGetCookieListResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerGetCookieListResponseParams() {
             this(0);
         }
-    
+
         public static CookieManagerGetCookieListResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerGetCookieListResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerGetCookieListResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -824,9 +875,10 @@ FlushCookieStoreResponse callback) {
             CookieManagerGetCookieListResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerGetCookieListResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerGetCookieListResponseParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     {
                         org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -837,13 +889,14 @@ FlushCookieStoreResponse callback) {
                             result.cookies[i1] = CanonicalCookie.decode(decoder2);
                         }
                     }
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -858,34 +911,6 @@ FlushCookieStoreResponse callback) {
                     encoder1.encode(this.cookies[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
                 }
             }
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CookieManagerGetCookieListResponseParams other = (CookieManagerGetCookieListResponseParams) object;
-            if (!java.util.Arrays.deepEquals(this.cookies, other.cookies))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + java.util.Arrays.deepHashCode(this.cookies);
-            return result;
         }
     }
 
@@ -954,39 +979,36 @@ FlushCookieStoreResponse callback) {
 
     
     static final class CookieManagerSetCanonicalCookieParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public CanonicalCookie cookie;
         public boolean secureSource;
         public boolean modifyHttpOnly;
-    
+
         private CookieManagerSetCanonicalCookieParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerSetCanonicalCookieParams() {
             this(0);
         }
-    
+
         public static CookieManagerSetCanonicalCookieParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerSetCanonicalCookieParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerSetCanonicalCookieParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -996,26 +1018,28 @@ FlushCookieStoreResponse callback) {
             CookieManagerSetCanonicalCookieParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerSetCanonicalCookieParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerSetCanonicalCookieParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.cookie = CanonicalCookie.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.secureSource = decoder0.readBoolean(16, 0);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.modifyHttpOnly = decoder0.readBoolean(16, 1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1027,77 +1051,40 @@ FlushCookieStoreResponse callback) {
             
             encoder0.encode(this.modifyHttpOnly, 16, 1);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CookieManagerSetCanonicalCookieParams other = (CookieManagerSetCanonicalCookieParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.cookie, other.cookie))
-                return false;
-            if (this.secureSource!= other.secureSource)
-                return false;
-            if (this.modifyHttpOnly!= other.modifyHttpOnly)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cookie);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.secureSource);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.modifyHttpOnly);
-            return result;
-        }
     }
 
 
 
     
     static final class CookieManagerSetCanonicalCookieResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean success;
-    
+
         private CookieManagerSetCanonicalCookieResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerSetCanonicalCookieResponseParams() {
             this(0);
         }
-    
+
         public static CookieManagerSetCanonicalCookieResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerSetCanonicalCookieResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerSetCanonicalCookieResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1107,51 +1094,25 @@ FlushCookieStoreResponse callback) {
             CookieManagerSetCanonicalCookieResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerSetCanonicalCookieResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerSetCanonicalCookieResponseParams(elementsOrVersion);
+                    {
+                        
                     result.success = decoder0.readBoolean(8, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.success, 8, 0);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CookieManagerSetCanonicalCookieResponseParams other = (CookieManagerSetCanonicalCookieResponseParams) object;
-            if (this.success!= other.success)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.success);
-            return result;
         }
     }
 
@@ -1219,38 +1180,223 @@ FlushCookieStoreResponse callback) {
 
 
     
-    static final class CookieManagerDeleteCookiesParams extends org.chromium.mojo.bindings.Struct {
+    static final class CookieManagerDeleteCanonicalCookieParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public CanonicalCookie cookie;
+
+        private CookieManagerDeleteCanonicalCookieParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public CookieManagerDeleteCanonicalCookieParams() {
+            this(0);
+        }
+
+        public static CookieManagerDeleteCanonicalCookieParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static CookieManagerDeleteCanonicalCookieParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static CookieManagerDeleteCanonicalCookieParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            CookieManagerDeleteCanonicalCookieParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerDeleteCanonicalCookieParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.cookie = CanonicalCookie.decode(decoder1);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.cookie, 8, false);
+        }
+    }
+
+
+
     
+    static final class CookieManagerDeleteCanonicalCookieResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public boolean success;
+
+        private CookieManagerDeleteCanonicalCookieResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public CookieManagerDeleteCanonicalCookieResponseParams() {
+            this(0);
+        }
+
+        public static CookieManagerDeleteCanonicalCookieResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static CookieManagerDeleteCanonicalCookieResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static CookieManagerDeleteCanonicalCookieResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            CookieManagerDeleteCanonicalCookieResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerDeleteCanonicalCookieResponseParams(elementsOrVersion);
+                    {
+                        
+                    result.success = decoder0.readBoolean(8, 0);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.success, 8, 0);
+        }
+    }
+
+    static class CookieManagerDeleteCanonicalCookieResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final CookieManager.DeleteCanonicalCookieResponse mCallback;
+
+        CookieManagerDeleteCanonicalCookieResponseParamsForwardToCallback(CookieManager.DeleteCanonicalCookieResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(DELETE_CANONICAL_COOKIE_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                CookieManagerDeleteCanonicalCookieResponseParams response = CookieManagerDeleteCanonicalCookieResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.success);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class CookieManagerDeleteCanonicalCookieResponseParamsProxyToResponder implements CookieManager.DeleteCanonicalCookieResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        CookieManagerDeleteCanonicalCookieResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(Boolean success) {
+            CookieManagerDeleteCanonicalCookieResponseParams _response = new CookieManagerDeleteCanonicalCookieResponseParams();
+
+            _response.success = success;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    DELETE_CANONICAL_COOKIE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class CookieManagerDeleteCookiesParams extends org.chromium.mojo.bindings.Struct {
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public CookieDeletionFilter filter;
-    
+
         private CookieManagerDeleteCookiesParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerDeleteCookiesParams() {
             this(0);
         }
-    
+
         public static CookieManagerDeleteCookiesParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerDeleteCookiesParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerDeleteCookiesParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1260,18 +1406,20 @@ FlushCookieStoreResponse callback) {
             CookieManagerDeleteCookiesParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerDeleteCookiesParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerDeleteCookiesParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.filter = CookieDeletionFilter.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1279,71 +1427,40 @@ FlushCookieStoreResponse callback) {
             
             encoder0.encode(this.filter, 8, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CookieManagerDeleteCookiesParams other = (CookieManagerDeleteCookiesParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.filter, other.filter))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.filter);
-            return result;
-        }
     }
 
 
 
     
     static final class CookieManagerDeleteCookiesResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int numDeleted;
-    
+
         private CookieManagerDeleteCookiesResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerDeleteCookiesResponseParams() {
             this(0);
         }
-    
+
         public static CookieManagerDeleteCookiesResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerDeleteCookiesResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerDeleteCookiesResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1353,51 +1470,25 @@ FlushCookieStoreResponse callback) {
             CookieManagerDeleteCookiesResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerDeleteCookiesResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerDeleteCookiesResponseParams(elementsOrVersion);
+                    {
+                        
                     result.numDeleted = decoder0.readInt(8);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.numDeleted, 8);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CookieManagerDeleteCookiesResponseParams other = (CookieManagerDeleteCookiesResponseParams) object;
-            if (this.numDeleted!= other.numDeleted)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.numDeleted);
-            return result;
         }
     }
 
@@ -1466,39 +1557,36 @@ FlushCookieStoreResponse callback) {
 
     
     static final class CookieManagerAddCookieChangeListenerParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.url.mojom.Url url;
         public String name;
         public CookieChangeListener listener;
-    
+
         private CookieManagerAddCookieChangeListenerParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerAddCookieChangeListenerParams() {
             this(0);
         }
-    
+
         public static CookieManagerAddCookieChangeListenerParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerAddCookieChangeListenerParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerAddCookieChangeListenerParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1508,26 +1596,28 @@ FlushCookieStoreResponse callback) {
             CookieManagerAddCookieChangeListenerParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerAddCookieChangeListenerParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerAddCookieChangeListenerParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.url = org.chromium.url.mojom.Url.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.name = decoder0.readString(16, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.listener = decoder0.readServiceInterface(24, false, CookieChangeListener.MANAGER);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1539,77 +1629,40 @@ FlushCookieStoreResponse callback) {
             
             encoder0.encode(this.listener, 24, false, CookieChangeListener.MANAGER);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CookieManagerAddCookieChangeListenerParams other = (CookieManagerAddCookieChangeListenerParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.url, other.url))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.name, other.name))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.listener, other.listener))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.url);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.name);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.listener);
-            return result;
-        }
     }
 
 
 
     
     static final class CookieManagerAddGlobalChangeListenerParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public CookieChangeListener notificationPointer;
-    
+
         private CookieManagerAddGlobalChangeListenerParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerAddGlobalChangeListenerParams() {
             this(0);
         }
-    
+
         public static CookieManagerAddGlobalChangeListenerParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerAddGlobalChangeListenerParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerAddGlobalChangeListenerParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1619,17 +1672,19 @@ FlushCookieStoreResponse callback) {
             CookieManagerAddGlobalChangeListenerParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerAddGlobalChangeListenerParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerAddGlobalChangeListenerParams(elementsOrVersion);
+                    {
+                        
                     result.notificationPointer = decoder0.readServiceInterface(8, false, CookieChangeListener.MANAGER);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1637,71 +1692,40 @@ FlushCookieStoreResponse callback) {
             
             encoder0.encode(this.notificationPointer, 8, false, CookieChangeListener.MANAGER);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CookieManagerAddGlobalChangeListenerParams other = (CookieManagerAddGlobalChangeListenerParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.notificationPointer, other.notificationPointer))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.notificationPointer);
-            return result;
-        }
     }
 
 
 
     
     static final class CookieManagerCloneInterfaceParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.InterfaceRequest<CookieManager> newInterface;
-    
+
         private CookieManagerCloneInterfaceParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerCloneInterfaceParams() {
             this(0);
         }
-    
+
         public static CookieManagerCloneInterfaceParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerCloneInterfaceParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerCloneInterfaceParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1711,17 +1735,19 @@ FlushCookieStoreResponse callback) {
             CookieManagerCloneInterfaceParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerCloneInterfaceParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerCloneInterfaceParams(elementsOrVersion);
+                    {
+                        
                     result.newInterface = decoder0.readInterfaceRequest(8, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1729,70 +1755,39 @@ FlushCookieStoreResponse callback) {
             
             encoder0.encode(this.newInterface, 8, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CookieManagerCloneInterfaceParams other = (CookieManagerCloneInterfaceParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.newInterface, other.newInterface))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.newInterface);
-            return result;
-        }
     }
 
 
 
     
     static final class CookieManagerFlushCookieStoreParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private CookieManagerFlushCookieStoreParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerFlushCookieStoreParams() {
             this(0);
         }
-    
+
         public static CookieManagerFlushCookieStoreParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerFlushCookieStoreParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerFlushCookieStoreParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1802,41 +1797,19 @@ FlushCookieStoreResponse callback) {
             CookieManagerFlushCookieStoreParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerFlushCookieStoreParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerFlushCookieStoreParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -1844,36 +1817,33 @@ FlushCookieStoreResponse callback) {
 
     
     static final class CookieManagerFlushCookieStoreResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private CookieManagerFlushCookieStoreResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CookieManagerFlushCookieStoreResponseParams() {
             this(0);
         }
-    
+
         public static CookieManagerFlushCookieStoreResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CookieManagerFlushCookieStoreResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CookieManagerFlushCookieStoreResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1883,41 +1853,19 @@ FlushCookieStoreResponse callback) {
             CookieManagerFlushCookieStoreResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CookieManagerFlushCookieStoreResponseParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerFlushCookieStoreResponseParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -1975,6 +1923,205 @@ FlushCookieStoreResponse callback) {
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
                                     mRequestId));
             mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class CookieManagerSetContentSettingsParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public org.chromium.content_settings.mojom.ContentSettingPatternSource[] settings;
+
+        private CookieManagerSetContentSettingsParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public CookieManagerSetContentSettingsParams() {
+            this(0);
+        }
+
+        public static CookieManagerSetContentSettingsParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static CookieManagerSetContentSettingsParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static CookieManagerSetContentSettingsParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            CookieManagerSetContentSettingsParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerSetContentSettingsParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    {
+                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                        result.settings = new org.chromium.content_settings.mojom.ContentSettingPatternSource[si1.elementsOrVersion];
+                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                            
+                            org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
+                            result.settings[i1] = org.chromium.content_settings.mojom.ContentSettingPatternSource.decode(decoder2);
+                        }
+                    }
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            if (this.settings == null) {
+                encoder0.encodeNullPointer(8, false);
+            } else {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.settings.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.settings.length; ++i0) {
+                    
+                    encoder1.encode(this.settings[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                }
+            }
+        }
+    }
+
+
+
+    
+    static final class CookieManagerSetForceKeepSessionStateParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 8;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+
+        private CookieManagerSetForceKeepSessionStateParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public CookieManagerSetForceKeepSessionStateParams() {
+            this(0);
+        }
+
+        public static CookieManagerSetForceKeepSessionStateParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static CookieManagerSetForceKeepSessionStateParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static CookieManagerSetForceKeepSessionStateParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            CookieManagerSetForceKeepSessionStateParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerSetForceKeepSessionStateParams(elementsOrVersion);
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+        }
+    }
+
+
+
+    
+    static final class CookieManagerBlockThirdPartyCookiesParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public boolean block;
+
+        private CookieManagerBlockThirdPartyCookiesParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public CookieManagerBlockThirdPartyCookiesParams() {
+            this(0);
+        }
+
+        public static CookieManagerBlockThirdPartyCookiesParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static CookieManagerBlockThirdPartyCookiesParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static CookieManagerBlockThirdPartyCookiesParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            CookieManagerBlockThirdPartyCookiesParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CookieManagerBlockThirdPartyCookiesParams(elementsOrVersion);
+                    {
+                        
+                    result.block = decoder0.readBoolean(8, 0);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.block, 8, 0);
         }
     }
 

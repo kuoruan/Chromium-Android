@@ -5,7 +5,9 @@
 package org.chromium.chrome.browser;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.provider.Browser;
 import android.support.annotation.Nullable;
@@ -16,6 +18,8 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.browserservices.BrowserServicesMetrics;
+import org.chromium.chrome.browser.browserservices.TrustedWebActivityClient;
 import org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
@@ -33,6 +37,8 @@ import org.chromium.ui.mojom.WindowOpenDisposition;
 import org.chromium.webapk.lib.client.WebApkIdentityServiceClient;
 import org.chromium.webapk.lib.client.WebApkNavigationClient;
 import org.chromium.webapk.lib.client.WebApkValidator;
+
+import java.util.List;
 
 /**
  * Tab Launcher to be used to launch new tabs from background Android Services,
@@ -80,9 +86,17 @@ public class ServiceTabLauncher {
     private static void dispatchLaunch(final int requestId, final boolean incognito,
             final String url, final String referrerUrl, final int referrerPolicy,
             final String extraHeaders, final ResourceRequestBody postData) {
-        final String webApkPackageName =
-                WebApkValidator.queryWebApkPackage(ContextUtils.getApplicationContext(), url);
+        Context context = ContextUtils.getApplicationContext();
+
+        List<ResolveInfo> resolveInfos;
+        try (BrowserServicesMetrics.TimingMetric t =
+                     BrowserServicesMetrics.getServiceTabResolveInfoTimingContext()) {
+            resolveInfos = WebApkValidator.resolveInfosForUrl(context, url);
+        }
+        String webApkPackageName = WebApkValidator.findWebApkPackage(context, resolveInfos);
+
         if (webApkPackageName != null) {
+            final List<ResolveInfo> resolveInfosFinal = resolveInfos;
             WebApkIdentityServiceClient.CheckBrowserBacksWebApkCallback callback =
                     doesBrowserBackWebApk -> {
                         if (doesBrowserBackWebApk) {
@@ -94,24 +108,36 @@ public class ServiceTabLauncher {
                             return;
                         }
                         launchTabOrWebapp(requestId, incognito, url, referrerUrl,
-                                referrerPolicy, extraHeaders, postData);
+                                referrerPolicy, extraHeaders, postData, resolveInfosFinal);
                     };
             ChromeWebApkHost.checkChromeBacksWebApkAsync(webApkPackageName, callback);
             return;
         }
 
-        launchTabOrWebapp(
-                requestId, incognito, url, referrerUrl, referrerPolicy, extraHeaders, postData);
+        launchTabOrWebapp(requestId, incognito, url, referrerUrl, referrerPolicy, extraHeaders,
+                postData, resolveInfos);
     }
 
     /** Launches WebappActivity or a tab for the |url|. */
     private static void launchTabOrWebapp(int requestId, boolean incognito, String url,
             String referrerUrl, int referrerPolicy, String extraHeaders,
-            ResourceRequestBody postData) {
+            ResourceRequestBody postData, List<ResolveInfo> resolveInfosForUrl) {
         // Launch WebappActivity if one matches the target URL and was opened recently.
         // Otherwise, open the URL in a tab.
         WebappDataStorage storage = WebappRegistry.getInstance().getWebappDataStorageForUrl(url);
         TabDelegate tabDelegate = new TabDelegate(incognito);
+
+        // Launch into a TrustedWebActivity if one exists for the URL.
+        Context appContext = ContextUtils.getApplicationContext();
+        if (!incognito) {
+            Intent twaIntent = TrustedWebActivityClient
+                    .createLaunchIntentForTwa(appContext, url, resolveInfosForUrl);
+
+            if (twaIntent != null) {
+                appContext.startActivity(twaIntent);
+                return;
+            }
+        }
 
         // Open a new tab if:
         // - We did not find a WebappDataStorage corresponding to this URL.

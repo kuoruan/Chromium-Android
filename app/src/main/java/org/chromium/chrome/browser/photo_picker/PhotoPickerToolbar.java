@@ -19,6 +19,7 @@ import java.util.List;
  * Handles toolbar functionality for the Photo Picker class.
  */
 public class PhotoPickerToolbar extends SelectableListToolbar<PickerBitmap> {
+    // TODO(finnur): Match style changes from Contacts Picker and delete blue_when_enabled.
     public PhotoPickerToolbar(Context context, AttributeSet attrs) {
         super(context, attrs);
     }

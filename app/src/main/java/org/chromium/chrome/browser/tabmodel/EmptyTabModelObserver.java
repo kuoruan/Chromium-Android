@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class EmptyTabModelObserver implements TabModelObserver {
     @Override
-    public void didSelectTab(Tab tab, TabSelectionType type, int lastId) {}
+    public void didSelectTab(Tab tab, @TabSelectionType int type, int lastId) {}
 
     @Override
     public void willCloseTab(Tab tab, boolean animate) {}
@@ -24,10 +24,10 @@ public class EmptyTabModelObserver implements TabModelObserver {
     public void didCloseTab(int tabId, boolean incognito) {}
 
     @Override
-    public void willAddTab(Tab tab, TabLaunchType type) {}
+    public void willAddTab(Tab tab, @TabLaunchType int type) {}
 
     @Override
-    public void didAddTab(Tab tab, TabLaunchType type) {}
+    public void didAddTab(Tab tab, @TabLaunchType int type) {}
 
     @Override
     public void didMoveTab(Tab tab, int newIndex, int curIndex) {}

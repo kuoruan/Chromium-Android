@@ -50,9 +50,6 @@ public final class InputDeviceInfo extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static InputDeviceInfo deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -66,57 +63,59 @@ public final class InputDeviceInfo extends org.chromium.mojo.bindings.Struct {
         InputDeviceInfo result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new InputDeviceInfo(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new InputDeviceInfo(elementsOrVersion);
+                {
+                    
                 result.id = decoder0.readString(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.name = decoder0.readString(16, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.subsystem = decoder0.readInt(24);
                     InputDeviceSubsystem.validate(result.subsystem);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.type = decoder0.readInt(28);
                     InputDeviceType.validate(result.type);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.isAccelerometer = decoder0.readBoolean(32, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.isJoystick = decoder0.readBoolean(32, 1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.isKey = decoder0.readBoolean(32, 2);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.isKeyboard = decoder0.readBoolean(32, 3);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.isMouse = decoder0.readBoolean(32, 4);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.isTablet = decoder0.readBoolean(32, 5);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.isTouchpad = decoder0.readBoolean(32, 6);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.isTouchscreen = decoder0.readBoolean(32, 7);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -151,66 +150,5 @@ public final class InputDeviceInfo extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.isTouchpad, 32, 6);
         
         encoder0.encode(this.isTouchscreen, 32, 7);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        InputDeviceInfo other = (InputDeviceInfo) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.id, other.id))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.name, other.name))
-            return false;
-        if (this.subsystem!= other.subsystem)
-            return false;
-        if (this.type!= other.type)
-            return false;
-        if (this.isAccelerometer!= other.isAccelerometer)
-            return false;
-        if (this.isJoystick!= other.isJoystick)
-            return false;
-        if (this.isKey!= other.isKey)
-            return false;
-        if (this.isKeyboard!= other.isKeyboard)
-            return false;
-        if (this.isMouse!= other.isMouse)
-            return false;
-        if (this.isTablet!= other.isTablet)
-            return false;
-        if (this.isTouchpad!= other.isTouchpad)
-            return false;
-        if (this.isTouchscreen!= other.isTouchscreen)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.id);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.name);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.subsystem);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isAccelerometer);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isJoystick);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isKey);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isKeyboard);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isMouse);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isTablet);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isTouchpad);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isTouchscreen);
-        return result;
     }
 }

@@ -12,6 +12,7 @@ import android.text.TextUtils;
 import com.google.android.gms.gcm.GcmListenerService;
 import com.google.ipc.invalidation.ticl.android2.channel.AndroidGcmController;
 
+import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.library_loader.ProcessInitException;
@@ -38,15 +39,13 @@ public class ChromeGcmListenerService extends GcmListenerService {
     @Override
     public void onMessageReceived(final String from, final Bundle data) {
         boolean hasCollapseKey = !TextUtils.isEmpty(data.getString("collapse_key"));
-        GcmUma.recordDataMessageReceived(getApplicationContext(), hasCollapseKey);
+        GcmUma.recordDataMessageReceived(ContextUtils.getApplicationContext(), hasCollapseKey);
 
         String invalidationSenderId = AndroidGcmController.get(this).getSenderId();
         if (from.equals(invalidationSenderId)) {
             AndroidGcmController.get(this).onMessageReceived(data);
             return;
         }
-
-        final Context applicationContext = getApplicationContext();
 
         // Dispatch the message to the GCM Driver for native features.
         ThreadUtils.runOnUiThread(new Runnable() {
@@ -60,7 +59,7 @@ public class ChromeGcmListenerService extends GcmListenerService {
                     return;
                 }
 
-                scheduleOrDispatchMessageToDriver(applicationContext, message);
+                scheduleOrDispatchMessageToDriver(message);
             }
         });
     }
@@ -68,13 +67,15 @@ public class ChromeGcmListenerService extends GcmListenerService {
     @Override
     public void onMessageSent(String msgId) {
         Log.d(TAG, "Message sent successfully. Message id: " + msgId);
-        GcmUma.recordGcmUpstreamHistogram(getApplicationContext(), GcmUma.UMA_UPSTREAM_SUCCESS);
+        GcmUma.recordGcmUpstreamHistogram(
+                ContextUtils.getApplicationContext(), GcmUma.UMA_UPSTREAM_SUCCESS);
     }
 
     @Override
     public void onSendError(String msgId, String error) {
         Log.w(TAG, "Error in sending message. Message id: " + msgId + " Error: " + error);
-        GcmUma.recordGcmUpstreamHistogram(getApplicationContext(), GcmUma.UMA_UPSTREAM_SEND_FAILED);
+        GcmUma.recordGcmUpstreamHistogram(
+                ContextUtils.getApplicationContext(), GcmUma.UMA_UPSTREAM_SEND_FAILED);
     }
 
     @Override
@@ -82,7 +83,7 @@ public class ChromeGcmListenerService extends GcmListenerService {
         // TODO(johnme): Ask GCM to include the subtype in this event.
         Log.w(TAG, "Push messages were deleted, but we can't tell the Service Worker as we don't"
                 + "know what subtype (app ID) it occurred for.");
-        GcmUma.recordDeletedMessages(getApplicationContext());
+        GcmUma.recordDeletedMessages(ContextUtils.getApplicationContext());
     }
 
     /**
@@ -91,7 +92,7 @@ public class ChromeGcmListenerService extends GcmListenerService {
      * Must be called on the UI thread both for the BackgroundTaskScheduler and for dispatching
      * the |message| to the GCMDriver.
      */
-    static void scheduleOrDispatchMessageToDriver(Context context, GCMMessage message) {
+    static void scheduleOrDispatchMessageToDriver(GCMMessage message) {
         ThreadUtils.assertOnUiThread();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -103,10 +104,11 @@ public class ChromeGcmListenerService extends GcmListenerService {
                                               .setExtras(extras)
                                               .build();
 
-            BackgroundTaskSchedulerFactory.getScheduler().schedule(context, backgroundTask);
+            BackgroundTaskSchedulerFactory.getScheduler().schedule(
+                    ContextUtils.getApplicationContext(), backgroundTask);
 
         } else {
-            dispatchMessageToDriver(context, message);
+            dispatchMessageToDriver(ContextUtils.getApplicationContext(), message);
         }
     }
 

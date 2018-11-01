@@ -5,8 +5,10 @@
 package org.chromium.chrome.browser.mojo;
 
 import org.chromium.base.annotations.CalledByNative;
+import org.chromium.blink.mojom.Authenticator;
 import org.chromium.chrome.browser.installedapp.InstalledAppProviderFactory;
 import org.chromium.chrome.browser.payments.PaymentRequestFactory;
+import org.chromium.chrome.browser.webauth.AuthenticatorFactory;
 import org.chromium.chrome.browser.webshare.ShareServiceImplementationFactory;
 import org.chromium.content_public.browser.InterfaceRegistrar;
 import org.chromium.content_public.browser.RenderFrameHost;
@@ -46,6 +48,7 @@ class ChromeInterfaceRegistrar {
                     PaymentRequest.MANAGER, new PaymentRequestFactory(renderFrameHost));
             registry.addInterface(
                     InstalledAppProvider.MANAGER, new InstalledAppProviderFactory(renderFrameHost));
+            registry.addInterface(Authenticator.MANAGER, new AuthenticatorFactory(renderFrameHost));
         }
     }
 }

@@ -9,6 +9,7 @@ import android.app.FragmentManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
+import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.support.v4.text.TextUtilsCompat;
 import android.support.v4.view.ViewCompat;
@@ -36,10 +37,22 @@ import java.util.Locale;
 public class ClearBrowsingDataTabsFragment extends Fragment {
     public static final int CBD_TAB_COUNT = 2;
 
+    private ClearBrowsingDataFetcher mFetcher;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        if (savedInstanceState == null) {
+            mFetcher = new ClearBrowsingDataFetcher();
+            mFetcher.fetchImportantSites();
+            mFetcher.requestInfoAboutOtherFormsOfBrowsingHistory();
+        } else {
+            mFetcher = savedInstanceState.getParcelable(
+                    ClearBrowsingDataPreferences.CLEAR_BROWSING_DATA_FETCHER);
+        }
+
         RecordUserAction.record("ClearBrowsingData_DialogCreated");
     }
 
@@ -64,17 +77,13 @@ public class ClearBrowsingDataTabsFragment extends Fragment {
         // Inflate the layout for this fragment.
         View view = inflater.inflate(R.layout.clear_browsing_data_tabs, container, false);
 
-        ClearBrowsingDataFetcher fetcher = new ClearBrowsingDataFetcher();
-        fetcher.fetchImportantSites();
-        fetcher.requestInfoAboutOtherFormsOfBrowsingHistory();
-
         // Get the ViewPager and set its PagerAdapter so that it can display items.
-        ViewPager viewPager = (ViewPager) view.findViewById(R.id.clear_browsing_data_viewpager);
+        ViewPager viewPager = view.findViewById(R.id.clear_browsing_data_viewpager);
         viewPager.setAdapter(
-                new ClearBrowsingDataPagerAdapter(fetcher, getFragmentManager(), getActivity()));
+                new ClearBrowsingDataPagerAdapter(mFetcher, getFragmentManager(), getActivity()));
 
         // Give the TabLayout the ViewPager.
-        TabLayout tabLayout = (TabLayout) view.findViewById(R.id.clear_browsing_data_tabs);
+        TabLayout tabLayout = view.findViewById(R.id.clear_browsing_data_tabs);
         tabLayout.setupWithViewPager(viewPager);
         int tabIndex = adjustIndexForDirectionality(
                 PrefServiceBridge.getInstance().getLastSelectedClearBrowsingDataTab());
@@ -89,6 +98,14 @@ public class ClearBrowsingDataTabsFragment extends Fragment {
         activity.getSupportActionBar().setElevation(0.0f);
 
         return view;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // mFetcher acts as a cache for important sites and history data. If the activity gets
+        // suspended, we can save the cached data and reuse it when we are activated again.
+        outState.putParcelable(ClearBrowsingDataPreferences.CLEAR_BROWSING_DATA_FETCHER, mFetcher);
     }
 
     private static class ClearBrowsingDataPagerAdapter extends FragmentPagerAdapter {
@@ -163,7 +180,8 @@ public class ClearBrowsingDataTabsFragment extends Fragment {
         menu.clear();
         MenuItem help =
                 menu.add(Menu.NONE, R.id.menu_id_targeted_help, Menu.NONE, R.string.menu_help);
-        help.setIcon(R.drawable.ic_help_and_feedback);
+        help.setIcon(VectorDrawableCompat.create(
+                getResources(), R.drawable.ic_help_and_feedback, getActivity().getTheme()));
         help.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
     }
 

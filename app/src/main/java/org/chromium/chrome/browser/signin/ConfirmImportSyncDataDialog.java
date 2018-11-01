@@ -5,11 +5,12 @@
 package org.chromium.chrome.browser.signin;
 
 import android.app.Dialog;
-import android.app.DialogFragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.IntDef;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +23,8 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.preferences.ManagedPreferencesUtils;
 import org.chromium.chrome.browser.widget.RadioButtonWithDescription;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 import java.util.List;
 
@@ -54,7 +57,12 @@ public class ConfirmImportSyncDataDialog extends DialogFragment
      * been signed into another account, had signed out then signed into a different one, or
      * if they directly switched accounts. This changes the strings displayed.
      */
-    public enum ImportSyncType { SWITCHING_SYNC_ACCOUNTS, PREVIOUS_DATA_FOUND }
+    @IntDef({ImportSyncType.SWITCHING_SYNC_ACCOUNTS, ImportSyncType.PREVIOUS_DATA_FOUND})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ImportSyncType {
+        int SWITCHING_SYNC_ACCOUNTS = 0;
+        int PREVIOUS_DATA_FOUND = 1;
+    }
 
     @VisibleForTesting
     public static final String CONFIRM_IMPORT_SYNC_DATA_DIALOG_TAG =
@@ -71,13 +79,12 @@ public class ConfirmImportSyncDataDialog extends DialogFragment
     private boolean mListenerCalled;
 
     private static ConfirmImportSyncDataDialog newInstance(
-            String oldAccountName, String newAccountName, ImportSyncType importSyncType) {
-
+            String oldAccountName, String newAccountName, @ImportSyncType int importSyncType) {
         ConfirmImportSyncDataDialog fragment = new ConfirmImportSyncDataDialog();
         Bundle args = new Bundle();
         args.putString(KEY_OLD_ACCOUNT_NAME, oldAccountName);
         args.putString(KEY_NEW_ACCOUNT_NAME, newAccountName);
-        args.putSerializable(KEY_IMPORT_SYNC_TYPE, importSyncType);
+        args.putInt(KEY_IMPORT_SYNC_TYPE, importSyncType);
         fragment.setArguments(args);
         return fragment;
     }
@@ -96,7 +103,8 @@ public class ConfirmImportSyncDataDialog extends DialogFragment
      *                        hitting cancel).
      */
     public static void showNewInstance(String oldAccountName, String newAccountName,
-            ImportSyncType importSyncType, FragmentManager fragmentManager, Listener callback) {
+            @ImportSyncType int importSyncType, FragmentManager fragmentManager,
+            Listener callback) {
         ConfirmImportSyncDataDialog confirmSync =
                 newInstance(oldAccountName, newAccountName, importSyncType);
 
@@ -115,8 +123,8 @@ public class ConfirmImportSyncDataDialog extends DialogFragment
         }
         String oldAccountName = getArguments().getString(KEY_OLD_ACCOUNT_NAME);
         String newAccountName = getArguments().getString(KEY_NEW_ACCOUNT_NAME);
-        ImportSyncType importSyncType =
-                (ImportSyncType) getArguments().getSerializable(KEY_IMPORT_SYNC_TYPE);
+        @ImportSyncType
+        int importSyncType = getArguments().getInt(KEY_IMPORT_SYNC_TYPE);
 
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View v = inflater.inflate(R.layout.confirm_import_sync_data, null);

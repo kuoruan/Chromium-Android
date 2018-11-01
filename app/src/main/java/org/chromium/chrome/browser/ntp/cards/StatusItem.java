@@ -47,8 +47,8 @@ public abstract class StatusItem extends OptionalLeaf implements StatusCardViewH
         }
 
         @Override
-        protected void visitOptionalItem(NodeVisitor visitor) {
-            visitor.visitNoSuggestionsItem();
+        public String describeForTesting() {
+            return "NO_SUGGESTIONS";
         }
     }
 

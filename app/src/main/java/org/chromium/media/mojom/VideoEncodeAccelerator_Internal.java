@@ -18,28 +18,28 @@ class VideoEncodeAccelerator_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<VideoEncodeAccelerator, VideoEncodeAccelerator.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<VideoEncodeAccelerator, VideoEncodeAccelerator.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::VideoEncodeAccelerator";
+            return "media.mojom.VideoEncodeAccelerator";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, VideoEncodeAccelerator impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public VideoEncodeAccelerator[] buildArray(int size) {
           return new VideoEncodeAccelerator[size];
@@ -66,18 +66,12 @@ class VideoEncodeAccelerator_Internal {
 
         @Override
         public void initialize(
-int inputFormat, org.chromium.gfx.mojom.Size inputVisibleSize, int outputProfile, int initialBitrate, VideoEncodeAcceleratorClient client, 
+VideoEncodeAcceleratorConfig config, VideoEncodeAcceleratorClient client, 
 InitializeResponse callback) {
 
             VideoEncodeAcceleratorInitializeParams _message = new VideoEncodeAcceleratorInitializeParams();
 
-            _message.inputFormat = inputFormat;
-
-            _message.inputVisibleSize = inputVisibleSize;
-
-            _message.outputProfile = outputProfile;
-
-            _message.initialBitrate = initialBitrate;
+            _message.config = config;
 
             _message.client = client;
 
@@ -139,11 +133,11 @@ int bitstreamBufferId, org.chromium.mojo.system.SharedBufferHandle buffer) {
 
         @Override
         public void requestEncodingParametersChange(
-int bitrate, int framerate) {
+VideoBitrateAllocation bitrateAllocation, int framerate) {
 
             VideoEncodeAcceleratorRequestEncodingParametersChangeParams _message = new VideoEncodeAcceleratorRequestEncodingParametersChangeParams();
 
-            _message.bitrate = bitrate;
+            _message.bitrateAllocation = bitrateAllocation;
 
             _message.framerate = framerate;
 
@@ -174,42 +168,42 @@ int bitrate, int framerate) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 VideoEncodeAccelerator_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
                     case USE_OUTPUT_BITSTREAM_BUFFER_ORDINAL: {
-            
+
                         VideoEncodeAcceleratorUseOutputBitstreamBufferParams data =
                                 VideoEncodeAcceleratorUseOutputBitstreamBufferParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().useOutputBitstreamBuffer(data.bitstreamBufferId, data.buffer);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case REQUEST_ENCODING_PARAMETERS_CHANGE_ORDINAL: {
-            
+
                         VideoEncodeAcceleratorRequestEncodingParametersChangeParams data =
                                 VideoEncodeAcceleratorRequestEncodingParametersChangeParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().requestEncodingParametersChange(data.bitrate, data.framerate);
+
+                        getImpl().requestEncodingParametersChange(data.bitrateAllocation, data.framerate);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -229,46 +223,46 @@ int bitrate, int framerate) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), VideoEncodeAccelerator_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case INITIALIZE_ORDINAL: {
-            
+
                         VideoEncodeAcceleratorInitializeParams data =
                                 VideoEncodeAcceleratorInitializeParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().initialize(data.inputFormat, data.inputVisibleSize, data.outputProfile, data.initialBitrate, data.client, new VideoEncodeAcceleratorInitializeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+
+                        getImpl().initialize(data.config, data.client, new VideoEncodeAcceleratorInitializeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case ENCODE_ORDINAL: {
-            
+
                         VideoEncodeAcceleratorEncodeParams data =
                                 VideoEncodeAcceleratorEncodeParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().encode(data.frame, data.forceKeyframe, new VideoEncodeAcceleratorEncodeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -282,41 +276,35 @@ int bitrate, int framerate) {
 
     
     static final class VideoEncodeAcceleratorInitializeParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 40;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
+
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public int inputFormat;
-        public org.chromium.gfx.mojom.Size inputVisibleSize;
-        public int outputProfile;
-        public int initialBitrate;
+        public VideoEncodeAcceleratorConfig config;
         public VideoEncodeAcceleratorClient client;
-    
+
         private VideoEncodeAcceleratorInitializeParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public VideoEncodeAcceleratorInitializeParams() {
             this(0);
         }
-    
+
         public static VideoEncodeAcceleratorInitializeParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static VideoEncodeAcceleratorInitializeParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static VideoEncodeAcceleratorInitializeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -326,90 +314,32 @@ int bitrate, int framerate) {
             VideoEncodeAcceleratorInitializeParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoEncodeAcceleratorInitializeParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.inputFormat = decoder0.readInt(8);
-                        VideoPixelFormat.validate(result.inputFormat);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.outputProfile = decoder0.readInt(12);
-                        VideoCodecProfile.validate(result.outputProfile);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                    result.inputVisibleSize = org.chromium.gfx.mojom.Size.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.initialBitrate = decoder0.readInt(24);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.client = decoder0.readServiceInterface(28, false, VideoEncodeAcceleratorClient.MANAGER);
-                }
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoEncodeAcceleratorInitializeParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.config = VideoEncodeAcceleratorConfig.decode(decoder1);
+                    }
+                    {
+                        
+                    result.client = decoder0.readServiceInterface(16, false, VideoEncodeAcceleratorClient.MANAGER);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.inputFormat, 8);
+            encoder0.encode(this.config, 8, false);
             
-            encoder0.encode(this.outputProfile, 12);
-            
-            encoder0.encode(this.inputVisibleSize, 16, false);
-            
-            encoder0.encode(this.initialBitrate, 24);
-            
-            encoder0.encode(this.client, 28, false, VideoEncodeAcceleratorClient.MANAGER);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            VideoEncodeAcceleratorInitializeParams other = (VideoEncodeAcceleratorInitializeParams) object;
-            if (this.inputFormat!= other.inputFormat)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.inputVisibleSize, other.inputVisibleSize))
-                return false;
-            if (this.outputProfile!= other.outputProfile)
-                return false;
-            if (this.initialBitrate!= other.initialBitrate)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.client, other.client))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inputFormat);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inputVisibleSize);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.outputProfile);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.initialBitrate);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
-            return result;
+            encoder0.encode(this.client, 16, false, VideoEncodeAcceleratorClient.MANAGER);
         }
     }
 
@@ -417,37 +347,34 @@ int bitrate, int framerate) {
 
     
     static final class VideoEncodeAcceleratorInitializeResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean result;
-    
+
         private VideoEncodeAcceleratorInitializeResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public VideoEncodeAcceleratorInitializeResponseParams() {
             this(0);
         }
-    
+
         public static VideoEncodeAcceleratorInitializeResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static VideoEncodeAcceleratorInitializeResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static VideoEncodeAcceleratorInitializeResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -457,51 +384,25 @@ int bitrate, int framerate) {
             VideoEncodeAcceleratorInitializeResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoEncodeAcceleratorInitializeResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoEncodeAcceleratorInitializeResponseParams(elementsOrVersion);
+                    {
+                        
                     result.result = decoder0.readBoolean(8, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.result, 8, 0);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            VideoEncodeAcceleratorInitializeResponseParams other = (VideoEncodeAcceleratorInitializeResponseParams) object;
-            if (this.result!= other.result)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.result);
-            return result;
         }
     }
 
@@ -570,38 +471,35 @@ int bitrate, int framerate) {
 
     
     static final class VideoEncodeAcceleratorEncodeParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public VideoFrame frame;
         public boolean forceKeyframe;
-    
+
         private VideoEncodeAcceleratorEncodeParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public VideoEncodeAcceleratorEncodeParams() {
             this(0);
         }
-    
+
         public static VideoEncodeAcceleratorEncodeParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static VideoEncodeAcceleratorEncodeParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static VideoEncodeAcceleratorEncodeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -611,22 +509,24 @@ int bitrate, int framerate) {
             VideoEncodeAcceleratorEncodeParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoEncodeAcceleratorEncodeParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoEncodeAcceleratorEncodeParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.frame = VideoFrame.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.forceKeyframe = decoder0.readBoolean(16, 0);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -636,73 +536,39 @@ int bitrate, int framerate) {
             
             encoder0.encode(this.forceKeyframe, 16, 0);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            VideoEncodeAcceleratorEncodeParams other = (VideoEncodeAcceleratorEncodeParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.frame, other.frame))
-                return false;
-            if (this.forceKeyframe!= other.forceKeyframe)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.frame);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.forceKeyframe);
-            return result;
-        }
     }
 
 
 
     
     static final class VideoEncodeAcceleratorEncodeResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private VideoEncodeAcceleratorEncodeResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public VideoEncodeAcceleratorEncodeResponseParams() {
             this(0);
         }
-    
+
         public static VideoEncodeAcceleratorEncodeResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static VideoEncodeAcceleratorEncodeResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static VideoEncodeAcceleratorEncodeResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -712,41 +578,19 @@ int bitrate, int framerate) {
             VideoEncodeAcceleratorEncodeResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoEncodeAcceleratorEncodeResponseParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoEncodeAcceleratorEncodeResponseParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -811,39 +655,36 @@ int bitrate, int framerate) {
 
     
     static final class VideoEncodeAcceleratorUseOutputBitstreamBufferParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int bitstreamBufferId;
         public org.chromium.mojo.system.SharedBufferHandle buffer;
-    
+
         private VideoEncodeAcceleratorUseOutputBitstreamBufferParams(int version) {
             super(STRUCT_SIZE, version);
             this.buffer = org.chromium.mojo.system.InvalidHandle.INSTANCE;
         }
-    
+
         public VideoEncodeAcceleratorUseOutputBitstreamBufferParams() {
             this(0);
         }
-    
+
         public static VideoEncodeAcceleratorUseOutputBitstreamBufferParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static VideoEncodeAcceleratorUseOutputBitstreamBufferParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static VideoEncodeAcceleratorUseOutputBitstreamBufferParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -853,21 +694,23 @@ int bitrate, int framerate) {
             VideoEncodeAcceleratorUseOutputBitstreamBufferParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoEncodeAcceleratorUseOutputBitstreamBufferParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoEncodeAcceleratorUseOutputBitstreamBufferParams(elementsOrVersion);
+                    {
+                        
                     result.bitstreamBufferId = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.buffer = decoder0.readSharedBufferHandle(12, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -877,75 +720,41 @@ int bitrate, int framerate) {
             
             encoder0.encode(this.buffer, 12, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            VideoEncodeAcceleratorUseOutputBitstreamBufferParams other = (VideoEncodeAcceleratorUseOutputBitstreamBufferParams) object;
-            if (this.bitstreamBufferId!= other.bitstreamBufferId)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.buffer, other.buffer))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bitstreamBufferId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.buffer);
-            return result;
-        }
     }
 
 
 
     
     static final class VideoEncodeAcceleratorRequestEncodingParametersChangeParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 16;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public int bitrate;
+        public VideoBitrateAllocation bitrateAllocation;
         public int framerate;
-    
+
         private VideoEncodeAcceleratorRequestEncodingParametersChangeParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public VideoEncodeAcceleratorRequestEncodingParametersChangeParams() {
             this(0);
         }
-    
+
         public static VideoEncodeAcceleratorRequestEncodingParametersChangeParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static VideoEncodeAcceleratorRequestEncodingParametersChangeParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static VideoEncodeAcceleratorRequestEncodingParametersChangeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -955,60 +764,32 @@ int bitrate, int framerate) {
             VideoEncodeAcceleratorRequestEncodingParametersChangeParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoEncodeAcceleratorRequestEncodingParametersChangeParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.bitrate = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.framerate = decoder0.readInt(12);
-                }
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoEncodeAcceleratorRequestEncodingParametersChangeParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.bitrateAllocation = VideoBitrateAllocation.decode(decoder1);
+                    }
+                    {
+                        
+                    result.framerate = decoder0.readInt(16);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.bitrate, 8);
+            encoder0.encode(this.bitrateAllocation, 8, false);
             
-            encoder0.encode(this.framerate, 12);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            VideoEncodeAcceleratorRequestEncodingParametersChangeParams other = (VideoEncodeAcceleratorRequestEncodingParametersChangeParams) object;
-            if (this.bitrate!= other.bitrate)
-                return false;
-            if (this.framerate!= other.framerate)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bitrate);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.framerate);
-            return result;
+            encoder0.encode(this.framerate, 16);
         }
     }
 

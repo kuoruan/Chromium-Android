@@ -4,8 +4,7 @@
      found in the LICENSE file. -->
 
 <PreferenceScreen
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto">
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <org.chromium.chrome.browser.preferences.ChromeSwitchPreference
         android:key="homepage_switch"

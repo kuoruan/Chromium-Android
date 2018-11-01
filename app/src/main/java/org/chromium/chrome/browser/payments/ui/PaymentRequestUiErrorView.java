@@ -6,13 +6,13 @@ package org.chromium.chrome.browser.payments.ui;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.support.v4.view.MarginLayoutParamsCompat;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.widget.BoundedLinearLayout;
 
@@ -42,9 +42,9 @@ public class PaymentRequestUiErrorView extends BoundedLinearLayout {
         ((ViewGroup) toRemove.getParent()).removeView(toRemove);
 
         int titleEndMargin = getContext().getResources().getDimensionPixelSize(
-                R.dimen.payments_section_large_spacing);
+                R.dimen.editor_dialog_section_large_spacing);
         View pageInfoGroup = findViewById(R.id.page_info);
-        ApiCompatibilityUtils.setMarginEnd(
+        MarginLayoutParamsCompat.setMarginEnd(
                 (MarginLayoutParams) pageInfoGroup.getLayoutParams(), titleEndMargin);
     }
 

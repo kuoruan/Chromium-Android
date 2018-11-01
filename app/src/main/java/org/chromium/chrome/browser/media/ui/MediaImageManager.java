@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.text.TextUtils;
 
+import org.chromium.base.FileUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.content_public.browser.ImageDownloadCallback;
 import org.chromium.content_public.browser.WebContents;
@@ -17,7 +18,6 @@ import org.chromium.content_public.browser.WebContents;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * A class for managing the MediaImage download process.
@@ -245,7 +245,7 @@ public class MediaImageManager implements ImageDownloadCallback {
     }
 
     private double getImageTypeScore(String url, String type) {
-        String extension = getExtension(url);
+        String extension = FileUtils.getExtension(url);
 
         if (sFileExtentionScores.containsKey(extension)) {
             return sFileExtentionScores.get(extension);
@@ -253,11 +253,5 @@ public class MediaImageManager implements ImageDownloadCallback {
         if (sMIMETypeScores.containsKey(type)) return sMIMETypeScores.get(type);
 
         return TYPE_SCORE_DEFAULT;
-    }
-
-    private String getExtension(String url) {
-        int index = TextUtils.lastIndexOf(url, '.');
-        if (index == -1) return "";
-        return url.substring(index + 1).toLowerCase(Locale.US);
     }
 }

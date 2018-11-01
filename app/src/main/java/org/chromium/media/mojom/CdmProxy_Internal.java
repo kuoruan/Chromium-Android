@@ -18,28 +18,28 @@ class CdmProxy_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<CdmProxy, CdmProxy.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<CdmProxy, CdmProxy.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::CdmProxy";
+            return "media.mojom.CdmProxy";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, CdmProxy impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public CdmProxy[] buildArray(int size) {
           return new CdmProxy[size];
@@ -196,44 +196,44 @@ int cryptoSessionId, byte[] keyId) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 CdmProxy_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
                     case SET_KEY_ORDINAL: {
-            
+
                         CdmProxySetKeyParams data =
                                 CdmProxySetKeyParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().setKey(data.cryptoSessionId, data.keyId, data.keyBlob);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case REMOVE_KEY_ORDINAL: {
-            
+
                         CdmProxyRemoveKeyParams data =
                                 CdmProxyRemoveKeyParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().removeKey(data.cryptoSessionId, data.keyId);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -253,61 +253,61 @@ int cryptoSessionId, byte[] keyId) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), CdmProxy_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case INITIALIZE_ORDINAL: {
-            
+
                         CdmProxyInitializeParams data =
                                 CdmProxyInitializeParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().initialize(data.client, new CdmProxyInitializeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case PROCESS_ORDINAL: {
-            
+
                         CdmProxyProcessParams data =
                                 CdmProxyProcessParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().process(data.function, data.cryptoSessionId, data.inputData, data.outputDataSize, new CdmProxyProcessResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case CREATE_MEDIA_CRYPTO_SESSION_ORDINAL: {
-            
+
                         CdmProxyCreateMediaCryptoSessionParams data =
                                 CdmProxyCreateMediaCryptoSessionParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().createMediaCryptoSession(data.inputData, new CdmProxyCreateMediaCryptoSessionResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -321,37 +321,34 @@ int cryptoSessionId, byte[] keyId) {
 
     
     static final class CdmProxyInitializeParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client;
-    
+
         private CdmProxyInitializeParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmProxyInitializeParams() {
             this(0);
         }
-    
+
         public static CdmProxyInitializeParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmProxyInitializeParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmProxyInitializeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -361,17 +358,19 @@ int cryptoSessionId, byte[] keyId) {
             CdmProxyInitializeParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmProxyInitializeParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmProxyInitializeParams(elementsOrVersion);
+                    {
+                        
                     result.client = decoder0.readAssociatedServiceInterfaceNotSupported(8, false);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -379,41 +378,13 @@ int cryptoSessionId, byte[] keyId) {
             
             encoder0.encode(this.client, 8, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CdmProxyInitializeParams other = (CdmProxyInitializeParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.client, other.client))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.client);
-            return result;
-        }
     }
 
 
 
     
     static final class CdmProxyInitializeResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
@@ -421,32 +392,29 @@ int cryptoSessionId, byte[] keyId) {
         public int protocol;
         public int cryptoSessionId;
         public int cdmId;
-    
+
         private CdmProxyInitializeResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmProxyInitializeResponseParams() {
             this(0);
         }
-    
+
         public static CdmProxyInitializeResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmProxyInitializeResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmProxyInitializeResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -456,31 +424,33 @@ int cryptoSessionId, byte[] keyId) {
             CdmProxyInitializeResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmProxyInitializeResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmProxyInitializeResponseParams(elementsOrVersion);
+                    {
+                        
                     result.status = decoder0.readInt(8);
                         CdmProxy.Status.validate(result.status);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.protocol = decoder0.readInt(12);
                         CdmProxy.Protocol.validate(result.protocol);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.cryptoSessionId = decoder0.readInt(16);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.cdmId = decoder0.readInt(20);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -493,43 +463,6 @@ int cryptoSessionId, byte[] keyId) {
             encoder0.encode(this.cryptoSessionId, 16);
             
             encoder0.encode(this.cdmId, 20);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CdmProxyInitializeResponseParams other = (CdmProxyInitializeResponseParams) object;
-            if (this.status!= other.status)
-                return false;
-            if (this.protocol!= other.protocol)
-                return false;
-            if (this.cryptoSessionId!= other.cryptoSessionId)
-                return false;
-            if (this.cdmId!= other.cdmId)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.protocol);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cryptoSessionId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cdmId);
-            return result;
         }
     }
 
@@ -604,7 +537,7 @@ int cryptoSessionId, byte[] keyId) {
 
     
     static final class CdmProxyProcessParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
@@ -612,32 +545,29 @@ int cryptoSessionId, byte[] keyId) {
         public int cryptoSessionId;
         public byte[] inputData;
         public int outputDataSize;
-    
+
         private CdmProxyProcessParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmProxyProcessParams() {
             this(0);
         }
-    
+
         public static CdmProxyProcessParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmProxyProcessParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmProxyProcessParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -647,30 +577,32 @@ int cryptoSessionId, byte[] keyId) {
             CdmProxyProcessParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmProxyProcessParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmProxyProcessParams(elementsOrVersion);
+                    {
+                        
                     result.function = decoder0.readInt(8);
                         CdmProxy.Function.validate(result.function);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.cryptoSessionId = decoder0.readInt(12);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.inputData = decoder0.readBytes(16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.outputDataSize = decoder0.readInt(24);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -684,81 +616,41 @@ int cryptoSessionId, byte[] keyId) {
             
             encoder0.encode(this.outputDataSize, 24);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CdmProxyProcessParams other = (CdmProxyProcessParams) object;
-            if (this.function!= other.function)
-                return false;
-            if (this.cryptoSessionId!= other.cryptoSessionId)
-                return false;
-            if (!java.util.Arrays.equals(this.inputData, other.inputData))
-                return false;
-            if (this.outputDataSize!= other.outputDataSize)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.function);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cryptoSessionId);
-            result = prime * result + java.util.Arrays.hashCode(this.inputData);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.outputDataSize);
-            return result;
-        }
     }
 
 
 
     
     static final class CdmProxyProcessResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int status;
         public byte[] outputData;
-    
+
         private CdmProxyProcessResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmProxyProcessResponseParams() {
             this(0);
         }
-    
+
         public static CdmProxyProcessResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmProxyProcessResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmProxyProcessResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -768,22 +660,24 @@ int cryptoSessionId, byte[] keyId) {
             CdmProxyProcessResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmProxyProcessResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmProxyProcessResponseParams(elementsOrVersion);
+                    {
+                        
                     result.status = decoder0.readInt(8);
                         CdmProxy.Status.validate(result.status);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.outputData = decoder0.readBytes(16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -792,37 +686,6 @@ int cryptoSessionId, byte[] keyId) {
             encoder0.encode(this.status, 8);
             
             encoder0.encode(this.outputData, 16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CdmProxyProcessResponseParams other = (CdmProxyProcessResponseParams) object;
-            if (this.status!= other.status)
-                return false;
-            if (!java.util.Arrays.equals(this.outputData, other.outputData))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
-            result = prime * result + java.util.Arrays.hashCode(this.outputData);
-            return result;
         }
     }
 
@@ -893,37 +756,34 @@ int cryptoSessionId, byte[] keyId) {
 
     
     static final class CdmProxyCreateMediaCryptoSessionParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public byte[] inputData;
-    
+
         private CdmProxyCreateMediaCryptoSessionParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmProxyCreateMediaCryptoSessionParams() {
             this(0);
         }
-    
+
         public static CdmProxyCreateMediaCryptoSessionParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmProxyCreateMediaCryptoSessionParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmProxyCreateMediaCryptoSessionParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -933,17 +793,19 @@ int cryptoSessionId, byte[] keyId) {
             CdmProxyCreateMediaCryptoSessionParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmProxyCreateMediaCryptoSessionParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmProxyCreateMediaCryptoSessionParams(elementsOrVersion);
+                    {
+                        
                     result.inputData = decoder0.readBytes(8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -951,73 +813,42 @@ int cryptoSessionId, byte[] keyId) {
             
             encoder0.encode(this.inputData, 8, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CdmProxyCreateMediaCryptoSessionParams other = (CdmProxyCreateMediaCryptoSessionParams) object;
-            if (!java.util.Arrays.equals(this.inputData, other.inputData))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + java.util.Arrays.hashCode(this.inputData);
-            return result;
-        }
     }
 
 
 
     
     static final class CdmProxyCreateMediaCryptoSessionResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int status;
         public int cryptoSessionId;
         public long outputData;
-    
+
         private CdmProxyCreateMediaCryptoSessionResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmProxyCreateMediaCryptoSessionResponseParams() {
             this(0);
         }
-    
+
         public static CdmProxyCreateMediaCryptoSessionResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmProxyCreateMediaCryptoSessionResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmProxyCreateMediaCryptoSessionResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1027,26 +858,28 @@ int cryptoSessionId, byte[] keyId) {
             CdmProxyCreateMediaCryptoSessionResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmProxyCreateMediaCryptoSessionResponseParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmProxyCreateMediaCryptoSessionResponseParams(elementsOrVersion);
+                    {
+                        
                     result.status = decoder0.readInt(8);
                         CdmProxy.Status.validate(result.status);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.cryptoSessionId = decoder0.readInt(12);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.outputData = decoder0.readLong(16);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1057,40 +890,6 @@ int cryptoSessionId, byte[] keyId) {
             encoder0.encode(this.cryptoSessionId, 12);
             
             encoder0.encode(this.outputData, 16);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CdmProxyCreateMediaCryptoSessionResponseParams other = (CdmProxyCreateMediaCryptoSessionResponseParams) object;
-            if (this.status!= other.status)
-                return false;
-            if (this.cryptoSessionId!= other.cryptoSessionId)
-                return false;
-            if (this.outputData!= other.outputData)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.status);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cryptoSessionId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.outputData);
-            return result;
         }
     }
 
@@ -1163,39 +962,36 @@ int cryptoSessionId, byte[] keyId) {
 
     
     static final class CdmProxySetKeyParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 32;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int cryptoSessionId;
         public byte[] keyId;
         public byte[] keyBlob;
-    
+
         private CdmProxySetKeyParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmProxySetKeyParams() {
             this(0);
         }
-    
+
         public static CdmProxySetKeyParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmProxySetKeyParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmProxySetKeyParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1205,25 +1001,27 @@ int cryptoSessionId, byte[] keyId) {
             CdmProxySetKeyParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmProxySetKeyParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmProxySetKeyParams(elementsOrVersion);
+                    {
+                        
                     result.cryptoSessionId = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.keyId = decoder0.readBytes(16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.keyBlob = decoder0.readBytes(24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1235,78 +1033,41 @@ int cryptoSessionId, byte[] keyId) {
             
             encoder0.encode(this.keyBlob, 24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CdmProxySetKeyParams other = (CdmProxySetKeyParams) object;
-            if (this.cryptoSessionId!= other.cryptoSessionId)
-                return false;
-            if (!java.util.Arrays.equals(this.keyId, other.keyId))
-                return false;
-            if (!java.util.Arrays.equals(this.keyBlob, other.keyBlob))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cryptoSessionId);
-            result = prime * result + java.util.Arrays.hashCode(this.keyId);
-            result = prime * result + java.util.Arrays.hashCode(this.keyBlob);
-            return result;
-        }
     }
 
 
 
     
     static final class CdmProxyRemoveKeyParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int cryptoSessionId;
         public byte[] keyId;
-    
+
         private CdmProxyRemoveKeyParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public CdmProxyRemoveKeyParams() {
             this(0);
         }
-    
+
         public static CdmProxyRemoveKeyParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static CdmProxyRemoveKeyParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static CdmProxyRemoveKeyParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1316,21 +1077,23 @@ int cryptoSessionId, byte[] keyId) {
             CdmProxyRemoveKeyParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new CdmProxyRemoveKeyParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmProxyRemoveKeyParams(elementsOrVersion);
+                    {
+                        
                     result.cryptoSessionId = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.keyId = decoder0.readBytes(16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1339,37 +1102,6 @@ int cryptoSessionId, byte[] keyId) {
             encoder0.encode(this.cryptoSessionId, 8);
             
             encoder0.encode(this.keyId, 16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            CdmProxyRemoveKeyParams other = (CdmProxyRemoveKeyParams) object;
-            if (this.cryptoSessionId!= other.cryptoSessionId)
-                return false;
-            if (!java.util.Arrays.equals(this.keyId, other.keyId))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cryptoSessionId);
-            result = prime * result + java.util.Arrays.hashCode(this.keyId);
-            return result;
         }
     }
 

@@ -35,7 +35,8 @@ public class HyperlinkPreference extends Preference {
         mImitateWebLink = a.getBoolean(R.styleable.HyperlinkPreference_imitateWebLink, false);
         a.recycle();
         mTitleResId = getTitleRes();
-        mColor = ApiCompatibilityUtils.getColor(context.getResources(), R.color.google_blue_700);
+        mColor = ApiCompatibilityUtils.getColor(
+                context.getResources(), R.color.default_text_color_link);
     }
 
     @Override

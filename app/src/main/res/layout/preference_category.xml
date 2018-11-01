@@ -5,7 +5,9 @@
 
 <!-- Emulates Android's preference_category_material.xml on pre-L devices.
      Also used as the layout for IconPreferenceCategory. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
@@ -16,7 +18,7 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:textAppearance="@style/PreferenceCategoryTextStyle" />
+        android:textAppearance="@style/TextAppearance.PreferenceCategoryText" />
 
     <!-- Users of this layout are responsible to set contentDescription. -->
     <ImageView
@@ -27,6 +29,6 @@
         android:minWidth="@dimen/min_touch_target_size"
         android:scaleType="center"
         android:background="?android:attr/selectableItemBackground"
-        android:contentDescription="@null" />
+        tools:ignore="ContentDescription" />
 
 </LinearLayout>

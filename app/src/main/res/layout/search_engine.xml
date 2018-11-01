@@ -27,14 +27,12 @@
             android:id="@+id/name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="17sp"
-            android:textColor="@color/default_text_color" />
+            android:textAppearance="@style/BlackTitle1" />
         <TextView
             android:id="@+id/url"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textColor="@color/descriptive_text_color" />
+            android:textAppearance="@style/BlackBody" />
         <TextView
             android:id="@+id/location_permission"
             android:layout_width="wrap_content"

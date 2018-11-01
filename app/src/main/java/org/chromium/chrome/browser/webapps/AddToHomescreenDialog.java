@@ -12,6 +12,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -40,11 +41,6 @@ public class AddToHomescreenDialog implements View.OnClickListener {
          * Called when the user accepts adding the item to the home screen with the provided title.
          */
         void addToHomescreen(String title);
-
-        /**
-         * Called when the dialog is explicitly cancelled by the user.
-         */
-        void onDialogCancelled();
 
         /**
          * Called when the user wants to view a native app in the Play Store.
@@ -100,7 +96,6 @@ public class AddToHomescreenDialog implements View.OnClickListener {
                         .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int id) {
-                                mDelegate.onDialogCancelled();
                                 dialog.cancel();
                             }
                         });
@@ -185,6 +180,9 @@ public class AddToHomescreenDialog implements View.OnClickListener {
     /**
      * Called when the home screen icon title (and possibly information from the web manifest) is
      * available. Used for web apps and bookmark shortcuts.
+     * @param title    Text to be displayed in the title field.
+     * @param url      URL of the web app/shortcut.
+     * @param isWebapp True if this is for a web app, and false otherwise.
      */
     public void onUserTitleAvailable(String title, String url, boolean isWebapp) {
         // Users may edit the title of bookmark shortcuts, but we respect web app names and do not
@@ -204,15 +202,25 @@ public class AddToHomescreenDialog implements View.OnClickListener {
     }
 
     /**
-     * Called when the home screen icon title and app rating are available. Used for native apps.
+     * Called when the home screen icon title, install text, and app rating are available. Used for
+     * native apps.
+     * @param title       Text to be displayed in the title field
+     * @param installText String to be displayed on the positive button
+     * @param rating      The rating of the app in the store.
      */
-    public void onUserTitleAvailable(String title, float rating) {
+    public void onUserTitleAvailable(String title, String installText, float rating) {
         mShortcutTitleInput.setVisibility(View.GONE);
         mAppNameView.setText(title);
         mAppOriginView.setVisibility(View.GONE);
         mAppRatingBar.setRating(rating);
         mPlayLogoView.setImageResource(R.drawable.google_play);
         mAppLayout.setVisibility(View.VISIBLE);
+
+        // Update the text on the primary button.
+        Button button = mDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+        button.setText(installText);
+        button.setContentDescription(mActivity.getString(
+                R.string.app_banner_view_native_app_install_accessibility, installText));
 
         // Clicking on the app title or the icon will open the Play Store for more details.
         mAppNameView.setOnClickListener(this);

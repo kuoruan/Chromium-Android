@@ -10,11 +10,12 @@
 -->
 <org.chromium.chrome.browser.payments.ui.PaymentRequestUiErrorView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="@drawable/menu_bg"
-    chrome:maxWidth="@dimen/payments_ui_max_dialog_width" >
+    android:background="@drawable/popup_bg"
+    app:maxWidthLandscape="@dimen/payments_ui_max_dialog_width"
+    app:maxWidthPortrait="@dimen/payments_ui_max_dialog_width" >
 
     <include layout="@layout/payment_request_header" />
 
@@ -24,9 +25,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
-        android:layout_marginStart="@dimen/payments_section_large_spacing"
-        android:layout_marginEnd="@dimen/payments_section_large_spacing"
-        android:layout_marginBottom="@dimen/payments_section_largest_spacing" 
+        android:layout_marginStart="@dimen/editor_dialog_section_large_spacing"
+        android:layout_marginEnd="@dimen/editor_dialog_section_large_spacing"
+        android:layout_marginBottom="@dimen/payments_section_largest_spacing"
         android:text="@string/payments_error_message"
         android:textColor="@color/error_text_color"
         android:textSize="16sp" />
@@ -39,8 +40,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end"
-        android:layout_marginEnd="@dimen/payments_section_small_spacing"
-        android:layout_marginBottom="@dimen/payments_section_small_spacing"
-        android:textColor="@color/light_active_color" />
+        android:layout_marginEnd="@dimen/editor_dialog_section_small_spacing"
+        android:layout_marginBottom="@dimen/editor_dialog_section_small_spacing" />
 
 </org.chromium.chrome.browser.payments.ui.PaymentRequestUiErrorView>

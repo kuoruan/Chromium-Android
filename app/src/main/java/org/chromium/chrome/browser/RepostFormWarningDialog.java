@@ -16,6 +16,8 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabObserver;
+import org.chromium.chrome.browser.vr.VrModuleProvider;
+import org.chromium.ui.widget.UiWidgetFactory;
 
 /**
  * Form resubmission warning dialog. Presents the cancel/continue choice and fires one of two
@@ -44,7 +46,7 @@ public class RepostFormWarningDialog extends DialogFragment {
         mTabObserver = new EmptyTabObserver() {
             @Override
             public void onDestroyed(Tab tab) {
-                dismiss();
+                dismissAllowingStateLoss();
             }
         };
         mTab.addObserver(mTabObserver);
@@ -63,25 +65,43 @@ public class RepostFormWarningDialog extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        AlertDialog.Builder builder =
-                new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme)
-                .setMessage(R.string.http_post_warning);
+        DialogInterface.OnClickListener negativeButtonListener = (dialog, id) -> {
+            if (!mTab.isInitialized()) return;
+            mTab.getWebContents().getNavigationController().cancelPendingReload();
+        };
+        DialogInterface.OnClickListener positiveButtonListener = (dialog, id) -> {
+            if (!mTab.isInitialized()) return;
+            mTab.getWebContents().getNavigationController().continuePendingReload();
+        };
+        Dialog dialog;
+        if (VrModuleProvider.getDelegate().isInVr()) {
+            android.app.AlertDialog alertDialog =
+                    UiWidgetFactory.getInstance().createAlertDialog(getActivity());
+            alertDialog.setMessage(alertDialog.getContext().getString(R.string.http_post_warning));
+            alertDialog.setCancelable(true);
+            if (savedInstanceState == null) {
+                assert mTab != null;
+                alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
+                        alertDialog.getContext().getString(R.string.cancel),
+                        negativeButtonListener);
+                alertDialog.setButton(DialogInterface.BUTTON_POSITIVE,
+                        alertDialog.getContext().getString(R.string.http_post_warning_resend),
+                        positiveButtonListener);
+            }
+            dialog = alertDialog;
+        } else {
+            AlertDialog.Builder builder =
+                    new AlertDialog.Builder(getActivity(), R.style.AlertDialogTheme)
+                            .setMessage(R.string.http_post_warning);
 
-        if (savedInstanceState == null) {
-            assert mTab != null;
-            builder.setNegativeButton(R.string.cancel,
-                    (DialogInterface.OnClickListener) (dialog, id) -> {
-                        if (!mTab.isInitialized()) return;
-                        mTab.getWebContents().getNavigationController().cancelPendingReload();
-                    });
-            builder.setPositiveButton(R.string.http_post_warning_resend,
-                    (DialogInterface.OnClickListener) (dialog, id) -> {
-                        if (!mTab.isInitialized()) return;
-                        mTab.getWebContents().getNavigationController().continuePendingReload();
-                    });
+            if (savedInstanceState == null) {
+                assert mTab != null;
+                builder.setNegativeButton(R.string.cancel, negativeButtonListener);
+                builder.setPositiveButton(
+                        R.string.http_post_warning_resend, positiveButtonListener);
+            }
+            dialog = builder.create();
         }
-
-        Dialog dialog = builder.create();
         setCurrentDialogForTesting(dialog);
 
         return dialog;
@@ -89,13 +109,25 @@ public class RepostFormWarningDialog extends DialogFragment {
 
     @Override
     public void dismiss() {
+        handleDimissCleanup();
         if (getFragmentManager() == null) return;
         super.dismiss();
     }
 
     @Override
+    public void dismissAllowingStateLoss() {
+        handleDimissCleanup();
+        if (getFragmentManager() == null) return;
+        super.dismissAllowingStateLoss();
+    }
+
+    @Override
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
+        handleDimissCleanup();
+    }
+
+    private void handleDimissCleanup() {
         setCurrentDialogForTesting(null);
 
         if (mTab != null && mTabObserver != null) {

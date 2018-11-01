@@ -34,12 +34,12 @@ public class ThumbnailGradient {
     private static final float PIXEL_BORDER_RATIO = 0.4f;
 
     /** The corner of the image the gradient is darkest. */
-    private static final int TOP_LEFT = 0;
-    private static final int TOP_RIGHT = 1;
-
-    @IntDef({TOP_LEFT, TOP_RIGHT})
+    @IntDef({GradientDirection.TOP_LEFT, GradientDirection.TOP_RIGHT})
     @Retention(RetentionPolicy.SOURCE)
-    private @interface GradientDirection {}
+    private @interface GradientDirection {
+        int TOP_LEFT = 0;
+        int TOP_RIGHT = 1;
+    }
 
     /**
      * If the {@link Bitmap} should have a gradient applied this method returns a Drawable
@@ -60,8 +60,9 @@ public class ThumbnailGradient {
 
         if (lightImage) {
             Drawable gradient = ApiCompatibilityUtils.getDrawable(resources,
-                    direction == TOP_LEFT ? R.drawable.thumbnail_gradient_top_left
-                                          : R.drawable.thumbnail_gradient_top_right);
+                    direction == GradientDirection.TOP_LEFT
+                            ? R.drawable.thumbnail_gradient_top_left
+                            : R.drawable.thumbnail_gradient_top_right);
 
             return new LayerDrawable(
                     new Drawable[] {new BitmapDrawable(resources, bitmap), gradient});
@@ -91,7 +92,7 @@ public class ThumbnailGradient {
             return true;
         }
 
-        final int x = direction == TOP_LEFT ? 0 : width - 1;
+        final int x = direction == GradientDirection.TOP_LEFT ? 0 : width - 1;
         // Avoid counting the corner pixels twice.
         for (int y = 1; y < height - 1; y++) {
             if (isPixelLight(bitmap.getPixel(x, y))) lightPixels++;
@@ -122,6 +123,6 @@ public class ThumbnailGradient {
         // flip it ourselves.
         boolean rtl = LocalizationUtils.isLayoutRtl();
 
-        return modern == rtl ? TOP_RIGHT : TOP_LEFT;
+        return modern == rtl ? GradientDirection.TOP_RIGHT : GradientDirection.TOP_LEFT;
     }
 }

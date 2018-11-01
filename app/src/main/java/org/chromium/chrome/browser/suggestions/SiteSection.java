@@ -14,31 +14,24 @@ import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ntp.ContextMenuManager;
 import org.chromium.chrome.browser.ntp.cards.ItemViewType;
 import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder;
-import org.chromium.chrome.browser.ntp.cards.NodeVisitor;
 import org.chromium.chrome.browser.ntp.cards.OptionalLeaf;
 import org.chromium.chrome.browser.offlinepages.OfflinePageBridge;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
 
 /**
  * The model and controller for a group of site suggestions.
+ * @deprecated This class is still being used, but not in the New Tab Page RecyclerView
+ *         anymore. It still uses the latter's base classes until SiteSection is migrated to the new
+ *         UI architecture.
  */
+@Deprecated
 public class SiteSection extends OptionalLeaf implements TileGroup.Observer {
     /**
      * The maximum number of tiles to try and fit in a row. On smaller screens, there may not be
      * enough space to fit all of them.
      */
     private static final int MAX_TILE_COLUMNS = 4;
-
-    /**
-     * Experiment parameter for the maximum number of tile suggestion rows to show.
-     */
-    private static final String PARAM_CHROME_HOME_MAX_TILE_ROWS = "chrome_home_max_tile_rows";
-
-    /**
-     * Experiment parameter for the number of tile title lines to show.
-     */
-    private static final String PARAM_CHROME_HOME_TILE_TITLE_LINES = "chrome_home_tile_title_lines";
+    private static final int TILE_TITLE_LINES = 1;
 
     private final TileGroup mTileGroup;
     private final TileRenderer mTileRenderer;
@@ -56,7 +49,7 @@ public class SiteSection extends OptionalLeaf implements TileGroup.Observer {
             TileGroup.Delegate tileGroupDelegate, OfflinePageBridge offlinePageBridge,
             UiConfig uiConfig) {
         mTileRenderer = new TileRenderer(ContextUtils.getApplicationContext(),
-                SuggestionsConfig.getTileStyle(uiConfig), getTileTitleLines(),
+                SuggestionsConfig.getTileStyle(uiConfig), TILE_TITLE_LINES,
                 uiDelegate.getImageFetcher());
         mTileGroup = new TileGroup(mTileRenderer, uiDelegate, contextMenuManager, tileGroupDelegate,
                 /* observer = */ this, offlinePageBridge);
@@ -66,7 +59,9 @@ public class SiteSection extends OptionalLeaf implements TileGroup.Observer {
     @Override
     @ItemViewType
     protected int getItemViewType() {
-        return ItemViewType.SITE_SECTION;
+        // Throw an exception instead of just `assert false` to avoid compiler warnings about the
+        // return value.
+        throw new IllegalStateException();
     }
 
     @Override
@@ -77,8 +72,10 @@ public class SiteSection extends OptionalLeaf implements TileGroup.Observer {
     }
 
     @Override
-    protected void visitOptionalItem(NodeVisitor visitor) {
-        visitor.visitTileGrid();
+    public String describeForTesting() {
+        // Throw an exception instead of just `assert false` to avoid compiler warnings about the
+        // return value.
+        throw new IllegalStateException();
     }
 
     @Override
@@ -105,22 +102,15 @@ public class SiteSection extends OptionalLeaf implements TileGroup.Observer {
         notifyItemChanged(0, (holder) -> ((SiteSectionViewHolder) holder).updateOfflineBadge(tile));
     }
 
-    public TileGroup getTileGroup() {
+    TileGroup getTileGroupForTesting() {
         return mTileGroup;
     }
 
     private static int getMaxTileRows() {
-        int defaultValue = 2;
-        if (!FeatureUtilities.isChromeHomeEnabled()) return defaultValue;
-        return ChromeFeatureList.getFieldTrialParamByFeatureAsInt(
-                ChromeFeatureList.CHROME_HOME, PARAM_CHROME_HOME_MAX_TILE_ROWS, defaultValue);
-    }
-
-    private static int getTileTitleLines() {
-        int defaultValue = 1;
-        if (!FeatureUtilities.isChromeHomeEnabled()) return defaultValue;
-        return ChromeFeatureList.getFieldTrialParamByFeatureAsInt(
-                ChromeFeatureList.CHROME_HOME, PARAM_CHROME_HOME_TILE_TITLE_LINES, defaultValue);
+        if (ChromeFeatureList.isEnabled(ChromeFeatureList.EXPLORE_SITES)) {
+            return 1;
+        }
+        return 2;
     }
 
     @LayoutRes

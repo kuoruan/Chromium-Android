@@ -4,7 +4,7 @@
 
 package org.chromium.chrome.browser.document;
 
-import org.chromium.components.web_contents_delegate_android.WebContentsDelegateAndroid;
+import org.chromium.components.embedder_support.delegate.WebContentsDelegateAndroid;
 import org.chromium.content_public.browser.WebContents;
 
 /**

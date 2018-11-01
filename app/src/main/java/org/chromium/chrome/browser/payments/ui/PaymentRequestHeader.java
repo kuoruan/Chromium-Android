@@ -59,8 +59,8 @@ public class PaymentRequestHeader extends FrameLayout {
         if (origin.startsWith(UrlConstants.HTTPS_URL_PREFIX)) {
             // Add a lock icon.
             ApiCompatibilityUtils.setCompoundDrawablesRelativeWithIntrinsicBounds(hostName,
-                    TintedDrawable.constructTintedDrawable(mContext.getResources(),
-                            R.drawable.omnibox_https_valid, R.color.google_green_700),
+                    TintedDrawable.constructTintedDrawable(
+                            mContext, R.drawable.omnibox_https_valid, R.color.google_green_700),
                     null, null, null);
 
             // Remove left padding to align left compound drawable with the title. Note that the

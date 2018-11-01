@@ -5,19 +5,29 @@
 package org.chromium.chrome.browser.util;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Region;
 import android.support.annotation.DrawableRes;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+
+import org.chromium.base.ApiCompatibilityUtils;
+import org.chromium.base.ContextUtils;
+import org.chromium.chrome.R;
+import org.chromium.chrome.browser.widget.RoundedIconGenerator;
 
 /**
  * View-related utility methods.
  */
 public class ViewUtils {
     private static final int[] sLocationTmp = new int[2];
+    public static int DEFAULT_FAVICON_CORNER_RADIUS = -1;
 
     /**
      * Invalidates a view and all of its descendants.
@@ -94,8 +104,8 @@ public class ViewUtils {
         outPosition[1] = 0;
         if (rootView == null || childView == rootView) return;
         while (childView != null) {
-            outPosition[0] += childView.getX();
-            outPosition[1] += childView.getY();
+            outPosition[0] = (int) (outPosition[0] + childView.getX());
+            outPosition[1] = (int) (outPosition[1] + childView.getY());
             if (childView.getParent() == rootView) break;
             childView = (View) childView.getParent();
         }
@@ -163,5 +173,27 @@ public class ViewUtils {
             if (parent.getId() == android.R.id.content) break;
             parent = (ViewGroup) parent.getParent();
         }
+    }
+
+    public static RoundedIconGenerator createDefaultRoundedIconGenerator(
+            boolean useHalfDisplayIconSize) {
+        Resources resources = ContextUtils.getApplicationContext().getResources();
+        int displayedIconSize = resources.getDimensionPixelSize(R.dimen.default_favicon_size);
+        int iconColor =
+                ApiCompatibilityUtils.getColor(resources, R.color.default_favicon_background_color);
+        int cornerRadius = resources.getDimensionPixelSize(R.dimen.default_favicon_corner_radius);
+        int textSize = resources.getDimensionPixelSize(R.dimen.default_favicon_icon_text_size);
+        return new RoundedIconGenerator(displayedIconSize, displayedIconSize,
+                useHalfDisplayIconSize ? displayedIconSize / 2 : cornerRadius, iconColor, textSize);
+    }
+
+    public static RoundedBitmapDrawable createRoundedBitmapDrawable(Bitmap icon, int cornerRadius) {
+        Resources resources = ContextUtils.getApplicationContext().getResources();
+        if (cornerRadius == DEFAULT_FAVICON_CORNER_RADIUS) {
+            cornerRadius = resources.getDimensionPixelSize(R.dimen.default_favicon_corner_radius);
+        }
+        RoundedBitmapDrawable roundedIcon = RoundedBitmapDrawableFactory.create(resources, icon);
+        roundedIcon.setCornerRadius(cornerRadius);
+        return roundedIcon;
     }
 }

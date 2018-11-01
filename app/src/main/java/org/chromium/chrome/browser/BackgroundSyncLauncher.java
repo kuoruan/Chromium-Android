@@ -6,13 +6,13 @@ package org.chromium.chrome.browser;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.StrictMode;
 
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.OneoffTask;
 import com.google.android.gms.gcm.Task;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
@@ -50,7 +50,7 @@ public class BackgroundSyncLauncher {
     private static boolean sGCMEnabled = true;
 
     @VisibleForTesting
-    protected AsyncTask<Void, Void, Void> mLaunchBrowserIfStoppedTask;
+    protected AsyncTask<Void> mLaunchBrowserIfStoppedTask;
 
     /**
      * Create a BackgroundSyncLauncher object, which is owned by C++.
@@ -95,9 +95,9 @@ public class BackgroundSyncLauncher {
      * @param callback The callback after fetching prefs.
      */
     protected static void shouldLaunchBrowserIfStopped(final ShouldLaunchCallback callback) {
-        new AsyncTask<Void, Void, Boolean>() {
+        new AsyncTask<Boolean>() {
             @Override
-            protected Boolean doInBackground(Void... params) {
+            protected Boolean doInBackground() {
                 SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
                 return prefs.getBoolean(PREF_BACKGROUND_SYNC_LAUNCH_NEXT_ONLINE, false);
             }
@@ -105,7 +105,8 @@ public class BackgroundSyncLauncher {
             protected void onPostExecute(Boolean shouldLaunch) {
                 callback.run(shouldLaunch);
             }
-        }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /**
@@ -123,9 +124,9 @@ public class BackgroundSyncLauncher {
     @VisibleForTesting
     @CalledByNative
     protected void launchBrowserIfStopped(final boolean shouldLaunch, final long minDelayMs) {
-        mLaunchBrowserIfStoppedTask = new AsyncTask<Void, Void, Void>() {
+        mLaunchBrowserIfStoppedTask = new AsyncTask<Void>() {
             @Override
-            protected Void doInBackground(Void... params) {
+            protected Void doInBackground() {
                 SharedPreferences prefs = ContextUtils.getAppSharedPreferences();
                 prefs.edit()
                         .putBoolean(PREF_BACKGROUND_SYNC_LAUNCH_NEXT_ONLINE, shouldLaunch)

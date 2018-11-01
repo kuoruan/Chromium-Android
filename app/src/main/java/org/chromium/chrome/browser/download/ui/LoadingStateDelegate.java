@@ -19,7 +19,7 @@ public class LoadingStateDelegate {
     private static final int ALL_LOADED = 0b111;
 
     private int mLoadingState;
-    private @DownloadFilter.Type int mPendingFilter = DownloadFilter.FILTER_ALL;
+    private @DownloadFilter.Type int mPendingFilter = DownloadFilter.Type.ALL;
 
     /** @param offTheRecord Whether this delegate needs to consider incognito. */
     public LoadingStateDelegate(boolean offTheRecord) {

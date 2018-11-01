@@ -36,31 +36,36 @@ class LanguagesManager {
     // Constants used to log UMA enum histogram, must stay in sync with
     // LanguageSettingsActionType. Further actions can only be appended, existing
     // entries must not be overwritten.
+    @IntDef({LanguageSettingsActionType.CLICK_ON_ADD_LANGUAGE,
+            LanguageSettingsActionType.LANGUAGE_ADDED, LanguageSettingsActionType.LANGUAGE_REMOVED,
+            LanguageSettingsActionType.DISABLE_TRANSLATE_GLOBALLY,
+            LanguageSettingsActionType.ENABLE_TRANSLATE_GLOBALLY,
+            LanguageSettingsActionType.DISABLE_TRANSLATE_FOR_SINGLE_LANGUAGE,
+            LanguageSettingsActionType.ENABLE_TRANSLATE_FOR_SINGLE_LANGUAGE,
+            LanguageSettingsActionType.LANGUAGE_LIST_REORDERED})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({ACTION_CLICK_ON_ADD_LANGUAGE, ACTION_LANGUAGE_ADDED, ACTION_LANGUAGE_REMOVED,
-            ACTION_DISABLE_TRANSLATE_GLOBALLY, ACTION_ENABLE_TRANSLATE_GLOBALLY,
-            ACTION_DISABLE_TRANSLATE_FOR_SINGLE_LANGUAGE,
-            ACTION_ENABLE_TRANSLATE_FOR_SINGLE_LANGUAGE, ACTION_LANGUAGE_LIST_REORDERED})
-    private @interface LanguageSettingsActionType {}
-    static final int ACTION_CLICK_ON_ADD_LANGUAGE = 1;
-    static final int ACTION_LANGUAGE_ADDED = 2;
-    static final int ACTION_LANGUAGE_REMOVED = 3;
-    static final int ACTION_DISABLE_TRANSLATE_GLOBALLY = 4;
-    static final int ACTION_ENABLE_TRANSLATE_GLOBALLY = 5;
-    static final int ACTION_DISABLE_TRANSLATE_FOR_SINGLE_LANGUAGE = 6;
-    static final int ACTION_ENABLE_TRANSLATE_FOR_SINGLE_LANGUAGE = 7;
-    static final int ACTION_LANGUAGE_LIST_REORDERED = 8;
-    static final int ACTION_BOUNDARY = 9;
+    @interface LanguageSettingsActionType {
+        int CLICK_ON_ADD_LANGUAGE = 1;
+        int LANGUAGE_ADDED = 2;
+        int LANGUAGE_REMOVED = 3;
+        int DISABLE_TRANSLATE_GLOBALLY = 4;
+        int ENABLE_TRANSLATE_GLOBALLY = 5;
+        int DISABLE_TRANSLATE_FOR_SINGLE_LANGUAGE = 6;
+        int ENABLE_TRANSLATE_FOR_SINGLE_LANGUAGE = 7;
+        int LANGUAGE_LIST_REORDERED = 8;
+        int NUM_ENTRIES = 9;
+    }
 
     // Constants used to log UMA enum histogram, must stay in sync with
     // LanguageSettingsPageType. Further actions can only be appended, existing
     // entries must not be overwritten.
+    @IntDef({LanguageSettingsPageType.PAGE_MAIN, LanguageSettingsPageType.PAGE_ADD_LANGUAGE})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({PAGE_MAIN, PAGE_ADD_LANGUAGE})
-    private @interface LanguageSettingsPageType {}
-    static final int PAGE_MAIN = 0;
-    static final int PAGE_ADD_LANGUAGE = 1;
-    static final int PAGE_BOUNDARY = 2;
+    @interface LanguageSettingsPageType {
+        int PAGE_MAIN = 0;
+        int PAGE_ADD_LANGUAGE = 1;
+        int NUM_ENTRIES = 2;
+    }
 
     private static LanguagesManager sManager;
 
@@ -150,7 +155,7 @@ class LanguagesManager {
         if (offset == 0) return;
 
         PrefServiceBridge.getInstance().moveAcceptLanguage(code, offset);
-        recordAction(ACTION_LANGUAGE_LIST_REORDERED);
+        recordAction(LanguageSettingsActionType.LANGUAGE_LIST_REORDERED);
         if (reload) notifyAcceptLanguageObserver();
     }
 
@@ -175,7 +180,7 @@ class LanguagesManager {
      */
     public static void recordImpression(@LanguageSettingsPageType int pageType) {
         RecordHistogram.recordEnumeratedHistogram(
-                "LanguageSettings.PageImpression", pageType, PAGE_BOUNDARY);
+                "LanguageSettings.PageImpression", pageType, LanguageSettingsPageType.NUM_ENTRIES);
     }
 
     /**
@@ -183,6 +188,6 @@ class LanguagesManager {
      */
     public static void recordAction(@LanguageSettingsActionType int actionType) {
         RecordHistogram.recordEnumeratedHistogram(
-                "LanguageSettings.Actions", actionType, ACTION_BOUNDARY);
+                "LanguageSettings.Actions", actionType, LanguageSettingsActionType.NUM_ENTRIES);
     }
 }

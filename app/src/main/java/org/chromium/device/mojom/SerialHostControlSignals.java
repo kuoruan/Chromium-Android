@@ -44,9 +44,6 @@ public final class SerialHostControlSignals extends org.chromium.mojo.bindings.S
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static SerialHostControlSignals deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -60,23 +57,25 @@ public final class SerialHostControlSignals extends org.chromium.mojo.bindings.S
         SerialHostControlSignals result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new SerialHostControlSignals(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new SerialHostControlSignals(elementsOrVersion);
+                {
+                    
                 result.dtr = decoder0.readBoolean(8, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.hasDtr = decoder0.readBoolean(8, 1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.rts = decoder0.readBoolean(8, 2);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.hasRts = decoder0.readBoolean(8, 3);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -95,42 +94,5 @@ public final class SerialHostControlSignals extends org.chromium.mojo.bindings.S
         encoder0.encode(this.rts, 8, 2);
         
         encoder0.encode(this.hasRts, 8, 3);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        SerialHostControlSignals other = (SerialHostControlSignals) object;
-        if (this.dtr!= other.dtr)
-            return false;
-        if (this.hasDtr!= other.hasDtr)
-            return false;
-        if (this.rts!= other.rts)
-            return false;
-        if (this.hasRts!= other.hasRts)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.dtr);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hasDtr);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.rts);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hasRts);
-        return result;
     }
 }

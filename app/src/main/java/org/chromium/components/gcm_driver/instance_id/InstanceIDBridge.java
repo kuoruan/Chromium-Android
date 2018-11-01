@@ -4,10 +4,9 @@
 
 package org.chromium.components.gcm_driver.instance_id;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 
-import org.chromium.base.ContextUtils;
+import org.chromium.base.AsyncTask;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 
@@ -187,14 +186,13 @@ public class InstanceIDBridge {
         protected abstract void sendResultToNative(Result result);
 
         public void execute() {
-            AsyncTask<Void, Void, Result> task = new AsyncTask<Void, Void, Result>() {
+            AsyncTask<Result> task = new AsyncTask<Result>() {
                 @Override
                 @SuppressWarnings("NoSynchronizedThisCheck") // Only used/accessible by native.
-                protected Result doInBackground(Void... params) {
+                protected Result doInBackground() {
                     synchronized (InstanceIDBridge.this) {
                         if (mInstanceID == null) {
-                            mInstanceID = InstanceIDWithSubtype.getInstance(
-                                    ContextUtils.getApplicationContext(), mSubtype);
+                            mInstanceID = InstanceIDWithSubtype.getInstance(mSubtype);
                         }
                     }
                     return doBackgroundWork();

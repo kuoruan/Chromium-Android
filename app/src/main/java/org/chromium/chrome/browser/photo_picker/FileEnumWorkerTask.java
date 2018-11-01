@@ -4,10 +4,14 @@
 
 package org.chromium.chrome.browser.photo_picker;
 
-import android.os.AsyncTask;
+import android.Manifest;
+import android.content.Intent;
 import android.os.Environment;
+import android.provider.MediaStore;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.ThreadUtils;
+import org.chromium.ui.base.WindowAndroid;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -17,7 +21,7 @@ import java.util.List;
 /**
  * A worker task to enumerate image files on disk.
  */
-class FileEnumWorkerTask extends AsyncTask<Void, Void, List<PickerBitmap>> {
+class FileEnumWorkerTask extends AsyncTask<List<PickerBitmap>> {
     /**
      * An interface to use to communicate back the results to the client.
      */
@@ -28,6 +32,8 @@ class FileEnumWorkerTask extends AsyncTask<Void, Void, List<PickerBitmap>> {
          */
         void filesEnumeratedCallback(List<PickerBitmap> files);
     }
+
+    private final WindowAndroid mWindowAndroid;
 
     // The callback to use to communicate the results.
     private FilesEnumeratedCallback mCallback;
@@ -40,10 +46,13 @@ class FileEnumWorkerTask extends AsyncTask<Void, Void, List<PickerBitmap>> {
 
     /**
      * A FileEnumWorkerTask constructor.
+     * @param windowAndroid The window wrapper associated with the current activity.
      * @param callback The callback to use to communicate back the results.
      * @param filter The file filter to apply to the list.
      */
-    public FileEnumWorkerTask(FilesEnumeratedCallback callback, MimeTypeFileFilter filter) {
+    public FileEnumWorkerTask(WindowAndroid windowAndroid, FilesEnumeratedCallback callback,
+            MimeTypeFileFilter filter) {
+        mWindowAndroid = windowAndroid;
         mCallback = callback;
         mFilter = filter;
     }
@@ -73,7 +82,7 @@ class FileEnumWorkerTask extends AsyncTask<Void, Void, List<PickerBitmap>> {
                 if (!traverseDir(file, pickerBitmaps)) return false;
             } else {
                 pickerBitmaps.add(new PickerBitmap(
-                        file.getPath(), file.lastModified(), PickerBitmap.PICTURE));
+                        file.getPath(), file.lastModified(), PickerBitmap.TileTypes.PICTURE));
             }
         }
 
@@ -86,7 +95,7 @@ class FileEnumWorkerTask extends AsyncTask<Void, Void, List<PickerBitmap>> {
      * @return A sorted list of images (by last-modified first).
      */
     @Override
-    protected List<PickerBitmap> doInBackground(Void... params) {
+    protected List<PickerBitmap> doInBackground() {
         assert !ThreadUtils.runningOnUiThread();
 
         if (isCancelled()) return null;
@@ -106,8 +115,15 @@ class FileEnumWorkerTask extends AsyncTask<Void, Void, List<PickerBitmap>> {
 
         Collections.sort(pickerBitmaps);
 
-        pickerBitmaps.add(0, new PickerBitmap("", 0, PickerBitmap.GALLERY));
-        pickerBitmaps.add(0, new PickerBitmap("", 0, PickerBitmap.CAMERA));
+        pickerBitmaps.add(0, new PickerBitmap("", 0, PickerBitmap.TileTypes.GALLERY));
+        boolean hasCameraAppAvailable =
+                mWindowAndroid.canResolveActivity(new Intent(MediaStore.ACTION_IMAGE_CAPTURE));
+        boolean hasOrCanRequestCameraPermission =
+                mWindowAndroid.hasPermission(Manifest.permission.CAMERA)
+                || mWindowAndroid.canRequestPermission(Manifest.permission.CAMERA);
+        if (hasCameraAppAvailable && hasOrCanRequestCameraPermission) {
+            pickerBitmaps.add(0, new PickerBitmap("", 0, PickerBitmap.TileTypes.CAMERA));
+        }
 
         return pickerBitmaps;
     }

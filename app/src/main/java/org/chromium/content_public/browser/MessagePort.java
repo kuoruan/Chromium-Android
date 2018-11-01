@@ -7,6 +7,7 @@ package org.chromium.content_public.browser;
 import android.os.Handler;
 
 import org.chromium.base.annotations.UsedByReflection;
+import org.chromium.content.browser.AppWebMessagePort;
 
 /**
  * Interface for message ports that handle postMessage requests.
@@ -23,6 +24,14 @@ public interface MessagePort {
          * @param sentPorts The {@link MessagePort}s that were sent if any.
          */
         void onMessage(String message, MessagePort[] sentPorts);
+    }
+
+    /**
+     * Called to create an entangled pair of ports.
+     * @return An array of a pair of{@link MessagePort} instances.
+     */
+    public static MessagePort[] createPair() {
+        return AppWebMessagePort.createPair();
     }
 
     /**

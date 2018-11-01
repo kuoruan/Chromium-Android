@@ -141,13 +141,8 @@ public class PasswordGenerationAdapter extends BaseAdapter {
                 TextView explanation = (TextView) view
                         .findViewById(R.id.password_generation_explanation);
                 SpannableString explanationSpan = new SpannableString(mExplanationText);
-                explanationSpan.setSpan(
-                        new NoUnderlineClickableSpan() {
-                            @Override
-                            public void onClick(View view) {
-                                mDelegate.onSavedPasswordsLinkClicked();
-                            }
-                        },
+                explanationSpan.setSpan(new NoUnderlineClickableSpan(
+                                                (view1) -> mDelegate.onSavedPasswordsLinkClicked()),
                         mExplanationTextLinkRangeStart, mExplanationTextLinkRangeEnd,
                         Spanned.SPAN_INCLUSIVE_INCLUSIVE);
                 explanation.setText(explanationSpan);

@@ -5,7 +5,9 @@
 package org.chromium.chrome.browser.contextmenu;
 
 import android.app.Activity;
-import android.content.DialogInterface;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -31,6 +33,7 @@ import org.chromium.base.Callback;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.widget.ContextMenuDialog;
+import org.chromium.ui.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,19 +67,9 @@ public class TabularContextMenuUi implements ContextMenuUi, AdapterView.OnItemCl
         mContextMenuDialog =
                 createContextMenuDialog(activity, params, items, touchPointXPx, touchPointYPx);
 
-        mContextMenuDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-            @Override
-            public void onShow(DialogInterface dialogInterface) {
-                onMenuShown.run();
-            }
-        });
+        mContextMenuDialog.setOnShowListener(dialogInterface -> { onMenuShown.run(); });
 
-        mContextMenuDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialogInterface) {
-                onMenuClosed.run();
-            }
-        });
+        mContextMenuDialog.setOnDismissListener(dialogInterface -> { onMenuClosed.run(); });
 
         mContextMenuDialog.show();
     }
@@ -203,17 +196,23 @@ public class TabularContextMenuUi implements ContextMenuUi, AdapterView.OnItemCl
         }
         headerTextView.setVisibility(View.VISIBLE);
         headerTextView.setText(headerText);
-        headerTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (headerTextView.getMaxLines() == Integer.MAX_VALUE) {
-                    headerTextView.setMaxLines(1);
-                    headerTextView.setEllipsize(TextUtils.TruncateAt.END);
-                } else {
-                    headerTextView.setMaxLines(Integer.MAX_VALUE);
-                    headerTextView.setEllipsize(null);
-                }
+        headerTextView.setOnClickListener(view -> {
+            if (headerTextView.getMaxLines() == Integer.MAX_VALUE) {
+                headerTextView.setMaxLines(1);
+                headerTextView.setEllipsize(TextUtils.TruncateAt.END);
+            } else {
+                headerTextView.setMaxLines(Integer.MAX_VALUE);
+                headerTextView.setEllipsize(null);
             }
+        });
+        if (TextUtils.isEmpty(params.getUnfilteredLinkUrl())) return;
+        headerTextView.setOnLongClickListener(view -> {
+            ClipboardManager clipboard = (ClipboardManager) view.getContext().getSystemService(
+                    Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("url", params.getUnfilteredLinkUrl());
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(view.getContext(), R.string.url_copied, Toast.LENGTH_SHORT).show();
+            return true;
         });
     }
 

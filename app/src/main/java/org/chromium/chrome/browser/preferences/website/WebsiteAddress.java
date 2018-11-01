@@ -8,6 +8,7 @@ import android.net.Uri;
 
 import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.util.UrlUtilities;
+import org.chromium.components.url_formatter.UrlFormatter;
 
 import java.io.Serializable;
 
@@ -94,8 +95,9 @@ public class WebsiteAddress implements Comparable<WebsiteAddress>, Serializable 
     }
 
     public String getTitle() {
-        if (mOrigin == null || mOmitProtocolAndPort) return mHost;
-        return mOrigin;
+        if (mOrigin == null) return mHost;
+        return mOmitProtocolAndPort ? UrlFormatter.formatUrlForSecurityDisplayOmitScheme(mOrigin)
+                                    : UrlFormatter.formatUrlForSecurityDisplay(mOrigin);
     }
 
     /**

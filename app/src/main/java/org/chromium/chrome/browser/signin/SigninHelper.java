@@ -7,12 +7,12 @@ package org.chromium.chrome.browser.signin;
 import android.accounts.Account;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.AsyncTask;
 
 import com.google.android.gms.auth.AccountChangeEvent;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
@@ -149,9 +149,9 @@ public class SigninHelper {
             // It is possible that Chrome got to this point without account
             // rename notification. Let us signout before doing a rename.
             // updateAccountRenameData(mContext, new SystemAccountChangeEventChecker());
-            AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+            AsyncTask<Void> task = new AsyncTask<Void>() {
                 @Override
-                protected Void doInBackground(Void... params) {
+                protected Void doInBackground() {
                     updateAccountRenameData(mContext, new SystemAccountChangeEventChecker());
                     return null;
                 }
@@ -171,7 +171,7 @@ public class SigninHelper {
                     }
                 }
             };
-            task.execute();
+            task.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
             return;
         }
 
@@ -181,7 +181,7 @@ public class SigninHelper {
             mOAuth2TokenService.validateAccounts(false);
         }
 
-        if (mProfileSyncService != null && AndroidSyncSettings.isSyncEnabled(mContext)) {
+        if (mProfileSyncService != null && AndroidSyncSettings.isSyncEnabled()) {
             if (mProfileSyncService.isFirstSetupComplete()) {
                 if (accountsChanged) {
                     // Nudge the syncer to ensure it does a full sync.

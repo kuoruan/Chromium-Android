@@ -25,14 +25,12 @@ import android.widget.ListView;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ContentSettingsType;
 import org.chromium.chrome.browser.notifications.channels.SiteChannelsManager;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.PreferenceUtils;
 import org.chromium.components.url_formatter.UrlFormatter;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -50,7 +48,7 @@ public class SingleWebsitePreferences extends PreferenceFragment
     // permissions for that website address and display those.
     public static final String EXTRA_SITE = "org.chromium.chrome.preferences.site";
     public static final String EXTRA_SITE_ADDRESS = "org.chromium.chrome.preferences.site_address";
-    public static final String EXTRA_USB_INFO = "org.chromium.chrome.preferences.usb_info";
+    public static final String EXTRA_OBJECT_INFO = "org.chromium.chrome.preferences.object_info";
 
     // Preference keys, see single_website_preferences.xml
     // Headings:
@@ -82,11 +80,13 @@ public class SingleWebsitePreferences extends PreferenceFragment
     public static final String PREF_POPUP_PERMISSION = "popup_permission_list";
     public static final String PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION =
             "protected_media_identifier_permission_list";
+    public static final String PREF_SENSORS_PERMISSION = "sensors_permission_list";
     public static final String PREF_SOUND_PERMISSION = "sound_permission_list";
 
     // All permissions from the permissions preference category must be listed here.
     // TODO(mvanouwerkerk): Use this array in more places to reduce verbosity.
     private static final String[] PERMISSION_PREFERENCE_KEYS = {
+            PREF_ADS_PERMISSION,
             PREF_AUTOPLAY_PERMISSION,
             PREF_BACKGROUND_SYNC_PERMISSION,
             PREF_CAMERA_CAPTURE_PERMISSION,
@@ -99,7 +99,7 @@ public class SingleWebsitePreferences extends PreferenceFragment
             PREF_NOTIFICATIONS_PERMISSION,
             PREF_POPUP_PERMISSION,
             PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION,
-            PREF_ADS_PERMISSION,
+            PREF_SENSORS_PERMISSION,
             PREF_SOUND_PERMISSION,
     };
 
@@ -108,8 +108,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
     // The website this page is displaying details about.
     private Website mSite;
 
-    // The number of USB device permissions displayed.
-    private int mUsbPermissionCount;
+    // The number of chosen object permissions displayed.
+    private int mObjectPermissionCount;
 
     private class SingleWebsitePermissionsPopulator
             implements WebsitePermissionsFetcher.WebsitePermissionsCallback {
@@ -144,8 +144,7 @@ public class SingleWebsitePreferences extends PreferenceFragment
         Bundle fragmentArgs = new Bundle();
         // TODO(mvanouwerkerk): Define a pure getOrigin method in UrlUtilities that is the
         // equivalent of the call below, because this is perfectly fine for non-display purposes.
-        String origin =
-                UrlFormatter.formatUrlForSecurityDisplay(URI.create(url), true /* showScheme */);
+        String origin = UrlFormatter.formatUrlForSecurityDisplay(url);
         fragmentArgs.putSerializable(EXTRA_SITE_ADDRESS, WebsiteAddress.create(origin));
         return fragmentArgs;
     }
@@ -193,42 +192,19 @@ public class SingleWebsitePreferences extends PreferenceFragment
         // This loop looks expensive, but the amount of data is likely to be relatively small
         // because most sites have very few permissions.
         for (Website other : websites) {
-            if (merged.getAdsException() == null && other.getAdsException() != null
+            if (merged.getContentSettingException(ContentSettingException.Type.ADS) == null
+                    && other.getContentSettingException(ContentSettingException.Type.ADS) != null
                     && other.compareByAddressTo(merged) == 0) {
-                merged.setAdsException(other.getAdsException());
+                merged.setContentSettingException(ContentSettingException.Type.ADS,
+                        other.getContentSettingException(ContentSettingException.Type.ADS));
             }
-            if (merged.getClipboardInfo() == null && other.getClipboardInfo() != null
-                    && permissionInfoIsForTopLevelOrigin(other.getClipboardInfo(), origin)) {
-                merged.setClipboardInfo(other.getClipboardInfo());
-            }
-            if (merged.getGeolocationInfo() == null && other.getGeolocationInfo() != null
-                    && permissionInfoIsForTopLevelOrigin(other.getGeolocationInfo(), origin)) {
-                merged.setGeolocationInfo(other.getGeolocationInfo());
-            }
-            if (merged.getMidiInfo() == null && other.getMidiInfo() != null
-                    && permissionInfoIsForTopLevelOrigin(other.getMidiInfo(), origin)) {
-                merged.setMidiInfo(other.getMidiInfo());
-            }
-            if (merged.getProtectedMediaIdentifierInfo() == null
-                    && other.getProtectedMediaIdentifierInfo() != null
-                    && permissionInfoIsForTopLevelOrigin(
-                               other.getProtectedMediaIdentifierInfo(), origin)) {
-                merged.setProtectedMediaIdentifierInfo(other.getProtectedMediaIdentifierInfo());
-            }
-            if (merged.getNotificationInfo() == null
-                    && other.getNotificationInfo() != null
-                    && permissionInfoIsForTopLevelOrigin(
-                               other.getNotificationInfo(), origin)) {
-                merged.setNotificationInfo(other.getNotificationInfo());
-            }
-            if (merged.getCameraInfo() == null && other.getCameraInfo() != null
-                    && permissionInfoIsForTopLevelOrigin(
-                               other.getCameraInfo(), origin)) {
-                merged.setCameraInfo(other.getCameraInfo());
-            }
-            if (merged.getMicrophoneInfo() == null && other.getMicrophoneInfo() != null
-                    && permissionInfoIsForTopLevelOrigin(other.getMicrophoneInfo(), origin)) {
-                merged.setMicrophoneInfo(other.getMicrophoneInfo());
+            for (@PermissionInfo.Type int type = 0; type < PermissionInfo.Type.NUM_ENTRIES;
+                    type++) {
+                if (merged.getPermissionInfo(type) == null && other.getPermissionInfo(type) != null
+                        && permissionInfoIsForTopLevelOrigin(
+                                   other.getPermissionInfo(type), origin)) {
+                    merged.setPermissionInfo(other.getPermissionInfo(type));
+                }
             }
             if (merged.getLocalStorageInfo() == null
                     && other.getLocalStorageInfo() != null
@@ -240,29 +216,25 @@ public class SingleWebsitePreferences extends PreferenceFragment
                     merged.addStorageInfo(storageInfo);
                 }
             }
-            for (UsbInfo usbInfo : other.getUsbInfo()) {
-                if (origin.equals(usbInfo.getOrigin())
-                        && (usbInfo.getEmbedder() == null || usbInfo.getEmbedder().equals("*"))) {
-                    merged.addUsbInfo(usbInfo);
+            for (ChosenObjectInfo objectInfo : other.getChosenObjectInfo()) {
+                if (origin.equals(objectInfo.getOrigin())
+                        && (objectInfo.getEmbedder() == null
+                                   || objectInfo.getEmbedder().equals("*"))) {
+                    merged.addChosenObjectInfo(objectInfo);
                 }
             }
             if (host.equals(other.getAddress().getHost())) {
-                if (merged.getJavaScriptException() == null
-                        && other.getJavaScriptException() != null) {
-                    merged.setJavaScriptException(other.getJavaScriptException());
-                }
-                if (merged.getSoundException() == null && other.getSoundException() != null) {
-                    merged.setSoundException(other.getSoundException());
-                }
-                if (merged.getAutoplayException() == null && other.getAutoplayException() != null) {
-                    merged.setAutoplayException(other.getAutoplayException());
-                }
-                if (merged.getBackgroundSyncException() == null
-                        && other.getBackgroundSyncException() != null) {
-                    merged.setBackgroundSyncException(other.getBackgroundSyncException());
-                }
-                if (merged.getPopupException() == null && other.getPopupException() != null) {
-                    merged.setPopupException(other.getPopupException());
+                for (@ContentSettingException.Type int type = 0;
+                        type < ContentSettingException.Type.NUM_ENTRIES; type++) {
+                    if (type == ContentSettingException.Type.ADS
+                            || type == ContentSettingException.Type.COOKIE) {
+                        continue;
+                    }
+                    if (merged.getContentSettingException(type) == null
+                            && other.getContentSettingException(type) != null) {
+                        merged.setContentSettingException(
+                                type, other.getContentSettingException(type));
+                    }
                 }
             }
 
@@ -301,19 +273,17 @@ public class SingleWebsitePreferences extends PreferenceFragment
                 maxPermissionOrder = Math.max(maxPermissionOrder, preference.getOrder());
             }
         }
-        setUpUsbPreferences(maxPermissionOrder);
+        setUpChosenObjectPreferences(maxPermissionOrder);
         setUpOsWarningPreferences();
 
         setUpAdsInformationalBanner();
 
         // Remove categories if no sub-items.
         if (!hasUsagePreferences()) {
-            Preference heading = preferenceScreen.findPreference(PREF_USAGE);
-            preferenceScreen.removePreference(heading);
+            preferenceScreen.removePreference(preferenceScreen.findPreference(PREF_USAGE));
         }
         if (!hasPermissionsPreferences()) {
-            Preference heading = preferenceScreen.findPreference(PREF_PERMISSIONS);
-            preferenceScreen.removePreference(heading);
+            preferenceScreen.removePreference(preferenceScreen.findPreference(PREF_PERMISSIONS));
         }
     }
 
@@ -328,29 +298,38 @@ public class SingleWebsitePreferences extends PreferenceFragment
         } else if (PREF_ADS_PERMISSION.equals(key)) {
             setUpAdsPreference(preference);
         } else if (PREF_AUTOPLAY_PERMISSION.equals(key)) {
-            setUpListPreference(preference, mSite.getAutoplayPermission());
+            setUpListPreference(preference,
+                    mSite.getContentSettingPermission(ContentSettingException.Type.AUTOPLAY));
         } else if (PREF_BACKGROUND_SYNC_PERMISSION.equals(key)) {
-            setUpListPreference(preference, mSite.getBackgroundSyncPermission());
+            setUpListPreference(preference,
+                    mSite.getContentSettingPermission(
+                            ContentSettingException.Type.BACKGROUND_SYNC));
         } else if (PREF_CAMERA_CAPTURE_PERMISSION.equals(key)) {
-            setUpListPreference(preference, mSite.getCameraPermission());
+            setUpListPreference(preference, mSite.getPermission(PermissionInfo.Type.CAMERA));
         } else if (PREF_CLIPBOARD_PERMISSION.equals(key)) {
-            setUpListPreference(preference, mSite.getClipboardPermission());
+            setUpListPreference(preference, mSite.getPermission(PermissionInfo.Type.CLIPBOARD));
         } else if (PREF_COOKIES_PERMISSION.equals(key)) {
-            setUpListPreference(preference, mSite.getCookiePermission());
+            setUpListPreference(preference,
+                    mSite.getContentSettingPermission(ContentSettingException.Type.COOKIE));
         } else if (PREF_JAVASCRIPT_PERMISSION.equals(key)) {
-            setUpListPreference(preference, mSite.getJavaScriptPermission());
+            setUpListPreference(preference,
+                    mSite.getContentSettingPermission(ContentSettingException.Type.JAVASCRIPT));
         } else if (PREF_LOCATION_ACCESS.equals(key)) {
             setUpLocationPreference(preference);
         } else if (PREF_MIC_CAPTURE_PERMISSION.equals(key)) {
-            setUpListPreference(preference, mSite.getMicrophonePermission());
+            setUpListPreference(preference, mSite.getPermission(PermissionInfo.Type.MICROPHONE));
         } else if (PREF_MIDI_SYSEX_PERMISSION.equals(key)) {
-            setUpListPreference(preference, mSite.getMidiPermission());
+            setUpListPreference(preference, mSite.getPermission(PermissionInfo.Type.MIDI));
         } else if (PREF_NOTIFICATIONS_PERMISSION.equals(key)) {
             setUpNotificationsPreference(preference);
         } else if (PREF_POPUP_PERMISSION.equals(key)) {
-            setUpListPreference(preference, mSite.getPopupPermission());
+            setUpListPreference(preference,
+                    mSite.getContentSettingPermission(ContentSettingException.Type.POPUP));
         } else if (PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION.equals(key)) {
-            setUpListPreference(preference, mSite.getProtectedMediaIdentifierPermission());
+            setUpListPreference(preference,
+                    mSite.getPermission(PermissionInfo.Type.PROTECTED_MEDIA_IDENTIFIER));
+        } else if (PREF_SENSORS_PERMISSION.equals(key)) {
+            setUpListPreference(preference, mSite.getPermission(PermissionInfo.Type.SENSORS));
         } else if (PREF_SOUND_PERMISSION.equals(key)) {
             setUpSoundPreference(preference);
         }
@@ -376,9 +355,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
     }
 
     private void setUpNotificationsPreference(Preference preference) {
-        final ContentSetting value = mSite.getNotificationPermission();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-                && ChromeFeatureList.isEnabled(ChromeFeatureList.SITE_NOTIFICATION_CHANNELS)) {
+        final ContentSetting value = mSite.getPermission(PermissionInfo.Type.NOTIFICATION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (!(value == ContentSetting.ALLOW || value == ContentSetting.BLOCK)) {
                 // TODO(crbug.com/735110): Figure out if this is the correct thing to do, for values
                 // that are non-null, but not ALLOW or BLOCK either. (In setupListPreference we
@@ -465,17 +443,17 @@ public class SingleWebsitePreferences extends PreferenceFragment
         }
     }
 
-    private void setUpUsbPreferences(int maxPermissionOrder) {
-        for (UsbInfo info : mSite.getUsbInfo()) {
+    private void setUpChosenObjectPreferences(int maxPermissionOrder) {
+        for (ChosenObjectInfo info : mSite.getChosenObjectInfo()) {
             Preference preference = new Preference(getActivity());
-            preference.getExtras().putSerializable(EXTRA_USB_INFO, info);
-            preference.setIcon(R.drawable.settings_usb);
+            preference.getExtras().putSerializable(EXTRA_OBJECT_INFO, info);
+            preference.setIcon(ContentSettingsResources.getIcon(info.getContentSettingsType()));
             preference.setOnPreferenceClickListener(this);
             preference.setOrder(maxPermissionOrder);
             preference.setTitle(info.getName());
-            preference.setWidgetLayoutResource(R.layout.usb_permission);
+            preference.setWidgetLayoutResource(R.layout.object_permission);
             getPreferenceScreen().addPreference(preference);
-            mUsbPermissionCount++;
+            mObjectPermissionCount++;
         }
     }
 
@@ -530,36 +508,36 @@ public class SingleWebsitePreferences extends PreferenceFragment
         // the user to the same location. It is preferrable, however, that we give Geolocation some
         // priority because that category is the only one that potentially shows an additional
         // warning (when Location is turned off globally).
-        if (showWarningFor(ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION)) {
-            return SiteSettingsCategory.fromContentSettingsType(
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION);
+        if (showWarningFor(SiteSettingsCategory.Type.DEVICE_LOCATION)) {
+            return SiteSettingsCategory.createFromType(SiteSettingsCategory.Type.DEVICE_LOCATION);
         }
-        if (showWarningFor(ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA)) {
-            return SiteSettingsCategory.fromContentSettingsType(
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA);
+        if (showWarningFor(SiteSettingsCategory.Type.CAMERA)) {
+            return SiteSettingsCategory.createFromType(SiteSettingsCategory.Type.CAMERA);
         }
-        if (showWarningFor(ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_MIC)) {
-            return SiteSettingsCategory.fromContentSettingsType(
-                    ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_MIC);
+        if (showWarningFor(SiteSettingsCategory.Type.MICROPHONE)) {
+            return SiteSettingsCategory.createFromType(SiteSettingsCategory.Type.MICROPHONE);
+        }
+        if (showWarningFor(SiteSettingsCategory.Type.NOTIFICATIONS)) {
+            return SiteSettingsCategory.createFromType(SiteSettingsCategory.Type.NOTIFICATIONS);
         }
         return null;
     }
 
-    private boolean showWarningFor(int type) {
+    private boolean showWarningFor(@SiteSettingsCategory.Type int type) {
         ContentSetting setting = null;
-        if (type == ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION) {
-            setting = mSite.getGeolocationPermission();
-        } else if (type == ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA) {
-            setting = mSite.getCameraPermission();
-        } else if (type == ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_MIC) {
-            setting = mSite.getMicrophonePermission();
+        if (type == SiteSettingsCategory.Type.DEVICE_LOCATION) {
+            setting = mSite.getPermission(PermissionInfo.Type.GEOLOCATION);
+        } else if (type == SiteSettingsCategory.Type.CAMERA) {
+            setting = mSite.getPermission(PermissionInfo.Type.CAMERA);
+        } else if (type == SiteSettingsCategory.Type.MICROPHONE) {
+            setting = mSite.getPermission(PermissionInfo.Type.MICROPHONE);
+        } else if (type == SiteSettingsCategory.Type.NOTIFICATIONS) {
+            setting = mSite.getPermission(PermissionInfo.Type.NOTIFICATION);
         }
 
-        if (setting == null) {
-            return false;
-        }
+        if (setting == null) return false;
 
-        SiteSettingsCategory category = SiteSettingsCategory.fromContentSettingsType(type);
+        SiteSettingsCategory category = SiteSettingsCategory.createFromType(type);
         return category.showPermissionBlockedMessage(getActivity());
     }
 
@@ -570,7 +548,7 @@ public class SingleWebsitePreferences extends PreferenceFragment
     }
 
     private boolean hasPermissionsPreferences() {
-        if (mUsbPermissionCount > 0) return true;
+        if (mObjectPermissionCount > 0) return true;
         PreferenceScreen screen = getPreferenceScreen();
         for (String key : PERMISSION_PREFERENCE_KEYS) {
             if (screen.findPreference(key) != null) return true;
@@ -619,24 +597,24 @@ public class SingleWebsitePreferences extends PreferenceFragment
         if (explanationResourceId != 0) {
             preference.setTitle(explanationResourceId);
         }
-        if (preference.isEnabled()) {
-            SiteSettingsCategory category =
-                    SiteSettingsCategory.fromContentSettingsType(contentType);
-            if (category != null && !category.enabledInAndroid(getActivity())) {
-                preference.setIcon(category.getDisabledInAndroidIcon(getActivity()));
-                preference.setEnabled(false);
-            } else {
-                preference.setIcon(
-                        ContentSettingsResources.getTintedIcon(contentType, getResources()));
-            }
-        } else {
+        if (!preference.isEnabled()) {
             preference.setIcon(
                     ContentSettingsResources.getDisabledIcon(contentType, getResources()));
+            return;
+        }
+        SiteSettingsCategory category =
+                SiteSettingsCategory.createFromContentSettingsType(contentType);
+        if (category != null && !category.enabledInAndroid(getActivity())) {
+            preference.setIcon(category.getDisabledInAndroidIcon(getActivity()));
+            preference.setEnabled(false);
+        } else {
+            preference.setIcon(PreferenceUtils.getTintedIcon(
+                    getActivity(), ContentSettingsResources.getIcon(contentType)));
         }
     }
 
     private void setUpLocationPreference(Preference preference) {
-        ContentSetting permission = mSite.getGeolocationPermission();
+        ContentSetting permission = mSite.getPermission(PermissionInfo.Type.GEOLOCATION);
         setUpListPreference(preference, permission);
         if (isPermissionControlledByDSE(ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION)
                 && permission != null) {
@@ -645,12 +623,15 @@ public class SingleWebsitePreferences extends PreferenceFragment
     }
 
     private void setUpSoundPreference(Preference preference) {
-        ContentSetting currentValue = mSite.getSoundPermission();
+        ContentSetting currentValue =
+                mSite.getContentSettingPermission(ContentSettingException.Type.SOUND);
         // In order to always show the sound permission, set it up with the default value if it
         // doesn't have a current value.
         if (currentValue == null) {
-            currentValue = PrefServiceBridge.getInstance().isSoundEnabled() ? ContentSetting.ALLOW
-                                                                            : ContentSetting.BLOCK;
+            currentValue = PrefServiceBridge.getInstance().isCategoryEnabled(
+                                   ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND)
+                    ? ContentSetting.ALLOW
+                    : ContentSetting.BLOCK;
         }
         setUpListPreference(preference, currentValue);
     }
@@ -672,7 +653,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
         // explicit permission disallowing the blocking.
         boolean activated =
                 WebsitePreferenceBridge.getAdBlockingActivated(mSite.getAddress().getOrigin());
-        ContentSetting permission = mSite.getAdsPermission();
+        ContentSetting permission =
+                mSite.getContentSettingPermission(ContentSettingException.Type.ADS);
 
         // If |permission| is null, there is no explicit (non-default) permission set for this site.
         // If the site is not considered a candidate for blocking, do the standard thing and remove
@@ -685,10 +667,10 @@ public class SingleWebsitePreferences extends PreferenceFragment
         // However, if the blocking is activated, we still want to show the permission, even if it
         // is in the default state.
         if (permission == null) {
-            ContentSetting defaultPermission = PrefServiceBridge.getInstance().adsEnabled()
+            permission = PrefServiceBridge.getInstance().isCategoryEnabled(
+                                 ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS)
                     ? ContentSetting.ALLOW
                     : ContentSetting.BLOCK;
-            permission = defaultPermission;
         }
         setUpListPreference(preference, permission);
 
@@ -752,6 +734,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
                 return ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS;
             case PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION:
                 return ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER;
+            case PREF_SENSORS_PERMISSION:
+                return ContentSettingsType.CONTENT_SETTINGS_TYPE_SENSORS;
             case PREF_SOUND_PERMISSION:
                 return ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND;
             default:
@@ -777,10 +761,8 @@ public class SingleWebsitePreferences extends PreferenceFragment
     }
 
     private void popBackIfNoSettings() {
-        if (!hasPermissionsPreferences() && !hasUsagePreferences()) {
-            if (getActivity() != null) {
-                getActivity().finish();
-            }
+        if (!hasPermissionsPreferences() && !hasUsagePreferences() && getActivity() != null) {
+            getActivity().finish();
         }
     }
 
@@ -788,35 +770,37 @@ public class SingleWebsitePreferences extends PreferenceFragment
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         ContentSetting permission = ContentSetting.fromString((String) newValue);
         if (PREF_ADS_PERMISSION.equals(preference.getKey())) {
-            mSite.setAdsPermission(permission);
+            mSite.setContentSettingPermission(ContentSettingException.Type.ADS, permission);
         } else if (PREF_AUTOPLAY_PERMISSION.equals(preference.getKey())) {
-            mSite.setAutoplayPermission(permission);
+            mSite.setContentSettingPermission(ContentSettingException.Type.AUTOPLAY, permission);
         } else if (PREF_BACKGROUND_SYNC_PERMISSION.equals(preference.getKey())) {
-            mSite.setBackgroundSyncPermission(permission);
+            mSite.setContentSettingPermission(
+                    ContentSettingException.Type.BACKGROUND_SYNC, permission);
         } else if (PREF_CAMERA_CAPTURE_PERMISSION.equals(preference.getKey())) {
-            mSite.setCameraPermission(permission);
+            mSite.setPermission(PermissionInfo.Type.CAMERA, permission);
         } else if (PREF_CLIPBOARD_PERMISSION.equals(preference.getKey())) {
-            mSite.setClipboardPermission(permission);
+            mSite.setPermission(PermissionInfo.Type.CLIPBOARD, permission);
         } else if (PREF_COOKIES_PERMISSION.equals(preference.getKey())) {
-            mSite.setCookiePermission(permission);
+            mSite.setContentSettingPermission(ContentSettingException.Type.COOKIE, permission);
         } else if (PREF_JAVASCRIPT_PERMISSION.equals(preference.getKey())) {
-            mSite.setJavaScriptPermission(permission);
+            mSite.setContentSettingPermission(ContentSettingException.Type.JAVASCRIPT, permission);
         } else if (PREF_LOCATION_ACCESS.equals(preference.getKey())) {
-            mSite.setGeolocationPermission(permission);
+            mSite.setPermission(PermissionInfo.Type.GEOLOCATION, permission);
         } else if (PREF_MIC_CAPTURE_PERMISSION.equals(preference.getKey())) {
-            mSite.setMicrophonePermission(permission);
+            mSite.setPermission(PermissionInfo.Type.MICROPHONE, permission);
         } else if (PREF_MIDI_SYSEX_PERMISSION.equals(preference.getKey())) {
-            mSite.setMidiPermission(permission);
+            mSite.setPermission(PermissionInfo.Type.MIDI, permission);
         } else if (PREF_NOTIFICATIONS_PERMISSION.equals(preference.getKey())) {
-            mSite.setNotificationPermission(permission);
+            mSite.setPermission(PermissionInfo.Type.NOTIFICATION, permission);
         } else if (PREF_POPUP_PERMISSION.equals(preference.getKey())) {
-            mSite.setPopupPermission(permission);
+            mSite.setContentSettingPermission(ContentSettingException.Type.POPUP, permission);
         } else if (PREF_PROTECTED_MEDIA_IDENTIFIER_PERMISSION.equals(preference.getKey())) {
-            mSite.setProtectedMediaIdentifierPermission(permission);
+            mSite.setPermission(PermissionInfo.Type.PROTECTED_MEDIA_IDENTIFIER, permission);
+        } else if (PREF_SENSORS_PERMISSION.equals(preference.getKey())) {
+            mSite.setPermission(PermissionInfo.Type.SENSORS, permission);
         } else if (PREF_SOUND_PERMISSION.equals(preference.getKey())) {
-            mSite.setSoundPermission(permission);
+            mSite.setContentSettingPermission(ContentSettingException.Type.SOUND, permission);
         }
-
         return true;
     }
 
@@ -824,13 +808,14 @@ public class SingleWebsitePreferences extends PreferenceFragment
     public boolean onPreferenceClick(Preference preference) {
         Bundle extras = preference.peekExtras();
         if (extras != null) {
-            UsbInfo usbInfo = (UsbInfo) extras.getSerializable(EXTRA_USB_INFO);
-            if (usbInfo != null) {
-                usbInfo.revoke();
+            ChosenObjectInfo objectInfo =
+                    (ChosenObjectInfo) extras.getSerializable(EXTRA_OBJECT_INFO);
+            if (objectInfo != null) {
+                objectInfo.revoke();
 
                 PreferenceScreen preferenceScreen = getPreferenceScreen();
                 preferenceScreen.removePreference(preference);
-                mUsbPermissionCount--;
+                mObjectPermissionCount--;
                 if (!hasPermissionsPreferences()) {
                     Preference heading = preferenceScreen.findPreference(PREF_PERMISSIONS);
                     preferenceScreen.removePreference(heading);
@@ -875,22 +860,16 @@ public class SingleWebsitePreferences extends PreferenceFragment
         WebsitePreferenceBridge.nativeClearBannerData(origin);
 
         // Clear the permissions.
-        mSite.setAdsPermission(ContentSetting.DEFAULT);
-        mSite.setAutoplayPermission(ContentSetting.DEFAULT);
-        mSite.setBackgroundSyncPermission(ContentSetting.DEFAULT);
-        mSite.setCameraPermission(ContentSetting.DEFAULT);
-        mSite.setClipboardPermission(ContentSetting.DEFAULT);
-        mSite.setCookiePermission(ContentSetting.DEFAULT);
-        mSite.setGeolocationPermission(ContentSetting.DEFAULT);
-        mSite.setJavaScriptPermission(ContentSetting.DEFAULT);
-        mSite.setMicrophonePermission(ContentSetting.DEFAULT);
-        mSite.setMidiPermission(ContentSetting.DEFAULT);
-        mSite.setNotificationPermission(ContentSetting.DEFAULT);
-        mSite.setPopupPermission(ContentSetting.DEFAULT);
-        mSite.setProtectedMediaIdentifierPermission(ContentSetting.DEFAULT);
-        mSite.setSoundPermission(ContentSetting.DEFAULT);
+        for (@ContentSettingException.Type int type = 0;
+                type < ContentSettingException.Type.NUM_ENTRIES; type++) {
+            mSite.setContentSettingPermission(type, ContentSetting.DEFAULT);
+        }
+        for (@PermissionInfo.Type int type = 0; type < PermissionInfo.Type.NUM_ENTRIES; type++) {
+            mSite.setPermission(type, ContentSetting.DEFAULT);
+        }
 
-        for (UsbInfo info : mSite.getUsbInfo()) info.revoke();
+        for (ChosenObjectInfo info : mSite.getChosenObjectInfo()) info.revoke();
+        mObjectPermissionCount = 0;
 
         // Clear the storage and finish the activity if necessary.
         if (mSite.getTotalUsage() > 0) {

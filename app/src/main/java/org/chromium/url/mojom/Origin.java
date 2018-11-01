@@ -42,9 +42,6 @@ public final class Origin extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static Origin deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -58,23 +55,25 @@ public final class Origin extends org.chromium.mojo.bindings.Struct {
         Origin result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new Origin(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new Origin(elementsOrVersion);
+                {
+                    
                 result.scheme = decoder0.readString(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.host = decoder0.readString(16, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.port = decoder0.readShort(24);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.unique = decoder0.readBoolean(26, 0);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -93,42 +92,5 @@ public final class Origin extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.port, 24);
         
         encoder0.encode(this.unique, 26, 0);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        Origin other = (Origin) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.scheme, other.scheme))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.host, other.host))
-            return false;
-        if (this.port!= other.port)
-            return false;
-        if (this.unique!= other.unique)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.scheme);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.host);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.port);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.unique);
-        return result;
     }
 }

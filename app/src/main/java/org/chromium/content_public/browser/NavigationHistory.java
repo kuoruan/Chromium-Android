@@ -10,8 +10,8 @@ import java.util.ArrayList;
 
 /**
  * {@link NavigationHistory} captures a snapshot of the navigation history of a
- * {@link ContentViewCore}. It is a copy and will not be updated as navigation
- * occurs on the source {@link ContentViewCore}.
+ * {@link WebContents}. It is a copy and will not be updated as navigation
+ * occurs on the source {@link WebContents}.
  */
 public class NavigationHistory {
 
@@ -41,7 +41,7 @@ public class NavigationHistory {
     }
 
     /**
-     * Returns the index of the entry the {@link ContentViewCore} was navigated to
+     * Returns the index of the entry the {@link WebContents} was navigated to
      * when the history was fetched.
      */
     public int getCurrentEntryIndex() {

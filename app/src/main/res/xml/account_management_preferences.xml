@@ -5,8 +5,7 @@
 
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:aapt="http://schemas.android.com/aapt">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <PreferenceCategory
         android:key="accounts_category"
@@ -19,38 +18,13 @@
         android:key="parental_settings"
         android:title="@string/account_management_parental_settings"/>
 
-    <Preference
-        android:key="parent_accounts">
-        <aapt:attr name="android:layout">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp">
-
-                <TextView android:id="@android:id/title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone"/>
-
-                <TextView android:id="@android:id/summary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:textColor="?android:attr/textColorSecondary"/>
-
-                <LinearLayout android:id="@android:id/widget_frame"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone"/>
-            </LinearLayout>
-        </aapt:attr>
-    </Preference>
+    <org.chromium.chrome.browser.preferences.TextMessagePreference
+        android:key="parent_accounts"
+        tools:summary="@string/account_management_two_parent_names"/>
 
     <Preference
         android:key="child_content"
+        android:selectable="false"
         android:title="@string/account_management_child_content_title"/>
 
     <Preference
@@ -62,15 +36,17 @@
         android:title="@string/sign_in_sync"/>
 
     <Preference
+        android:key="sync_settings_divider"
         android:layout="@layout/divider_preference"/>
 
     <Preference
         android:key="google_activity_controls"
         android:icon="@drawable/ic_logo_googleg_24dp"
-        android:title="@string/sign_in_google_activity_controls"
-        android:summary="@string/sign_in_google_activity_controls_message"/>
+        android:title="@string/sign_in_google_activity_controls_legacy"
+        android:summary="@string/sign_in_google_activity_controls_message_legacy"/>
 
     <Preference
+        android:key="google_activity_controls_divider"
         android:layout="@layout/divider_preference"/>
 
     <Preference

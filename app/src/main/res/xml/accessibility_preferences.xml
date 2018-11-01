@@ -21,4 +21,9 @@
         android:summary="@string/reader_for_accessibility_summary"
         android:title="@string/reader_for_accessibility_title" />
 
+    <org.chromium.chrome.browser.preferences.ChromeBaseCheckBoxPreference
+        android:key="accessibility_tab_switcher"
+        android:summary="@string/accessibility_tab_switcher_summary"
+        android:title="@string/accessibility_tab_switcher_title" />
+
 </PreferenceScreen>

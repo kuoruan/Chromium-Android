@@ -13,16 +13,13 @@ import android.view.inputmethod.InputConnection;
 
 import org.chromium.base.Log;
 import org.chromium.base.ThreadUtils;
-import org.chromium.base.annotations.UsedByReflection;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This is a fake View that is only exposed to InputMethodManager.
  */
-@UsedByReflection("ThreadedInputConnectionFactory.java")
 public class ThreadedInputConnectionProxyView extends View {
     private static final String TAG = "cr_Ime";
     private static final boolean DEBUG_LOGS = false;
@@ -33,9 +30,10 @@ public class ThreadedInputConnectionProxyView extends View {
     private final AtomicBoolean mWindowFocused = new AtomicBoolean();
     private final AtomicReference<IBinder> mWindowToken = new AtomicReference<>();
     private final AtomicReference<View> mRootView = new AtomicReference<>();
+    private final ThreadedInputConnectionFactory mFactory;
 
-    ThreadedInputConnectionProxyView(
-            Context context, Handler imeThreadHandler, View containerView) {
+    ThreadedInputConnectionProxyView(Context context, Handler imeThreadHandler, View containerView,
+            ThreadedInputConnectionFactory factory) {
         super(context);
         mImeThreadHandler = imeThreadHandler;
         mContainerView = containerView;
@@ -48,6 +46,7 @@ public class ThreadedInputConnectionProxyView extends View {
         mWindowFocused.set(mContainerView.hasWindowFocus());
         mWindowToken.set(mContainerView.getWindowToken());
         mRootView.set(mContainerView.getRootView());
+        mFactory = factory;
     }
 
     public void onOriginalViewFocusChanged(boolean gainFocus) {
@@ -90,11 +89,11 @@ public class ThreadedInputConnectionProxyView extends View {
     @Override
     public InputConnection onCreateInputConnection(final EditorInfo outAttrs) {
         if (DEBUG_LOGS) Log.w(TAG, "onCreateInputConnection");
-        return ThreadUtils.runOnUiThreadBlockingNoException(new Callable<InputConnection>() {
-            @Override
-            public InputConnection call() throws Exception {
-                return mContainerView.onCreateInputConnection(outAttrs);
-            }
+        return ThreadUtils.runOnUiThreadBlockingNoException(() -> {
+            mFactory.setTriggerDelayedOnCreateInputConnection(false);
+            InputConnection connection = mContainerView.onCreateInputConnection(outAttrs);
+            mFactory.setTriggerDelayedOnCreateInputConnection(true);
+            return connection;
         });
     }
 

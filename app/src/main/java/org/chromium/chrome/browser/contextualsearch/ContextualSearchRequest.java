@@ -71,11 +71,10 @@ class ContextualSearchRequest {
             // TODO(donnd): Call TemplateURL once we have an API for 3rd-party providers.
             Uri baseLowPriorityUri = getUriTemplate(searchTerm, alternateTerm, mid, true);
             mLowPriorityUri = makeLowPriorityUri(baseLowPriorityUri);
-            mIsLowPriority = true;
         } else {
-            mIsLowPriority = false;
             mLowPriorityUri = null;
         }
+        mIsLowPriority = isLowPriorityEnabled;
     }
 
     /**
@@ -118,11 +117,8 @@ class ContextualSearchRequest {
      * @return either the low-priority or normal-priority URL for this search request.
      */
     String getSearchUrl() {
-        if (mIsLowPriority && mLowPriorityUri != null) {
-            return mLowPriorityUri.toString();
-        } else {
-            return mNormalPriorityUri.toString();
-        }
+        return mIsLowPriority && mLowPriorityUri != null ? mLowPriorityUri.toString()
+                                                         : mNormalPriorityUri.toString();
     }
 
     /**
@@ -201,9 +197,7 @@ class ContextualSearchRequest {
             boolean shouldPrefetch) {
         Uri uri = Uri.parse(TemplateUrlService.getInstance().getUrlForContextualSearchQuery(
                 query, alternateTerm, shouldPrefetch, CTXS_TWO_REQUEST_PROTOCOL));
-        if (!TextUtils.isEmpty(mid)) {
-            uri = makeKPTriggeringUri(uri, mid);
-        }
+        if (!TextUtils.isEmpty(mid)) uri = makeKPTriggeringUri(uri, mid);
         return uri;
     }
 

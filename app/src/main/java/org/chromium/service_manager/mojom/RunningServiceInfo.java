@@ -41,9 +41,6 @@ public final class RunningServiceInfo extends org.chromium.mojo.bindings.Struct 
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static RunningServiceInfo deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -57,20 +54,22 @@ public final class RunningServiceInfo extends org.chromium.mojo.bindings.Struct 
         RunningServiceInfo result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new RunningServiceInfo(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new RunningServiceInfo(elementsOrVersion);
+                {
+                    
                 result.id = decoder0.readInt(8);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.pid = decoder0.readInt(12);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 result.identity = Identity.decode(decoder1);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -87,39 +86,5 @@ public final class RunningServiceInfo extends org.chromium.mojo.bindings.Struct 
         encoder0.encode(this.pid, 12);
         
         encoder0.encode(this.identity, 16, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        RunningServiceInfo other = (RunningServiceInfo) object;
-        if (this.id!= other.id)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.identity, other.identity))
-            return false;
-        if (this.pid!= other.pid)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.id);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.identity);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pid);
-        return result;
     }
 }

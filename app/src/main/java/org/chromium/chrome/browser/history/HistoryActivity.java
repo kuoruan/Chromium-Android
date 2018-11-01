@@ -38,4 +38,9 @@ public class HistoryActivity extends SnackbarActivity {
     HistoryManager getHistoryManagerForTests() {
         return mHistoryManager;
     }
+
+    @Override
+    public void onBackPressed() {
+        if (!mHistoryManager.onBackPressed()) super.onBackPressed();
+    }
 }

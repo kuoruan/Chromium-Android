@@ -8,7 +8,8 @@
 
 <org.chromium.chrome.browser.widget.accessibility.AccessibilityTabModelListItem
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:chrome="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/list_item_frame"
     android:layout_width="match_parent"
     android:layout_height="@dimen/accessibility_tab_height">
@@ -31,8 +32,8 @@
             android:paddingEnd="8dp"
             android:scaleType="fitCenter"
             android:gravity="center_vertical"
-            android:contentDescription="@null"
-            chrome:chrometint="@android:color/white" />
+            tools:ignore="ContentDescription"
+            app:chrometint="@color/dark_mode_tint" />
         <TextView
             android:id="@+id/tab_title"
             android:layout_width="0dp"
@@ -52,7 +53,7 @@
             android:padding="4dp"
             android:background="?attr/selectableItemBackground"
             android:src="@drawable/btn_close"
-            chrome:chrometint="@color/light_mode_tint"
+            app:chrometint="@color/light_mode_tint"
             android:gravity="end|center_vertical" />
     </LinearLayout>
 
@@ -69,7 +70,8 @@
             style="@style/ListItemEndIconSmall"
             android:paddingStart="23dp"
             android:paddingEnd="13dp"
-            android:src="@drawable/btn_delete_24dp" />
+            android:src="@drawable/btn_delete_24dp"
+            app:chrometint="@color/dark_mode_tint" />
     </LinearLayout>
 
     <LinearLayout

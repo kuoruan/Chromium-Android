@@ -121,6 +121,15 @@ final class ScreenshotTask implements ScreenshotSource {
         ChromeActivity chromeActivity = (ChromeActivity) activity;
         Tab currentTab = chromeActivity.getActivityTab();
 
+        // If the bottom sheet is currently open, then do not use the Compositor based screenshot
+        // so that the Android View for the bottom sheet will be captured.
+        // TODO(https://crbug.com/835862): When the sheet is partially opened both the compositor
+        // and Android views should be captured in the screenshot.
+        if (chromeActivity.getBottomSheet() != null
+                && chromeActivity.getBottomSheet().isSheetOpen()) {
+            return false;
+        }
+
         // If the tab is null, assume in the tab switcher so a Compositor snapshot is good.
         if (currentTab == null) return true;
         // If the tab is not interactable, also assume in the tab switcher.

@@ -4,11 +4,11 @@
 
 package org.chromium.chrome.browser.contextualsearch;
 
+import android.support.annotation.Nullable;
+
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
-
-import javax.annotation.Nullable;
 
 /**
  * Controls the internal state of the Contextual Search Manager.
@@ -48,52 +48,75 @@ class ContextualSearchInternalStateController {
      * above.
      */
     public static enum InternalState {
-        /** This start state should only be used when the manager is not yet initialized or already
+        /**
+         * This start state should only be used when the manager is not yet initialized or already
          * destroyed.
          */
         UNDEFINED,
-        /** This start/resting state shows no UI (panel is closed). */
+        /**
+         * This start/resting state shows no UI (panel is closed).
+         */
         IDLE,
-
-        /** This starts a transition that leads to the SHOWING_LONGPRESS_SEARCH resting state. */
+        /**
+         * This starts a transition that leads to the SHOWING_LONGPRESS_SEARCH resting state.
+         */
         LONG_PRESS_RECOGNIZED,
-        /** Resting state when showing the panel in response to a Long-press gesture. */
+        /**
+         * Resting state when showing the panel in response to a Long-press gesture.
+         */
         SHOWING_LONGPRESS_SEARCH,
-
-        /** This is a start state when the selection is cleared typically due to a tap on the base
-         * page.  If the previous state wasn't IDLE then it could be a tap near a previous Tap.
+        /**
+         * This is a start state when the selection is cleared typically due to a tap on the base
+         * page. If the previous state wasn't IDLE then it could be a tap near a previous Tap.
          * Transitions to WAITING_FOR_POSSIBLE_TAP_NEAR_PREVIOUS to wait for a Tap and hide the Bar
-         * if no tap ever happens. */
+         * if no tap ever happens.
+         */
         SELECTION_CLEARED_RECOGNIZED,
-        /** Waits to see if the tap gesture was valid so we can just update the Bar instead of
-         * hiding/showing it. */
+        /**
+         * Waits to see if the tap gesture was valid so we can just update the Bar instead of
+         * hiding/showing it.
+         */
         WAITING_FOR_POSSIBLE_TAP_NEAR_PREVIOUS,
-
-        /** This starts a sequence of states needed to get to the SHOWING_TAP_SEARCH resting state.
+        /**
+         * This starts a sequence of states needed to get to the SHOWING_TAP_SEARCH resting state.
          */
         TAP_RECOGNIZED,
-        /** Waits to see if the Tap was on a previous tap-selection, which will show the selection
+        /**
+         * Waits to see if the Tap was on a previous tap-selection, which will show the selection
          * manipulation pins and be subsumed by a LONG_PRESS_RECOGNIZED.  If that doesn't happen
          * within the waiting period we'll advance.
          */
         WAITING_FOR_POSSIBLE_TAP_ON_TAP_SELECTION,
-        /** The first state in the Tap-gesture processing pipeline where we know we're processing
+        /**
+         * The first state in the Tap-gesture processing pipeline where we know we're processing
          * a Tap-gesture that won't be converted into a long-press (from tap on tap-selection).  It
          * may later be suppressed or ignored due to being on an invalid character.
          */
         TAP_GESTURE_COMMIT,
-        /** Gathers text surrounding the selection. */
+        /**
+         * Gathers text surrounding the selection.
+         */
         GATHERING_SURROUNDINGS,
-        /** Decides if the gesture should trigger the UX or be suppressed. */
+        /**
+         * Decides if the gesture should trigger the UX or be suppressed.
+         */
         DECIDING_SUPPRESSION,
-        /** Start showing the Tap UI.  Currently this means select the word that was tapped. */
+        /**
+         * Start showing the Tap UI. Currently this means select the word that was tapped.
+         */
         START_SHOWING_TAP_UI,
-        /** Show the full Tap UI.  Currently this means showing the Overlay Panel. */
+        /**
+         * Show the full Tap UI. Currently this means showing the Overlay Panel.
+         */
         SHOW_FULL_TAP_UI,
-        /** Resolving the Search Term using the surrounding text and additional context.
-         * Currently this makes a server request, which could take a long time. */
+        /**
+         * Resolving the Search Term using the surrounding text and additional context.
+         * Currently this makes a server request, which could take a long time.
+         */
         RESOLVING,
-        /** Resting state when showing the panel in response to a Tap gesture. */
+        /**
+         * Resting state when showing the panel in response to a Tap gesture.
+         */
         SHOWING_TAP_SEARCH
     }
 
@@ -138,7 +161,7 @@ class ContextualSearchInternalStateController {
      * Reset the current state to the IDLE state.
      * @param reason The reason for the reset.
      */
-    void reset(StateChangeReason reason) {
+    void reset(@Nullable @StateChangeReason Integer reason) {
         transitionTo(InternalState.IDLE, reason);
     }
 
@@ -207,7 +230,8 @@ class ContextualSearchInternalStateController {
      * @param reason The reason we're starting this state, or {@code null} if not significant
      *        or known.  Only needed when we enter the IDLE state.
      */
-    private void transitionTo(final InternalState state, @Nullable final StateChangeReason reason) {
+    private void transitionTo(
+            final InternalState state, final @Nullable @StateChangeReason Integer reason) {
         if (state == mState) return;
 
         // This should be the only part of the code that changes the state (other than #enter)!
@@ -225,18 +249,16 @@ class ContextualSearchInternalStateController {
      * @param reason The reason we're starting this state, or {@code null} if not significant
      *        or known.  Only needed when we enter the IDLE state.
      */
-    private void startWorkingOn(InternalState state, @Nullable StateChangeReason reason) {
+    private void startWorkingOn(InternalState state, @Nullable @StateChangeReason Integer reason) {
         // All transitional states should be listed here, but not start states.
         switch (state) {
             case IDLE:
                 assert reason != null;
                 mStateHandler.hideContextualSearchUi(reason);
                 break;
-
             case SHOWING_LONGPRESS_SEARCH:
                 mStateHandler.showContextualSearchLongpressUi();
                 break;
-
             case WAITING_FOR_POSSIBLE_TAP_NEAR_PREVIOUS:
                 mStateHandler.waitForPossibleTapNearPrevious();
                 break;

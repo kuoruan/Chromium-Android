@@ -4,10 +4,8 @@
 
 package org.chromium.chrome.browser.notifications;
 
-import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.os.Build;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.browser.notifications.channels.ChannelsInitializer;
@@ -19,14 +17,9 @@ import org.chromium.chrome.browser.notifications.channels.ChannelsInitializer;
 public class NotificationBuilderFactory {
     /**
      * Creates either a Notification.Builder or NotificationCompat.Builder under the hood, wrapped
-     * in our own common interface.
-     *
-     * TODO(crbug.com/704152) Remove this once we've updated to revision 26 of the support library.
-     * Then we can use NotificationCompat.Builder and set the channel directly everywhere.
-     * Although we will still need to ensure the channel is always initialized first.
+     * in our own common interface, and ensures the notification channel has been initialized.
      *
      * @param preferCompat true if a NotificationCompat.Builder is preferred.
-     *                     A Notification.Builder will be used regardless on Android O.
      * @param channelId The ID of the channel the notification should be posted to. This channel
      *                  will be created if it did not already exist. Must be a known channel within
      *                  {@link ChannelsInitializer#ensureInitialized(String)}.
@@ -34,19 +27,14 @@ public class NotificationBuilderFactory {
     public static ChromeNotificationBuilder createChromeNotificationBuilder(
             boolean preferCompat, String channelId) {
         Context context = ContextUtils.getApplicationContext();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            return createNotificationBuilderForO(channelId, context);
-        }
-        return preferCompat ? new NotificationCompatBuilder(context)
-                            : new NotificationBuilder(context);
-    }
 
-    @SuppressLint("NewApi") // for Context.getSystemService(Class)
-    private static ChromeNotificationBuilder createNotificationBuilderForO(
-            String channelId, Context context) {
-        return new NotificationBuilderForO(context, channelId,
-                new ChannelsInitializer(new NotificationManagerProxyImpl(context.getSystemService(
-                                                NotificationManager.class)),
-                        context.getResources()));
+        NotificationManagerProxyImpl notificationManagerProxy = new NotificationManagerProxyImpl(
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE));
+
+        ChannelsInitializer channelsInitializer =
+                new ChannelsInitializer(notificationManagerProxy, context.getResources());
+
+        return preferCompat ? new NotificationCompatBuilder(context, channelId, channelsInitializer)
+                            : new NotificationBuilder(context, channelId, channelsInitializer);
     }
 }

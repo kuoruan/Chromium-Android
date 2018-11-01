@@ -47,9 +47,6 @@ public final class SerialConnectionInfo extends org.chromium.mojo.bindings.Struc
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static SerialConnectionInfo deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -63,30 +60,32 @@ public final class SerialConnectionInfo extends org.chromium.mojo.bindings.Struc
         SerialConnectionInfo result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new SerialConnectionInfo(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new SerialConnectionInfo(elementsOrVersion);
+                {
+                    
                 result.bitrate = decoder0.readInt(8);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.dataBits = decoder0.readInt(12);
                     SerialDataBits.validate(result.dataBits);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.parityBit = decoder0.readInt(16);
                     SerialParityBit.validate(result.parityBit);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.stopBits = decoder0.readInt(20);
                     SerialStopBits.validate(result.stopBits);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.ctsFlowControl = decoder0.readBoolean(24, 0);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -107,45 +106,5 @@ public final class SerialConnectionInfo extends org.chromium.mojo.bindings.Struc
         encoder0.encode(this.stopBits, 20);
         
         encoder0.encode(this.ctsFlowControl, 24, 0);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        SerialConnectionInfo other = (SerialConnectionInfo) object;
-        if (this.bitrate!= other.bitrate)
-            return false;
-        if (this.dataBits!= other.dataBits)
-            return false;
-        if (this.parityBit!= other.parityBit)
-            return false;
-        if (this.stopBits!= other.stopBits)
-            return false;
-        if (this.ctsFlowControl!= other.ctsFlowControl)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bitrate);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.dataBits);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.parityBit);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.stopBits);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.ctsFlowControl);
-        return result;
     }
 }

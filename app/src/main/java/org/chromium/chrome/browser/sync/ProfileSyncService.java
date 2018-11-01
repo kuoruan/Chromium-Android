@@ -111,10 +111,23 @@ public class ProfileSyncService {
         return sProfileSyncService;
     }
 
+    /**
+     * Overrides the initialization for tests. The tests should call resetForTests() at shutdown.
+     */
     @VisibleForTesting
     public static void overrideForTests(ProfileSyncService profileSyncService) {
         sProfileSyncService = profileSyncService;
         sInitialized = true;
+    }
+
+    /**
+     * Resets the ProfileSyncService instance. Calling get() next time will initialize with a new
+     * instance.
+     */
+    @VisibleForTesting
+    public static void resetForTests() {
+        sInitialized = false;
+        sProfileSyncService = null;
     }
 
     protected ProfileSyncService() {
@@ -142,11 +155,6 @@ public class ProfileSyncService {
 
     public void signOut() {
         nativeSignOutSync(mNativeProfileSyncServiceAndroid);
-    }
-
-    public String querySyncStatus() {
-        ThreadUtils.assertOnUiThread();
-        return nativeQuerySyncStatusSummary(mNativeProfileSyncServiceAndroid);
     }
 
     /**
@@ -286,9 +294,12 @@ public class ProfileSyncService {
         return nativeSetDecryptionPassphrase(mNativeProfileSyncServiceAndroid, passphrase);
     }
 
-    public GoogleServiceAuthError.State getAuthError() {
+    public @GoogleServiceAuthError.State int getAuthError() {
         int authErrorCode = nativeGetAuthError(mNativeProfileSyncServiceAndroid);
-        return GoogleServiceAuthError.State.fromCode(authErrorCode);
+        if (authErrorCode < 0 || authErrorCode >= GoogleServiceAuthError.State.NUM_ENTRIES) {
+            throw new IllegalArgumentException("No state for code: " + authErrorCode);
+        }
+        return authErrorCode;
     }
 
     /**
@@ -405,6 +416,18 @@ public class ProfileSyncService {
 
     public boolean hasUnrecoverableError() {
         return nativeHasUnrecoverableError(mNativeProfileSyncServiceAndroid);
+    }
+
+    /**
+     * Returns whether either personalized or anonymized URL keyed data collection is enabled.
+     *
+     * @param personlized Whether to check for personalized data collection. If false, this will
+     *                    check for anonymized data collection.
+     * @return Whether URL-keyed data collection is enabled for the current profile.
+     */
+    public boolean isUrlKeyedDataCollectionEnabled(boolean personalized) {
+        return nativeIsUrlKeyedDataCollectionEnabled(
+                mNativeProfileSyncServiceAndroid, personalized);
     }
 
     /**
@@ -536,7 +559,6 @@ public class ProfileSyncService {
     private native void nativeFlushDirectory(long nativeProfileSyncServiceAndroid);
     private native void nativeSignOutSync(long nativeProfileSyncServiceAndroid);
     private native void nativeSetSyncSessionsId(long nativeProfileSyncServiceAndroid, String tag);
-    private native String nativeQuerySyncStatusSummary(long nativeProfileSyncServiceAndroid);
     private native int nativeGetAuthError(long nativeProfileSyncServiceAndroid);
     private native int nativeGetProtocolErrorClientAction(long nativeProfileSyncServiceAndroid);
     private native boolean nativeIsEngineInitialized(long nativeProfileSyncServiceAndroid);
@@ -574,6 +596,8 @@ public class ProfileSyncService {
     private native boolean nativeIsSyncActive(long nativeProfileSyncServiceAndroid);
     private native boolean nativeHasKeepEverythingSynced(long nativeProfileSyncServiceAndroid);
     private native boolean nativeHasUnrecoverableError(long nativeProfileSyncServiceAndroid);
+    private native boolean nativeIsUrlKeyedDataCollectionEnabled(
+            long nativeProfileSyncServiceAndroid, boolean personalized);
     private native boolean nativeIsPassphrasePrompted(long nativeProfileSyncServiceAndroid);
     private native void nativeSetPassphrasePrompted(long nativeProfileSyncServiceAndroid,
                                                     boolean prompted);

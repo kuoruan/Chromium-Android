@@ -28,7 +28,7 @@ public interface CdmFile extends org.chromium.mojo.bindings.Interface {
 
 OpenFileForWritingResponse callback);
 
-    interface OpenFileForWritingResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<org.chromium.mojo.common.mojom.File> { }
+    interface OpenFileForWritingResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<org.chromium.mojo_base.mojom.File> { }
 
 
 
@@ -36,7 +36,7 @@ OpenFileForWritingResponse callback);
 
 CommitWriteResponse callback);
 
-    interface CommitWriteResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<org.chromium.mojo.common.mojom.File> { }
+    interface CommitWriteResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<org.chromium.mojo_base.mojom.File> { }
 
 
 }

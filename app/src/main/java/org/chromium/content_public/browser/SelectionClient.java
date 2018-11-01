@@ -97,13 +97,6 @@ public interface SelectionClient {
     void onSelectionEvent(int eventType, float posXPix, float posYPix);
 
     /**
-     * Requests to show the UI for an unhandled tap, if needed.
-     * @param x The x coordinate of the tap.
-     * @param y The y coordinate of the tap.
-     */
-    void showUnhandledTapUIIfNeeded(int x, int y);
-
-    /**
      * Acknowledges that a selectWordAroundCaret action has completed with the given result.
      * @param didSelect Whether a word was actually selected or not.
      * @param startAdjust The adjustment to the selection start offset needed to select the word.

@@ -6,7 +6,6 @@
     <!-- Buttons -->
     <style name="ButtonCompat" parent="ButtonCompatBase">
         <item name="android:background">@drawable/button_compat</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
     </style>
     <style name="ButtonCompatBorderless" parent="ButtonCompat">
         <item name="android:background">@drawable/button_borderless_compat</item>

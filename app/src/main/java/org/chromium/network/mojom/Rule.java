@@ -16,9 +16,10 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class Rule extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 24;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+    private static final int STRUCT_SIZE = 32;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+    public int resolverType;
     public String hostPattern;
     public String replacement;
 
@@ -40,9 +41,6 @@ public final class Rule extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static Rule deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,15 +54,22 @@ public final class Rule extends org.chromium.mojo.bindings.Struct {
         Rule result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new Rule(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.hostPattern = decoder0.readString(8, false);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
-                result.replacement = decoder0.readString(16, false);
-            }
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new Rule(elementsOrVersion);
+                {
+                    
+                result.resolverType = decoder0.readInt(8);
+                    ResolverType.validate(result.resolverType);
+                }
+                {
+                    
+                result.hostPattern = decoder0.readString(16, false);
+                }
+                {
+                    
+                result.replacement = decoder0.readString(24, false);
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -76,39 +81,10 @@ public final class Rule extends org.chromium.mojo.bindings.Struct {
     protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
-        encoder0.encode(this.hostPattern, 8, false);
+        encoder0.encode(this.resolverType, 8);
         
-        encoder0.encode(this.replacement, 16, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        Rule other = (Rule) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.hostPattern, other.hostPattern))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.replacement, other.replacement))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hostPattern);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.replacement);
-        return result;
+        encoder0.encode(this.hostPattern, 16, false);
+        
+        encoder0.encode(this.replacement, 24, false);
     }
 }

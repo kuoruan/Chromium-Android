@@ -38,7 +38,7 @@ public class RecentTabsExpandableListView extends ExpandableListView {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        if (!DeviceFormFactor.isTablet()) {
+        if (!DeviceFormFactor.isNonMultiDisplayContextOnTablet(getContext())) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
             return;
         }

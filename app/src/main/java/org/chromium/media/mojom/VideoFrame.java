@@ -23,9 +23,9 @@ public final class VideoFrame extends org.chromium.mojo.bindings.Struct {
     public org.chromium.gfx.mojom.Size codedSize;
     public org.chromium.gfx.mojom.Rect visibleRect;
     public org.chromium.gfx.mojom.Size naturalSize;
-    public org.chromium.mojo.common.mojom.TimeDelta timestamp;
+    public org.chromium.mojo_base.mojom.TimeDelta timestamp;
     public VideoFrameData data;
-    public org.chromium.mojo.common.mojom.DictionaryValue metadata;
+    public org.chromium.mojo_base.mojom.DictionaryValue metadata;
 
     private VideoFrame(int version) {
         super(STRUCT_SIZE, version);
@@ -45,9 +45,6 @@ public final class VideoFrame extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static VideoFrame deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -61,41 +58,43 @@ public final class VideoFrame extends org.chromium.mojo.bindings.Struct {
         VideoFrame result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new VideoFrame(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new VideoFrame(elementsOrVersion);
+                {
+                    
                 result.format = decoder0.readInt(8);
                     VideoPixelFormat.validate(result.format);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                 result.codedSize = org.chromium.gfx.mojom.Size.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                 result.visibleRect = org.chromium.gfx.mojom.Rect.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
                 result.naturalSize = org.chromium.gfx.mojom.Size.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(40, false);
-                result.timestamp = org.chromium.mojo.common.mojom.TimeDelta.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                result.timestamp = org.chromium.mojo_base.mojom.TimeDelta.decode(decoder1);
+                }
+                {
+                    
                 result.data = VideoFrameData.decode(decoder0, 48);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(64, false);
-                result.metadata = org.chromium.mojo.common.mojom.DictionaryValue.decode(decoder1);
-            }
+                result.metadata = org.chromium.mojo_base.mojom.DictionaryValue.decode(decoder1);
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -120,51 +119,5 @@ public final class VideoFrame extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.data, 48, false);
         
         encoder0.encode(this.metadata, 64, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        VideoFrame other = (VideoFrame) object;
-        if (this.format!= other.format)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.codedSize, other.codedSize))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.visibleRect, other.visibleRect))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.naturalSize, other.naturalSize))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.timestamp, other.timestamp))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.data, other.data))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.metadata, other.metadata))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.format);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.codedSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.visibleRect);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.naturalSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.timestamp);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.data);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.metadata);
-        return result;
     }
 }

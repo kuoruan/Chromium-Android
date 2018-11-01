@@ -6,7 +6,7 @@ package org.chromium.chrome.browser.tabmodel;
 
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
-import org.chromium.content_public.browser.ContentViewCore;
+import org.chromium.content_public.browser.WebContents;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -134,14 +134,14 @@ public class TabModelUtils {
 
     /**
      * @param model The {@link TabModel} to act on.
-     * @return      The currently active {@link ContentViewCore}, or {@code null} if no {@link Tab}
-     *              is selected or the selected {@link Tab} has no current {@link ContentViewCore}.
+     * @return      The currently active {@link WebContents}, or {@code null} if no {@link Tab}
+     *              is selected or the selected {@link Tab} has no current {@link WebContents}.
      */
-    public static ContentViewCore getCurrentContentViewCore(TabList model) {
+    public static WebContents getCurrentWebContents(TabList model) {
         Tab tab = getCurrentTab(model);
         if (tab == null) return null;
 
-        return tab.getContentViewCore();
+        return tab.getWebContents();
     }
 
     /**

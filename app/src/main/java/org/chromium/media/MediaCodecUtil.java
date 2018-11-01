@@ -502,6 +502,8 @@ class MediaCodecUtil {
         ExynosVp8(MimeTypes.VIDEO_VP8, "OMX.Exynos.", Build.VERSION_CODES.M,
                 BitrateAdjuster.NO_ADJUSTMENT),
         ExynosH264(MimeTypes.VIDEO_H264, "OMX.Exynos.", Build.VERSION_CODES.LOLLIPOP,
+                BitrateAdjuster.FRAMERATE_ADJUSTMENT),
+        MediatekH264(MimeTypes.VIDEO_H264, "OMX.MTK.", Build.VERSION_CODES.O_MR1,
                 BitrateAdjuster.FRAMERATE_ADJUSTMENT);
 
         private final String mMime;

@@ -1,2 +1,2 @@
-include ':app', ':ui', ':data_chart', ':media', ':content', ':components:autofill', ':browseractions',
-        ':components:web_contents_delegate', ':components:components_base'
+include ':app', ':ui', ':data_chart', ':media', ':content', ':components:autofill', ':customtabs',
+        ':components:embedder_support', ':components:components_base'

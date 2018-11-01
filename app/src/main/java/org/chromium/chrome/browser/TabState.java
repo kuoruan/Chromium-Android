@@ -7,15 +7,15 @@ package org.chromium.chrome.browser;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Handler;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.util.Pair;
 
 import org.chromium.base.StreamUtil;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.browser.crypto.CipherFactory;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.ColorUtils;
-import org.chromium.components.sync.SyncConstants;
-import org.chromium.content.browser.crypto.CipherFactory;
 import org.chromium.content_public.browser.WebContents;
 
 import java.io.BufferedOutputStream;
@@ -93,6 +93,21 @@ public class TabState {
         }
 
         /**
+         * Deletes navigation entries from this buffer matching predicate.
+         * @param predicate Handle for a deletion predicate interpreted by native code.
+                            Only valid during this call frame.
+         * @return WebContentsState A new state or null if nothing changed.
+         */
+        @Nullable
+        public WebContentsState deleteNavigationEntries(long predicate) {
+            ByteBuffer newBuffer = nativeDeleteNavigationEntries(mBuffer, mVersion, predicate);
+            if (newBuffer == null) return null;
+            WebContentsState newState = new TabState.WebContentsStateNative(newBuffer);
+            newState.setVersion(TabState.CONTENTS_STATE_CURRENT_VERSION);
+            return newState;
+        }
+
+        /**
          * Creates a WebContents for the ContentsState and adds it as an historical tab, then
          * deletes the WebContents.
          */
@@ -120,7 +135,6 @@ public class TabState {
     /** Navigation history of the WebContents. */
     public WebContentsState contentsState;
     public int parentId = Tab.INVALID_TAB_ID;
-    public long syncId;
 
     public long timestampMillis = TIMESTAMP_NOT_SET;
     public String openerAppId;
@@ -202,9 +216,7 @@ public class TabState {
                 stream = new DataInputStream(new CipherInputStream(input, cipher));
             }
         }
-        if (stream == null) {
-            stream = new DataInputStream(input);
-        }
+        if (stream == null) stream = new DataInputStream(input);
         try {
             if (encrypted && stream.readLong() != KEY_CHECKER) {
                 // Got the wrong key, skip the file
@@ -252,11 +264,9 @@ public class TabState {
                         + "version " + tabState.contentsState.version());
             }
             try {
-                tabState.syncId = stream.readLong();
+                // Skip obsolete sync ID.
+                stream.readLong();
             } catch (EOFException eof) {
-                tabState.syncId = SyncConstants.INVALID_TAB_NODE_ID;
-                // Could happen if reading a version of TabState without syncId.
-                Log.w(TAG, "Failed to read syncId from tab state. Assuming syncId is: -1");
             }
             try {
                 tabState.shouldPreserve = stream.readBoolean();
@@ -290,9 +300,7 @@ public class TabState {
      * @param encrypted Whether or not the TabState should be encrypted.
      */
     public static void saveState(File file, TabState state, boolean encrypted) {
-        if (state == null || state.contentsState == null) {
-            return;
-        }
+        if (state == null || state.contentsState == null) return;
 
         // Create the byte array from contentsState before opening the FileOutputStream, in case
         // contentsState.buffer is an instance of MappedByteBuffer that is mapped to
@@ -330,16 +338,14 @@ public class TabState {
             } else {
                 dataOutputStream = new DataOutputStream(new BufferedOutputStream(fileOutputStream));
             }
-            if (encrypted) {
-                dataOutputStream.writeLong(KEY_CHECKER);
-            }
+            if (encrypted) dataOutputStream.writeLong(KEY_CHECKER);
             dataOutputStream.writeLong(state.timestampMillis);
             dataOutputStream.writeInt(contentsStateBytes.length);
             dataOutputStream.write(contentsStateBytes);
             dataOutputStream.writeInt(state.parentId);
             dataOutputStream.writeUTF(state.openerAppId != null ? state.openerAppId : "");
             dataOutputStream.writeInt(state.contentsState.version());
-            dataOutputStream.writeLong(state.syncId);
+            dataOutputStream.writeLong(-1); // Obsolete sync ID.
             dataOutputStream.writeBoolean(state.shouldPreserve);
             dataOutputStream.writeInt(state.themeColor);
         } catch (FileNotFoundException e) {
@@ -469,6 +475,9 @@ public class TabState {
             ByteBuffer buffer, int savedStateVersion, boolean initiallyHidden);
 
     private static native ByteBuffer nativeGetContentsStateAsByteBuffer(Tab tab);
+
+    private static native ByteBuffer nativeDeleteNavigationEntries(
+            ByteBuffer state, int saveStateVersion, long predicate);
 
     private static native ByteBuffer nativeCreateSingleNavigationStateAsByteBuffer(
             String url, String referrerUrl, int referrerPolicy, boolean isIncognito);

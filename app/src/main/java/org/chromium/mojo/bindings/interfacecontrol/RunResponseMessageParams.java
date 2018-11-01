@@ -39,9 +39,6 @@ public final class RunResponseMessageParams extends org.chromium.mojo.bindings.S
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static RunResponseMessageParams deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -55,11 +52,13 @@ public final class RunResponseMessageParams extends org.chromium.mojo.bindings.S
         RunResponseMessageParams result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new RunResponseMessageParams(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new RunResponseMessageParams(elementsOrVersion);
+                {
+                    
                 result.output = RunOutput.decode(decoder0, 8);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -72,33 +71,5 @@ public final class RunResponseMessageParams extends org.chromium.mojo.bindings.S
         org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
         
         encoder0.encode(this.output, 8, true);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        RunResponseMessageParams other = (RunResponseMessageParams) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.output, other.output))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.output);
-        return result;
     }
 }

@@ -29,7 +29,7 @@ class MediaCodecEncoder extends MediaCodecBridge {
     private ByteBuffer mConfigData = null;
 
     protected MediaCodecEncoder(MediaCodec mediaCodec, BitrateAdjuster bitrateAdjuster) {
-        super(mediaCodec, bitrateAdjuster);
+        super(mediaCodec, bitrateAdjuster, false);
     }
 
     @Override

@@ -9,8 +9,10 @@
      in landscape.  If these become more frequently used, we should investigate optimizing the
      layout.
 -->
-<merge xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:chrome="http://schemas.android.com/apk/res-auto" >
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <org.chromium.chrome.browser.widget.PromoDialogLayout
             android:id="@+id/promo_dialog_layout"
@@ -18,8 +20,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:orientation="vertical"
-            android:background="@drawable/menu_bg"
-            chrome:maxWidth="@dimen/dialog_max_width" >
+            android:background="@drawable/popup_bg"
+            app:maxWidthLandscape="@dimen/dialog_max_width"
+            app:maxWidthPortrait="@dimen/dialog_max_width" >
 
         <org.chromium.chrome.browser.widget.FadingEdgeScrollView
                 android:id="@+id/promo_container"
@@ -46,14 +49,15 @@
                         android:layout_marginStart="@dimen/promo_dialog_illustration_margin"
                         android:layout_marginEnd="@dimen/promo_dialog_illustration_margin"
                         android:scaleType="fitCenter"
-                        android:contentDescription="@null" />
+                        tools:ignore="ContentDescription" />
 
                 <org.chromium.chrome.browser.widget.BoundedLinearLayout
                         android:id="@+id/scrollable_promo_content"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        chrome:maxWidth="@dimen/promo_dialog_max_content_width" >
+                        app:maxWidthLandscape="@dimen/promo_dialog_max_content_width"
+                        app:maxWidthPortrait="@dimen/promo_dialog_max_content_width" >
 
                     <TextView
                             android:id="@+id/header"
@@ -88,8 +92,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:padding="@dimen/promo_dialog_padding"
-                chrome:buttonAlignment="end"
-                chrome:stackedMargin="@dimen/infobar_padding" />
+                app:buttonAlignment="end"
+                app:stackedMargin="@dimen/infobar_padding" />
 
     </org.chromium.chrome.browser.widget.PromoDialogLayout>
 

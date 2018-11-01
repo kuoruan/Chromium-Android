@@ -22,6 +22,7 @@ public final class NfcMessage extends org.chromium.mojo.bindings.Struct {
 
     
     public static final int MAX_SIZE = (int) 32768L;
+
     public NfcRecord[] data;
     public String url;
 
@@ -43,9 +44,6 @@ public final class NfcMessage extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static NfcMessage deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -59,9 +57,10 @@ public final class NfcMessage extends org.chromium.mojo.bindings.Struct {
         NfcMessage result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new NfcMessage(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new NfcMessage(elementsOrVersion);
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                 {
                     org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -72,11 +71,12 @@ public final class NfcMessage extends org.chromium.mojo.bindings.Struct {
                         result.data[i1] = NfcRecord.decode(decoder2);
                     }
                 }
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.url = decoder0.readString(16, true);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -99,36 +99,5 @@ public final class NfcMessage extends org.chromium.mojo.bindings.Struct {
         }
         
         encoder0.encode(this.url, 16, true);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        NfcMessage other = (NfcMessage) object;
-        if (!java.util.Arrays.deepEquals(this.data, other.data))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.url, other.url))
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + java.util.Arrays.deepHashCode(this.data);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.url);
-        return result;
     }
 }

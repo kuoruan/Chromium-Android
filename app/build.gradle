@@ -31,16 +31,12 @@ android {
         javaMaxHeapSize "4g"
     }
     aaptOptions {
-        noCompress "dat", "bin", "pak"
+        noCompress "dat", "bin", "pak", "unwind_cfi_32"
     }
     sourceSets {
         main {
             java.filter.exclude(
-                "com/google/protobuf/*.java",
-                "com/google/protobuf/micro/*.java",
-                "com/google/protobuf/nano/*.java",
-                "com/google/protobuf/nano/android/*.java",
-                "org/chromium/chrome/browser/offlinepages/evaluation/*.java"
+                    "org/chromium/chrome/browser/offlinepages/evaluation/*.java"
             )
         }
     }
@@ -68,6 +64,7 @@ dependencies {
     implementation "com.android.support:support-v13:$rootProject.ext.supportLibraryVersion"
     implementation "com.google.android.gms:play-services-auth:$rootProject.ext.playServicesVersion"
     implementation "com.google.android.gms:play-services-cast:$rootProject.ext.playServicesVersion"
+    implementation "com.google.android.gms:play-services-cast-framework:$rootProject.ext.playServicesVersion"
     implementation "com.google.android.gms:play-services-gcm:$rootProject.ext.playServicesVersion"
     implementation "com.google.android.gms:play-services-identity:$rootProject.ext.playServicesVersion"
     implementation "com.google.android.gms:play-services-nearby:$rootProject.ext.playServicesVersion"
@@ -76,14 +73,15 @@ dependencies {
     implementation "com.google.vr:sdk-base:$rootProject.ext.googleVRVersion"
     implementation 'com.android.support:multidex:1.0.3'
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    implementation 'com.google.protobuf:protobuf-java:3.6.1'
     implementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
     implementation project(':components:autofill')
-    implementation project(':components:web_contents_delegate')
+    implementation project(':components:embedder_support')
     implementation project(':content')
     implementation project(':data_chart')
     implementation project(':media')
     implementation project(':ui')
-    implementation project(':browseractions')
+    implementation project(':customtabs')
     androidTestImplementation "com.android.support.test:runner:$rootProject.ext.runnerVersion"
     androidTestImplementation "com.android.support.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
     testImplementation "junit:junit:$rootProject.ext.junitVersion"

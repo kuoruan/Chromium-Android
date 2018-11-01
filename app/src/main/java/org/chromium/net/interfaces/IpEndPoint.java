@@ -40,9 +40,6 @@ public final class IpEndPoint extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static IpEndPoint deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -56,16 +53,18 @@ public final class IpEndPoint extends org.chromium.mojo.bindings.Struct {
         IpEndPoint result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new IpEndPoint(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new IpEndPoint(elementsOrVersion);
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                 result.address = IpAddress.decode(decoder1);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.port = decoder0.readShort(16);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -80,36 +79,5 @@ public final class IpEndPoint extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.address, 8, false);
         
         encoder0.encode(this.port, 16);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        IpEndPoint other = (IpEndPoint) object;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.address, other.address))
-            return false;
-        if (this.port!= other.port)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.address);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.port);
-        return result;
     }
 }

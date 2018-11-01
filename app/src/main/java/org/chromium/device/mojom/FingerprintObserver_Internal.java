@@ -18,28 +18,28 @@ class FingerprintObserver_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<FingerprintObserver, FingerprintObserver.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<FingerprintObserver, FingerprintObserver.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "device::mojom::FingerprintObserver";
+            return "device.mojom.FingerprintObserver";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, FingerprintObserver impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public FingerprintObserver[] buildArray(int size) {
           return new FingerprintObserver[size];
@@ -152,62 +152,62 @@ int scanResult, java.util.Map<String, String[]> matches) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 FingerprintObserver_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_RESTARTED_ORDINAL: {
-            
+
                         FingerprintObserverOnRestartedParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onRestarted();
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_ENROLL_SCAN_DONE_ORDINAL: {
-            
+
                         FingerprintObserverOnEnrollScanDoneParams data =
                                 FingerprintObserverOnEnrollScanDoneParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onEnrollScanDone(data.scanResult, data.isComplete, data.percentComplete);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_AUTH_SCAN_DONE_ORDINAL: {
-            
+
                         FingerprintObserverOnAuthScanDoneParams data =
                                 FingerprintObserverOnAuthScanDoneParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onAuthScanDone(data.scanResult, data.matches);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case ON_SESSION_FAILED_ORDINAL: {
-            
+
                         FingerprintObserverOnSessionFailedParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().onSessionFailed();
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -227,20 +227,20 @@ int scanResult, java.util.Map<String, String[]> matches) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), FingerprintObserver_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -254,36 +254,33 @@ int scanResult, java.util.Map<String, String[]> matches) {
 
     
     static final class FingerprintObserverOnRestartedParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private FingerprintObserverOnRestartedParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public FingerprintObserverOnRestartedParams() {
             this(0);
         }
-    
+
         public static FingerprintObserverOnRestartedParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static FingerprintObserverOnRestartedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static FingerprintObserverOnRestartedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -293,41 +290,19 @@ int scanResult, java.util.Map<String, String[]> matches) {
             FingerprintObserverOnRestartedParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new FingerprintObserverOnRestartedParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new FingerprintObserverOnRestartedParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -335,39 +310,36 @@ int scanResult, java.util.Map<String, String[]> matches) {
 
     
     static final class FingerprintObserverOnEnrollScanDoneParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int scanResult;
         public boolean isComplete;
         public int percentComplete;
-    
+
         private FingerprintObserverOnEnrollScanDoneParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public FingerprintObserverOnEnrollScanDoneParams() {
             this(0);
         }
-    
+
         public static FingerprintObserverOnEnrollScanDoneParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static FingerprintObserverOnEnrollScanDoneParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static FingerprintObserverOnEnrollScanDoneParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -377,25 +349,27 @@ int scanResult, java.util.Map<String, String[]> matches) {
             FingerprintObserverOnEnrollScanDoneParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new FingerprintObserverOnEnrollScanDoneParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new FingerprintObserverOnEnrollScanDoneParams(elementsOrVersion);
+                    {
+                        
                     result.scanResult = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.isComplete = decoder0.readBoolean(12, 0);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.percentComplete = decoder0.readInt(16);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -407,78 +381,41 @@ int scanResult, java.util.Map<String, String[]> matches) {
             
             encoder0.encode(this.percentComplete, 16);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            FingerprintObserverOnEnrollScanDoneParams other = (FingerprintObserverOnEnrollScanDoneParams) object;
-            if (this.scanResult!= other.scanResult)
-                return false;
-            if (this.isComplete!= other.isComplete)
-                return false;
-            if (this.percentComplete!= other.percentComplete)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.scanResult);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isComplete);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.percentComplete);
-            return result;
-        }
     }
 
 
 
     
     static final class FingerprintObserverOnAuthScanDoneParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int scanResult;
         public java.util.Map<String, String[]> matches;
-    
+
         private FingerprintObserverOnAuthScanDoneParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public FingerprintObserverOnAuthScanDoneParams() {
             this(0);
         }
-    
+
         public static FingerprintObserverOnAuthScanDoneParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static FingerprintObserverOnAuthScanDoneParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static FingerprintObserverOnAuthScanDoneParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -488,13 +425,14 @@ int scanResult, java.util.Map<String, String[]> matches) {
             FingerprintObserverOnAuthScanDoneParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new FingerprintObserverOnAuthScanDoneParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new FingerprintObserverOnAuthScanDoneParams(elementsOrVersion);
+                    {
+                        
                     result.scanResult = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     {
                         decoder1.readDataHeaderForMap();
@@ -537,13 +475,14 @@ int scanResult, java.util.Map<String, String[]> matches) {
                             result.matches.put(keys0[index0],  values0[index0]);
                         }
                     }
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -590,73 +529,39 @@ int scanResult, java.util.Map<String, String[]> matches) {
                 }
             }
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            FingerprintObserverOnAuthScanDoneParams other = (FingerprintObserverOnAuthScanDoneParams) object;
-            if (this.scanResult!= other.scanResult)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.matches, other.matches))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.scanResult);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.matches);
-            return result;
-        }
     }
 
 
 
     
     static final class FingerprintObserverOnSessionFailedParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private FingerprintObserverOnSessionFailedParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public FingerprintObserverOnSessionFailedParams() {
             this(0);
         }
-    
+
         public static FingerprintObserverOnSessionFailedParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static FingerprintObserverOnSessionFailedParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static FingerprintObserverOnSessionFailedParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -666,41 +571,19 @@ int scanResult, java.util.Map<String, String[]> matches) {
             FingerprintObserverOnSessionFailedParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new FingerprintObserverOnSessionFailedParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new FingerprintObserverOnSessionFailedParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 

@@ -18,28 +18,28 @@ class NetworkServiceTest_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<NetworkServiceTest, NetworkServiceTest.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<NetworkServiceTest, NetworkServiceTest.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "network::mojom::NetworkServiceTest";
+            return "network.mojom.NetworkServiceTest";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, NetworkServiceTest impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public NetworkServiceTest[] buildArray(int size) {
           return new NetworkServiceTest[size];
@@ -51,11 +51,17 @@ class NetworkServiceTest_Internal {
 
     private static final int SIMULATE_NETWORK_CHANGE_ORDINAL = 1;
 
-    private static final int SIMULATE_CRASH_ORDINAL = 2;
+    private static final int SIMULATE_NETWORK_QUALITY_CHANGE_ORDINAL = 2;
 
-    private static final int MOCK_CERT_VERIFIER_SET_DEFAULT_RESULT_ORDINAL = 3;
+    private static final int SIMULATE_CRASH_ORDINAL = 3;
 
-    private static final int MOCK_CERT_VERIFIER_ADD_RESULT_FOR_CERT_AND_HOST_ORDINAL = 4;
+    private static final int MOCK_CERT_VERIFIER_SET_DEFAULT_RESULT_ORDINAL = 4;
+
+    private static final int MOCK_CERT_VERIFIER_ADD_RESULT_FOR_CERT_AND_HOST_ORDINAL = 5;
+
+    private static final int SET_SHOULD_REQUIRE_CT_ORDINAL = 6;
+
+    private static final int CRASH_ON_RESOLVE_HOST_ORDINAL = 7;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements NetworkServiceTest.Proxy {
@@ -106,6 +112,28 @@ SimulateNetworkChangeResponse callback) {
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
                                     0)),
                     new NetworkServiceTestSimulateNetworkChangeResponseParamsForwardToCallback(callback));
+
+        }
+
+
+        @Override
+        public void simulateNetworkQualityChange(
+int type, 
+SimulateNetworkQualityChangeResponse callback) {
+
+            NetworkServiceTestSimulateNetworkQualityChangeParams _message = new NetworkServiceTestSimulateNetworkQualityChangeParams();
+
+            _message.type = type;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    SIMULATE_NETWORK_QUALITY_CHANGE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new NetworkServiceTestSimulateNetworkQualityChangeResponseParamsForwardToCallback(callback));
 
         }
 
@@ -175,6 +203,45 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
         }
 
 
+        @Override
+        public void setShouldRequireCt(
+int required, 
+SetShouldRequireCtResponse callback) {
+
+            NetworkServiceTestSetShouldRequireCtParams _message = new NetworkServiceTestSetShouldRequireCtParams();
+
+            _message.required = required;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    SET_SHOULD_REQUIRE_CT_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new NetworkServiceTestSetShouldRequireCtResponseParamsForwardToCallback(callback));
+
+        }
+
+
+        @Override
+        public void crashOnResolveHost(
+String host) {
+
+            NetworkServiceTestCrashOnResolveHostParams _message = new NetworkServiceTestCrashOnResolveHostParams();
+
+            _message.host = host;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(CRASH_ON_RESOLVE_HOST_ORDINAL)));
+
+        }
+
+
     }
 
     static final class Stub extends org.chromium.mojo.bindings.Interface.Stub<NetworkServiceTest> {
@@ -193,32 +260,49 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 NetworkServiceTest_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
                     case SIMULATE_CRASH_ORDINAL: {
-            
+
                         NetworkServiceTestSimulateCrashParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().simulateCrash();
                         return true;
                     }
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
+                    case CRASH_ON_RESOLVE_HOST_ORDINAL: {
+
+                        NetworkServiceTestCrashOnResolveHostParams data =
+                                NetworkServiceTestCrashOnResolveHostParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().crashOnResolveHost(data.host);
+                        return true;
+                    }
+
+
                     default:
                         return false;
                 }
@@ -238,74 +322,106 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), NetworkServiceTest_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case ADD_RULES_ORDINAL: {
-            
+
                         NetworkServiceTestAddRulesParams data =
                                 NetworkServiceTestAddRulesParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().addRules(data.rules, new NetworkServiceTestAddRulesResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case SIMULATE_NETWORK_CHANGE_ORDINAL: {
-            
+
                         NetworkServiceTestSimulateNetworkChangeParams data =
                                 NetworkServiceTestSimulateNetworkChangeParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().simulateNetworkChange(data.type, new NetworkServiceTestSimulateNetworkChangeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+                    case SIMULATE_NETWORK_QUALITY_CHANGE_ORDINAL: {
+
+                        NetworkServiceTestSimulateNetworkQualityChangeParams data =
+                                NetworkServiceTestSimulateNetworkQualityChangeParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().simulateNetworkQualityChange(data.type, new NetworkServiceTestSimulateNetworkQualityChangeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
+
+
+
+
+
+
+
                     case MOCK_CERT_VERIFIER_SET_DEFAULT_RESULT_ORDINAL: {
-            
+
                         NetworkServiceTestMockCertVerifierSetDefaultResultParams data =
                                 NetworkServiceTestMockCertVerifierSetDefaultResultParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().mockCertVerifierSetDefaultResult(data.defaultResult, new NetworkServiceTestMockCertVerifierSetDefaultResultResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
                     case MOCK_CERT_VERIFIER_ADD_RESULT_FOR_CERT_AND_HOST_ORDINAL: {
-            
+
                         NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams data =
                                 NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().mockCertVerifierAddResultForCertAndHost(data.cert, data.hostPattern, data.verifyResult, data.rv, new NetworkServiceTestMockCertVerifierAddResultForCertAndHostResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
-            
-            
+
+
+
+
+
+
+
+                    case SET_SHOULD_REQUIRE_CT_ORDINAL: {
+
+                        NetworkServiceTestSetShouldRequireCtParams data =
+                                NetworkServiceTestSetShouldRequireCtParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().setShouldRequireCt(data.required, new NetworkServiceTestSetShouldRequireCtResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
+
+
                     default:
                         return false;
                 }
@@ -319,37 +435,34 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
 
     
     static final class NetworkServiceTestAddRulesParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public Rule[] rules;
-    
+
         private NetworkServiceTestAddRulesParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceTestAddRulesParams() {
             this(0);
         }
-    
+
         public static NetworkServiceTestAddRulesParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceTestAddRulesParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceTestAddRulesParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -359,9 +472,10 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
             NetworkServiceTestAddRulesParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceTestAddRulesParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestAddRulesParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     {
                         org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
@@ -372,13 +486,14 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
                             result.rules[i1] = Rule.decode(decoder2);
                         }
                     }
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -394,70 +509,39 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
                 }
             }
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceTestAddRulesParams other = (NetworkServiceTestAddRulesParams) object;
-            if (!java.util.Arrays.deepEquals(this.rules, other.rules))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + java.util.Arrays.deepHashCode(this.rules);
-            return result;
-        }
     }
 
 
 
     
     static final class NetworkServiceTestAddRulesResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private NetworkServiceTestAddRulesResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceTestAddRulesResponseParams() {
             this(0);
         }
-    
+
         public static NetworkServiceTestAddRulesResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceTestAddRulesResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceTestAddRulesResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -467,41 +551,19 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
             NetworkServiceTestAddRulesResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceTestAddRulesResponseParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestAddRulesResponseParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -566,37 +628,34 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
 
     
     static final class NetworkServiceTestSimulateNetworkChangeParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int type;
-    
+
         private NetworkServiceTestSimulateNetworkChangeParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceTestSimulateNetworkChangeParams() {
             this(0);
         }
-    
+
         public static NetworkServiceTestSimulateNetworkChangeParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceTestSimulateNetworkChangeParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceTestSimulateNetworkChangeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -606,18 +665,20 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
             NetworkServiceTestSimulateNetworkChangeParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceTestSimulateNetworkChangeParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestSimulateNetworkChangeParams(elementsOrVersion);
+                    {
+                        
                     result.type = decoder0.readInt(8);
                         ConnectionType.validate(result.type);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -625,70 +686,39 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
             
             encoder0.encode(this.type, 8);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceTestSimulateNetworkChangeParams other = (NetworkServiceTestSimulateNetworkChangeParams) object;
-            if (this.type!= other.type)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.type);
-            return result;
-        }
     }
 
 
 
     
     static final class NetworkServiceTestSimulateNetworkChangeResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private NetworkServiceTestSimulateNetworkChangeResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceTestSimulateNetworkChangeResponseParams() {
             this(0);
         }
-    
+
         public static NetworkServiceTestSimulateNetworkChangeResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceTestSimulateNetworkChangeResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceTestSimulateNetworkChangeResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -698,41 +728,19 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
             NetworkServiceTestSimulateNetworkChangeResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceTestSimulateNetworkChangeResponseParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestSimulateNetworkChangeResponseParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -796,37 +804,211 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
 
 
     
-    static final class NetworkServiceTestSimulateCrashParams extends org.chromium.mojo.bindings.Struct {
+    static final class NetworkServiceTestSimulateNetworkQualityChangeParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int type;
+
+        private NetworkServiceTestSimulateNetworkQualityChangeParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceTestSimulateNetworkQualityChangeParams() {
+            this(0);
+        }
+
+        public static NetworkServiceTestSimulateNetworkQualityChangeParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceTestSimulateNetworkQualityChangeParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceTestSimulateNetworkQualityChangeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceTestSimulateNetworkQualityChangeParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestSimulateNetworkQualityChangeParams(elementsOrVersion);
+                    {
+                        
+                    result.type = decoder0.readInt(8);
+                        EffectiveConnectionType.validate(result.type);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.type, 8);
+        }
+    }
+
+
+
     
+    static final class NetworkServiceTestSimulateNetworkQualityChangeResponseParams extends org.chromium.mojo.bindings.Struct {
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+
+        private NetworkServiceTestSimulateNetworkQualityChangeResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceTestSimulateNetworkQualityChangeResponseParams() {
+            this(0);
+        }
+
+        public static NetworkServiceTestSimulateNetworkQualityChangeResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceTestSimulateNetworkQualityChangeResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceTestSimulateNetworkQualityChangeResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceTestSimulateNetworkQualityChangeResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestSimulateNetworkQualityChangeResponseParams(elementsOrVersion);
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+        }
+    }
+
+    static class NetworkServiceTestSimulateNetworkQualityChangeResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final NetworkServiceTest.SimulateNetworkQualityChangeResponse mCallback;
+
+        NetworkServiceTestSimulateNetworkQualityChangeResponseParamsForwardToCallback(NetworkServiceTest.SimulateNetworkQualityChangeResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(SIMULATE_NETWORK_QUALITY_CHANGE_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                mCallback.call();
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class NetworkServiceTestSimulateNetworkQualityChangeResponseParamsProxyToResponder implements NetworkServiceTest.SimulateNetworkQualityChangeResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        NetworkServiceTestSimulateNetworkQualityChangeResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call() {
+            NetworkServiceTestSimulateNetworkQualityChangeResponseParams _response = new NetworkServiceTestSimulateNetworkQualityChangeResponseParams();
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    SIMULATE_NETWORK_QUALITY_CHANGE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
     
+    static final class NetworkServiceTestSimulateCrashParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 8;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+
         private NetworkServiceTestSimulateCrashParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceTestSimulateCrashParams() {
             this(0);
         }
-    
+
         public static NetworkServiceTestSimulateCrashParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceTestSimulateCrashParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceTestSimulateCrashParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -836,41 +1018,19 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
             NetworkServiceTestSimulateCrashParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceTestSimulateCrashParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestSimulateCrashParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -878,37 +1038,34 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
 
     
     static final class NetworkServiceTestMockCertVerifierSetDefaultResultParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int defaultResult;
-    
+
         private NetworkServiceTestMockCertVerifierSetDefaultResultParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceTestMockCertVerifierSetDefaultResultParams() {
             this(0);
         }
-    
+
         public static NetworkServiceTestMockCertVerifierSetDefaultResultParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceTestMockCertVerifierSetDefaultResultParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceTestMockCertVerifierSetDefaultResultParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -918,17 +1075,19 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
             NetworkServiceTestMockCertVerifierSetDefaultResultParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceTestMockCertVerifierSetDefaultResultParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestMockCertVerifierSetDefaultResultParams(elementsOrVersion);
+                    {
+                        
                     result.defaultResult = decoder0.readInt(8);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -936,70 +1095,39 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
             
             encoder0.encode(this.defaultResult, 8);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceTestMockCertVerifierSetDefaultResultParams other = (NetworkServiceTestMockCertVerifierSetDefaultResultParams) object;
-            if (this.defaultResult!= other.defaultResult)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.defaultResult);
-            return result;
-        }
     }
 
 
 
     
     static final class NetworkServiceTestMockCertVerifierSetDefaultResultResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private NetworkServiceTestMockCertVerifierSetDefaultResultResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceTestMockCertVerifierSetDefaultResultResponseParams() {
             this(0);
         }
-    
+
         public static NetworkServiceTestMockCertVerifierSetDefaultResultResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceTestMockCertVerifierSetDefaultResultResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceTestMockCertVerifierSetDefaultResultResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1009,41 +1137,19 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
             NetworkServiceTestMockCertVerifierSetDefaultResultResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceTestMockCertVerifierSetDefaultResultResponseParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestMockCertVerifierSetDefaultResultResponseParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -1108,7 +1214,7 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
 
     
     static final class NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 40;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
@@ -1116,32 +1222,29 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
         public String hostPattern;
         public CertVerifyResult verifyResult;
         public int rv;
-    
+
         private NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams() {
             this(0);
         }
-    
+
         public static NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1151,31 +1254,33 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
             NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams(elementsOrVersion);
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
                     result.cert = X509Certificate.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.hostPattern = decoder0.readString(16, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                     result.verifyResult = CertVerifyResult.decode(decoder1);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.rv = decoder0.readInt(32);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -1189,79 +1294,39 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
             
             encoder0.encode(this.rv, 32);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams other = (NetworkServiceTestMockCertVerifierAddResultForCertAndHostParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.cert, other.cert))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.hostPattern, other.hostPattern))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.verifyResult, other.verifyResult))
-                return false;
-            if (this.rv!= other.rv)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.cert);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hostPattern);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.verifyResult);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.rv);
-            return result;
-        }
     }
 
 
 
     
     static final class NetworkServiceTestMockCertVerifierAddResultForCertAndHostResponseParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 8;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    
+
         private NetworkServiceTestMockCertVerifierAddResultForCertAndHostResponseParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public NetworkServiceTestMockCertVerifierAddResultForCertAndHostResponseParams() {
             this(0);
         }
-    
+
         public static NetworkServiceTestMockCertVerifierAddResultForCertAndHostResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static NetworkServiceTestMockCertVerifierAddResultForCertAndHostResponseParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static NetworkServiceTestMockCertVerifierAddResultForCertAndHostResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -1271,41 +1336,19 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
             NetworkServiceTestMockCertVerifierAddResultForCertAndHostResponseParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new NetworkServiceTestMockCertVerifierAddResultForCertAndHostResponseParams(mainDataHeader.elementsOrVersion);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestMockCertVerifierAddResultForCertAndHostResponseParams(elementsOrVersion);
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            return result;
         }
     }
 
@@ -1363,6 +1406,246 @@ MockCertVerifierAddResultForCertAndHostResponse callback) {
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
                                     mRequestId));
             mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceTestSetShouldRequireCtParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int required;
+
+        private NetworkServiceTestSetShouldRequireCtParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceTestSetShouldRequireCtParams() {
+            this(0);
+        }
+
+        public static NetworkServiceTestSetShouldRequireCtParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceTestSetShouldRequireCtParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceTestSetShouldRequireCtParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceTestSetShouldRequireCtParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestSetShouldRequireCtParams(elementsOrVersion);
+                    {
+                        
+                    result.required = decoder0.readInt(8);
+                        NetworkServiceTest.ShouldRequireCt.validate(result.required);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.required, 8);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceTestSetShouldRequireCtResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 8;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+
+        private NetworkServiceTestSetShouldRequireCtResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceTestSetShouldRequireCtResponseParams() {
+            this(0);
+        }
+
+        public static NetworkServiceTestSetShouldRequireCtResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceTestSetShouldRequireCtResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceTestSetShouldRequireCtResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceTestSetShouldRequireCtResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestSetShouldRequireCtResponseParams(elementsOrVersion);
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+        }
+    }
+
+    static class NetworkServiceTestSetShouldRequireCtResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final NetworkServiceTest.SetShouldRequireCtResponse mCallback;
+
+        NetworkServiceTestSetShouldRequireCtResponseParamsForwardToCallback(NetworkServiceTest.SetShouldRequireCtResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(SET_SHOULD_REQUIRE_CT_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                mCallback.call();
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class NetworkServiceTestSetShouldRequireCtResponseParamsProxyToResponder implements NetworkServiceTest.SetShouldRequireCtResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        NetworkServiceTestSetShouldRequireCtResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call() {
+            NetworkServiceTestSetShouldRequireCtResponseParams _response = new NetworkServiceTestSetShouldRequireCtResponseParams();
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    SET_SHOULD_REQUIRE_CT_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceTestCrashOnResolveHostParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public String host;
+
+        private NetworkServiceTestCrashOnResolveHostParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceTestCrashOnResolveHostParams() {
+            this(0);
+        }
+
+        public static NetworkServiceTestCrashOnResolveHostParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceTestCrashOnResolveHostParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceTestCrashOnResolveHostParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceTestCrashOnResolveHostParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceTestCrashOnResolveHostParams(elementsOrVersion);
+                    {
+                        
+                    result.host = decoder0.readString(8, false);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.host, 8, false);
         }
     }
 

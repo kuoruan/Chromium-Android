@@ -4,9 +4,9 @@
 
 package org.chromium.ui.resources.async;
 
-import android.os.AsyncTask;
 import android.util.SparseArray;
 
+import org.chromium.base.AsyncTask;
 import org.chromium.base.TraceEvent;
 import org.chromium.ui.resources.Resource;
 import org.chromium.ui.resources.ResourceLoader;
@@ -84,7 +84,7 @@ public class AsyncPreloadResourceLoader extends ResourceLoader {
     public void preloadResource(int resId) {
         if (mOutstandingLoads.get(resId) != null) return;
         AsyncLoadTask task = new AsyncLoadTask(resId);
-        task.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, (Void[]) null);
+        task.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
         mOutstandingLoads.put(resId, task);
     }
 
@@ -103,7 +103,7 @@ public class AsyncPreloadResourceLoader extends ResourceLoader {
         mOutstandingLoads.remove(resourceId);
     }
 
-    private class AsyncLoadTask extends AsyncTask<Void, Void, Resource> {
+    private class AsyncLoadTask extends AsyncTask<Resource> {
         private final int mResourceId;
 
         public AsyncLoadTask(int resourceId) {
@@ -111,7 +111,7 @@ public class AsyncPreloadResourceLoader extends ResourceLoader {
         }
 
         @Override
-        protected Resource doInBackground(Void... params) {
+        protected Resource doInBackground() {
             return createResource(mResourceId);
         }
 

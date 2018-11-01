@@ -32,7 +32,9 @@ public class SeparateTaskManagedCustomTabActivity extends SeparateTaskCustomTabA
         super.onStartWithNative();
 
         if (!isFinishing()) {
-            ActivityAssigner.instance(ActivityAssigner.SEPARATE_TASK_CCT_NAMESPACE)
+            ActivityAssigner
+                    .instance(
+                            ActivityAssigner.ActivityAssignerNamespace.SEPARATE_TASK_CCT_NAMESPACE)
                     .markActivityUsed(getActivityIndex(), getIntent().getData().getAuthority());
         }
     }
@@ -62,7 +64,7 @@ public class SeparateTaskManagedCustomTabActivity extends SeparateTaskCustomTabA
 
             @Override
             public void processUrlViewIntent(String url, String referer, String headers,
-                    TabOpenType tabOpenType, String externalAppId, int tabIdToBringToFront,
+                    @TabOpenType int tabOpenType, String externalAppId, int tabIdToBringToFront,
                     boolean hasUserGesture, Intent intent) {
                 Tab currentTab = getTabCreator(false).launchUrlFromExternalApp(
                         url, referer, headers, externalAppId, true, intent, mIntentHandlingTimeMs);

@@ -42,9 +42,6 @@ public final class CaLayerParams extends org.chromium.mojo.bindings.Struct {
      * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
      */
     public static CaLayerParams deserialize(java.nio.ByteBuffer data) {
-        if (data == null)
-            return null;
-
         return deserialize(new org.chromium.mojo.bindings.Message(
                 data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
     }
@@ -58,24 +55,26 @@ public final class CaLayerParams extends org.chromium.mojo.bindings.Struct {
         CaLayerParams result;
         try {
             org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-            result = new CaLayerParams(mainDataHeader.elementsOrVersion);
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+            final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+            result = new CaLayerParams(elementsOrVersion);
+                {
+                    
                 result.isEmpty = decoder0.readBoolean(8, 0);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.scaleFactor = decoder0.readFloat(12);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 result.content = CaLayerContent.decode(decoder0, 16);
-            }
-            if (mainDataHeader.elementsOrVersion >= 0) {
-                
+                }
+                {
+                    
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
                 result.pixelSize = Size.decode(decoder1);
-            }
+                }
+
         } finally {
             decoder0.decreaseStackDepth();
         }
@@ -94,42 +93,5 @@ public final class CaLayerParams extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.content, 16, false);
         
         encoder0.encode(this.pixelSize, 32, false);
-    }
-
-    /**
-     * @see Object#equals(Object)
-     */
-    @Override
-    public boolean equals(Object object) {
-        if (object == this)
-            return true;
-        if (object == null)
-            return false;
-        if (getClass() != object.getClass())
-            return false;
-        CaLayerParams other = (CaLayerParams) object;
-        if (this.isEmpty!= other.isEmpty)
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.content, other.content))
-            return false;
-        if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.pixelSize, other.pixelSize))
-            return false;
-        if (this.scaleFactor!= other.scaleFactor)
-            return false;
-        return true;
-    }
-
-    /**
-     * @see Object#hashCode()
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = prime + getClass().hashCode();
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.isEmpty);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.content);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.pixelSize);
-        result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.scaleFactor);
-        return result;
     }
 }

@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.suggestions;
 
 import android.content.res.Resources;
+import android.text.TextUtils;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
@@ -18,16 +19,16 @@ import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
  */
 public final class SuggestionsConfig {
     /**
-     * Experiment parameter for whether to use the condensed tile layout on small screens.
+     * Field trial parameter for referrer URL.
+     * It must be kept in sync with //components/ntp_suggestions/features.cc
      */
-    private static final String PARAM_CONDENSED_TILE_LAYOUT_FOR_SMALL_SCREENS_ENABLED =
-            "condensed_tile_layout_for_small_screens_enabled";
+    private static final String REFERRER_URL_PARAM = "referrer_url";
 
     /**
-     * Experiment parameter for whether to use the condensed tile layout on large screens.
+     * Default value for referrer URL.
+     * It must be kept in sync with //components/ntp_suggestions/features.cc
      */
-    private static final String PARAM_CONDENSED_TILE_LAYOUT_FOR_LARGE_SCREENS_ENABLED =
-            "condensed_tile_layout_for_large_screens_enabled";
+    private static final String DEFAULT_REFERRER_URL = "https://discover.google.com/";
 
     private SuggestionsConfig() {}
 
@@ -38,7 +39,7 @@ public final class SuggestionsConfig {
         // The scroll to load feature does not work well for users who require accessibility mode.
         if (AccessibilityUtil.isAccessibilityEnabled()) return false;
 
-        return FeatureUtilities.isChromeHomeEnabled()
+        return ChromeFeatureList.isEnabled(ChromeFeatureList.SIMPLIFIED_NTP)
                 && ChromeFeatureList.isEnabled(
                            ChromeFeatureList.CONTENT_SUGGESTIONS_SCROLL_TO_LOAD);
     }
@@ -67,15 +68,9 @@ public final class SuggestionsConfig {
     }
 
     private static boolean useCondensedTileLayout(boolean isScreenSmall) {
-        if (isScreenSmall) {
-            return ChromeFeatureList.getFieldTrialParamByFeatureAsBoolean(
-                    ChromeFeatureList.NTP_CONDENSED_TILE_LAYOUT,
-                    PARAM_CONDENSED_TILE_LAYOUT_FOR_SMALL_SCREENS_ENABLED, true);
-        }
+        if (isScreenSmall) return true;
 
-        return ChromeFeatureList.getFieldTrialParamByFeatureAsBoolean(
-                ChromeFeatureList.NTP_CONDENSED_TILE_LAYOUT,
-                PARAM_CONDENSED_TILE_LAYOUT_FOR_LARGE_SCREENS_ENABLED, false);
+        return false;
     }
 
     /**
@@ -84,5 +79,17 @@ public final class SuggestionsConfig {
     public static boolean useModernLayout() {
         return FeatureUtilities.isChromeModernDesignEnabled()
                 || ChromeFeatureList.isEnabled(ChromeFeatureList.NTP_MODERN_LAYOUT);
+    }
+
+    /** @return The value of referrer URL to use with content suggestions. */
+    public static String getReferrerUrl() {
+        String referrerParamValue = ChromeFeatureList.getFieldTrialParamByFeature(
+                ChromeFeatureList.NTP_ARTICLE_SUGGESTIONS, REFERRER_URL_PARAM);
+
+        if (!TextUtils.isEmpty(referrerParamValue)) {
+            return referrerParamValue;
+        }
+
+        return DEFAULT_REFERRER_URL;
     }
 }

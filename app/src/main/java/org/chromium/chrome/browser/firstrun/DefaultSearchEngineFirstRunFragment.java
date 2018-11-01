@@ -4,8 +4,8 @@
 
 package org.chromium.chrome.browser.firstrun;
 
-import android.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,7 +52,7 @@ public class DefaultSearchEngineFirstRunFragment extends Fragment implements Fir
 
         assert TemplateUrlService.getInstance().isLoaded();
         mSearchEnginePromoDialoType = LocaleManager.getInstance().getSearchEnginePromoShowType();
-        if (mSearchEnginePromoDialoType != LocaleManager.SEARCH_ENGINE_PROMO_DONT_SHOW) {
+        if (mSearchEnginePromoDialoType != LocaleManager.SearchEnginePromoType.DONT_SHOW) {
             Runnable dismissRunnable = new Runnable() {
                 @Override
                 public void run() {
@@ -71,7 +71,7 @@ public class DefaultSearchEngineFirstRunFragment extends Fragment implements Fir
         super.setUserVisibleHint(isVisibleToUser);
 
         if (isVisibleToUser) {
-            if (mSearchEnginePromoDialoType == LocaleManager.SEARCH_ENGINE_PROMO_DONT_SHOW) {
+            if (mSearchEnginePromoDialoType == LocaleManager.SearchEnginePromoType.DONT_SHOW) {
                 ThreadUtils.postOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -87,9 +87,10 @@ public class DefaultSearchEngineFirstRunFragment extends Fragment implements Fir
     private void recordShown() {
         if (mShownRecorded) return;
 
-        if (mSearchEnginePromoDialoType == LocaleManager.SEARCH_ENGINE_PROMO_SHOW_NEW) {
+        if (mSearchEnginePromoDialoType == LocaleManager.SearchEnginePromoType.SHOW_NEW) {
             RecordUserAction.record("SearchEnginePromo.NewDevice.Shown.FirstRun");
-        } else if (mSearchEnginePromoDialoType == LocaleManager.SEARCH_ENGINE_PROMO_SHOW_EXISTING) {
+        } else if (mSearchEnginePromoDialoType
+                == LocaleManager.SearchEnginePromoType.SHOW_EXISTING) {
             RecordUserAction.record("SearchEnginePromo.ExistingDevice.Shown.FirstRun");
         }
 

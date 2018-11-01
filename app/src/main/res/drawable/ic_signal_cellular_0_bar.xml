@@ -13,5 +13,5 @@
     <path
         android:pathData="M2,22h20V2z"
         android:fillAlpha=".3"
-        android:fillColor="@color/google_grey_600"/>
+        android:fillColor="@color/default_icon_color"/>
 </vector>

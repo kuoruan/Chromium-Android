@@ -107,7 +107,7 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="2dp"
-            android:contentDescription="@null"
+            tools:ignore="ContentDescription"
             android:visibility="gone"
             style="@style/WebNotificationDivider"/>
 
@@ -123,7 +123,7 @@
             android:id="@+id/footer_divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:contentDescription="@null"
+            tools:ignore="ContentDescription"
             style="@style/WebNotificationDivider"/>
 
         <RelativeLayout
@@ -137,7 +137,7 @@
                 android:layout_height="40dp"
                 android:layout_alignParentStart="true"
                 android:layout_alignParentTop="true"
-                android:contentDescription="@null"
+                tools:ignore="ContentDescription"
                 android:src="@drawable/settings_cog"
                 android:scaleType="centerInside"
                 style="@style/WebNotificationSettingsIcon"/>

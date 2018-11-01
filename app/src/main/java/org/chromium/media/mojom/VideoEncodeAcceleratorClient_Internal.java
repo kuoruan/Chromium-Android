@@ -18,28 +18,28 @@ class VideoEncodeAcceleratorClient_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<VideoEncodeAcceleratorClient, VideoEncodeAcceleratorClient.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<VideoEncodeAcceleratorClient, VideoEncodeAcceleratorClient.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::VideoEncodeAcceleratorClient";
+            return "media.mojom.VideoEncodeAcceleratorClient";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, VideoEncodeAcceleratorClient impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public VideoEncodeAcceleratorClient[] buildArray(int size) {
           return new VideoEncodeAcceleratorClient[size];
@@ -85,17 +85,13 @@ int inputCount, org.chromium.gfx.mojom.Size inputCodedSize, int outputBufferSize
 
         @Override
         public void bitstreamBufferReady(
-int bitstreamBufferId, int payloadSize, boolean keyFrame, org.chromium.mojo.common.mojom.TimeDelta timestamp) {
+int bitstreamBufferId, BitstreamBufferMetadata metadata) {
 
             VideoEncodeAcceleratorClientBitstreamBufferReadyParams _message = new VideoEncodeAcceleratorClientBitstreamBufferReadyParams();
 
             _message.bitstreamBufferId = bitstreamBufferId;
 
-            _message.payloadSize = payloadSize;
-
-            _message.keyFrame = keyFrame;
-
-            _message.timestamp = timestamp;
+            _message.metadata = metadata;
 
 
             getProxyHandler().getMessageReceiver().accept(
@@ -141,51 +137,51 @@ int error) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 VideoEncodeAcceleratorClient_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case REQUIRE_BITSTREAM_BUFFERS_ORDINAL: {
-            
+
                         VideoEncodeAcceleratorClientRequireBitstreamBuffersParams data =
                                 VideoEncodeAcceleratorClientRequireBitstreamBuffersParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().requireBitstreamBuffers(data.inputCount, data.inputCodedSize, data.outputBufferSize);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case BITSTREAM_BUFFER_READY_ORDINAL: {
-            
+
                         VideoEncodeAcceleratorClientBitstreamBufferReadyParams data =
                                 VideoEncodeAcceleratorClientBitstreamBufferReadyParams.deserialize(messageWithHeader.getPayload());
-            
-                        getImpl().bitstreamBufferReady(data.bitstreamBufferId, data.payloadSize, data.keyFrame, data.timestamp);
+
+                        getImpl().bitstreamBufferReady(data.bitstreamBufferId, data.metadata);
                         return true;
                     }
-            
-            
-            
-            
-            
+
+
+
+
+
                     case NOTIFY_ERROR_ORDINAL: {
-            
+
                         VideoEncodeAcceleratorClientNotifyErrorParams data =
                                 VideoEncodeAcceleratorClientNotifyErrorParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().notifyError(data.error);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -205,18 +201,18 @@ int error) {
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), VideoEncodeAcceleratorClient_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
-            
-            
-            
-            
+
+
+
+
+
+
+
+
                     default:
                         return false;
                 }
@@ -230,39 +226,36 @@ int error) {
 
     
     static final class VideoEncodeAcceleratorClientRequireBitstreamBuffersParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int inputCount;
         public org.chromium.gfx.mojom.Size inputCodedSize;
         public int outputBufferSize;
-    
+
         private VideoEncodeAcceleratorClientRequireBitstreamBuffersParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public VideoEncodeAcceleratorClientRequireBitstreamBuffersParams() {
             this(0);
         }
-    
+
         public static VideoEncodeAcceleratorClientRequireBitstreamBuffersParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static VideoEncodeAcceleratorClientRequireBitstreamBuffersParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static VideoEncodeAcceleratorClientRequireBitstreamBuffersParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -272,26 +265,28 @@ int error) {
             VideoEncodeAcceleratorClientRequireBitstreamBuffersParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoEncodeAcceleratorClientRequireBitstreamBuffersParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoEncodeAcceleratorClientRequireBitstreamBuffersParams(elementsOrVersion);
+                    {
+                        
                     result.inputCount = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.outputBufferSize = decoder0.readInt(12);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
                     result.inputCodedSize = org.chromium.gfx.mojom.Size.decode(decoder1);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -303,80 +298,41 @@ int error) {
             
             encoder0.encode(this.inputCodedSize, 16, false);
         }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            VideoEncodeAcceleratorClientRequireBitstreamBuffersParams other = (VideoEncodeAcceleratorClientRequireBitstreamBuffersParams) object;
-            if (this.inputCount!= other.inputCount)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.inputCodedSize, other.inputCodedSize))
-                return false;
-            if (this.outputBufferSize!= other.outputBufferSize)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inputCount);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.inputCodedSize);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.outputBufferSize);
-            return result;
-        }
     }
 
 
 
     
     static final class VideoEncodeAcceleratorClientBitstreamBufferReadyParams extends org.chromium.mojo.bindings.Struct {
-    
-        private static final int STRUCT_SIZE = 32;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
+
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int bitstreamBufferId;
-        public int payloadSize;
-        public boolean keyFrame;
-        public org.chromium.mojo.common.mojom.TimeDelta timestamp;
-    
+        public BitstreamBufferMetadata metadata;
+
         private VideoEncodeAcceleratorClientBitstreamBufferReadyParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public VideoEncodeAcceleratorClientBitstreamBufferReadyParams() {
             this(0);
         }
-    
+
         public static VideoEncodeAcceleratorClientBitstreamBufferReadyParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static VideoEncodeAcceleratorClientBitstreamBufferReadyParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static VideoEncodeAcceleratorClientBitstreamBufferReadyParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -386,30 +342,24 @@ int error) {
             VideoEncodeAcceleratorClientBitstreamBufferReadyParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoEncodeAcceleratorClientBitstreamBufferReadyParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoEncodeAcceleratorClientBitstreamBufferReadyParams(elementsOrVersion);
+                    {
+                        
                     result.bitstreamBufferId = decoder0.readInt(8);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.payloadSize = decoder0.readInt(12);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    result.keyFrame = decoder0.readBoolean(16, 0);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
-                    result.timestamp = org.chromium.mojo.common.mojom.TimeDelta.decode(decoder1);
-                }
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    result.metadata = BitstreamBufferMetadata.decode(decoder1);
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -417,48 +367,7 @@ int error) {
             
             encoder0.encode(this.bitstreamBufferId, 8);
             
-            encoder0.encode(this.payloadSize, 12);
-            
-            encoder0.encode(this.keyFrame, 16, 0);
-            
-            encoder0.encode(this.timestamp, 24, false);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            VideoEncodeAcceleratorClientBitstreamBufferReadyParams other = (VideoEncodeAcceleratorClientBitstreamBufferReadyParams) object;
-            if (this.bitstreamBufferId!= other.bitstreamBufferId)
-                return false;
-            if (this.payloadSize!= other.payloadSize)
-                return false;
-            if (this.keyFrame!= other.keyFrame)
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.timestamp, other.timestamp))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.bitstreamBufferId);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.payloadSize);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.keyFrame);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.timestamp);
-            return result;
+            encoder0.encode(this.metadata, 16, false);
         }
     }
 
@@ -466,37 +375,34 @@ int error) {
 
     
     static final class VideoEncodeAcceleratorClientNotifyErrorParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int error;
-    
+
         private VideoEncodeAcceleratorClientNotifyErrorParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public VideoEncodeAcceleratorClientNotifyErrorParams() {
             this(0);
         }
-    
+
         public static VideoEncodeAcceleratorClientNotifyErrorParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static VideoEncodeAcceleratorClientNotifyErrorParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static VideoEncodeAcceleratorClientNotifyErrorParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -506,52 +412,26 @@ int error) {
             VideoEncodeAcceleratorClientNotifyErrorParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new VideoEncodeAcceleratorClientNotifyErrorParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoEncodeAcceleratorClientNotifyErrorParams(elementsOrVersion);
+                    {
+                        
                     result.error = decoder0.readInt(8);
                         VideoEncodeAccelerator.Error.validate(result.error);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.error, 8);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            VideoEncodeAcceleratorClientNotifyErrorParams other = (VideoEncodeAcceleratorClientNotifyErrorParams) object;
-            if (this.error!= other.error)
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.error);
-            return result;
         }
     }
 

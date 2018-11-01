@@ -54,7 +54,19 @@ import java.util.concurrent.TimeUnit;
  * http://docs.google.com/a/google.com/document/d/1scTCovqASf5ktkOeVj8wFRkWTCeDYw2LrOBNn05CDB0/edit
  */
 public class OmahaBase {
-    private static final String TAG = "omaha";
+    // Used in various org.chromium.chrome.browser.omaha files.
+    static final String TAG = "omaha";
+
+    /** Version config data structure. */
+    public static class VersionConfig {
+        public final String latestVersion;
+        public final String downloadUrl;
+
+        protected VersionConfig(String latestVersion, String downloadUrl) {
+            this.latestVersion = latestVersion;
+            this.downloadUrl = downloadUrl;
+        }
+    }
 
     // Flags for retrieving the OmahaClient's state after it's written to disk.
     // The PREF_PACKAGE doesn't match the current OmahaClient package for historical reasons.
@@ -75,13 +87,14 @@ public class OmahaBase {
     private static boolean sIsDisabled;
 
     // Results of {@link #handlePostRequest()}.
+    @IntDef({PostResult.NO_REQUEST, PostResult.SENT, PostResult.FAILED, PostResult.SCHEDULED})
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({POST_RESULT_NO_REQUEST, POST_RESULT_SENT, POST_RESULT_FAILED, POST_RESULT_SCHEDULED})
-    @interface PostResult {}
-    static final int POST_RESULT_NO_REQUEST = 0;
-    static final int POST_RESULT_SENT = 1;
-    static final int POST_RESULT_FAILED = 2;
-    static final int POST_RESULT_SCHEDULED = 3;
+    @interface PostResult {
+        int NO_REQUEST = 0;
+        int SENT = 1;
+        int FAILED = 2;
+        int SCHEDULED = 3;
+    }
 
     /** Deprecated; kept around to cancel alarms set for OmahaClient pre-M58. */
     private static final String ACTION_REGISTER_REQUEST =
@@ -110,9 +123,8 @@ public class OmahaBase {
     private long mTimestampOfInstall;
     private long mTimestampForNextPostAttempt;
     private long mTimestampForNewRequest;
-    private String mLatestVersion;
-    private String mMarketURL;
     private String mInstallSource;
+    protected VersionConfig mVersionConfig;
     protected boolean mSendInstallEvent;
 
     /** See {@link #sIsDisabled}. */
@@ -148,8 +160,9 @@ public class OmahaBase {
         }
 
         if (hasRequest()) {
+            @PostResult
             int result = handlePostRequest();
-            if (result == POST_RESULT_FAILED || result == POST_RESULT_SCHEDULED) {
+            if (result == PostResult.FAILED || result == PostResult.SCHEDULED) {
                 nextTimestamp = Math.min(nextTimestamp, mTimestampForNextPostAttempt);
             }
         }
@@ -183,13 +196,14 @@ public class OmahaBase {
     /**
      * Sends the request it is holding.
      */
-    private int handlePostRequest() {
+    private @PostResult int handlePostRequest() {
         if (!hasRequest()) {
-            mDelegate.onHandlePostRequestDone(POST_RESULT_NO_REQUEST, false);
-            return POST_RESULT_NO_REQUEST;
+            mDelegate.onHandlePostRequestDone(PostResult.NO_REQUEST, false);
+            return PostResult.NO_REQUEST;
         }
 
         // If enough time has passed since the last attempt, try sending a request.
+        @PostResult
         int result;
         long currentTimestamp = getBackoffScheduler().getCurrentTime();
         boolean installEventWasSent = false;
@@ -209,17 +223,16 @@ public class OmahaBase {
                 succeeded &= generateAndPostRequest(currentTimestamp, sessionID);
             }
 
-            result = succeeded ? POST_RESULT_SENT : POST_RESULT_FAILED;
+            result = succeeded ? PostResult.SENT : PostResult.FAILED;
         } else {
-            result = POST_RESULT_SCHEDULED;
+            result = PostResult.SCHEDULED;
         }
 
         mDelegate.onHandlePostRequestDone(result, installEventWasSent);
         return result;
     }
 
-    private boolean generateAndPostRequest(long currentTimestamp, String sessionID) {
-        ExponentialBackoffScheduler scheduler = getBackoffScheduler();
+    protected boolean generateAndPostRequest(long currentTimestamp, String sessionID) {
         boolean succeeded = false;
         try {
             // Generate the XML for the current request.
@@ -238,15 +251,16 @@ public class OmahaBase {
             boolean sentPingAndUpdate = !mSendInstallEvent;
             ResponseParser parser = new ResponseParser(
                     appId, mSendInstallEvent, sentPingAndUpdate, sentPingAndUpdate);
-            parser.parseResponse(response);
-            mLatestVersion = parser.getNewVersion();
-            mMarketURL = parser.getURL();
-
+            mVersionConfig = parser.parseResponse(response);
             succeeded = true;
         } catch (RequestFailureException e) {
             Log.e(TAG, "Failed to contact server: ", e);
         }
+        return onResponseReceived(succeeded);
+    }
 
+    protected boolean onResponseReceived(boolean succeeded) {
+        ExponentialBackoffScheduler scheduler = getBackoffScheduler();
         if (succeeded) {
             // If we've gotten this far, we've successfully sent a request.
             mCurrentRequest = null;
@@ -375,8 +389,7 @@ public class OmahaBase {
         mTimestampOfInstall = preferences.getLong(OmahaBase.PREF_TIMESTAMP_OF_INSTALL, currentTime);
         mSendInstallEvent = preferences.getBoolean(OmahaBase.PREF_SEND_INSTALL_EVENT, true);
         mInstallSource = preferences.getString(OmahaBase.PREF_INSTALL_SOURCE, installSource);
-        mLatestVersion = preferences.getString(OmahaBase.PREF_LATEST_VERSION, "");
-        mMarketURL = preferences.getString(OmahaBase.PREF_MARKET_URL, "");
+        mVersionConfig = getVersionConfig(preferences);
 
         // If we're not sending an install event, don't bother restoring the request ID:
         // the server does not expect to have persisted request IDs for pings or update checks.
@@ -428,10 +441,8 @@ public class OmahaBase {
                 hasRequest() ? mCurrentRequest.getCreationTimestamp() : INVALID_TIMESTAMP);
         editor.putString(OmahaBase.PREF_PERSISTED_REQUEST_ID,
                 hasRequest() ? mCurrentRequest.getRequestID() : INVALID_REQUEST_ID);
-        editor.putString(
-                OmahaBase.PREF_LATEST_VERSION, mLatestVersion == null ? "" : mLatestVersion);
-        editor.putString(OmahaBase.PREF_MARKET_URL, mMarketURL == null ? "" : mMarketURL);
         editor.putString(OmahaBase.PREF_INSTALL_SOURCE, mInstallSource);
+        setVersionConfig(editor, mVersionConfig);
         editor.apply();
 
         mDelegate.onSaveStateDone(mTimestampForNewRequest, mTimestampForNextPostAttempt);
@@ -505,7 +516,7 @@ public class OmahaBase {
     private static void checkServerResponseCode(HttpURLConnection urlConnection)
             throws RequestFailureException {
         try {
-            if (urlConnection.getResponseCode() != 200) {
+            if (urlConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 throw new RequestFailureException("Received " + urlConnection.getResponseCode()
                         + " code instead of 200 (OK) from the server.  Aborting.");
             }
@@ -517,5 +528,17 @@ public class OmahaBase {
     /** Returns the Omaha SharedPreferences. */
     static SharedPreferences getSharedPreferences(Context context) {
         return context.getSharedPreferences(PREF_PACKAGE, Context.MODE_PRIVATE);
+    }
+
+    static void setVersionConfig(SharedPreferences.Editor editor, VersionConfig versionConfig) {
+        editor.putString(OmahaBase.PREF_LATEST_VERSION,
+                versionConfig == null ? "" : versionConfig.latestVersion);
+        editor.putString(
+                OmahaBase.PREF_MARKET_URL, versionConfig == null ? "" : versionConfig.downloadUrl);
+    }
+
+    static VersionConfig getVersionConfig(SharedPreferences sharedPref) {
+        return new VersionConfig(sharedPref.getString(OmahaBase.PREF_LATEST_VERSION, ""),
+                sharedPref.getString(OmahaBase.PREF_MARKET_URL, ""));
     }
 }

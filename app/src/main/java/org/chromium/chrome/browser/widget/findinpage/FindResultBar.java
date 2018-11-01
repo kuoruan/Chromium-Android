@@ -128,9 +128,9 @@ class FindResultBar extends View {
 
         mFindInPageBridge = findInPageBridge;
         mTab = tab;
-        mTab.getContentViewCore().getContainerView().addView(
-                this, new FrameLayout.LayoutParams(mBarTouchWidth,
-                ViewGroup.LayoutParams.MATCH_PARENT, Gravity.END));
+        mTab.getContentView().addView(this,
+                new FrameLayout.LayoutParams(
+                        mBarTouchWidth, ViewGroup.LayoutParams.MATCH_PARENT, Gravity.END));
         setTranslationX(
                 MathUtils.flipSignIf(mBarTouchWidth, LocalizationUtils.isLayoutRtl()));
 

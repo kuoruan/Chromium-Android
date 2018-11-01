@@ -36,34 +36,32 @@ import java.lang.annotation.RetentionPolicy;
  */
 public class SogouPromoDialog extends PromoDialog {
     // These constants are here to back a uma histogram. Append new constants at the end of this
-    // list (do not rearrange) and don't forget to update CHOICE_ENUM_COUNT.
+    // list (do not rearrange) and don't forget to update NUM_ENTRIES.
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef({CHOICE_USE_SOGOU, CHOICE_KEEP_GOOGLE, CHOICE_SETTINGS, CHOICE_BACK_KEY})
-    private @interface UserChoice {}
-    private static final int CHOICE_USE_SOGOU = 0;
-    private static final int CHOICE_KEEP_GOOGLE = 1;
-    private static final int CHOICE_SETTINGS = 2;
-    private static final int CHOICE_BACK_KEY = 3;
-
-    private static final int CHOICE_ENUM_COUNT = 4;
+    @IntDef({UserChoice.USE_SOGOU, UserChoice.KEEP_GOOGLE, UserChoice.SETTINGS,
+            UserChoice.BACK_KEY})
+    private @interface UserChoice {
+        int USE_SOGOU = 0;
+        int KEEP_GOOGLE = 1;
+        int SETTINGS = 2;
+        int BACK_KEY = 3;
+        int NUM_ENTRIES = 4;
+    }
 
     /** Run when the dialog is dismissed. */
     private final Callback<Boolean> mOnDismissedCallback;
 
     private final LocaleManager mLocaleManager;
-    private final ClickableSpan mSpan = new NoUnderlineClickableSpan() {
-        @Override
-        public void onClick(View widget) {
-            mChoice = CHOICE_SETTINGS;
-            Intent intent = PreferencesLauncher.createIntentForSettingsPage(
-                    getContext(), SearchEnginePreference.class.getName());
-            getContext().startActivity(intent);
-            dismiss();
-        }
-    };
+    private final ClickableSpan mSpan = new NoUnderlineClickableSpan((widget) -> {
+        mChoice = UserChoice.SETTINGS;
+        Intent intent = PreferencesLauncher.createIntentForSettingsPage(
+                getContext(), SearchEnginePreference.class.getName());
+        getContext().startActivity(intent);
+        dismiss();
+    });
 
     @UserChoice
-    private int mChoice = CHOICE_BACK_KEY;
+    private int mChoice = UserChoice.BACK_KEY;
 
     /**
      * Creates an instance of the dialog.
@@ -110,9 +108,9 @@ public class SogouPromoDialog extends PromoDialog {
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.button_secondary) {
-            mChoice = CHOICE_KEEP_GOOGLE;
+            mChoice = UserChoice.KEEP_GOOGLE;
         } else if (view.getId() == R.id.button_primary) {
-            mChoice = CHOICE_USE_SOGOU;
+            mChoice = UserChoice.USE_SOGOU;
         } else {
             assert false : "Not handled click.";
         }
@@ -133,12 +131,12 @@ public class SogouPromoDialog extends PromoDialog {
     @Override
     public void onDismiss(DialogInterface dialog) {
         switch (mChoice) {
-            case CHOICE_KEEP_GOOGLE:
-            case CHOICE_SETTINGS:
-            case CHOICE_BACK_KEY:
+            case UserChoice.KEEP_GOOGLE:
+            case UserChoice.SETTINGS:
+            case UserChoice.BACK_KEY:
                 keepGoogle();
                 break;
-            case CHOICE_USE_SOGOU:
+            case UserChoice.USE_SOGOU:
                 useSogou();
                 break;
             default:
@@ -149,7 +147,7 @@ public class SogouPromoDialog extends PromoDialog {
                 .putBoolean(LocaleManager.PREF_PROMO_SHOWN, true)
                 .apply();
         RecordHistogram.recordEnumeratedHistogram(
-                "SpecialLocale.PromotionDialog", mChoice, CHOICE_ENUM_COUNT);
+                "SpecialLocale.PromotionDialog", mChoice, UserChoice.NUM_ENTRIES);
 
         if (mOnDismissedCallback != null) mOnDismissedCallback.onResult(true);
     }

@@ -5,10 +5,12 @@
 package org.chromium.chrome.browser.util;
 
 import android.accessibilityservice.AccessibilityServiceInfo;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.support.v7.app.AlertDialog;
 import android.view.Gravity;
 import android.view.View;
@@ -54,8 +56,40 @@ public class AccessibilityUtil {
                         Context.ACCESSIBILITY_SERVICE);
         boolean retVal =
                 manager != null && manager.isEnabled() && manager.isTouchExplorationEnabled();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && manager != null
+                && manager.isEnabled() && !retVal) {
+            List<AccessibilityServiceInfo> services = manager.getEnabledAccessibilityServiceList(
+                    AccessibilityServiceInfo.FEEDBACK_ALL_MASK);
+            for (AccessibilityServiceInfo service : services) {
+                if (canPerformGestures(service)) {
+                    retVal = true;
+                    break;
+                }
+            }
+        }
+
         TraceEvent.end("AccessibilityManager::isAccessibilityEnabled");
         return retVal;
+    }
+
+    /**
+     * Checks whether the given {@link AccesibilityServiceInfo} can perform gestures.
+     * @param service The service to check.
+     * @return Whether the {@code service} can perform gestures. On N+, this relies on the
+     *         capabilities the service can perform. On L & M, this looks specifically for
+     *         Switch Access.
+     */
+    private static boolean canPerformGestures(AccessibilityServiceInfo service) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return (service.getCapabilities()
+                           & AccessibilityServiceInfo.CAPABILITY_CAN_PERFORM_GESTURES)
+                    != 0;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return service.getResolveInfo() != null
+                    && service.getResolveInfo().toString().contains("switchaccess");
+        }
+        return false;
     }
 
     /**
@@ -126,6 +160,7 @@ public class AccessibilityUtil {
      * @param description The string shown in the toast.
      * @return Whether a toast has been shown successfully.
      */
+    @SuppressLint("RtlHardcoded")
     public static boolean showAccessibilityToast(
             Context context, View view, CharSequence description) {
         if (description == null) return false;
@@ -137,10 +172,16 @@ public class AccessibilityUtil {
         final int width = view.getWidth();
         final int height = view.getHeight();
 
+        final int horizontalGravity =
+                (screenPos[0] < screenWidth / 2) ? Gravity.LEFT : Gravity.RIGHT;
+        final int xOffset = (screenPos[0] < screenWidth / 2)
+                ? screenPos[0] + width / 2
+                : screenWidth - screenPos[0] - width / 2;
+        final int yOffset = (screenPos[1] < screenHeight / 2) ? screenPos[1] + height / 2
+                                                              : screenPos[1] - height * 3 / 2;
+
         Toast toast = Toast.makeText(context, description, Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.TOP | Gravity.END, screenWidth - screenPos[0] - width / 2,
-                (screenPos[1] < screenHeight / 2) ? screenPos[1] + height / 2
-                                                  : screenPos[1] - height * 3 / 2);
+        toast.setGravity(Gravity.TOP | horizontalGravity, xOffset, yOffset);
         toast.show();
         return true;
     }

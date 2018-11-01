@@ -50,18 +50,8 @@ public class DropdownItemBase implements DropdownItem {
     }
 
     @Override
-    public int getLabelFontSizeResId() {
-        return R.dimen.text_size_large;
-    }
-
-    @Override
     public int getSublabelFontSizeResId() {
         return R.dimen.text_size_small;
-    }
-
-    @Override
-    public boolean isLabelAndSublabelOnSameLine() {
-        return false;
     }
 
     @Override

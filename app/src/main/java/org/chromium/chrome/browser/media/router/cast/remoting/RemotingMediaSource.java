@@ -9,7 +9,7 @@ import android.util.Base64;
 import com.google.android.gms.cast.CastMediaControlIntent;
 
 import org.chromium.base.Log;
-import org.chromium.chrome.browser.media.router.cast.MediaSource;
+import org.chromium.chrome.browser.media.router.MediaSource;
 
 import java.io.UnsupportedEncodingException;
 

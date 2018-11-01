@@ -4,31 +4,34 @@
 
 package org.chromium.chrome.browser.preferences.privacy;
 
+import android.support.annotation.IntDef;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 /**
  * Bandwidth options available based on network.
  */
-public enum BandwidthType {
-
-    // Still using "prerender" in the strings for historical reasons: we don't want to break
-    // existing users' settings.
-    NEVER_PRERENDER      ("never_prefetch"),
-    PRERENDER_ON_WIFI    ("prefetch_on_wifi"),
-    ALWAYS_PRERENDER     ("always_prefetch");
-
-    public static final BandwidthType DEFAULT = PRERENDER_ON_WIFI;
-
-    private final String mTitle;
-
-    BandwidthType(String title) {
-        mTitle = title;
+public class BandwidthType {
+    @IntDef({Type.NEVER_PRERENDER, Type.PRERENDER_ON_WIFI, Type.ALWAYS_PRERENDER})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Type {
+        // Values are numbered from 0 and can't have gaps.
+        int NEVER_PRERENDER = 0;
+        int PRERENDER_ON_WIFI = 1; // Default option.
+        int ALWAYS_PRERENDER = 2;
+        int NUM_ENTRIES = 3;
     }
+
+    private final static String[] TITLES = {
+            "never_prefetch", "prefetch_on_wifi", "always_prefetch"};
 
     /**
      * Returns the title of the bandwidthType.
      * @return title
      */
-    public String title() {
-        return mTitle;
+    public static String title(@Type int type) {
+        return TITLES[type];
     }
 
     /**
@@ -36,11 +39,11 @@ public enum BandwidthType {
      * @param title
      * @return BandwidthType
      */
-    public static BandwidthType getBandwidthFromTitle(String title) {
-        for (BandwidthType b : BandwidthType.values()) {
-            if (b.mTitle.equals(title)) return b;
+    public static @BandwidthType.Type int getBandwidthFromTitle(String title) {
+        for (@BandwidthType.Type int i = Type.NEVER_PRERENDER; i < Type.NUM_ENTRIES; i++) {
+            if (TITLES[i].equals(title)) return i;
         }
         assert false;
-        return DEFAULT;
+        return Type.PRERENDER_ON_WIFI;
     }
 }

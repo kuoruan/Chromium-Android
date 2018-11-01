@@ -19,54 +19,79 @@ import android.content.res.Resources;
  * implementation is supplied to an android_apk target (via build_hooks_android_impl_deps).
  */
 public abstract class BuildHooksAndroid {
-    private static final BuildHooksAndroidImpl sInstance = new BuildHooksAndroidImpl();
+    private static BuildHooksAndroid sInstance;
+
+    private static BuildHooksAndroid get() {
+        if (sInstance == null) {
+            sInstance = constructBuildHooksAndroidImpl();
+        }
+        return sInstance;
+    }
+
+    // Creates an instance of BuildHooksAndroidImpl using reflection. Why is this necessary?
+    // The downstream version of BuildHooksAndroidImpl pulls a bunch of methods into the main dex
+    // that don't actually need to be there. This happens because there are @MainDex classes that
+    // have Context methods added (via. bytecode rewriting) that call into BuildHooksAndroid.
+    // Creating the instance via. reflection tricks proguard into thinking BuildHooksAndroidImpl
+    // doesn't need to be in the main dex file.
+    private static BuildHooksAndroid constructBuildHooksAndroidImpl() {
+        try {
+            // Not final to avoid inlining. Without this proguard is able to figure out that
+            // BuildHooksAndroidImpl is actually used.
+            String implClazzName = "org.chromium.build.BuildHooksAndroidImpl";
+            Class<?> implClazz = Class.forName(implClazzName);
+            return (BuildHooksAndroid) implClazz.newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static Resources getResources(Context context) {
-        return sInstance.getResourcesImpl(context);
+        return get().getResourcesImpl(context);
     }
 
     protected abstract Resources getResourcesImpl(Context context);
 
     public static AssetManager getAssets(Context context) {
-        return sInstance.getAssetsImpl(context);
+        return get().getAssetsImpl(context);
     }
 
     protected abstract AssetManager getAssetsImpl(Context context);
 
     public static Resources.Theme getTheme(Context context) {
-        return sInstance.getThemeImpl(context);
+        return get().getThemeImpl(context);
     }
 
     protected abstract Resources.Theme getThemeImpl(Context context);
 
     public static void setTheme(Context context, int theme) {
-        sInstance.setThemeImpl(context, theme);
+        get().setThemeImpl(context, theme);
     }
 
     protected abstract void setThemeImpl(Context context, int theme);
 
     public static Context createConfigurationContext(Context context) {
-        return sInstance.createConfigurationContextImpl(context);
+        return get().createConfigurationContextImpl(context);
     }
 
     protected abstract Context createConfigurationContextImpl(Context context);
 
     public static int getIdentifier(
             Resources resources, String name, String defType, String defPackage) {
-        return sInstance.getIdentifierImpl(resources, name, defType, defPackage);
+        return get().getIdentifierImpl(resources, name, defType, defPackage);
     }
 
     protected abstract int getIdentifierImpl(
             Resources resources, String name, String defType, String defPackage);
 
     public static boolean isEnabled() {
-        return sInstance.isEnabledImpl();
+        return get().isEnabledImpl();
     }
 
     protected abstract boolean isEnabledImpl();
 
     public static void initCustomResources(Context context) {
-        sInstance.initCustomResourcesImpl(context);
+        get().initCustomResourcesImpl(context);
     }
 
     protected abstract void initCustomResourcesImpl(Context context);
@@ -75,7 +100,7 @@ public abstract class BuildHooksAndroid {
      * Record custom resources related UMA. Requires native library to be loaded.
      */
     public static void maybeRecordResourceMetrics() {
-        sInstance.maybeRecordResourceMetricsImpl();
+        get().maybeRecordResourceMetricsImpl();
     }
 
     protected abstract void maybeRecordResourceMetricsImpl();

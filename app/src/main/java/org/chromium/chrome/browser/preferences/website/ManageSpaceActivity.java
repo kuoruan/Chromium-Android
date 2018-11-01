@@ -194,7 +194,7 @@ public class ManageSpaceActivity extends AppCompatActivity implements View.OnCli
     private void refreshStorageNumbers() {
         WebsitePermissionsFetcher fetcher = new WebsitePermissionsFetcher(new SizeCalculator());
         fetcher.fetchPreferencesForCategory(
-                SiteSettingsCategory.fromString(SiteSettingsCategory.CATEGORY_USE_STORAGE));
+                SiteSettingsCategory.createFromType(SiteSettingsCategory.Type.USE_STORAGE));
     }
 
     /** Data will be cleared once we fetch all site size and important status info. */
@@ -238,7 +238,7 @@ public class ManageSpaceActivity extends AppCompatActivity implements View.OnCli
                     this, SingleCategoryPreferences.class.getName());
             Bundle initialArguments = new Bundle();
             initialArguments.putString(SingleCategoryPreferences.EXTRA_CATEGORY,
-                    SiteSettingsCategory.CATEGORY_USE_STORAGE);
+                    SiteSettingsCategory.preferenceKey(SiteSettingsCategory.Type.USE_STORAGE));
             initialArguments.putString(SingleCategoryPreferences.EXTRA_TITLE,
                     getString(R.string.website_settings_storage));
             intent.putExtra(Preferences.EXTRA_SHOW_FRAGMENT_ARGUMENTS, initialArguments);
@@ -309,7 +309,7 @@ public class ManageSpaceActivity extends AppCompatActivity implements View.OnCli
         public void clearData() {
             WebsitePermissionsFetcher fetcher = new WebsitePermissionsFetcher(this, true);
             fetcher.fetchPreferencesForCategory(
-                    SiteSettingsCategory.fromString(SiteSettingsCategory.CATEGORY_USE_STORAGE));
+                    SiteSettingsCategory.createFromType(SiteSettingsCategory.Type.USE_STORAGE));
         }
 
         @Override

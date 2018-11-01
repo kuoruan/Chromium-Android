@@ -18,28 +18,28 @@ class MediaService_Internal {
 
     public static final org.chromium.mojo.bindings.Interface.Manager<MediaService, MediaService.Proxy> MANAGER =
             new org.chromium.mojo.bindings.Interface.Manager<MediaService, MediaService.Proxy>() {
-    
+
         @Override
         public String getName() {
-            return "media::mojom::MediaService";
+            return "media.mojom.MediaService";
         }
-    
+
         @Override
         public int getVersion() {
           return 0;
         }
-    
+
         @Override
         public Proxy buildProxy(org.chromium.mojo.system.Core core,
                                 org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             return new Proxy(core, messageReceiver);
         }
-    
+
         @Override
         public Stub buildStub(org.chromium.mojo.system.Core core, MediaService impl) {
             return new Stub(core, impl);
         }
-    
+
         @Override
         public MediaService[] buildArray(int size) {
           return new MediaService[size];
@@ -95,25 +95,25 @@ org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chrom
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_OR_CLOSE_PIPE_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRunOrClosePipe(
                                 MediaService_Internal.MANAGER, messageWithHeader);
-            
-            
-            
-            
-            
+
+
+
+
+
                     case CREATE_INTERFACE_FACTORY_ORDINAL: {
-            
+
                         MediaServiceCreateInterfaceFactoryParams data =
                                 MediaServiceCreateInterfaceFactoryParams.deserialize(messageWithHeader.getPayload());
-            
+
                         getImpl().createInterfaceFactory(data.factory, data.hostInterfaces);
                         return true;
                     }
-            
-            
+
+
                     default:
                         return false;
                 }
@@ -133,14 +133,14 @@ org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chrom
                     return false;
                 }
                 switch(header.getType()) {
-            
+
                     case org.chromium.mojo.bindings.interfacecontrol.InterfaceControlMessagesConstants.RUN_MESSAGE_ID:
                         return org.chromium.mojo.bindings.InterfaceControlMessagesHelper.handleRun(
                                 getCore(), MediaService_Internal.MANAGER, messageWithHeader, receiver);
-            
-            
-            
-            
+
+
+
+
                     default:
                         return false;
                 }
@@ -154,38 +154,35 @@ org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chrom
 
     
     static final class MediaServiceCreateInterfaceFactoryParams extends org.chromium.mojo.bindings.Struct {
-    
+
         private static final int STRUCT_SIZE = 24;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory;
         public org.chromium.service_manager.mojom.InterfaceProvider hostInterfaces;
-    
+
         private MediaServiceCreateInterfaceFactoryParams(int version) {
             super(STRUCT_SIZE, version);
         }
-    
+
         public MediaServiceCreateInterfaceFactoryParams() {
             this(0);
         }
-    
+
         public static MediaServiceCreateInterfaceFactoryParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
-    
+
         /**
          * Similar to the method above, but deserializes from a |ByteBuffer| instance.
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
         public static MediaServiceCreateInterfaceFactoryParams deserialize(java.nio.ByteBuffer data) {
-            if (data == null)
-                return null;
-    
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
-    
+
         @SuppressWarnings("unchecked")
         public static MediaServiceCreateInterfaceFactoryParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
@@ -195,21 +192,23 @@ org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chrom
             MediaServiceCreateInterfaceFactoryParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
-                result = new MediaServiceCreateInterfaceFactoryParams(mainDataHeader.elementsOrVersion);
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new MediaServiceCreateInterfaceFactoryParams(elementsOrVersion);
+                    {
+                        
                     result.factory = decoder0.readInterfaceRequest(8, false);
-                }
-                if (mainDataHeader.elementsOrVersion >= 0) {
-                    
+                    }
+                    {
+                        
                     result.hostInterfaces = decoder0.readServiceInterface(12, true, org.chromium.service_manager.mojom.InterfaceProvider.MANAGER);
-                }
+                    }
+
             } finally {
                 decoder0.decreaseStackDepth();
             }
             return result;
         }
-    
+
         @SuppressWarnings("unchecked")
         @Override
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
@@ -218,37 +217,6 @@ org.chromium.mojo.bindings.InterfaceRequest<InterfaceFactory> factory, org.chrom
             encoder0.encode(this.factory, 8, false);
             
             encoder0.encode(this.hostInterfaces, 12, true, org.chromium.service_manager.mojom.InterfaceProvider.MANAGER);
-        }
-    
-        /**
-         * @see Object#equals(Object)
-         */
-        @Override
-        public boolean equals(Object object) {
-            if (object == this)
-                return true;
-            if (object == null)
-                return false;
-            if (getClass() != object.getClass())
-                return false;
-            MediaServiceCreateInterfaceFactoryParams other = (MediaServiceCreateInterfaceFactoryParams) object;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.factory, other.factory))
-                return false;
-            if (!org.chromium.mojo.bindings.BindingsHelper.equals(this.hostInterfaces, other.hostInterfaces))
-                return false;
-            return true;
-        }
-    
-        /**
-         * @see Object#hashCode()
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = prime + getClass().hashCode();
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.factory);
-            result = prime * result + org.chromium.mojo.bindings.BindingsHelper.hashCode(this.hostInterfaces);
-            return result;
         }
     }
 

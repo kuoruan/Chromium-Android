@@ -15,6 +15,7 @@ import android.view.View.OnCreateContextMenuListener;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.partnercustomizations.HomepageManager;
+import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.TintedImageButton;
 
 /**
@@ -28,7 +29,7 @@ public class HomePageButton extends TintedImageButton
     /** Constructor inflating from XML. */
     public HomePageButton(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setOnCreateContextMenuListener(this);
+        if (!FeatureUtilities.isNewTabPageButtonEnabled()) setOnCreateContextMenuListener(this);
     }
 
     @Override
