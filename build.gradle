@@ -25,8 +25,8 @@ task clean(type: Delete) {
 }
 
 ext {
-    versionCode = 14
-    versionName = "70.0.3538.83"
+    versionCode = 15
+    versionName = "70.0.3538.118"
 
     // third_party/android_sdk/README.chromium
     compileSdkVersion = 28

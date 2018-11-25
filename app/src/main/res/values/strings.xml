@@ -6,5 +6,5 @@
 
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-  <string name="product_version" translatable="false" tools:ignore="UnusedResources">70.0.3538.83</string>
+  <string name="product_version" translatable="false" tools:ignore="UnusedResources">70.0.3538.118</string>
 </resources>
