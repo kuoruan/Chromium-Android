@@ -6,6 +6,8 @@ package org.chromium.chrome.browser.preferences.website;
 
 import android.support.annotation.IntDef;
 
+import org.chromium.chrome.browser.ContentSettingsType;
+
 import java.io.Serializable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -18,7 +20,7 @@ public class PermissionInfo implements Serializable {
             Type.NOTIFICATION, Type.PROTECTED_MEDIA_IDENTIFIER, Type.SENSORS})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Type {
-        // Values used in Website and other places to address permission
+        // Values used below, in Website, SingleWebsitePreferences and other places to address
         // array index. Should be enumerated from 0 and can't have gaps.
         int CAMERA = 0;
         int CLIPBOARD = 1;
@@ -33,6 +35,18 @@ public class PermissionInfo implements Serializable {
          */
         int NUM_ENTRIES = 8;
     }
+
+    // Mapping from {@link Type} to ContentSettingType.
+    final static int[] CONTENT_TYPES = {
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_CAMERA,
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_CLIPBOARD_READ,
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_GEOLOCATION,
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_MEDIASTREAM_MIC,
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_MIDI_SYSEX,
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_NOTIFICATIONS,
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_PROTECTED_MEDIA_IDENTIFIER,
+            ContentSettingsType.CONTENT_SETTINGS_TYPE_SENSORS,
+    };
 
     private final boolean mIsIncognito;
     private final String mEmbedder;

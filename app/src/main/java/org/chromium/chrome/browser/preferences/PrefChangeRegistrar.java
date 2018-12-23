@@ -46,6 +46,17 @@ public class PrefChangeRegistrar {
     }
 
     /**
+     * Remove an observer for the specified preference if it has previously been added.
+     * @param preference The specified preference.
+     */
+    public void removeObserver(@Pref int preference) {
+        PrefObserver observer = mObservers.get(preference);
+        if (observer == null) return;
+        mObservers.remove(preference);
+        nativeRemove(mNativeRegistrar, preference);
+    }
+
+    /**
      * Destroy native PrefChangeRegistrar.
      */
     public void destroy() {
@@ -64,5 +75,6 @@ public class PrefChangeRegistrar {
 
     private native long nativeInit();
     private native void nativeAdd(long nativePrefChangeRegistrarAndroid, int preference);
+    private native void nativeRemove(long nativePrefChangeRegistrarAndroid, int preference);
     private native void nativeDestroy(long nativePrefChangeRegistrarAndroid);
 }

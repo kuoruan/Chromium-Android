@@ -9,7 +9,9 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
@@ -31,7 +33,8 @@ import org.chromium.ui.R;
  *      app:cornerRadiusTopStart="8dp"
  *      app:cornerRadiusTopEnd="8dp"
  *      app:cornerRadiusBottomStart="8dp"
- *      app:cornerRadiusBottomEnd="8dp" />
+ *      app:cornerRadiusBottomEnd="8dp"
+ *      app:roundedfillColor="@android:color/white"/>
  *
  * Note : This does not properly handle padding. Padding will not be taken into account when rounded
  * corners are used.
@@ -40,6 +43,11 @@ public class RoundedCornerImageView extends ImageView {
     private Shape mRoundedRectangle;
     private BitmapShader mShader;
     private Paint mPaint;
+
+    private Paint mFillPaint;
+
+    // Object to avoid allocations during draw calls.
+    private final RectF mTmpRect = new RectF();
 
     // Whether or not to apply the shader, if we have one. This might be set to false if the image
     // is smaller than the view and does not need to have the corners rounded.
@@ -66,6 +74,11 @@ public class RoundedCornerImageView extends ImageView {
                     R.styleable.RoundedCornerImageView_cornerRadiusBottomStart, 0);
             int cornerRadiusBottomEnd = a.getDimensionPixelSize(
                     R.styleable.RoundedCornerImageView_cornerRadiusBottomEnd, 0);
+            if (a.hasValue(R.styleable.RoundedCornerImageView_roundedfillColor)) {
+                mFillPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                mFillPaint.setColor(a.getColor(
+                        R.styleable.RoundedCornerImageView_roundedfillColor, Color.WHITE));
+            }
             a.recycle();
 
             setRoundedCorners(cornerRadiusTopStart, cornerRadiusTopEnd, cornerRadiusBottomStart,
@@ -147,31 +160,6 @@ public class RoundedCornerImageView extends ImageView {
 
         // Default to using the shader.
         mApplyShader = true;
-
-        // If the scale type would not scale up the image, and the image is smaller than the
-        // view bounds, then just draw it normally so the shader won't have adverse effects.
-        // CENTER does not do any scaling, and simply centers the image. In that case we need to
-        // check to see if the image is smaller than the view in either dimension, and don't apply
-        // the shaer if it is. CENTER_INSIDE will only scale down, so we need to calculate the
-        // scaled size of the image, and only apply the shader if it happens to match the size of
-        // the view.
-        // TODO: this won't work with a custom image matrix, but that's probably ok for now
-        ScaleType scaleType = getScaleType();
-        if (scaleType == ScaleType.CENTER || scaleType == ScaleType.CENTER_INSIDE) {
-            int viewWidth = getWidth() - getPaddingRight() - getPaddingLeft();
-            int viewHeight = getHeight() - getPaddingTop() - getPaddingBottom();
-            int drawableWidth = drawable.getIntrinsicWidth();
-            int drawableHeight = drawable.getIntrinsicHeight();
-            if (scaleType == ScaleType.CENTER_INSIDE) {
-                float scale = Math.min((float) viewWidth / (float) drawableWidth,
-                        (float) viewHeight / (float) drawableHeight);
-                drawableWidth = (int) ((scale * drawableWidth) + 0.5f);
-                drawableHeight = (int) ((scale * drawableHeight) + 0.5f);
-            }
-            if ((drawableWidth < viewWidth) || (drawableHeight < viewHeight)) {
-                mApplyShader = false;
-            }
-        }
     }
 
     @Override
@@ -179,28 +167,51 @@ public class RoundedCornerImageView extends ImageView {
         Drawable drawable = getDrawable();
         Shape localRoundedRect = mRoundedRectangle;
         Paint localPaint = mPaint;
-        if (drawable == null || localPaint == null || localRoundedRect == null) {
+
+        boolean drawFill = mFillPaint != null && localRoundedRect != null
+                && !(drawable instanceof ColorDrawable);
+        boolean drawContent = drawable != null && localPaint != null && localRoundedRect != null
+                && isSupportedDrawable(drawable);
+
+        if (drawFill || drawContent) localRoundedRect.resize(getWidth(), getHeight());
+
+        // First, fill the drawing area with the given fill paint.
+        if (drawFill) localRoundedRect.draw(canvas, mFillPaint);
+
+        if (!drawContent) {
+            // We probably have an unsupported drawable or we don't want rounded corners. Draw
+            // normally and return.
             super.onDraw(canvas);
             return;
         }
 
-        if (!isSupportedDrawable(drawable)) {
-            super.onDraw(canvas);
-            return;
-        }
-
+        // We have a drawable to draw with rounded corners. Let's first set up the paint.
         if (drawable instanceof ColorDrawable) {
             ColorDrawable colorDrawable = (ColorDrawable) drawable;
             localPaint.setColor(colorDrawable.getColor());
         }
 
         if (mShader != null && mApplyShader) {
+            // Apply the matrix to the bitmap shader.
             mShader.setLocalMatrix(getImageMatrix());
             localPaint.setShader(mShader);
+
+            // Find the desired bounding box where the bitmap is to be shown.
+            mTmpRect.set(getDrawable().getBounds());
+            getImageMatrix().mapRect(mTmpRect);
         }
 
-        localRoundedRect.resize(getWidth(), getHeight());
+        final int saveCount = canvas.save();
+
+        // Clip the canvas to the desired bounding box so that the shader isn't applied anywhere
+        // outside the desired area.
+        if (mApplyShader) canvas.clipRect(mTmpRect);
+
+        // Draw the rounded rectangle.
         localRoundedRect.draw(canvas, localPaint);
+
+        // Remove the clip.
+        canvas.restoreToCount(saveCount);
     }
 
     private boolean isSupportedDrawable(Drawable drawable) {

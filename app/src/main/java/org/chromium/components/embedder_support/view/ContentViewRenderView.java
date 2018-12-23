@@ -37,8 +37,6 @@ public class ContentViewRenderView extends FrameLayout {
     private int mWidth;
     private int mHeight;
 
-    private int mFramesUntilHideBackground;
-
     /**
      * Constructs a new ContentViewRenderView.
      * This should be called and the {@link ContentViewRenderView} should be added to the view
@@ -96,8 +94,6 @@ public class ContentViewRenderView extends FrameLayout {
                 mSurfaceView.setVisibility(mSurfaceView.getVisibility());
 
                 onReadyToRender();
-
-                mFramesUntilHideBackground = 2;
             }
 
             @Override
@@ -210,27 +206,14 @@ public class ContentViewRenderView extends FrameLayout {
 
     @CalledByNative
     private void didSwapFrame() {
-        // When a new surface is created, wait a couple frames to show it to
-        // prevent flashes of incomplete frames.
-        if (mFramesUntilHideBackground > 1) {
-            mFramesUntilHideBackground--;
-            // Make sure another frame is always rendered.
-            requestRender();
-        } else {
-            if (mSurfaceView.getBackground() != null) {
-                post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mSurfaceView.setBackgroundResource(0);
-                    }
-                });
-            }
+        if (mSurfaceView.getBackground() != null) {
+            post(new Runnable() {
+                @Override
+                public void run() {
+                    mSurfaceView.setBackgroundResource(0);
+                }
+            });
         }
-    }
-
-    private void requestRender() {
-        if (mNativeContentViewRenderView != 0)
-            nativeSetNeedsComposite(mNativeContentViewRenderView);
     }
 
     private native long nativeInit(WindowAndroid rootWindow);
@@ -239,7 +222,6 @@ public class ContentViewRenderView extends FrameLayout {
             long nativeContentViewRenderView, WebContents webContents);
     private native void nativeOnPhysicalBackingSizeChanged(
             long nativeContentViewRenderView, WebContents webContents, int width, int height);
-    private native void nativeSetNeedsComposite(long nativeContentViewRenderView);
     private native void nativeSurfaceCreated(long nativeContentViewRenderView);
     private native void nativeSurfaceDestroyed(long nativeContentViewRenderView);
     private native void nativeSurfaceChanged(

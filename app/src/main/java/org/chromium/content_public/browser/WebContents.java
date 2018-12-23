@@ -441,14 +441,6 @@ public interface WebContents extends Parcelable {
     Rect getFullscreenVideoSize();
 
     /**
-     * Issues a fake notification about the renderer being killed.
-     *
-     * @param wasOomProtected True if the renderer was protected from the OS out-of-memory killer
-     *                        (e.g. renderer for the currently selected tab)
-     */
-    void simulateRendererKilledForTesting(boolean wasOomProtected);
-
-    /**
      * Notifies the WebContents about the new persistent video status. It should be called whenever
      * the value changes.
      *

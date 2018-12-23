@@ -10,6 +10,7 @@ import android.view.Window;
 
 import org.chromium.chrome.browser.fullscreen.FullscreenHtmlApiHandler.FullscreenHtmlApiDelegate;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.tab.TabBrowserControlsOffsetHelper;
 
 /**
  * Manages the basic fullscreen functionality required by a Tab.
@@ -111,12 +112,18 @@ public abstract class FullscreenManager {
         if (mTab == tab) return;
 
         // Remove the fullscreen manager from the old tab before setting the new tab.
-        if (mTab != null) mTab.setFullscreenManager(null);
+        setFullscreenManager(null);
 
         mTab = tab;
 
         // Initialize the new tab with the correct fullscreen manager reference.
-        if (mTab != null) mTab.setFullscreenManager(this);
+        setFullscreenManager(this);
+    }
+
+    private void setFullscreenManager(FullscreenManager manager) {
+        if (mTab == null) return;
+        mTab.setFullscreenManager(manager);
+        TabBrowserControlsOffsetHelper.from(mTab).resetPositions();
     }
 
     /**
@@ -181,4 +188,11 @@ public abstract class FullscreenManager {
      * Called when scrolling state of the ContentView changed.
      */
     public void onContentViewScrollingStateChanged(boolean scrolling) {}
+
+    /**
+     * Destroys the FullscreenManager
+     */
+    public void destroy() {
+        setTab(null);
+    }
 }

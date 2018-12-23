@@ -15,7 +15,6 @@ import org.chromium.chrome.browser.native_page.BasicNativePage;
 import org.chromium.chrome.browser.native_page.NativePageHost;
 import org.chromium.chrome.browser.snackbar.SnackbarManager.SnackbarManageable;
 import org.chromium.chrome.browser.util.ColorUtils;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 
 /**
  * Native page for managing browsing history.
@@ -36,8 +35,7 @@ public class HistoryPage extends BasicNativePage {
 
         mThemeColor = !host.isIncognito()
                 ? super.getThemeColor()
-                : ColorUtils.getDefaultThemeColor(activity.getResources(),
-                          FeatureUtilities.isChromeModernDesignEnabled(), true);
+                : ColorUtils.getDefaultThemeColor(activity.getResources(), true);
     }
 
     @Override

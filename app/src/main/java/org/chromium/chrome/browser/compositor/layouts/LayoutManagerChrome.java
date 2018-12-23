@@ -15,6 +15,7 @@ import org.chromium.chrome.browser.compositor.layouts.components.LayoutTab;
 import org.chromium.chrome.browser.compositor.layouts.components.VirtualView;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EdgeSwipeHandler;
+import org.chromium.chrome.browser.compositor.layouts.eventfilter.EmptyEdgeSwipeHandler;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.ScrollDirection;
 import org.chromium.chrome.browser.compositor.layouts.phone.StackLayout;
 import org.chromium.chrome.browser.compositor.overlays.SceneOverlay;
@@ -72,7 +73,7 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
         mOverviewModeObservers = new ObserverList<OverviewModeObserver>();
 
         // Build Event Filter Handlers
-        mToolbarSwipeHandler = createToolbarSwipeHandler(this);
+        mToolbarSwipeHandler = new ToolbarSwipeHandler();
 
         // Build Layouts
         mOverviewListLayout = new OverviewListLayout(context, this, renderHost);
@@ -146,16 +147,6 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
         mOverviewListLayout.addSceneOverlay(helper);
         mToolbarSwipeLayout.addSceneOverlay(helper);
         if (mOverviewLayout != null) mOverviewLayout.addSceneOverlay(helper);
-    }
-
-    /**
-     * Meant to be overridden by child classes for when they need to extend the toolbar side swipe
-     * functionality.
-     * @param provider A {@link LayoutProvider} instance.
-     * @return         A {@link ToolbarSwipeHandler} instance that will be used by internal layouts.
-     */
-    protected ToolbarSwipeHandler createToolbarSwipeHandler(LayoutProvider provider) {
-        return new ToolbarSwipeHandler(provider);
     }
 
     /**
@@ -390,7 +381,7 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
     /**
      * A {@link EdgeSwipeHandler} meant to respond to edge events for the toolbar.
      */
-    protected class ToolbarSwipeHandler extends EdgeSwipeHandlerLayoutDelegate {
+    protected class ToolbarSwipeHandler extends EmptyEdgeSwipeHandler {
         /** The scroll direction of the current gesture. */
         private @ScrollDirection int mScrollDirection;
 
@@ -400,14 +391,6 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
          */
         private static final float SWIPE_RANGE_DEG = 25;
 
-        /**
-         * Creates an instance of the {@link ToolbarSwipeHandler}.
-         * @param provider A {@link LayoutProvider} instance.
-         */
-        public ToolbarSwipeHandler(LayoutProvider provider) {
-            super(provider);
-        }
-
         @Override
         public void swipeStarted(@ScrollDirection int direction, float x, float y) {
             mScrollDirection = ScrollDirection.UNKNOWN;
@@ -415,11 +398,11 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
 
         @Override
         public void swipeUpdated(float x, float y, float dx, float dy, float tx, float ty) {
-            if (getActiveLayout() == null) return;
+            if (mToolbarSwipeLayout == null) return;
 
             // If scroll direction has been computed, send the event to super.
             if (mScrollDirection != ScrollDirection.UNKNOWN) {
-                super.swipeUpdated(x, y, dx, dy, tx, ty);
+                mToolbarSwipeLayout.swipeUpdated(time(), x, y, dx, dy, tx, ty);
                 return;
             }
 
@@ -435,7 +418,19 @@ public class LayoutManagerChrome extends LayoutManager implements OverviewModeBe
                 startShowing(mToolbarSwipeLayout, true);
             }
 
-            super.swipeStarted(mScrollDirection, x, y);
+            mToolbarSwipeLayout.swipeStarted(time(), mScrollDirection, x, y);
+        }
+
+        @Override
+        public void swipeFinished() {
+            if (mToolbarSwipeLayout == null || !mToolbarSwipeLayout.isActive()) return;
+            mToolbarSwipeLayout.swipeFinished(time());
+        }
+
+        @Override
+        public void swipeFlingOccurred(float x, float y, float tx, float ty, float vx, float vy) {
+            if (mToolbarSwipeLayout == null || !mToolbarSwipeLayout.isActive()) return;
+            mToolbarSwipeLayout.swipeFlingOccurred(time(), x, y, tx, ty, vx, vy);
         }
 
         /**

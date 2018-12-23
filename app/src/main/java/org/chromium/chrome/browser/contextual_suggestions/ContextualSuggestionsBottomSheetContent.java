@@ -6,7 +6,7 @@ package org.chromium.chrome.browser.contextual_suggestions;
 
 import android.view.View;
 
-import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.R;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.BottomSheetContent;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.ContentPriority;
 
@@ -14,7 +14,6 @@ import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet.ContentPriorit
 public class ContextualSuggestionsBottomSheetContent implements BottomSheetContent {
     private final ContentCoordinator mContentCoordinator;
     private final ToolbarCoordinator mToolbarCoordinator;
-    private final boolean mUseSlimPeek;
 
     /**
      * Construct a new {@link ContextualSuggestionsBottomSheetContent}.
@@ -22,13 +21,11 @@ public class ContextualSuggestionsBottomSheetContent implements BottomSheetConte
      *                           displayed.
      * @param toolbarCoordinator The {@link ToolbarCoordinator} that manages the toolbar to be
      *                           displayed.
-     * @param useSlimPeek Whether the slim peek UI should be used for this content.
      */
-    ContextualSuggestionsBottomSheetContent(ContentCoordinator contentCoordinator,
-            ToolbarCoordinator toolbarCoordinator, boolean useSlimPeek) {
+    ContextualSuggestionsBottomSheetContent(
+            ContentCoordinator contentCoordinator, ToolbarCoordinator toolbarCoordinator) {
         mContentCoordinator = contentCoordinator;
         mToolbarCoordinator = toolbarCoordinator;
-        mUseSlimPeek = useSlimPeek;
     }
 
     @Override
@@ -56,16 +53,31 @@ public class ContextualSuggestionsBottomSheetContent implements BottomSheetConte
 
     @Override
     public boolean swipeToDismissEnabled() {
-        return ChromeFeatureList.isEnabled(ChromeFeatureList.CONTEXTUAL_SUGGESTIONS_BUTTON);
+        return true;
     }
 
     @Override
     public boolean isPeekStateEnabled() {
-        return !ChromeFeatureList.isEnabled(ChromeFeatureList.CONTEXTUAL_SUGGESTIONS_BUTTON);
+        return false;
     }
 
     @Override
-    public boolean useSlimPeek() {
-        return mUseSlimPeek;
+    public int getSheetContentDescriptionStringId() {
+        return R.string.contextual_suggestions_button_description;
+    }
+
+    @Override
+    public int getSheetHalfHeightAccessibilityStringId() {
+        return R.string.contextual_suggestions_sheet_opened_half;
+    }
+
+    @Override
+    public int getSheetFullHeightAccessibilityStringId() {
+        return R.string.contextual_suggestions_sheet_opened_full;
+    }
+
+    @Override
+    public int getSheetClosedAccessibilityStringId() {
+        return R.string.contextual_suggestions_sheet_closed;
     }
 }

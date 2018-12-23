@@ -267,6 +267,12 @@ public class ChromeAnimation<T> {
             }
         }
 
+        public static void unsetAnimationMultiplierForTesting() {
+            synchronized (sLock) {
+                sAnimationMultiplier = null;
+            }
+        }
+
         @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
         public static float getAnimationMultiplier() {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) return 1f;

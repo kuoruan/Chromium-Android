@@ -9,11 +9,11 @@ import android.support.annotation.IntDef;
 import android.view.View;
 
 import org.chromium.base.ObserverList;
-import org.chromium.chrome.browser.download.home.PrefetchStatusProvider;
 import org.chromium.chrome.browser.download.home.filter.Filters.FilterType;
 import org.chromium.chrome.browser.download.home.filter.chips.ChipsCoordinator;
 import org.chromium.chrome.browser.modelutil.PropertyModel;
 import org.chromium.chrome.browser.modelutil.PropertyModelChangeProcessor;
+import org.chromium.chrome.browser.offlinepages.prefetch.PrefetchConfiguration;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -33,10 +33,8 @@ public class FilterCoordinator {
         void onFilterChanged(@FilterType int selectedTab);
     }
 
-    private final PrefetchStatusProvider mPrefetchStatusProvider;
     private final ObserverList<Observer> mObserverList = new ObserverList<>();
-    private final PropertyModel mModel;
-    private final FilterViewBinder mViewBinder;
+    private final PropertyModel mModel = new PropertyModel(FilterProperties.ALL_KEYS);
     private final FilterView mView;
 
     private final ChipsCoordinator mChipsCoordinator;
@@ -46,22 +44,17 @@ public class FilterCoordinator {
      * Builds a new FilterCoordinator.
      * @param context The context to build the views and pull parameters from.
      */
-    public FilterCoordinator(Context context, PrefetchStatusProvider prefetchStatusProvider,
-            OfflineItemFilterSource chipFilterSource) {
-        mPrefetchStatusProvider = prefetchStatusProvider;
+    public FilterCoordinator(Context context, OfflineItemFilterSource chipFilterSource) {
         mChipsProvider = new FilterChipsProvider(type -> handleChipSelected(), chipFilterSource);
         mChipsCoordinator = new ChipsCoordinator(context, mChipsProvider);
 
-        mModel = new PropertyModel(FilterProperties.ALL_KEYS);
-        mViewBinder = new FilterViewBinder();
         mView = new FilterView(context);
-        mModel.addObserver(new PropertyModelChangeProcessor<>(mModel, mView, mViewBinder));
+        PropertyModelChangeProcessor.create(mModel, mView, new FilterViewBinder());
 
-        mModel.setValue(
-                FilterProperties.CHANGE_LISTENER, selectedTab -> handleTabSelected(selectedTab));
+        mModel.set(FilterProperties.CHANGE_LISTENER, this::handleTabSelected);
         selectTab(TabType.FILES);
 
-        mModel.setValue(FilterProperties.SHOW_TABS, mPrefetchStatusProvider.enabled());
+        mModel.set(FilterProperties.SHOW_TABS, PrefetchConfiguration.isPrefetchingFlagEnabled());
     }
 
     /** @return The {@link View} representing this widget. */
@@ -84,21 +77,26 @@ public class FilterCoordinator {
      * components might need to update the UI state.
      */
     public void setSelectedFilter(@FilterType int filter) {
-        if (filter == Filters.FilterType.PREFETCHED) {
-            selectTab(TabType.PREFETCH);
+        @TabType
+        int tabSelected;
+        if (filter == Filters.FilterType.PREFETCHED
+                && PrefetchConfiguration.isPrefetchingFlagEnabled()) {
+            tabSelected = TabType.PREFETCH;
         } else {
             mChipsProvider.setFilterSelected(filter);
-            selectTab(TabType.FILES);
+            tabSelected = TabType.FILES;
         }
+
+        handleTabSelected(tabSelected);
     }
 
     private void selectTab(@TabType int selectedTab) {
-        mModel.setValue(FilterProperties.SELECTED_TAB, selectedTab);
+        mModel.set(FilterProperties.SELECTED_TAB, selectedTab);
 
         if (selectedTab == TabType.FILES) {
-            mModel.setValue(FilterProperties.CONTENT_VIEW, mChipsCoordinator.getView());
+            mModel.set(FilterProperties.CONTENT_VIEW, mChipsCoordinator.getView());
         } else if (selectedTab == TabType.PREFETCH) {
-            mModel.setValue(FilterProperties.CONTENT_VIEW, null);
+            mModel.set(FilterProperties.CONTENT_VIEW, null);
         }
     }
 
@@ -121,6 +119,6 @@ public class FilterCoordinator {
     }
 
     private void handleChipSelected() {
-        handleTabSelected(mModel.getValue(FilterProperties.SELECTED_TAB));
+        handleTabSelected(mModel.get(FilterProperties.SELECTED_TAB));
     }
 }

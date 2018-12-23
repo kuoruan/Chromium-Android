@@ -10,7 +10,7 @@ import android.content.Intent;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.base.annotations.CalledByNative;
-import org.chromium.chrome.browser.preferences.autofill.AutofillCreditCardsFragment;
+import org.chromium.chrome.browser.preferences.autofill.AutofillPaymentMethodsFragment;
 import org.chromium.chrome.browser.preferences.autofill.AutofillProfilesFragment;
 import org.chromium.chrome.browser.preferences.password.SavePasswordsPreferences;
 import org.chromium.chrome.browser.preferences.privacy.ClearBrowsingDataTabsFragment;
@@ -72,7 +72,7 @@ public class PreferencesLauncher {
 
     @CalledByNative
     private static void showAutofillCreditCardSettings(WebContents webContents) {
-        showSettingSubpage(webContents, AutofillCreditCardsFragment.class.getName());
+        showSettingSubpage(webContents, AutofillPaymentMethodsFragment.class.getName());
     }
 
     @CalledByNative

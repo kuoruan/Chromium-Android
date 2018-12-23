@@ -57,6 +57,7 @@ import java.lang.annotation.RetentionPolicy;
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PLUGINS_DATA,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_PAYMENT_HANDLER,
     ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_GUARD,
+    ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_FETCH,
     ContentSettingsType.CONTENT_SETTINGS_NUM_TYPES
 })
 @Retention(RetentionPolicy.SOURCE)
@@ -168,5 +169,10 @@ public @interface ContentSettingsType {
    * CONTENT_SETTINGS_TYPE_USB_CHOOSER_DATA.
    */
   int CONTENT_SETTINGS_TYPE_USB_GUARD = 39;
-  int CONTENT_SETTINGS_NUM_TYPES = 40;
+  /**
+   * Nothing is stored in this setting at present. Please refer to BackgroundFetchPermissionContext
+   * for details on how this permission is ascertained.
+   */
+  int CONTENT_SETTINGS_TYPE_BACKGROUND_FETCH = 40;
+  int CONTENT_SETTINGS_NUM_TYPES = 41;
 }

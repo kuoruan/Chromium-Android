@@ -1,8 +1,11 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: ../../chrome/android/java/src/org/chromium/chrome/browser/customtabs/dynamicmodule/IModuleEntryPoint.aidl
+ * Original file: ../../third_party/cct_dynamic_module/src/src/java/org/chromium/chrome/browser/customtabs/dynamicmodule/IModuleEntryPoint.aidl
  */
 package org.chromium.chrome.browser.customtabs.dynamicmodule;
+/**
+ * Entry point for a dynamic module.
+ */
 public interface IModuleEntryPoint extends android.os.IInterface
 {
 /** Local-side IPC implementation stub class. */
@@ -151,6 +154,11 @@ _data.recycle();
 }
 return _result;
 }
+/**
+   * Called when an enhanced activity is started.
+   *
+   * @throws IllegalStateException if the hosted application is not created.
+   */
 @Override public org.chromium.chrome.browser.customtabs.dynamicmodule.IActivityDelegate createActivityDelegate(org.chromium.chrome.browser.customtabs.dynamicmodule.IActivityHost activityHost) throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
@@ -193,6 +201,11 @@ static final int TRANSACTION_onDestroy = (android.os.IBinder.FIRST_CALL_TRANSACT
 public void init(org.chromium.chrome.browser.customtabs.dynamicmodule.IModuleHost moduleHost) throws android.os.RemoteException;
 public int getModuleVersion() throws android.os.RemoteException;
 public int getMinimumHostVersion() throws android.os.RemoteException;
+/**
+   * Called when an enhanced activity is started.
+   *
+   * @throws IllegalStateException if the hosted application is not created.
+   */
 public org.chromium.chrome.browser.customtabs.dynamicmodule.IActivityDelegate createActivityDelegate(org.chromium.chrome.browser.customtabs.dynamicmodule.IActivityHost activityHost) throws android.os.RemoteException;
 public void onDestroy() throws android.os.RemoteException;
 }

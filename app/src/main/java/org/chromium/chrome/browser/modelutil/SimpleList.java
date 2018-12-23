@@ -37,7 +37,7 @@ public interface SimpleList<T> extends Iterable<T> {
     @NonNull
     default Iterator<T> iterator() {
         return new Iterator<T>() {
-            private int mI = 0;
+            private int mI;
 
             @Override
             public boolean hasNext() {

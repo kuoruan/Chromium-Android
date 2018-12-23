@@ -13,6 +13,7 @@ import android.support.annotation.IntDef;
 import android.webkit.MimeTypeMap;
 
 import org.chromium.base.metrics.CachedMetrics;
+import org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider;
 import org.chromium.chrome.browser.util.IntentUtils;
 
 import java.lang.annotation.Retention;
@@ -63,6 +64,8 @@ public class MediaLauncherActivity extends Activity {
         Intent intent = MediaViewerUtils.getMediaViewerIntent(
                 contentUri, contentUri, mimeType, false /* allowExternalAppHandlers */);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.putExtra(CustomTabIntentDataProvider.EXTRA_BROWSER_LAUNCH_SOURCE,
+                CustomTabIntentDataProvider.LaunchSourceType.MEDIA_LAUNCHER_ACTIVITY);
         startActivity(intent);
 
         finish();

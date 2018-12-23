@@ -26,6 +26,7 @@ import org.chromium.chrome.browser.widget.bottomsheet.BottomSheetObserver;
 import org.chromium.chrome.browser.widget.bottomsheet.EmptyBottomSheetObserver;
 import org.chromium.content_public.browser.SelectionPopupController;
 import org.chromium.content_public.browser.WebContents;
+import org.chromium.content_public.common.BrowserControlsState;
 import org.chromium.ui.UiUtils;
 import org.chromium.ui.interpolators.BakedBezierInterpolator;
 
@@ -109,7 +110,7 @@ public class TabModalPresenter
         if (mDialogContainer == null) initDialogContainer();
         setBrowserControlsAccess(true);
         // Don't show the dialog container before browser controls are guaranteed fully visible.
-        if (mActiveTab.getControlsOffsetHelper().areBrowserControlsFullyVisible()) {
+        if (getControlsOffsetHelper().areBrowserControlsFullyVisible()) {
             runEnterAnimation(dialogView);
         } else {
             mRunEnterAnimationOnCallback = true;
@@ -139,6 +140,10 @@ public class TabModalPresenter
             mRunEnterAnimationOnCallback = false;
             runEnterAnimation(getModalDialog().getView());
         }
+    }
+
+    private TabBrowserControlsOffsetHelper getControlsOffsetHelper() {
+        return TabBrowserControlsOffsetHelper.from(mActiveTab);
     }
 
     /**
@@ -224,7 +229,7 @@ public class TabModalPresenter
             assert mActiveTab
                     != null : "Tab modal dialogs should be shown on top of an active tab.";
 
-            mActiveTab.getControlsOffsetHelper().addObserver(this);
+            getControlsOffsetHelper().addObserver(this);
             // Hide contextual search panel so that bottom toolbar will not be
             // obscured and back press is not overridden.
             ContextualSearchManager contextualSearchManager =
@@ -249,7 +254,7 @@ public class TabModalPresenter
             mChromeActivity.getAppMenuHandler().hideAppMenu();
 
             // Force toolbar to show and disable overflow menu.
-            mActiveTab.onTabModalDialogStateChanged(true);
+            onTabModalDialogStateChanged(true);
 
             if (mHasBottomControls) {
                 bottomSheet.setSheetState(BottomSheet.SheetState.PEEK, true);
@@ -259,7 +264,7 @@ public class TabModalPresenter
             }
             menuButton.setEnabled(false);
         } else {
-            mActiveTab.getControlsOffsetHelper().removeObserver(this);
+            getControlsOffsetHelper().removeObserver(this);
             // Show the action bar back if it was dismissed when the dialogs were showing.
             if (mDidClearTextControls) {
                 mDidClearTextControls = false;
@@ -270,10 +275,23 @@ public class TabModalPresenter
                 }
             }
 
-            mActiveTab.onTabModalDialogStateChanged(false);
+            onTabModalDialogStateChanged(false);
             menuButton.setEnabled(true);
             if (mHasBottomControls) bottomSheet.removeObserver(mBottomSheetObserver);
             mActiveTab = null;
+        }
+    }
+
+    private void onTabModalDialogStateChanged(boolean isShowing) {
+        mActiveTab.onTabModalDialogStateChanged(isShowing);
+
+        // Also need to update browser control state after dismissal to refresh the constraints.
+        TabBrowserControlsOffsetHelper offsetHelper = getControlsOffsetHelper();
+        if (isShowing && mActiveTab.areRendererInputEventsIgnored()) {
+            offsetHelper.showAndroidControls(true);
+        } else {
+            mActiveTab.updateBrowserControlsState(
+                    BrowserControlsState.SHOWN, !offsetHelper.isControlsOffsetOverridden());
         }
     }
 

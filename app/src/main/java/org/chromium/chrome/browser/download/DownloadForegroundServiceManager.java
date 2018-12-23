@@ -69,7 +69,7 @@ public class DownloadForegroundServiceManager {
             Log.w(TAG, "Done checking if delayed stopAndUnbindService needs to be resolved.");
         }
     };
-    private boolean mStopServiceDelayed = false;
+    private boolean mStopServiceDelayed;
 
     private int mPinnedNotificationId = INVALID_NOTIFICATION_ID;
 

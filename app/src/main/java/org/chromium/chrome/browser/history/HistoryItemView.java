@@ -11,31 +11,32 @@ import android.support.annotation.VisibleForTesting;
 import android.support.graphics.drawable.VectorDrawableCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.content.res.AppCompatResources;
+import android.support.v7.widget.AppCompatImageButton;
 import android.util.AttributeSet;
 import android.view.View;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.favicon.FaviconHelper.DefaultFaviconHelper;
 import org.chromium.chrome.browser.favicon.IconType;
 import org.chromium.chrome.browser.favicon.LargeIconBridge.LargeIconCallback;
 import org.chromium.chrome.browser.preferences.Pref;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.ViewUtils;
 import org.chromium.chrome.browser.widget.RoundedIconGenerator;
-import org.chromium.chrome.browser.widget.TintedImageButton;
 import org.chromium.chrome.browser.widget.selection.SelectableItemView;
 
 /**
  * The SelectableItemView for items displayed in the browsing history UI.
  */
 public class HistoryItemView extends SelectableItemView<HistoryItem> implements LargeIconCallback {
-    private TintedImageButton mRemoveButton;
+    private AppCompatImageButton mRemoveButton;
     private VectorDrawableCompat mBlockedVisitDrawable;
     private View mContentView;
 
     private HistoryManager mHistoryManager;
     private final RoundedIconGenerator mIconGenerator;
+    private DefaultFaviconHelper mFaviconHelper;
 
     private final int mMinIconSize;
     private final int mDisplayedIconSize;
@@ -49,8 +50,7 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
 
         mMinIconSize = getResources().getDimensionPixelSize(R.dimen.default_favicon_min_size);
         mDisplayedIconSize = getResources().getDimensionPixelSize(R.dimen.default_favicon_size);
-        mIconGenerator = ViewUtils.createDefaultRoundedIconGenerator(
-                FeatureUtilities.isChromeModernDesignEnabled());
+        mIconGenerator = ViewUtils.createDefaultRoundedIconGenerator(true);
         mEndPadding = context.getResources().getDimensionPixelSize(
                 R.dimen.selectable_list_layout_row_padding);
 
@@ -62,7 +62,7 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
         super.onFinishInflate();
         mIconView.setImageResource(R.drawable.default_favicon);
         mContentView = findViewById(R.id.content);
-        mRemoveButton = (TintedImageButton) findViewById(R.id.remove);
+        mRemoveButton = (AppCompatImageButton) findViewById(R.id.remove);
         mRemoveButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -94,7 +94,7 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
                     ApiCompatibilityUtils.getColor(getResources(), R.color.google_red_700));
         } else {
             setIconDrawable(
-                    ApiCompatibilityUtils.getDrawable(getResources(), R.drawable.default_favicon));
+                    mFaviconHelper.getDefaultFaviconDrawable(getContext(), item.getUrl(), true));
             if (mHistoryManager != null) requestIcon();
 
             mTitleView.setTextColor(
@@ -111,6 +111,13 @@ public class HistoryItemView extends SelectableItemView<HistoryItem> implements 
 
         mHistoryManager = manager;
         if (!getItem().wasBlockedVisit()) requestIcon();
+    }
+
+    /**
+     * @param helper The helper for fetching default favicons.
+     */
+    public void setFaviconHelper(DefaultFaviconHelper helper) {
+        mFaviconHelper = helper;
     }
 
     /**

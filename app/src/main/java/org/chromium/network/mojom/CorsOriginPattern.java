@@ -22,6 +22,7 @@ public final class CorsOriginPattern extends org.chromium.mojo.bindings.Struct {
     public String protocol;
     public String domain;
     public boolean allowSubdomains;
+    public int priority;
 
     private CorsOriginPattern(int version) {
         super(STRUCT_SIZE, version);
@@ -68,6 +69,11 @@ public final class CorsOriginPattern extends org.chromium.mojo.bindings.Struct {
                     
                 result.allowSubdomains = decoder0.readBoolean(24, 0);
                 }
+                {
+                    
+                result.priority = decoder0.readInt(28);
+                    CorsOriginAccessMatchPriority.validate(result.priority);
+                }
 
         } finally {
             decoder0.decreaseStackDepth();
@@ -85,5 +91,7 @@ public final class CorsOriginPattern extends org.chromium.mojo.bindings.Struct {
         encoder0.encode(this.domain, 16, false);
         
         encoder0.encode(this.allowSubdomains, 24, 0);
+        
+        encoder0.encode(this.priority, 28);
     }
 }

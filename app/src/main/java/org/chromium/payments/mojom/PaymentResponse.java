@@ -16,16 +16,14 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class PaymentResponse extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 64;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(64, 0)};
+    private static final int STRUCT_SIZE = 48;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(48, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public String methodName;
     public String stringifiedDetails;
     public PaymentAddress shippingAddress;
     public String shippingOption;
-    public String payerName;
-    public String payerEmail;
-    public String payerPhone;
+    public PayerDetail payer;
 
     private PaymentResponse(int version) {
         super(STRUCT_SIZE, version);
@@ -79,15 +77,8 @@ public final class PaymentResponse extends org.chromium.mojo.bindings.Struct {
                 }
                 {
                     
-                result.payerName = decoder0.readString(40, true);
-                }
-                {
-                    
-                result.payerEmail = decoder0.readString(48, true);
-                }
-                {
-                    
-                result.payerPhone = decoder0.readString(56, true);
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(40, false);
+                result.payer = PayerDetail.decode(decoder1);
                 }
 
         } finally {
@@ -109,10 +100,6 @@ public final class PaymentResponse extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.shippingOption, 32, true);
         
-        encoder0.encode(this.payerName, 40, true);
-        
-        encoder0.encode(this.payerEmail, 48, true);
-        
-        encoder0.encode(this.payerPhone, 56, true);
+        encoder0.encode(this.payer, 40, false);
     }
 }

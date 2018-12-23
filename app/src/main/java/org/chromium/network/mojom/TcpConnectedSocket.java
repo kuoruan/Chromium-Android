@@ -32,6 +32,22 @@ UpgradeToTlsResponse callback);
 
 
 
+    void setSendBufferSize(
+int sendBufferSize, 
+SetSendBufferSizeResponse callback);
+
+    interface SetSendBufferSizeResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Integer> { }
+
+
+
+    void setReceiveBufferSize(
+int receiveBufferSize, 
+SetReceiveBufferSizeResponse callback);
+
+    interface SetReceiveBufferSizeResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Integer> { }
+
+
+
     void setNoDelay(
 boolean noDelay, 
 SetNoDelayResponse callback);

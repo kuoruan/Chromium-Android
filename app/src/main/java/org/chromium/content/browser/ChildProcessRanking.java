@@ -37,6 +37,17 @@ public class ChildProcessRanking implements Iterable<ChildProcessConnection> {
     }
 
     private static class RankComparator implements Comparator<ConnectionWithRank> {
+        private static int compareByIntersectsViewportAndDepth(
+                ConnectionWithRank o1, ConnectionWithRank o2) {
+            if (o1.intersectsViewport && !o2.intersectsViewport) {
+                return -1;
+            } else if (!o1.intersectsViewport && o2.intersectsViewport) {
+                return 1;
+            }
+
+            return (int) (o1.frameDepth - o2.frameDepth);
+        }
+
         @Override
         public int compare(ConnectionWithRank o1, ConnectionWithRank o2) {
             // Sort null to the end.
@@ -52,38 +63,60 @@ public class ChildProcessRanking implements Iterable<ChildProcessConnection> {
             assert o2 != null;
 
             // Ranking order:
-            // * visible or ChildProcessImportance.IMPORTANT
-            // * ChildProcessImportance.MODERATE
-            // * intersectsViewport
-            // * frameDepth (lower value is higher rank)
-            // Note boostForPendingViews is not used for ranking.
+            // * (visible and main frame) or ChildProcessImportance.IMPORTANT
+            // * (visible and subframe and intersect viewport) or ChildProcessImportance.MODERATE
+            // * invisible main frame
+            // * visible subframe and not intersect viewport
+            // * invisible subframes
+            // Within each group, ties are broken by intersect viewport and then frame depth where
+            // applicable. Note boostForPendingViews is not used for ranking.
 
-            boolean o1IsForeground =
-                    o1.visible || o1.importance == ChildProcessImportance.IMPORTANT;
-            boolean o2IsForeground =
-                    o2.visible || o2.importance == ChildProcessImportance.IMPORTANT;
-
-            if (o1IsForeground && !o2IsForeground) {
+            boolean o1IsVisibleMainOrImportant = (o1.visible && o1.frameDepth == 0)
+                    || o1.importance == ChildProcessImportance.IMPORTANT;
+            boolean o2IsVisibleMainOrImportant = (o2.visible && o2.frameDepth == 0)
+                    || o2.importance == ChildProcessImportance.IMPORTANT;
+            if (o1IsVisibleMainOrImportant && o2IsVisibleMainOrImportant) {
+                return compareByIntersectsViewportAndDepth(o1, o2);
+            } else if (o1IsVisibleMainOrImportant && !o2IsVisibleMainOrImportant) {
                 return -1;
-            } else if (!o1IsForeground && o2IsForeground) {
+            } else if (!o1IsVisibleMainOrImportant && o2IsVisibleMainOrImportant) {
                 return 1;
             }
 
-            boolean o1IsModerate = o1.importance == ChildProcessImportance.MODERATE;
-            boolean o2IsModerate = o2.importance == ChildProcessImportance.MODERATE;
-            if (o1IsModerate && !o2IsModerate) {
+            boolean o1VisibleIntersectSubframeOrModerate =
+                    (o1.visible && o1.frameDepth > 0 && o1.intersectsViewport)
+                    || o1.importance == ChildProcessImportance.MODERATE;
+            boolean o2VisibleIntersectSubframeOrModerate =
+                    (o2.visible && o2.frameDepth > 0 && o2.intersectsViewport)
+                    || o2.importance == ChildProcessImportance.MODERATE;
+            if (o1VisibleIntersectSubframeOrModerate && o2VisibleIntersectSubframeOrModerate) {
+                return compareByIntersectsViewportAndDepth(o1, o2);
+            } else if (o1VisibleIntersectSubframeOrModerate
+                    && !o2VisibleIntersectSubframeOrModerate) {
                 return -1;
-            } else if (!o1IsModerate && o2IsModerate) {
+            } else if (!o1VisibleIntersectSubframeOrModerate
+                    && o2VisibleIntersectSubframeOrModerate) {
                 return 1;
             }
 
-            if (o1.intersectsViewport && !o2.intersectsViewport) {
+            boolean o1InvisibleMainFrame = !o1.visible && o1.frameDepth == 0;
+            boolean o2InvisibleMainFrame = !o2.visible && o2.frameDepth == 0;
+            if (o1InvisibleMainFrame && o2InvisibleMainFrame) {
+                return 0;
+            } else if (o1InvisibleMainFrame && !o2InvisibleMainFrame) {
                 return -1;
-            } else if (!o1.intersectsViewport && o2.intersectsViewport) {
+            } else if (!o1InvisibleMainFrame && o2InvisibleMainFrame) {
                 return 1;
             }
 
-            return (int) (o1.frameDepth - o2.frameDepth);
+            // The rest of the groups can just be ranked by visibility, intersects viewport, and
+            // frame depth.
+            if (o1.visible && !o2.visible) {
+                return -1;
+            } else if (!o1.visible && o2.visible) {
+                return 1;
+            }
+            return compareByIntersectsViewportAndDepth(o1, o2);
         }
     }
 

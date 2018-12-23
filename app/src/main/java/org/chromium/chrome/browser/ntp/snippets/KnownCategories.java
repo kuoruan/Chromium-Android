@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
     KnownCategories.RECENT_TABS_DEPRECATED, KnownCategories.DOWNLOADS, KnownCategories.BOOKMARKS,
-    KnownCategories.PHYSICAL_WEB_PAGES_DEPRECATED, KnownCategories.FOREIGN_TABS,
+    KnownCategories.PHYSICAL_WEB_PAGES_DEPRECATED, KnownCategories.FOREIGN_TABS_DEPRECATED,
     KnownCategories.READING_LIST, KnownCategories.CONTEXTUAL,
     KnownCategories.LOCAL_CATEGORIES_COUNT, KnownCategories.REMOTE_CATEGORIES_OFFSET,
     KnownCategories.ARTICLES, KnownCategories.LAST_KNOWN_REMOTE_CATEGORY
@@ -43,7 +43,7 @@ public @interface KnownCategories {
   /**
    * Pages recently browsed to on other devices.
    */
-  int FOREIGN_TABS = 4;
+  int FOREIGN_TABS_DEPRECATED = 4;
   /**
    * Pages from the user reading list.
    */

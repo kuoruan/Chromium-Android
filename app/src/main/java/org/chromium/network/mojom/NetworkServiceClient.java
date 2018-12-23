@@ -30,7 +30,7 @@ int processId, int routingId, int requestId, org.chromium.url.mojom.Url url, org
 
 
     void onCertificateRequested(
-int processId, int routingId, int requestId, SslCertRequestInfo certInfo, 
+org.chromium.mojo_base.mojom.UnguessableToken windowId, int processId, int routingId, int requestId, SslCertRequestInfo certInfo, 
 OnCertificateRequestedResponse callback);
 
     interface OnCertificateRequestedResponse extends org.chromium.mojo.bindings.Callbacks.Callback4<X509Certificate, short[], SslPrivateKey, Boolean> { }

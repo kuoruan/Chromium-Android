@@ -13,8 +13,15 @@ import org.chromium.base.Callback;
 public class DownloadMediaParserBridge {
     private long mNativeDownloadMediaParserBridge;
 
-    public DownloadMediaParserBridge() {
-        mNativeDownloadMediaParserBridge = nativeInit();
+    /** Creates a media parser to analyze media metadata and retrieve thumbnails.
+     * @param mimeType The mime type of the media file.
+     * @param filePath The absolute path of the media file.
+     * @param totalSize Total size of the media file.
+     * @param callback Callback to get the result.
+     */
+    public DownloadMediaParserBridge(
+            String mimeType, String filePath, Callback<DownloadMediaData> callback) {
+        mNativeDownloadMediaParserBridge = nativeInit(mimeType, filePath, callback);
     }
 
     /**
@@ -27,22 +34,16 @@ public class DownloadMediaParserBridge {
     }
 
     /**
-     * Parses a media file to retrieve media metadata and video thumbnail.
-     * @param mimeType The mime type of the media file.
-     * @param filePath The absolute path of the media file.
-     * @param totalSize Total size of the media file.
-     * @param callback Callback to get the result.
+     * Starts to parse a media file to retrieve media metadata and video thumbnail.
      */
-    public void parseMediaFile(
-            String mimeType, String filePath, long totalSize, Callback<Boolean> callback) {
+    public void start() {
         if (mNativeDownloadMediaParserBridge != 0) {
-            nativeParseMediaFile(
-                    mNativeDownloadMediaParserBridge, mimeType, filePath, totalSize, callback);
+            nativeStart(mNativeDownloadMediaParserBridge);
         }
     }
 
-    private native long nativeInit();
+    private native long nativeInit(
+            String mimeType, String filePath, Callback<DownloadMediaData> callback);
     private native void nativeDestory(long nativeDownloadMediaParserBridge);
-    private native void nativeParseMediaFile(long nativeDownloadMediaParserBridge, String mimeType,
-            String filePath, long totalSize, Callback<Boolean> callback);
+    private native void nativeStart(long nativeDownloadMediaParserBridge);
 }

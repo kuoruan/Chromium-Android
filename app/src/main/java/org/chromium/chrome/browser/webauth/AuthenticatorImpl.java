@@ -34,7 +34,7 @@ public class AuthenticatorImpl implements Authenticator, HandlerResponseCallback
     private static final int GMSCORE_MIN_VERSION = 12800000;
 
     /** Ensures only one request is processed at a time. */
-    private boolean mIsOperationPending = false;
+    private boolean mIsOperationPending;
 
     private org.chromium.mojo.bindings.Callbacks
             .Callback2<Integer, MakeCredentialAuthenticatorResponse> mMakeCredentialCallback;

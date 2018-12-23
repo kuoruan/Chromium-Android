@@ -6,10 +6,12 @@ package org.chromium.chrome.browser.widget.incognitotoggle;
 
 import android.content.Context;
 import android.support.annotation.StringRes;
+import android.support.v7.content.res.AppCompatResources;
+import android.support.v7.widget.AppCompatImageButton;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.ImageButton;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModelSelectorObserver;
@@ -23,7 +25,7 @@ import org.chromium.chrome.browser.tabmodel.TabModelSelectorObserver;
  * TabModelSelector switches between normal and incognito modes. It can be subclassed (e.g. as is
  * done in IncognitoToggleButtonTablet) to add additional behaviors.
  */
-public class IncognitoToggleButton extends ImageButton {
+public class IncognitoToggleButton extends AppCompatImageButton {
     // TODO(crbug.com/843749): refactor this class so it doesn't need to hold a reference to
     // TabModelSelector.
     protected TabModelSelector mTabModelSelector;
@@ -66,6 +68,17 @@ public class IncognitoToggleButton extends ImageButton {
         }
     }
 
+    /**
+     * Set the image for the toggle button and set any necessary properties (e.g. tint).
+     * @param isIncognitoSelected Whether incognito is currently selected.
+     */
+    protected void setImage(boolean isIncognitoSelected) {
+        setImageResource(R.drawable.incognito_simple);
+        ApiCompatibilityUtils.setImageTintList(this,
+                AppCompatResources.getColorStateList(getContext(),
+                        isIncognitoSelected ? R.color.white_mode_tint : R.color.dark_mode_tint));
+    }
+
     private void updateButtonResource() {
         if (mTabModelSelector == null || mTabModelSelector.getCurrentModel() == null) return;
 
@@ -80,8 +93,6 @@ public class IncognitoToggleButton extends ImageButton {
                                   ? R.string.accessibility_tabstrip_btn_private_toggle_standard
                                   : R.string.accessibility_tabstrip_btn_incognito_toggle_standard);
         setContentDescription(getContext().getString(resId));
-        setImageResource(mTabModelSelector.isIncognitoSelected()
-                        ? R.drawable.btn_tabstrip_switch_incognito
-                        : R.drawable.btn_tabstrip_switch_normal);
+        setImage(mTabModelSelector.isIncognitoSelected());
     }
 }

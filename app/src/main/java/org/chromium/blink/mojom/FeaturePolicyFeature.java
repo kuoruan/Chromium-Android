@@ -18,61 +18,63 @@ public final class FeaturePolicyFeature {
 
     public static final int NOT_FOUND = (int) (0L);
 
-    public static final int AUTOPLAY = NOT_FOUND + 1;
+    public static final int AUTOPLAY = (int) (1L);
 
-    public static final int CAMERA = AUTOPLAY + 1;
+    public static final int CAMERA = (int) (2L);
 
-    public static final int ENCRYPTED_MEDIA = CAMERA + 1;
+    public static final int ENCRYPTED_MEDIA = (int) (3L);
 
-    public static final int FULLSCREEN = ENCRYPTED_MEDIA + 1;
+    public static final int FULLSCREEN = (int) (4L);
 
-    public static final int GEOLOCATION = FULLSCREEN + 1;
+    public static final int GEOLOCATION = (int) (5L);
 
-    public static final int MICROPHONE = GEOLOCATION + 1;
+    public static final int MICROPHONE = (int) (6L);
 
-    public static final int MIDI_FEATURE = MICROPHONE + 1;
+    public static final int MIDI_FEATURE = (int) (7L);
 
-    public static final int PAYMENT = MIDI_FEATURE + 1;
+    public static final int PAYMENT = (int) (8L);
 
-    public static final int SPEAKER = PAYMENT + 1;
+    public static final int SPEAKER = (int) (9L);
 
-    public static final int DOCUMENT_COOKIE = SPEAKER + 1;
+    public static final int DOCUMENT_COOKIE = (int) (10L);
 
-    public static final int DOCUMENT_DOMAIN = DOCUMENT_COOKIE + 1;
+    public static final int DOCUMENT_DOMAIN = (int) (11L);
 
-    public static final int SYNC_SCRIPT = DOCUMENT_DOMAIN + 1;
+    public static final int SYNC_SCRIPT = (int) (12L);
 
-    public static final int SYNC_XHR = SYNC_SCRIPT + 1;
+    public static final int SYNC_XHR = (int) (13L);
 
-    public static final int USB = SYNC_XHR + 1;
+    public static final int USB = (int) (14L);
 
-    public static final int ACCESSIBILITY_EVENTS = USB + 1;
+    public static final int ACCESSIBILITY_EVENTS = (int) (15L);
 
-    public static final int WEB_VR = ACCESSIBILITY_EVENTS + 1;
+    public static final int WEB_VR = (int) (16L);
 
-    public static final int ACCELEROMETER = WEB_VR + 1;
+    public static final int ACCELEROMETER = (int) (17L);
 
-    public static final int AMBIENT_LIGHT_SENSOR = ACCELEROMETER + 1;
+    public static final int AMBIENT_LIGHT_SENSOR = (int) (18L);
 
-    public static final int GYROSCOPE = AMBIENT_LIGHT_SENSOR + 1;
+    public static final int GYROSCOPE = (int) (19L);
 
-    public static final int MAGNETOMETER = GYROSCOPE + 1;
+    public static final int MAGNETOMETER = (int) (20L);
 
-    public static final int UNSIZED_MEDIA = MAGNETOMETER + 1;
+    public static final int UNSIZED_MEDIA = (int) (21L);
 
-    public static final int LEGACY_IMAGE_FORMATS = UNSIZED_MEDIA + 1;
+    public static final int LEGACY_IMAGE_FORMATS = (int) (22L);
 
-    public static final int IMAGE_COMPRESSION = LEGACY_IMAGE_FORMATS + 1;
+    public static final int IMAGE_COMPRESSION = (int) (23L);
 
-    public static final int ANIMATIONS = IMAGE_COMPRESSION + 1;
+    public static final int ANIMATIONS = (int) (24L);
 
-    public static final int MAX_DOWNSCALING_IMAGE = ANIMATIONS + 1;
+    public static final int MAX_DOWNSCALING_IMAGE = (int) (25L);
 
-    public static final int PICTURE_IN_PICTURE = MAX_DOWNSCALING_IMAGE + 1;
+    public static final int PICTURE_IN_PICTURE = (int) (26L);
 
-    public static final int VERTICAL_SCROLL = PICTURE_IN_PICTURE + 1;
+    public static final int VERTICAL_SCROLL = (int) (27L);
 
-    public static final int DOCUMENT_WRITE = VERTICAL_SCROLL + 1;
+    public static final int DOCUMENT_WRITE = (int) (28L);
+
+    public static final int LAZY_LOAD = (int) (29L);
 
 
     private static final boolean IS_EXTENSIBLE = false;
@@ -108,6 +110,7 @@ public final class FeaturePolicyFeature {
             case 26:
             case 27:
             case 28:
+            case 29:
                 return true;
         }
         return false;

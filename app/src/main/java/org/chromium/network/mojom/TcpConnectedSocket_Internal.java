@@ -49,9 +49,13 @@ class TcpConnectedSocket_Internal {
 
     private static final int UPGRADE_TO_TLS_ORDINAL = 0;
 
-    private static final int SET_NO_DELAY_ORDINAL = 1;
+    private static final int SET_SEND_BUFFER_SIZE_ORDINAL = 1;
 
-    private static final int SET_KEEP_ALIVE_ORDINAL = 2;
+    private static final int SET_RECEIVE_BUFFER_SIZE_ORDINAL = 2;
+
+    private static final int SET_NO_DELAY_ORDINAL = 3;
+
+    private static final int SET_KEEP_ALIVE_ORDINAL = 4;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements TcpConnectedSocket.Proxy {
@@ -88,6 +92,50 @@ UpgradeToTlsResponse callback) {
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
                                     0)),
                     new TcpConnectedSocketUpgradeToTlsResponseParamsForwardToCallback(callback));
+
+        }
+
+
+        @Override
+        public void setSendBufferSize(
+int sendBufferSize, 
+SetSendBufferSizeResponse callback) {
+
+            TcpConnectedSocketSetSendBufferSizeParams _message = new TcpConnectedSocketSetSendBufferSizeParams();
+
+            _message.sendBufferSize = sendBufferSize;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    SET_SEND_BUFFER_SIZE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new TcpConnectedSocketSetSendBufferSizeResponseParamsForwardToCallback(callback));
+
+        }
+
+
+        @Override
+        public void setReceiveBufferSize(
+int receiveBufferSize, 
+SetReceiveBufferSizeResponse callback) {
+
+            TcpConnectedSocketSetReceiveBufferSizeParams _message = new TcpConnectedSocketSetReceiveBufferSizeParams();
+
+            _message.receiveBufferSize = receiveBufferSize;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    SET_RECEIVE_BUFFER_SIZE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new TcpConnectedSocketSetReceiveBufferSizeResponseParamsForwardToCallback(callback));
 
         }
 
@@ -168,6 +216,10 @@ SetKeepAliveResponse callback) {
 
 
 
+
+
+
+
                     default:
                         return false;
                 }
@@ -204,6 +256,36 @@ SetKeepAliveResponse callback) {
                                 TcpConnectedSocketUpgradeToTlsParams.deserialize(messageWithHeader.getPayload());
 
                         getImpl().upgradeToTls(data.hostPortPair, data.options, data.trafficAnnotation, data.request, data.observer, new TcpConnectedSocketUpgradeToTlsResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
+
+
+
+
+
+                    case SET_SEND_BUFFER_SIZE_ORDINAL: {
+
+                        TcpConnectedSocketSetSendBufferSizeParams data =
+                                TcpConnectedSocketSetSendBufferSizeParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().setSendBufferSize(data.sendBufferSize, new TcpConnectedSocketSetSendBufferSizeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
+
+
+
+
+
+                    case SET_RECEIVE_BUFFER_SIZE_ORDINAL: {
+
+                        TcpConnectedSocketSetReceiveBufferSizeParams data =
+                                TcpConnectedSocketSetReceiveBufferSizeParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().setReceiveBufferSize(data.receiveBufferSize, new TcpConnectedSocketSetReceiveBufferSizeResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
 
@@ -489,6 +571,380 @@ SetKeepAliveResponse callback) {
                             mCore,
                             new org.chromium.mojo.bindings.MessageHeader(
                                     UPGRADE_TO_TLS_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class TcpConnectedSocketSetSendBufferSizeParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int sendBufferSize;
+
+        private TcpConnectedSocketSetSendBufferSizeParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public TcpConnectedSocketSetSendBufferSizeParams() {
+            this(0);
+        }
+
+        public static TcpConnectedSocketSetSendBufferSizeParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static TcpConnectedSocketSetSendBufferSizeParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static TcpConnectedSocketSetSendBufferSizeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            TcpConnectedSocketSetSendBufferSizeParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new TcpConnectedSocketSetSendBufferSizeParams(elementsOrVersion);
+                    {
+                        
+                    result.sendBufferSize = decoder0.readInt(8);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.sendBufferSize, 8);
+        }
+    }
+
+
+
+    
+    static final class TcpConnectedSocketSetSendBufferSizeResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int netError;
+
+        private TcpConnectedSocketSetSendBufferSizeResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public TcpConnectedSocketSetSendBufferSizeResponseParams() {
+            this(0);
+        }
+
+        public static TcpConnectedSocketSetSendBufferSizeResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static TcpConnectedSocketSetSendBufferSizeResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static TcpConnectedSocketSetSendBufferSizeResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            TcpConnectedSocketSetSendBufferSizeResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new TcpConnectedSocketSetSendBufferSizeResponseParams(elementsOrVersion);
+                    {
+                        
+                    result.netError = decoder0.readInt(8);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.netError, 8);
+        }
+    }
+
+    static class TcpConnectedSocketSetSendBufferSizeResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final TcpConnectedSocket.SetSendBufferSizeResponse mCallback;
+
+        TcpConnectedSocketSetSendBufferSizeResponseParamsForwardToCallback(TcpConnectedSocket.SetSendBufferSizeResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(SET_SEND_BUFFER_SIZE_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                TcpConnectedSocketSetSendBufferSizeResponseParams response = TcpConnectedSocketSetSendBufferSizeResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.netError);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class TcpConnectedSocketSetSendBufferSizeResponseParamsProxyToResponder implements TcpConnectedSocket.SetSendBufferSizeResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        TcpConnectedSocketSetSendBufferSizeResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(Integer netError) {
+            TcpConnectedSocketSetSendBufferSizeResponseParams _response = new TcpConnectedSocketSetSendBufferSizeResponseParams();
+
+            _response.netError = netError;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    SET_SEND_BUFFER_SIZE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class TcpConnectedSocketSetReceiveBufferSizeParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int receiveBufferSize;
+
+        private TcpConnectedSocketSetReceiveBufferSizeParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public TcpConnectedSocketSetReceiveBufferSizeParams() {
+            this(0);
+        }
+
+        public static TcpConnectedSocketSetReceiveBufferSizeParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static TcpConnectedSocketSetReceiveBufferSizeParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static TcpConnectedSocketSetReceiveBufferSizeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            TcpConnectedSocketSetReceiveBufferSizeParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new TcpConnectedSocketSetReceiveBufferSizeParams(elementsOrVersion);
+                    {
+                        
+                    result.receiveBufferSize = decoder0.readInt(8);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.receiveBufferSize, 8);
+        }
+    }
+
+
+
+    
+    static final class TcpConnectedSocketSetReceiveBufferSizeResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int netError;
+
+        private TcpConnectedSocketSetReceiveBufferSizeResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public TcpConnectedSocketSetReceiveBufferSizeResponseParams() {
+            this(0);
+        }
+
+        public static TcpConnectedSocketSetReceiveBufferSizeResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static TcpConnectedSocketSetReceiveBufferSizeResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static TcpConnectedSocketSetReceiveBufferSizeResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            TcpConnectedSocketSetReceiveBufferSizeResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new TcpConnectedSocketSetReceiveBufferSizeResponseParams(elementsOrVersion);
+                    {
+                        
+                    result.netError = decoder0.readInt(8);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.netError, 8);
+        }
+    }
+
+    static class TcpConnectedSocketSetReceiveBufferSizeResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final TcpConnectedSocket.SetReceiveBufferSizeResponse mCallback;
+
+        TcpConnectedSocketSetReceiveBufferSizeResponseParamsForwardToCallback(TcpConnectedSocket.SetReceiveBufferSizeResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(SET_RECEIVE_BUFFER_SIZE_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                TcpConnectedSocketSetReceiveBufferSizeResponseParams response = TcpConnectedSocketSetReceiveBufferSizeResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.netError);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class TcpConnectedSocketSetReceiveBufferSizeResponseParamsProxyToResponder implements TcpConnectedSocket.SetReceiveBufferSizeResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        TcpConnectedSocketSetReceiveBufferSizeResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(Integer netError) {
+            TcpConnectedSocketSetReceiveBufferSizeResponseParams _response = new TcpConnectedSocketSetReceiveBufferSizeResponseParams();
+
+            _response.netError = netError;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    SET_RECEIVE_BUFFER_SIZE_ORDINAL,
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
                                     mRequestId));
             mMessageReceiver.accept(_message);

@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.media.router;
 
+import android.support.annotation.Nullable;
+
 import java.util.List;
 
 /**
@@ -47,25 +49,20 @@ public interface MediaRouteManager {
     public void onRouteRequestError(String errorText, int requestId);
 
     /**
-     * Called when the route is closed either as a result of
-     * {@link MediaRouteProvider#closeRoute(String)} or an external event (e.g. screen disconnect).
+     * Called when the route is terminated. This happens when the receiver app has stopped.
+     *
      * @param mediaRouteId the id of the created route.
      */
-    public void onRouteClosed(String mediaRouteId);
+    public void onRouteTerminated(String mediaRouteId);
 
     /**
-     * Called when the route is closed because of an error, for example, session launch failure.
+     * Called when the route is closed with an optional error, for example, session launch failure.
+     * This happens when a route leaves the session while not affecting the receiver app state.
+     *
      * @param mediaRouteId the id of the created route.
-     * @param message The error message.
+     * @param error the error message. {@code null} indicates no error.
      */
-    public void onRouteClosedWithError(String mediaRouteId, String message);
-
-    /**
-     * Called when sending the message to the route finished.
-     * @param success Indicates if the message was sent successfully.
-     * @param callbackId The identifier of the callback to pass the result to.
-     */
-    public void onMessageSentResult(boolean success, int callbackId);
+    public void onRouteClosed(String mediaRouteId, @Nullable String error);
 
     /**
      * Called when a specified media route receives a message.

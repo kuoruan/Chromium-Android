@@ -21,13 +21,13 @@ public final class PredictionTargets extends org.chromium.mojo.bindings.Struct {
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public int framesDecoded;
     public int framesDropped;
-    public int framesDecodedPowerEfficient;
+    public int framesPowerEfficient;
 
     private PredictionTargets(int version) {
         super(STRUCT_SIZE, version);
         this.framesDecoded = (int) 0L;
         this.framesDropped = (int) 0L;
-        this.framesDecodedPowerEfficient = (int) 0L;
+        this.framesPowerEfficient = (int) 0L;
     }
 
     public PredictionTargets() {
@@ -69,7 +69,7 @@ public final class PredictionTargets extends org.chromium.mojo.bindings.Struct {
                 }
                 {
                     
-                result.framesDecodedPowerEfficient = decoder0.readInt(16);
+                result.framesPowerEfficient = decoder0.readInt(16);
                 }
 
         } finally {
@@ -87,6 +87,6 @@ public final class PredictionTargets extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.framesDropped, 12);
         
-        encoder0.encode(this.framesDecodedPowerEfficient, 16);
+        encoder0.encode(this.framesPowerEfficient, 16);
     }
 }

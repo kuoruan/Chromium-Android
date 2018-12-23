@@ -18,4 +18,7 @@
 <string name="video_call_notification_text_2">"正在存取視訊輸入"</string>
 <string name="audio_call_notification_text_2">"正在存取音訊輸入"</string>
 <string name="video_audio_call_notification_text_2">"正在存取音訊和視訊輸入"</string>
+<string name="video_call_incognito_notification_text_2">"有某個網站正在存取視訊輸入內容"</string>
+<string name="audio_call_incognito_notification_text_2">"有某個網站正在存取音訊輸入內容"</string>
+<string name="video_audio_call_incognito_notification_text_2">"有某個網站正在存取音訊和視訊輸入內容"</string>
 </resources>

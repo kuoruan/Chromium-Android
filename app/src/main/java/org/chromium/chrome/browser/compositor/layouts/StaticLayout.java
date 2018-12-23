@@ -8,8 +8,8 @@ import android.content.Context;
 import android.graphics.RectF;
 import android.os.Handler;
 
-import org.chromium.chrome.R;
 import org.chromium.chrome.browser.compositor.LayerTitleCache;
+import org.chromium.chrome.browser.compositor.animation.CompositorAnimator;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanelManager;
 import org.chromium.chrome.browser.compositor.layouts.components.LayoutTab;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
@@ -20,6 +20,8 @@ import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelImpl;
+import org.chromium.chrome.browser.tabmodel.TabModelSelector;
+import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabObserver;
 import org.chromium.ui.resources.ResourceManager;
 
 import java.util.Arrays;
@@ -43,10 +45,15 @@ public class StaticLayout extends Layout {
         public void run() {
             mUnstalling = false;
             if (mLayoutTabs == null || mLayoutTabs.length == 0) return;
-            addToAnimation(mLayoutTabs[0], LayoutTab.Property.SATURATION,
-                    mLayoutTabs[0].getSaturation(), 1.0f, HIDE_DURATION_MS, 0);
-            addToAnimation(mLayoutTabs[0], LayoutTab.Property.STATIC_TO_VIEW_BLEND,
-                    mLayoutTabs[0].getStaticToViewBlend(), 0.0f, HIDE_DURATION_MS, 0);
+            CompositorAnimator
+                    .ofFloatProperty(getAnimationHandler(), mLayoutTabs[0], LayoutTab.SATURATION,
+                            mLayoutTabs[0].getSaturation(), 1.0f, HIDE_DURATION_MS)
+                    .start();
+            CompositorAnimator
+                    .ofFloatProperty(getAnimationHandler(), mLayoutTabs[0],
+                            LayoutTab.STATIC_TO_VIEW_BLEND, mLayoutTabs[0].getStaticToViewBlend(),
+                            0.0f, HIDE_DURATION_MS)
+                    .start();
             mLayoutTabs[0].setShouldStall(false);
         }
     }
@@ -70,7 +77,7 @@ public class StaticLayout extends Layout {
         mHandler = new Handler();
         mUnstallRunnable = new UnstallRunnable();
         mUnstalling = false;
-        mSceneLayer = new StaticTabSceneLayer(R.id.control_container);
+        mSceneLayer = new StaticTabSceneLayer();
     }
 
     /**
@@ -132,9 +139,14 @@ public class StaticLayout extends Layout {
     }
 
     @Override
-    public void onTabPageLoadFinished(int id, boolean incognito) {
-        super.onTabPageLoadFinished(id, incognito);
-        unstallImmediately(id);
+    public void setTabModelSelector(TabModelSelector modelSelector, TabContentManager manager) {
+        super.setTabModelSelector(modelSelector, manager);
+        new TabModelSelectorTabObserver(mTabModelSelector) {
+            @Override
+            public void onPageLoadFinished(Tab tab) {
+                if (isActive()) unstallImmediately(tab.getId());
+            }
+        };
     }
 
     private void setPreHideState() {

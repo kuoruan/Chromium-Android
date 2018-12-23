@@ -1,8 +1,11 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: ../../chrome/android/java/src/org/chromium/chrome/browser/customtabs/dynamicmodule/IModuleHost.aidl
+ * Original file: ../../third_party/cct_dynamic_module/src/src/java/org/chromium/chrome/browser/customtabs/dynamicmodule/IModuleHost.aidl
  */
 package org.chromium.chrome.browser.customtabs.dynamicmodule;
+/**
+ * Chrome host that runs custom modules.
+ */
 public interface IModuleHost extends android.os.IInterface
 {
 /** Local-side IPC implementation stub class. */
@@ -92,6 +95,7 @@ public java.lang.String getInterfaceDescriptor()
 {
 return DESCRIPTOR;
 }
+/** Application context of Chrome. */
 @Override public org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper getHostApplicationContext() throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
@@ -109,6 +113,7 @@ _data.recycle();
 }
 return _result;
 }
+/** Generated context of the module. */
 @Override public org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper getModuleContext() throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
@@ -166,7 +171,9 @@ static final int TRANSACTION_getModuleContext = (android.os.IBinder.FIRST_CALL_T
 static final int TRANSACTION_getHostVersion = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
 static final int TRANSACTION_getMinimumModuleVersion = (android.os.IBinder.FIRST_CALL_TRANSACTION + 3);
 }
+/** Application context of Chrome. */
 public org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper getHostApplicationContext() throws android.os.RemoteException;
+/** Generated context of the module. */
 public org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper getModuleContext() throws android.os.RemoteException;
 public int getHostVersion() throws android.os.RemoteException;
 public int getMinimumModuleVersion() throws android.os.RemoteException;

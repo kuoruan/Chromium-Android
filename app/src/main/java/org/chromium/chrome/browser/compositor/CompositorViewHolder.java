@@ -14,6 +14,8 @@ import android.graphics.RectF;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.Nullable;
+import android.support.annotation.Px;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.accessibility.AccessibilityEventCompat;
 import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
@@ -32,6 +34,7 @@ import org.chromium.base.SysUtils;
 import org.chromium.base.TraceEvent;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.InsetObserverView;
+import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardExtensionSizeManager;
 import org.chromium.chrome.browser.compositor.Invalidator.Client;
 import org.chromium.chrome.browser.compositor.layouts.LayoutManager;
 import org.chromium.chrome.browser.compositor.layouts.LayoutManagerHost;
@@ -50,9 +53,9 @@ import org.chromium.chrome.browser.tabmodel.EmptyTabModelSelectorObserver;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager;
 import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
-import org.chromium.chrome.browser.util.ColorUtils;
 import org.chromium.chrome.browser.widget.ControlContainer;
 import org.chromium.content_public.browser.WebContents;
+import org.chromium.ui.KeyboardVisibilityDelegate;
 import org.chromium.ui.UiUtils;
 import org.chromium.ui.base.EventForwarder;
 import org.chromium.ui.base.SPenSupport;
@@ -72,7 +75,8 @@ import java.util.List;
  */
 public class CompositorViewHolder extends FrameLayout
         implements ContentOffsetProvider, LayoutManagerHost, LayoutRenderHost, Invalidator.Host,
-                   FullscreenListener, InsetObserverView.WindowInsetObserver {
+                   FullscreenListener, InsetObserverView.WindowInsetObserver,
+                   KeyboardExtensionSizeManager.Observer {
     private static final long SYSTEM_UI_VIEWPORT_UPDATE_DELAY_MS = 500;
 
     private boolean mIsKeyboardShowing;
@@ -103,6 +107,7 @@ public class CompositorViewHolder extends FrameLayout
     /** The toolbar control container. **/
     private ControlContainer mControlContainer;
 
+    private @Nullable KeyboardExtensionSizeManager mKeyboardExtensionSizeManager;
     private InsetObserverView mInsetObserverView;
     private boolean mShowingFullscreen;
     private Runnable mSystemUiFullscreenResizeRunnable;
@@ -257,7 +262,8 @@ public class CompositorViewHolder extends FrameLayout
         // contents.
         //
         // [1] - https://developer.android.com/reference/android/view/WindowManager.LayoutParams.html#FLAG_FULLSCREEN
-        if (mShowingFullscreen && UiUtils.isKeyboardShowing(getContext(), this)) {
+        if (mShowingFullscreen
+                && KeyboardVisibilityDelegate.getInstance().isKeyboardShowing(getContext(), this)) {
             getWindowVisibleDisplayFrame(mCacheRect);
 
             // On certain devices, getWindowVisibleDisplayFrame is larger than the screen size, so
@@ -371,6 +377,38 @@ public class CompositorViewHolder extends FrameLayout
 
     @Override
     public void onSafeAreaChanged(Rect area) {}
+
+    /**
+     * Allows to set (or unset if called with null) the {@link KeyboardExtensionSizeManager} that
+     * provides the dimensions of any keyboard extensions or replacements. Registers an observer to
+     * react to size changes immediately.
+     * @param manager A {@link KeyboardExtensionSizeManager}. Optional.
+     */
+    public void setKeyboardExtensionView(@Nullable KeyboardExtensionSizeManager manager) {
+        if (mKeyboardExtensionSizeManager != null) {
+            mKeyboardExtensionSizeManager.removeObserver(this);
+        }
+        mKeyboardExtensionSizeManager = manager;
+        if (mKeyboardExtensionSizeManager != null) {
+            mKeyboardExtensionSizeManager.addObserver(this);
+            onViewportChanged();
+        }
+    }
+
+    @Override
+    public void onKeyboardExtensionHeightChanged(int keyboardHeight) {
+        onUpdateViewportSize();
+    }
+
+    /**
+     * Returns the combined height of all extensions to or replacements of the keyboard which
+     * consume space at the bottom of the content area.
+     * @return the full height in pixels.
+     */
+    public @Px int getKeyboardExtensionsHeight() {
+        if (mKeyboardExtensionSizeManager == null) return 0;
+        return mKeyboardExtensionSizeManager.getKeyboardExtensionHeight();
+    }
 
     /**
      * Should be called for cleanup when the CompositorView instance is no longer used.
@@ -571,6 +609,7 @@ public class CompositorViewHolder extends FrameLayout
         int controlsHeight = controlsResizeView()
                 ? getTopControlsHeightPixels() + getBottomControlsHeightPixels()
                 : 0;
+        controlsHeight += getKeyboardExtensionsHeight();
         if (isAttachedToWindow(view)) {
             webContents.setSize(w, h - controlsHeight);
         } else {
@@ -798,7 +837,8 @@ public class CompositorViewHolder extends FrameLayout
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        mIsKeyboardShowing = UiUtils.isKeyboardShowing(getContext(), this);
+        mIsKeyboardShowing =
+                KeyboardVisibilityDelegate.getInstance().isKeyboardShowing(getContext(), this);
     }
 
     @Override
@@ -836,13 +876,6 @@ public class CompositorViewHolder extends FrameLayout
     @Override
     public int getBrowserControlsBackgroundColor() {
         return mTabVisible == null ? Color.WHITE : mTabVisible.getThemeColor();
-    }
-
-    @Override
-    public float getBrowserControlsUrlBarAlpha() {
-        return mTabVisible == null
-                ? 1.f
-                : ColorUtils.getTextBoxAlphaForToolbarBackground(mTabVisible);
     }
 
     @Override
@@ -906,7 +939,7 @@ public class CompositorViewHolder extends FrameLayout
         if (mUrlBar != null) mUrlBar.clearFocus();
         boolean wasVisible = false;
         if (hasFocus()) {
-            wasVisible = UiUtils.hideKeyboard(this);
+            wasVisible = KeyboardVisibilityDelegate.getInstance().hideKeyboard(this);
         }
         if (wasVisible) {
             mPostHideKeyboardTask = postHideTask;

@@ -23,7 +23,7 @@
 <string name="autofill_card_unmask_expiration_date_separator">"/"</string>
 <string name="autofill_card_unmask_new_card_link">"更新信用卡"</string>
 <string name="autofill_enable_profiles_toggle_sublabel">"包括電話號碼、電子郵件地址和運送地址等資訊"</string>
-<string name="autofill_enable_credit_cards_toggle_sublabel">"加快線上付款流程"</string>
+<string name="autofill_enable_credit_cards_toggle_sublabel">"在付款表單中填入已儲存的付款方式"</string>
 <string name="autofill_addresses_settings_title">"地址和其他資訊"</string>
 <string name="autofill_payment_methods">"付款方式"</string>
 <string name="autofill_enable_profiles_toggle_label">"儲存及填入地址"</string>
@@ -64,7 +64,7 @@
         &lt;/ul&gt;"</string>
 <string name="ntp_title_no_suggestions">"暫無內容"</string>
 <string name="ntp_article_suggestions_section_header">"為您推薦的文章"</string>
-<string name="page_info_permission_ads_subtitle">"網站經常顯示侵入式廣告"</string>
+<string name="page_info_permission_ads_subtitle">"網站顯示干擾性或誤導性廣告"</string>
 <string name="payments_method_of_payment_label">"付款方式"</string>
 <string name="payments_contact_details_label">"聯絡資訊"</string>
 <string name="payments_add_contact_details_label">"新增聯絡資訊"</string>

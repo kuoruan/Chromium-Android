@@ -16,13 +16,15 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class SecondaryPlaybackProperties extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 40;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
+    private static final int STRUCT_SIZE = 48;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(48, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public int audioCodec;
     public int videoCodec;
     public String audioDecoderName;
     public String videoDecoderName;
+    public int audioEncryptionScheme;
+    public int videoEncryptionScheme;
     public org.chromium.gfx.mojom.Size naturalSize;
 
     private SecondaryPlaybackProperties(int version) {
@@ -78,7 +80,17 @@ public final class SecondaryPlaybackProperties extends org.chromium.mojo.binding
                 }
                 {
                     
-                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
+                result.audioEncryptionScheme = decoder0.readInt(32);
+                    EncryptionMode.validate(result.audioEncryptionScheme);
+                }
+                {
+                    
+                result.videoEncryptionScheme = decoder0.readInt(36);
+                    EncryptionMode.validate(result.videoEncryptionScheme);
+                }
+                {
+                    
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(40, false);
                 result.naturalSize = org.chromium.gfx.mojom.Size.decode(decoder1);
                 }
 
@@ -101,6 +113,10 @@ public final class SecondaryPlaybackProperties extends org.chromium.mojo.binding
         
         encoder0.encode(this.videoDecoderName, 24, false);
         
-        encoder0.encode(this.naturalSize, 32, false);
+        encoder0.encode(this.audioEncryptionScheme, 32);
+        
+        encoder0.encode(this.videoEncryptionScheme, 36);
+        
+        encoder0.encode(this.naturalSize, 40, false);
     }
 }

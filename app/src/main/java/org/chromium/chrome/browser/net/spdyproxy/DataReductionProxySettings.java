@@ -78,28 +78,6 @@ public class DataReductionProxySettings {
     private Callback<List<DataReductionDataUseItem>> mQueryDataUsageCallback;
 
     /**
-     * Returns whether the data reduction proxy is enabled.
-     *
-     * The knowledge of the data reduction proxy status is needed before the
-     * native library is loaded.
-     *
-     * Note that the returned value can be out-of-date if the Data Reduction
-     * Proxy is enabled/disabled from the native side without going through the
-     * UI. The discrepancy will however be fixed at the next launch, so the
-     * value returned here can be wrong (both false-positive and false-negative)
-     * right after such a change.
-     *
-     * @param context The application context.
-     * @return Whether the data reduction proxy is enabled.
-     */
-    public static boolean isEnabledBeforeNativeLoad(Context context) {
-        // TODO(lizeb): Add a listener for the native preference change to keep
-        // both in sync and avoid the false-positives and false-negatives.
-        return ContextUtils.getAppSharedPreferences().getBoolean(
-            DATA_REDUCTION_ENABLED_PREF, false);
-    }
-
-    /**
      * Handles calls for data reduction proxy initialization that need to happen after the native
      * library has been loaded.
      */

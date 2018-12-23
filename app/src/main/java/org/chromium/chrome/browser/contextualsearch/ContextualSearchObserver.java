@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 /**
  * An interface to be notified when contextual searches are performed or no longer active.
  */
-public interface ContextualSearchObserver {
+interface ContextualSearchObserver {
     /**
      * Notifies that a contextual search was performed, and provides the selection context if
      * the feature is fully enabled (and {@code null} otherwise).

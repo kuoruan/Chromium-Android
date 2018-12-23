@@ -522,12 +522,16 @@ CreateWriterResponse callback) {
 
         @Override
         public void chooseEntry(
-int renderFrameId, 
+int type, ChooseFileSystemEntryAcceptsOption[] accepts, boolean includeAcceptsAll, 
 ChooseEntryResponse callback) {
 
             FileSystemManagerChooseEntryParams _message = new FileSystemManagerChooseEntryParams();
 
-            _message.renderFrameId = renderFrameId;
+            _message.type = type;
+
+            _message.accepts = accepts;
+
+            _message.includeAcceptsAll = includeAcceptsAll;
 
 
             getProxyHandler().getMessageReceiver().acceptWithResponder(
@@ -905,7 +909,7 @@ ChooseEntryResponse callback) {
                         FileSystemManagerChooseEntryParams data =
                                 FileSystemManagerChooseEntryParams.deserialize(messageWithHeader.getPayload());
 
-                        getImpl().chooseEntry(data.renderFrameId, new FileSystemManagerChooseEntryResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().chooseEntry(data.type, data.accepts, data.includeAcceptsAll, new FileSystemManagerChooseEntryResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
 
@@ -4352,10 +4356,12 @@ ChooseEntryResponse callback) {
     
     static final class FileSystemManagerChooseEntryParams extends org.chromium.mojo.bindings.Struct {
 
-        private static final int STRUCT_SIZE = 16;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public int renderFrameId;
+        public int type;
+        public ChooseFileSystemEntryAcceptsOption[] accepts;
+        public boolean includeAcceptsAll;
 
         private FileSystemManagerChooseEntryParams(int version) {
             super(STRUCT_SIZE, version);
@@ -4392,7 +4398,25 @@ ChooseEntryResponse callback) {
                 result = new FileSystemManagerChooseEntryParams(elementsOrVersion);
                     {
                         
-                    result.renderFrameId = decoder0.readInt(8);
+                    result.type = decoder0.readInt(8);
+                        ChooseFileSystemEntryType.validate(result.type);
+                    }
+                    {
+                        
+                    result.includeAcceptsAll = decoder0.readBoolean(12, 0);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    {
+                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                        result.accepts = new ChooseFileSystemEntryAcceptsOption[si1.elementsOrVersion];
+                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                            
+                            org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
+                            result.accepts[i1] = ChooseFileSystemEntryAcceptsOption.decode(decoder2);
+                        }
+                    }
                     }
 
             } finally {
@@ -4406,7 +4430,19 @@ ChooseEntryResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.renderFrameId, 8);
+            encoder0.encode(this.type, 8);
+            
+            encoder0.encode(this.includeAcceptsAll, 12, 0);
+            
+            if (this.accepts == null) {
+                encoder0.encodeNullPointer(16, false);
+            } else {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.accepts.length, 16, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.accepts.length; ++i0) {
+                    
+                    encoder1.encode(this.accepts[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                }
+            }
         }
     }
 

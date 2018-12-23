@@ -64,13 +64,13 @@ class ServiceWorkerFetchResponseCallback_Internal {
 
         @Override
         public void onResponse(
-FetchApiResponse response, org.chromium.mojo_base.mojom.Time dispatchEventTime) {
+FetchApiResponse response, ServiceWorkerFetchEventTiming timing) {
 
             ServiceWorkerFetchResponseCallbackOnResponseParams _message = new ServiceWorkerFetchResponseCallbackOnResponseParams();
 
             _message.response = response;
 
-            _message.dispatchEventTime = dispatchEventTime;
+            _message.timing = timing;
 
 
             getProxyHandler().getMessageReceiver().accept(
@@ -83,7 +83,7 @@ FetchApiResponse response, org.chromium.mojo_base.mojom.Time dispatchEventTime) 
 
         @Override
         public void onResponseStream(
-FetchApiResponse response, ServiceWorkerStreamHandle bodyAsStream, org.chromium.mojo_base.mojom.Time dispatchEventTime) {
+FetchApiResponse response, ServiceWorkerStreamHandle bodyAsStream, ServiceWorkerFetchEventTiming timing) {
 
             ServiceWorkerFetchResponseCallbackOnResponseStreamParams _message = new ServiceWorkerFetchResponseCallbackOnResponseStreamParams();
 
@@ -91,7 +91,7 @@ FetchApiResponse response, ServiceWorkerStreamHandle bodyAsStream, org.chromium.
 
             _message.bodyAsStream = bodyAsStream;
 
-            _message.dispatchEventTime = dispatchEventTime;
+            _message.timing = timing;
 
 
             getProxyHandler().getMessageReceiver().accept(
@@ -104,11 +104,11 @@ FetchApiResponse response, ServiceWorkerStreamHandle bodyAsStream, org.chromium.
 
         @Override
         public void onFallback(
-org.chromium.mojo_base.mojom.Time dispatchEventTime) {
+ServiceWorkerFetchEventTiming timing) {
 
             ServiceWorkerFetchResponseCallbackOnFallbackParams _message = new ServiceWorkerFetchResponseCallbackOnFallbackParams();
 
-            _message.dispatchEventTime = dispatchEventTime;
+            _message.timing = timing;
 
 
             getProxyHandler().getMessageReceiver().accept(
@@ -151,7 +151,7 @@ org.chromium.mojo_base.mojom.Time dispatchEventTime) {
                         ServiceWorkerFetchResponseCallbackOnResponseParams data =
                                 ServiceWorkerFetchResponseCallbackOnResponseParams.deserialize(messageWithHeader.getPayload());
 
-                        getImpl().onResponse(data.response, data.dispatchEventTime);
+                        getImpl().onResponse(data.response, data.timing);
                         return true;
                     }
 
@@ -164,7 +164,7 @@ org.chromium.mojo_base.mojom.Time dispatchEventTime) {
                         ServiceWorkerFetchResponseCallbackOnResponseStreamParams data =
                                 ServiceWorkerFetchResponseCallbackOnResponseStreamParams.deserialize(messageWithHeader.getPayload());
 
-                        getImpl().onResponseStream(data.response, data.bodyAsStream, data.dispatchEventTime);
+                        getImpl().onResponseStream(data.response, data.bodyAsStream, data.timing);
                         return true;
                     }
 
@@ -177,7 +177,7 @@ org.chromium.mojo_base.mojom.Time dispatchEventTime) {
                         ServiceWorkerFetchResponseCallbackOnFallbackParams data =
                                 ServiceWorkerFetchResponseCallbackOnFallbackParams.deserialize(messageWithHeader.getPayload());
 
-                        getImpl().onFallback(data.dispatchEventTime);
+                        getImpl().onFallback(data.timing);
                         return true;
                     }
 
@@ -231,7 +231,7 @@ org.chromium.mojo_base.mojom.Time dispatchEventTime) {
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public FetchApiResponse response;
-        public org.chromium.mojo_base.mojom.Time dispatchEventTime;
+        public ServiceWorkerFetchEventTiming timing;
 
         private ServiceWorkerFetchResponseCallbackOnResponseParams(int version) {
             super(STRUCT_SIZE, version);
@@ -274,7 +274,7 @@ org.chromium.mojo_base.mojom.Time dispatchEventTime) {
                     {
                         
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                    result.dispatchEventTime = org.chromium.mojo_base.mojom.Time.decode(decoder1);
+                    result.timing = ServiceWorkerFetchEventTiming.decode(decoder1);
                     }
 
             } finally {
@@ -290,7 +290,7 @@ org.chromium.mojo_base.mojom.Time dispatchEventTime) {
             
             encoder0.encode(this.response, 8, false);
             
-            encoder0.encode(this.dispatchEventTime, 16, false);
+            encoder0.encode(this.timing, 16, false);
         }
     }
 
@@ -304,7 +304,7 @@ org.chromium.mojo_base.mojom.Time dispatchEventTime) {
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public FetchApiResponse response;
         public ServiceWorkerStreamHandle bodyAsStream;
-        public org.chromium.mojo_base.mojom.Time dispatchEventTime;
+        public ServiceWorkerFetchEventTiming timing;
 
         private ServiceWorkerFetchResponseCallbackOnResponseStreamParams(int version) {
             super(STRUCT_SIZE, version);
@@ -352,7 +352,7 @@ org.chromium.mojo_base.mojom.Time dispatchEventTime) {
                     {
                         
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
-                    result.dispatchEventTime = org.chromium.mojo_base.mojom.Time.decode(decoder1);
+                    result.timing = ServiceWorkerFetchEventTiming.decode(decoder1);
                     }
 
             } finally {
@@ -370,7 +370,7 @@ org.chromium.mojo_base.mojom.Time dispatchEventTime) {
             
             encoder0.encode(this.bodyAsStream, 16, false);
             
-            encoder0.encode(this.dispatchEventTime, 24, false);
+            encoder0.encode(this.timing, 24, false);
         }
     }
 
@@ -382,7 +382,7 @@ org.chromium.mojo_base.mojom.Time dispatchEventTime) {
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.mojo_base.mojom.Time dispatchEventTime;
+        public ServiceWorkerFetchEventTiming timing;
 
         private ServiceWorkerFetchResponseCallbackOnFallbackParams(int version) {
             super(STRUCT_SIZE, version);
@@ -420,7 +420,7 @@ org.chromium.mojo_base.mojom.Time dispatchEventTime) {
                     {
                         
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                    result.dispatchEventTime = org.chromium.mojo_base.mojom.Time.decode(decoder1);
+                    result.timing = ServiceWorkerFetchEventTiming.decode(decoder1);
                     }
 
             } finally {
@@ -434,7 +434,7 @@ org.chromium.mojo_base.mojom.Time dispatchEventTime) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.dispatchEventTime, 8, false);
+            encoder0.encode(this.timing, 8, false);
         }
     }
 

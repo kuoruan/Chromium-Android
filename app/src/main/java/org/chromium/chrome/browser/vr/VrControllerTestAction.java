@@ -17,16 +17,18 @@ import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
     VrControllerTestAction.CLICK, VrControllerTestAction.HOVER,
-    VrControllerTestAction.ENABLE_MOCKED_CONTROLLER,
-    VrControllerTestAction.REVERT_TO_REAL_CONTROLLER, VrControllerTestAction.CLICK_DOWN,
-    VrControllerTestAction.CLICK_UP, VrControllerTestAction.MOVE
+    VrControllerTestAction.ENABLE_MOCKED_INPUT, VrControllerTestAction.REVERT_TO_REAL_INPUT,
+    VrControllerTestAction.CLICK_DOWN, VrControllerTestAction.CLICK_UP, VrControllerTestAction.MOVE
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface VrControllerTestAction {
+  /**
+   * (kElementVisibilityChange)
+   */
   int CLICK = 0;
   int HOVER = 1;
-  int ENABLE_MOCKED_CONTROLLER = 2;
-  int REVERT_TO_REAL_CONTROLLER = 3;
+  int ENABLE_MOCKED_INPUT = 2;
+  int REVERT_TO_REAL_INPUT = 3;
   int CLICK_DOWN = 4;
   int CLICK_UP = 5;
   int MOVE = 6;

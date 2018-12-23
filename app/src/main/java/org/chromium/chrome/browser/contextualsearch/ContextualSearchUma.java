@@ -12,6 +12,7 @@ import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.PanelState;
 import org.chromium.chrome.browser.compositor.bottombar.OverlayPanel.StateChangeReason;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
+import org.chromium.components.sync.AndroidSyncSettings;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -824,12 +825,19 @@ public class ContextualSearchUma {
     }
 
     /**
-     * Logs whether search results were seen for a Tap gesture.  Recorded for all users.
+     * Logs whether search results were seen for a Tap gesture, for all users and sync-enabled
+     * users. For sync-enabled users we log to a separate histogram for that sub-population in order
+     * to help validate the Ranker Tap Suppression model results (since they are trained on UKM data
+     * which approximately reflects this sync-enabled population).
      * @param wasPanelSeen Whether the panel was seen.
      */
     public static void logTapResultsSeen(boolean wasPanelSeen) {
         RecordHistogram.recordBooleanHistogram(
                 "Search.ContextualSearch.Tap.ResultsSeen", wasPanelSeen);
+        if (AndroidSyncSettings.isSyncEnabled()) {
+            RecordHistogram.recordBooleanHistogram(
+                    "Search.ContextualSearch.Tap.SyncEnabled.ResultsSeen", wasPanelSeen);
+        }
     }
 
     /**

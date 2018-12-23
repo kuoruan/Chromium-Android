@@ -108,42 +108,6 @@ public interface SceneOverlay {
     void tabModelSwitched(boolean incognito);
 
     /**
-     * Called when a tab get selected.
-     * @param time      The current time of the app in ms.
-     * @param incognito Whether or not the affected model was incognito.
-     * @param id        The id of the selected tab.
-     * @param prevId    The id of the previously selected tab.
-     */
-    void tabSelected(long time, boolean incognito, int id, int prevId);
-
-    /**
-     * Called when a tab has been moved in the tabModel.
-     * @param time      The current time of the app in ms.
-     * @param incognito Whether or not the affected model was incognito.
-     * @param id        The id of the Tab.
-     * @param oldIndex  The old index of the tab in the {@link TabModel}.
-     * @param newIndex  The new index of the tab in the {@link TabModel}.
-     */
-    void tabMoved(long time, boolean incognito, int id, int oldIndex, int newIndex);
-
-    /**
-     * Called when a tab is being closed. When called, the closing tab will not
-     * be part of the model.
-     * @param time      The current time of the app in ms.
-     * @param incognito Whether or not the affected model was incognito.
-     * @param id        The id of the tab being closed.
-     */
-    void tabClosed(long time, boolean incognito, int id);
-
-    /**
-     * Called when a tab close has been undone and the tab has been restored.
-     * @param time      The current time of the app in ms.
-     * @param id        The id of the Tab.
-     * @param incognito True if the tab is incognito
-     */
-    void tabClosureCancelled(long time, boolean incognito, int id);
-
-    /**
      * Called when a tab is created from the top left button.
      * @param time      The current time of the app in ms.
      * @param incognito Whether or not the affected model was incognito.
@@ -152,32 +116,4 @@ public interface SceneOverlay {
      * @param selected  Whether the tab will be selected.
      */
     void tabCreated(long time, boolean incognito, int id, int prevId, boolean selected);
-
-    /**
-     * Called when a tab has started loading.
-     * @param id        The id of the Tab.
-     * @param incognito True if the tab is incognito.
-     */
-    void tabPageLoadStarted(int id, boolean incognito);
-
-    /**
-     * Called when a tab has finished loading.
-     * @param id        The id of the Tab.
-     * @param incognito True if the tab is incognito.
-     */
-    void tabPageLoadFinished(int id, boolean incognito);
-
-    /**
-     * Called when a tab has started loading resources.
-     * @param id        The id of the Tab.
-     * @param incognito True if the tab is incognito.
-     */
-    void tabLoadStarted(int id, boolean incognito);
-
-    /**
-     * Called when a tab has stopped loading resources.
-     * @param id        The id of the Tab.
-     * @param incognito True if the tab is incognito.
-     */
-    void tabLoadFinished(int id, boolean incognito);
 }

@@ -15,6 +15,7 @@ import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.DiscardableReferencePool;
@@ -31,25 +32,27 @@ import org.chromium.chrome.browser.download.DownloadManagerService;
 import org.chromium.chrome.browser.native_page.NativePage;
 import org.chromium.chrome.browser.native_page.NativePageHost;
 import org.chromium.chrome.browser.ntp.NewTabPageView.NewTabPageManager;
+import org.chromium.chrome.browser.ntp.cards.ItemViewType;
+import org.chromium.chrome.browser.ntp.cards.NewTabPageAdapter;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
 import org.chromium.chrome.browser.omnibox.LocationBarVoiceRecognitionHandler;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.search_engines.TemplateUrlService;
 import org.chromium.chrome.browser.search_engines.TemplateUrlService.TemplateUrlServiceObserver;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
-import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
 import org.chromium.chrome.browser.suggestions.SuggestionsDependencyFactory;
 import org.chromium.chrome.browser.suggestions.SuggestionsEventReporter;
 import org.chromium.chrome.browser.suggestions.SuggestionsMetrics;
 import org.chromium.chrome.browser.suggestions.SuggestionsNavigationDelegate;
-import org.chromium.chrome.browser.suggestions.SuggestionsNavigationDelegateImpl;
 import org.chromium.chrome.browser.suggestions.SuggestionsUiDelegateImpl;
 import org.chromium.chrome.browser.suggestions.Tile;
 import org.chromium.chrome.browser.suggestions.TileGroup;
 import org.chromium.chrome.browser.suggestions.TileGroupDelegateImpl;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.tab.Tab.TabHidingType;
 import org.chromium.chrome.browser.tab.TabObserver;
+import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.util.ColorUtils;
 import org.chromium.chrome.browser.util.FeatureUtilities;
@@ -57,6 +60,7 @@ import org.chromium.chrome.browser.util.UrlUtilities;
 import org.chromium.chrome.browser.vr.VrModuleProvider;
 import org.chromium.content_public.browser.NavigationController;
 import org.chromium.content_public.browser.NavigationEntry;
+import org.chromium.content_public.common.BrowserControlsState;
 import org.chromium.net.NetworkChangeNotifier;
 import org.chromium.ui.mojom.WindowOpenDisposition;
 
@@ -74,6 +78,7 @@ public class NewTabPage
 
     // Key for the scroll position data that may be stored in a navigation entry.
     private static final String NAVIGATION_ENTRY_SCROLL_POSITION_KEY = "NewTabPageScrollPosition";
+    public static final String CONTEXT_MENU_USER_ACTION_PREFIX = "Suggestions";
 
     protected final Tab mTab;
 
@@ -225,9 +230,6 @@ public class NewTabPage
             NewTabPageUma.recordNTPImpression(NewTabPageUma.NTP_IMPRESSION_REGULAR);
             // If not visible when loading completes, wait until onShown is received.
             if (!mTab.isHidden()) recordNTPShown();
-            if (mTab.getUrl().contains(UrlConstants.CONTENT_SUGGESTIONS_SUFFIX)) {
-                scrollToSuggestions();
-            }
         }
     }
 
@@ -281,26 +283,23 @@ public class NewTabPage
         SuggestionsSource suggestionsSource = depsFactory.createSuggestionSource(profile);
         SuggestionsEventReporter eventReporter = depsFactory.createEventReporter();
 
-        SuggestionsNavigationDelegateImpl navigationDelegate =
-                new SuggestionsNavigationDelegateImpl(
-                        activity, profile, nativePageHost, tabModelSelector);
+        SuggestionsNavigationDelegate navigationDelegate = new SuggestionsNavigationDelegate(
+                activity, profile, nativePageHost, tabModelSelector);
         mNewTabPageManager = new NewTabPageManagerImpl(suggestionsSource, eventReporter,
                 navigationDelegate, profile, nativePageHost,
                 activity.getChromeApplication().getReferencePool(), activity.getSnackbarManager());
         mTileGroupDelegate = new NewTabPageTileGroupDelegate(activity, profile, navigationDelegate);
 
         mTitle = activity.getResources().getString(R.string.button_new_tab);
-        mBackgroundColor = ApiCompatibilityUtils.getColor(activity.getResources(),
-                SuggestionsConfig.useModernLayout() ? R.color.modern_primary_color
-                                                    : R.color.ntp_bg);
-        mThemeColor = ColorUtils.getDefaultThemeColor(
-                activity.getResources(), FeatureUtilities.isChromeModernDesignEnabled(), false);
+        mBackgroundColor = ApiCompatibilityUtils.getColor(
+                activity.getResources(), R.color.modern_primary_color);
+        mThemeColor = ColorUtils.getDefaultThemeColor(activity.getResources(), false);
         mIsTablet = activity.isTablet();
         TemplateUrlService.getInstance().addObserver(this);
 
         mTabObserver = new EmptyTabObserver() {
             @Override
-            public void onShown(Tab tab) {
+            public void onShown(Tab tab, @TabSelectionType int type) {
                 // Showing the NTP is only meaningful when the page has been loaded already.
                 if (mIsLoaded) recordNTPShown();
 
@@ -308,7 +307,7 @@ public class NewTabPage
             }
 
             @Override
-            public void onHidden(Tab tab) {
+            public void onHidden(Tab tab, @TabHidingType int type) {
                 if (mIsLoaded) recordNTPHidden();
             }
 
@@ -316,11 +315,26 @@ public class NewTabPage
             public void onPageLoadStarted(Tab tab, String url) {
                 saveLastScrollPosition();
             }
+
+            @Override
+            public void onBrowserControlsConstraintsUpdated(Tab tab, int constraints) {
+                updateMargins(constraints);
+            }
         };
         mTab.addObserver(mTabObserver);
         updateSearchProviderHasLogo();
 
         initializeMainView(activity);
+        getView().addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View view) {
+                updateMargins(mTab.getBrowserControlsStateConstraints());
+                getView().removeOnAttachStateChangeListener(this);
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View view) {}
+        });
 
         eventReporter.onSurfaceOpened();
 
@@ -372,11 +386,21 @@ public class NewTabPage
                 index, NAVIGATION_ENTRY_SCROLL_POSITION_KEY, Integer.toString(scrollPosition));
     }
 
-    /**
-     * Scroll to the list of suggested articles.
-     */
-    protected void scrollToSuggestions() {
-        mNewTabPageView.scrollToSuggestions();
+    /** Update the margins for the content when browser controls constraints are changed. */
+    private void updateMargins(@BrowserControlsState int constraints) {
+        // TODO(mdjones): can this be merged with BasicNativePage's updateMargins?
+
+        View view = getView();
+        ViewGroup.MarginLayoutParams layoutParams =
+                ((ViewGroup.MarginLayoutParams) view.getLayoutParams());
+        if (layoutParams == null) return;
+
+        int bottomMargin = 0;
+        if (FeatureUtilities.isBottomToolbarEnabled()
+                && constraints != BrowserControlsState.HIDDEN) {
+            bottomMargin = mTab.getActivity().getFullscreenManager().getBottomControlsHeight();
+        }
+        layoutParams.bottomMargin = bottomMargin;
     }
 
     /** @return The view container for the new tab page. */
@@ -641,5 +665,23 @@ public class NewTabPage
     @VisibleForTesting
     public NewTabPageManager getManagerForTesting() {
         return mNewTabPageManager;
+    }
+
+    @VisibleForTesting
+    public View getSignInPromoViewForTesting() {
+        RecyclerView recyclerView = mNewTabPageView.getRecyclerView();
+        NewTabPageAdapter adapter = (NewTabPageAdapter) recyclerView.getAdapter();
+        return recyclerView
+                .findViewHolderForAdapterPosition(
+                        adapter.getFirstPositionForType(ItemViewType.PROMO))
+                .itemView;
+    }
+
+    @VisibleForTesting
+    public View getSectionHeaderViewForTesting() {
+        RecyclerView recyclerView = mNewTabPageView.getRecyclerView();
+        NewTabPageAdapter adapter = (NewTabPageAdapter) recyclerView.getAdapter();
+        return recyclerView.findViewHolderForAdapterPosition(adapter.getFirstHeaderPosition())
+                .itemView;
     }
 }

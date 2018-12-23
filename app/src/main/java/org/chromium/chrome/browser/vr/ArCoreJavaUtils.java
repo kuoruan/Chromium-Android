@@ -41,6 +41,10 @@ public class ArCoreJavaUtils {
     // the intent to install ARCore returns.
     private static final int AR_CORE_INSTALL_RESULT = -1;
 
+    // This purely exists to silence lint errors.
+    // TODO(crbug.com/884321): Find a better solution.
+    private static final int[] SILENCE_LINT_ERRORS = new int[] {R.string.ar_module_title};
+
     @IntDef({ArCoreInstallStatus.ARCORE_NEEDS_UPDATE, ArCoreInstallStatus.ARCORE_NOT_INSTALLED,
             ArCoreInstallStatus.ARCORE_INSTALLED})
     @Retention(RetentionPolicy.SOURCE)
@@ -50,8 +54,8 @@ public class ArCoreJavaUtils {
         int ARCORE_INSTALLED = 2;
     }
 
-    private long mNativeArCoreJavaUtils = 0;
-    private boolean mAppInfoInitialized = false;
+    private long mNativeArCoreJavaUtils;
+    private boolean mAppInfoInitialized;
     private int mAppMinArCoreApkVersionCode = ARCORE_NOT_INSTALLED_VERSION_CODE;
 
     /**

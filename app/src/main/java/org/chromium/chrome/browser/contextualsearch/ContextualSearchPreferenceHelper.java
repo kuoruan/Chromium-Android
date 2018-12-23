@@ -17,7 +17,7 @@ class ContextualSearchPreferenceHelper {
     public static final String THROTTLE = "throttle";
 
     // Our singleton instance.
-    private static ContextualSearchPreferenceHelper sInstance = null;
+    private static ContextualSearchPreferenceHelper sInstance;
 
     // Pointer to the native instance of this class.
     private long mNativePointer;

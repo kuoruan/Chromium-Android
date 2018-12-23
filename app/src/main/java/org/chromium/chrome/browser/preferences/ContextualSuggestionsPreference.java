@@ -12,11 +12,12 @@ import android.support.annotation.Nullable;
 import android.text.SpannableString;
 import android.text.style.ImageSpan;
 
-import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.ChromeApplication;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.contextual_suggestions.ContextualSuggestionsBridge;
+import org.chromium.chrome.browser.contextual_suggestions.ContextualSuggestionsEnabledStateUtils;
 import org.chromium.chrome.browser.contextual_suggestions.EnabledStateMonitor;
 import org.chromium.chrome.browser.signin.AccountSigninActivity;
 import org.chromium.chrome.browser.signin.SigninAccessPoint;
@@ -40,8 +41,6 @@ public class ContextualSuggestionsPreference
     private static final String PREF_CONTEXTUAL_SUGGESTIONS_MESSAGE =
             "contextual_suggestions_message";
 
-    private static EnabledStateMonitor sEnabledStateMonitorForTesting;
-
     private ChromeSwitchPreference mSwitch;
     private EnabledStateMonitor mEnabledStateMonitor;
 
@@ -52,9 +51,10 @@ public class ContextualSuggestionsPreference
         getActivity().setTitle(R.string.prefs_contextual_suggestions);
 
         mSwitch = (ChromeSwitchPreference) findPreference(PREF_CONTEXTUAL_SUGGESTIONS_SWITCH);
-        mEnabledStateMonitor = sEnabledStateMonitorForTesting != null
-                ? sEnabledStateMonitorForTesting
-                : new EnabledStateMonitor(this);
+        mEnabledStateMonitor =
+                ChromeApplication.getComponent().getContextualSuggestionsEnabledStateMonitor();
+        mEnabledStateMonitor.addObserver(this);
+        onSettingsStateChanged(mEnabledStateMonitor.getSettingsEnabled());
         initialize();
     }
 
@@ -67,7 +67,7 @@ public class ContextualSuggestionsPreference
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mEnabledStateMonitor.destroy();
+        mEnabledStateMonitor.removeObserver(this);
     }
 
     @Override
@@ -144,7 +144,7 @@ public class ContextualSuggestionsPreference
             PrefServiceBridge.getInstance().setBoolean(
                     Pref.CONTEXTUAL_SUGGESTIONS_ENABLED, enabled);
 
-            EnabledStateMonitor.recordPreferenceEnabled(enabled);
+            ContextualSuggestionsEnabledStateUtils.recordPreferenceEnabled(enabled);
             if (enabled) {
                 RecordUserAction.record("ContextualSuggestions.Preference.Enabled");
             } else {
@@ -158,12 +158,7 @@ public class ContextualSuggestionsPreference
 
     /** Helper method to update the enabled state of the switch. */
     private void updateSwitch() {
-        mSwitch.setEnabled(EnabledStateMonitor.getSettingsEnabled());
-        mSwitch.setChecked(EnabledStateMonitor.getEnabledState());
-    }
-
-    @VisibleForTesting
-    static void setEnabledStateMonitorForTesting(EnabledStateMonitor monitor) {
-        sEnabledStateMonitorForTesting = monitor;
+        mSwitch.setEnabled(mEnabledStateMonitor.getSettingsEnabled());
+        mSwitch.setChecked(mEnabledStateMonitor.getEnabledState());
     }
 }

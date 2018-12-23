@@ -6,7 +6,7 @@ package org.chromium.chrome.browser.customtabs.dynamicmodule;
 
 /**
  * This interface intentionally has no methods, and instances of this should
- * be created from class ObjectWrapper only. This is used as a way of passing
+ * be created from class ObjectWrapper only.  This is used as a way of passing
  * objects that descend from the system classes via AIDL across classloaders
  * without serializing them.
  */

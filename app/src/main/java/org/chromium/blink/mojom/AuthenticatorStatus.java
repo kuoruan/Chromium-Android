@@ -32,7 +32,9 @@ public final class AuthenticatorStatus {
 
     public static final int NOT_FOCUSED = NOT_IMPLEMENTED + 1;
 
-    public static final int USER_VERIFICATION_UNSUPPORTED = NOT_FOCUSED + 1;
+    public static final int RESIDENT_CREDENTIALS_UNSUPPORTED = NOT_FOCUSED + 1;
+
+    public static final int USER_VERIFICATION_UNSUPPORTED = RESIDENT_CREDENTIALS_UNSUPPORTED + 1;
 
     public static final int ALGORITHM_UNSUPPORTED = USER_VERIFICATION_UNSUPPORTED + 1;
 
@@ -60,6 +62,7 @@ public final class AuthenticatorStatus {
             case 10:
             case 11:
             case 12:
+            case 13:
                 return true;
         }
         return false;

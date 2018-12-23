@@ -119,7 +119,7 @@ public class ChromeCastSessionManager {
     private CastSessionManagerListener mCurrentSessionListener;
 
     // Whether we are currently in the process of launching a session.
-    private boolean mSessionLaunching = false;
+    private boolean mSessionLaunching;
 
     public static ChromeCastSessionManager get() {
         if (sInstance == null) sInstance = new ChromeCastSessionManager();

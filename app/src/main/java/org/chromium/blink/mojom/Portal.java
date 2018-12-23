@@ -36,4 +36,12 @@ InitResponse callback);
 org.chromium.url.mojom.Url url);
 
 
+
+    void activate(
+
+ActivateResponse callback);
+
+    interface ActivateResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Integer> { }
+
+
 }

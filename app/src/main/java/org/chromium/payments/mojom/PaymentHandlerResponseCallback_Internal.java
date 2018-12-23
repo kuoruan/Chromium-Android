@@ -64,7 +64,7 @@ class PaymentHandlerResponseCallback_Internal {
 
         @Override
         public void onResponseForAbortPayment(
-boolean paymentAborted, org.chromium.mojo_base.mojom.Time dispatchEventTime) {
+boolean paymentAborted, org.chromium.mojo_base.mojom.TimeTicks dispatchEventTime) {
 
             PaymentHandlerResponseCallbackOnResponseForAbortPaymentParams _message = new PaymentHandlerResponseCallbackOnResponseForAbortPaymentParams();
 
@@ -83,7 +83,7 @@ boolean paymentAborted, org.chromium.mojo_base.mojom.Time dispatchEventTime) {
 
         @Override
         public void onResponseForCanMakePayment(
-boolean canMakePayment, org.chromium.mojo_base.mojom.Time dispatchEventTime) {
+boolean canMakePayment, org.chromium.mojo_base.mojom.TimeTicks dispatchEventTime) {
 
             PaymentHandlerResponseCallbackOnResponseForCanMakePaymentParams _message = new PaymentHandlerResponseCallbackOnResponseForCanMakePaymentParams();
 
@@ -102,7 +102,7 @@ boolean canMakePayment, org.chromium.mojo_base.mojom.Time dispatchEventTime) {
 
         @Override
         public void onResponseForPaymentRequest(
-PaymentHandlerResponse response, org.chromium.mojo_base.mojom.Time dispatchEventTime) {
+PaymentHandlerResponse response, org.chromium.mojo_base.mojom.TimeTicks dispatchEventTime) {
 
             PaymentHandlerResponseCallbackOnResponseForPaymentRequestParams _message = new PaymentHandlerResponseCallbackOnResponseForPaymentRequestParams();
 
@@ -231,7 +231,7 @@ PaymentHandlerResponse response, org.chromium.mojo_base.mojom.Time dispatchEvent
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean paymentAborted;
-        public org.chromium.mojo_base.mojom.Time dispatchEventTime;
+        public org.chromium.mojo_base.mojom.TimeTicks dispatchEventTime;
 
         private PaymentHandlerResponseCallbackOnResponseForAbortPaymentParams(int version) {
             super(STRUCT_SIZE, version);
@@ -273,7 +273,7 @@ PaymentHandlerResponse response, org.chromium.mojo_base.mojom.Time dispatchEvent
                     {
                         
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                    result.dispatchEventTime = org.chromium.mojo_base.mojom.Time.decode(decoder1);
+                    result.dispatchEventTime = org.chromium.mojo_base.mojom.TimeTicks.decode(decoder1);
                     }
 
             } finally {
@@ -302,7 +302,7 @@ PaymentHandlerResponse response, org.chromium.mojo_base.mojom.Time dispatchEvent
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public boolean canMakePayment;
-        public org.chromium.mojo_base.mojom.Time dispatchEventTime;
+        public org.chromium.mojo_base.mojom.TimeTicks dispatchEventTime;
 
         private PaymentHandlerResponseCallbackOnResponseForCanMakePaymentParams(int version) {
             super(STRUCT_SIZE, version);
@@ -344,7 +344,7 @@ PaymentHandlerResponse response, org.chromium.mojo_base.mojom.Time dispatchEvent
                     {
                         
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                    result.dispatchEventTime = org.chromium.mojo_base.mojom.Time.decode(decoder1);
+                    result.dispatchEventTime = org.chromium.mojo_base.mojom.TimeTicks.decode(decoder1);
                     }
 
             } finally {
@@ -373,7 +373,7 @@ PaymentHandlerResponse response, org.chromium.mojo_base.mojom.Time dispatchEvent
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public PaymentHandlerResponse response;
-        public org.chromium.mojo_base.mojom.Time dispatchEventTime;
+        public org.chromium.mojo_base.mojom.TimeTicks dispatchEventTime;
 
         private PaymentHandlerResponseCallbackOnResponseForPaymentRequestParams(int version) {
             super(STRUCT_SIZE, version);
@@ -416,7 +416,7 @@ PaymentHandlerResponse response, org.chromium.mojo_base.mojom.Time dispatchEvent
                     {
                         
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
-                    result.dispatchEventTime = org.chromium.mojo_base.mojom.Time.decode(decoder1);
+                    result.dispatchEventTime = org.chromium.mojo_base.mojom.TimeTicks.decode(decoder1);
                     }
 
             } finally {

@@ -38,7 +38,7 @@ public class ChartView extends FrameLayout {
 
     @ViewDebug.ExportedProperty
     private int mOptimalWidth = -1;
-    private float mOptimalWidthWeight = 0;
+    private float mOptimalWidthWeight;
 
     // Used in onLayout(). Reused to avoid allocations during layout.
     private Rect mContent = new Rect();

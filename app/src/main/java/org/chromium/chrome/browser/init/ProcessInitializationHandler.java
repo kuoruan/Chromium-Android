@@ -19,7 +19,6 @@ import android.view.inputmethod.InputMethodSubtype;
 import com.google.ipc.invalidation.external.client.android.service.AndroidLogger;
 
 import org.chromium.base.ApiCompatibilityUtils;
-import org.chromium.base.AsyncTask;
 import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
@@ -28,6 +27,7 @@ import org.chromium.base.SysUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.base.task.AsyncTask;
 import org.chromium.build.BuildHooksAndroid;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.AfterStartupTaskUtils;
@@ -82,6 +82,7 @@ import org.chromium.content_public.common.ContentSwitches;
 import org.chromium.printing.PrintDocumentAdapterWrapper;
 import org.chromium.printing.PrintingControllerImpl;
 import org.chromium.ui.ContactsPickerListener;
+import org.chromium.ui.KeyboardVisibilityDelegate;
 import org.chromium.ui.PhotoPickerListener;
 import org.chromium.ui.UiUtils;
 import org.chromium.ui.base.SelectFileDialog;
@@ -136,10 +137,13 @@ public class ProcessInitializationHandler {
      * startup.
      */
     public final void initializePreNative() {
-        ThreadUtils.checkUiThread();
-        if (mInitializedPreNative) return;
-        handlePreNativeInitialization();
-        mInitializedPreNative = true;
+        try (TraceEvent e =
+                        TraceEvent.scoped("ProcessInitializationHandler.initializePreNative()")) {
+            ThreadUtils.checkUiThread();
+            if (mInitializedPreNative) return;
+            handlePreNativeInitialization();
+            mInitializedPreNative = true;
+        }
     }
 
     /**
@@ -148,9 +152,9 @@ public class ProcessInitializationHandler {
     protected void handlePreNativeInitialization() {
         Context application = ContextUtils.getApplicationContext();
 
-        UiUtils.setKeyboardShowingDelegate(new UiUtils.KeyboardShowingDelegate() {
+        KeyboardVisibilityDelegate.setInstance(new KeyboardVisibilityDelegate() {
             @Override
-            public boolean disableKeyboardCheck(Context context, View view) {
+            public boolean isKeyboardShowing(Context context, View view) {
                 Activity activity = null;
                 if (context instanceof Activity) {
                     activity = (Activity) context;
@@ -158,9 +162,11 @@ public class ProcessInitializationHandler {
                     activity = (Activity) view.getContext();
                 }
 
-                // For multiwindow mode we do not track keyboard visibility.
-                return activity != null
-                        && MultiWindowUtils.getInstance().isLegacyMultiWindow(activity);
+                if (activity != null
+                        && MultiWindowUtils.getInstance().isLegacyMultiWindow(activity)) {
+                    return false; // For multi-window mode we do not track keyboard visibility.
+                }
+                return super.isKeyboardShowing(context, view);
             }
         });
 

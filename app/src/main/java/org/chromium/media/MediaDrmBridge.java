@@ -105,9 +105,9 @@ public class MediaDrmBridge {
     private boolean mProvisioningPending;
 
     // Boolean to track if 'ORIGIN' is set in MediaDrm.
-    private boolean mOriginSet = false;
+    private boolean mOriginSet;
 
-    private SessionEventDeferrer mSessionEventDeferrer = null;
+    private SessionEventDeferrer mSessionEventDeferrer;
 
     // Defer the creation of MediaCryptor creation. Only used when mRequiresMediaCrypto is true.
     private static final MediaCryptoDeferrer sMediaCryptoDeferrer = new MediaCryptoDeferrer();

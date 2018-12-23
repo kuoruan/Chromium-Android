@@ -20,10 +20,12 @@ public final class ServiceWorkerRegistrationOptions extends org.chromium.mojo.bi
     private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public org.chromium.url.mojom.Url scope;
+    public int type;
     public int updateViaCache;
 
     private ServiceWorkerRegistrationOptions(int version) {
         super(STRUCT_SIZE, version);
+        this.type = (int) ScriptType.CLASSIC;
         this.updateViaCache = (int) ServiceWorkerUpdateViaCache.IMPORTS;
     }
 
@@ -63,7 +65,12 @@ public final class ServiceWorkerRegistrationOptions extends org.chromium.mojo.bi
                 }
                 {
                     
-                result.updateViaCache = decoder0.readInt(16);
+                result.type = decoder0.readInt(16);
+                    ScriptType.validate(result.type);
+                }
+                {
+                    
+                result.updateViaCache = decoder0.readInt(20);
                     ServiceWorkerUpdateViaCache.validate(result.updateViaCache);
                 }
 
@@ -80,6 +87,8 @@ public final class ServiceWorkerRegistrationOptions extends org.chromium.mojo.bi
         
         encoder0.encode(this.scope, 8, false);
         
-        encoder0.encode(this.updateViaCache, 16);
+        encoder0.encode(this.type, 16);
+        
+        encoder0.encode(this.updateViaCache, 20);
     }
 }

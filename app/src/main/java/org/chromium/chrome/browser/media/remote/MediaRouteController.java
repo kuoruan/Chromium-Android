@@ -336,6 +336,14 @@ public interface MediaRouteController {
     Bitmap getPoster();
 
     /**
+     * Used to filter out routes in the MediaRouteChooserDialog.
+     * Overridden in some downstream code.
+     * @param route the route to be filtered.
+     * @return true if the route should be excluded, false if it should be shown to the user.
+     */
+    boolean shouldFilterOutRoute(MediaRouter.RouteInfo route);
+
+    /**
      * Called when a new route has been selected
      * @param player The player {@link MediaStateListener} that initiated the connection
      * @param router The MediaRouter.

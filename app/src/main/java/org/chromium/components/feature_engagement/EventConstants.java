@@ -51,9 +51,9 @@ public final class EventConstants {
     public static final String CONTEXTUAL_SUGGESTIONS_OPENED = "contextual_suggestions_opened";
 
     /**
-     * The contextual suggestions bottom sheet was shown in its peeking state.
+     * A contextual suggestion was clicked, opened in a new tab or downloaded.
      */
-    public static final String CONTEXTUAL_SUGGESTIONS_PEEKED = "contextual_suggestions_peeked";
+    public static final String CONTEXTUAL_SUGGESTION_TAKEN = "contextual_suggestion_taken";
 
     /**
      * Screenshot is taken with Chrome in the foreground.
@@ -81,6 +81,16 @@ public final class EventConstants {
      * The data saver footer was used (tapped).
      */
     public static final String DATA_SAVER_DETAIL_OPENED = "data_saver_overview_opened";
+
+    /**
+     * The previews verbose status view was opened.
+     */
+    public static final String PREVIEWS_VERBOSE_STATUS_OPENED = "previews_verbose_status_opened";
+
+    /**
+     * A page load used a preview.
+     */
+    public static final String PREVIEWS_PAGE_LOADED = "preview_page_load";
 
     /**
      * The download button for a media element was displayed.

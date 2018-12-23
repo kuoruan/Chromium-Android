@@ -16,6 +16,7 @@ import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.content.res.AppCompatResources;
+import android.support.v7.widget.AppCompatImageButton;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -28,6 +29,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -39,17 +41,15 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.toolbar.ActionModeController;
 import org.chromium.chrome.browser.toolbar.ToolbarActionModeCallback;
 import org.chromium.chrome.browser.util.ColorUtils;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.vr.VrModeObserver;
 import org.chromium.chrome.browser.vr.VrModuleProvider;
 import org.chromium.chrome.browser.widget.NumberRollView;
 import org.chromium.chrome.browser.widget.TintedDrawable;
-import org.chromium.chrome.browser.widget.TintedImageButton;
 import org.chromium.chrome.browser.widget.displaystyle.DisplayStyleObserver;
 import org.chromium.chrome.browser.widget.displaystyle.HorizontalDisplayStyle;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate.SelectionObserver;
-import org.chromium.ui.UiUtils;
+import org.chromium.ui.KeyboardVisibilityDelegate;
 
 import java.util.List;
 
@@ -92,15 +92,15 @@ public class SelectableListToolbar<E>
 
     protected boolean mIsSelectionEnabled;
     protected SelectionDelegate<E> mSelectionDelegate;
-    protected boolean mIsSearching;
 
+    private boolean mIsSearching;
     private boolean mHasSearchView;
     private LinearLayout mSearchView;
     private EditText mSearchText;
     private EditText mSearchEditText;
-    private TintedImageButton mClearTextButton;
+    private AppCompatImageButton mClearTextButton;
     private SearchDelegate mSearchDelegate;
-    private boolean mSelectableListHasItems;
+    private boolean mSearchEnabled;
     private boolean mIsVrEnabled;
     private boolean mUpdateStatusBarColor;
 
@@ -153,7 +153,7 @@ public class SelectableListToolbar<E>
     public void destroy() {
         mIsDestroyed = true;
         if (mSelectionDelegate != null) mSelectionDelegate.removeObserver(this);
-        UiUtils.hideKeyboard(mSearchEditText);
+        KeyboardVisibilityDelegate.getInstance().hideKeyboard(mSearchEditText);
         VrModuleProvider.unregisterVrModeObserver(this);
     }
 
@@ -201,8 +201,7 @@ public class SelectableListToolbar<E>
 
         normalBackgroundColorResId = normalBackgroundColorResId != null
                 ? normalBackgroundColorResId
-                : ColorUtils.getDefaultThemeColor(
-                          getResources(), FeatureUtilities.isChromeModernDesignEnabled(), false);
+                : ColorUtils.getDefaultThemeColor(getResources(), false);
         mNormalBackgroundColor =
                 ApiCompatibilityUtils.getColor(getResources(), normalBackgroundColorResId);
         setBackgroundColor(mNormalBackgroundColor);
@@ -225,10 +224,6 @@ public class SelectableListToolbar<E>
                 getContext(), R.drawable.ic_more_vert_black_24dp, R.color.white_mode_tint);
         mNavigationIconDrawable = TintedDrawable.constructTintedDrawable(
                 getContext(), R.drawable.ic_arrow_back_white_24dp);
-
-        if (!FeatureUtilities.isChromeModernDesignEnabled()) {
-            setTitleTextAppearance(getContext(), R.style.BlackHeadline2);
-        }
 
         VrModuleProvider.registerVrModeObserver(this);
         if (VrModuleProvider.getDelegate().isInVr()) onEnterVr();
@@ -301,20 +296,13 @@ public class SelectableListToolbar<E>
             public void afterTextChanged(Editable s) {}
         });
 
-        mClearTextButton = (TintedImageButton) findViewById(R.id.clear_text_button);
+        mClearTextButton = (AppCompatImageButton) findViewById(R.id.clear_text_button);
         mClearTextButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 mSearchEditText.setText("");
             }
         });
-
-        if (FeatureUtilities.isChromeModernDesignEnabled()) {
-            mClearTextButton.setPadding(ViewCompat.getPaddingStart(mClearTextButton),
-                    mClearTextButton.getPaddingTop(),
-                    getResources().getDimensionPixelSize(R.dimen.clear_text_button_end_padding),
-                    mClearTextButton.getPaddingBottom());
-        }
     }
 
     @Override
@@ -324,6 +312,7 @@ public class SelectableListToolbar<E>
         LayoutInflater.from(getContext()).inflate(R.layout.number_roll_view, this);
         mNumberRollView = (NumberRollView) findViewById(R.id.selection_mode_number);
         mNumberRollView.setString(R.plurals.selected_items);
+        mNumberRollView.setStringForZero(R.string.select_items);
     }
 
     @Override
@@ -447,7 +436,7 @@ public class SelectableListToolbar<E>
         showSearchViewInternal();
 
         mSearchEditText.requestFocus();
-        UiUtils.showKeyboard(mSearchEditText);
+        KeyboardVisibilityDelegate.getInstance().showKeyboard(mSearchEditText);
         setTitle(null);
     }
 
@@ -471,19 +460,19 @@ public class SelectableListToolbar<E>
 
         mIsSearching = false;
         mSearchEditText.setText("");
-        UiUtils.hideKeyboard(mSearchEditText);
+        KeyboardVisibilityDelegate.getInstance().hideKeyboard(mSearchEditText);
         showNormalView();
 
         mSearchDelegate.onEndSearch();
     }
 
     /**
-     * Called when the data in the selectable list this toolbar is associated with changes.
-     * @param numItems The number of items in the selectable list.
+     * Called to enable/disable search menu button.
+     * @param searchEnabled Whether the search button should be enabled.
      */
-    protected void onDataChanged(int numItems) {
+    public void setSearchEnabled(boolean searchEnabled) {
         if (mHasSearchView) {
-            mSelectableListHasItems = numItems != 0;
+            mSearchEnabled = searchEnabled;
             updateSearchMenuItem();
         }
     }
@@ -491,7 +480,7 @@ public class SelectableListToolbar<E>
     @Override
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-            UiUtils.hideKeyboard(v);
+            KeyboardVisibilityDelegate.getInstance().hideKeyboard(v);
         }
         return false;
     }
@@ -528,8 +517,7 @@ public class SelectableListToolbar<E>
         int padding =
                 SelectableListLayout.getPaddingForDisplayStyle(newDisplayStyle, getResources());
         int paddingStartOffset = 0;
-        boolean isModernSearchViewEnabled = mIsSearching && !mIsSelectionEnabled
-                && FeatureUtilities.isChromeModernDesignEnabled();
+        boolean isSearchViewShowing = mIsSearching && !mIsSelectionEnabled;
         MarginLayoutParams params = (MarginLayoutParams) getLayoutParams();
 
         if (newDisplayStyle.horizontal == HorizontalDisplayStyle.WIDE
@@ -541,8 +529,7 @@ public class SelectableListToolbar<E>
 
         // The margin instead of padding will be set to adjust the modern search view background
         // in search mode.
-        if (newDisplayStyle.horizontal == HorizontalDisplayStyle.WIDE
-                && isModernSearchViewEnabled) {
+        if (newDisplayStyle.horizontal == HorizontalDisplayStyle.WIDE && isSearchViewShowing) {
             params.setMargins(padding, params.topMargin, padding, params.bottomMargin);
             padding = 0;
         } else {
@@ -612,6 +599,7 @@ public class SelectableListToolbar<E>
     protected void showSelectionView(List<E> selectedItems, boolean wasSelectionEnabled) {
         getMenu().setGroupVisible(mNormalGroupResId, false);
         getMenu().setGroupVisible(mSelectedGroupResId, true);
+        getMenu().setGroupEnabled(mSelectedGroupResId, !selectedItems.isEmpty());
         if (mHasSearchView) mSearchView.setVisibility(View.GONE);
 
         setNavigationButton(NAVIGATION_BUTTON_SELECTION_BACK);
@@ -620,7 +608,7 @@ public class SelectableListToolbar<E>
 
         switchToNumberRollView(selectedItems, wasSelectionEnabled);
 
-        if (mIsSearching) UiUtils.hideKeyboard(mSearchEditText);
+        if (mIsSearching) KeyboardVisibilityDelegate.getInstance().hideKeyboard(mSearchEditText);
 
         updateDisplayStyleIfNecessary();
     }
@@ -632,12 +620,8 @@ public class SelectableListToolbar<E>
         mSearchView.setVisibility(View.VISIBLE);
 
         setNavigationButton(NAVIGATION_BUTTON_BACK);
-        if (FeatureUtilities.isChromeModernDesignEnabled()) {
-            setBackgroundResource(R.drawable.search_toolbar_modern_bg);
-            updateStatusBarColor(mSearchBackgroundColor);
-        } else {
-            setBackgroundColor(mSearchBackgroundColor);
-        }
+        setBackgroundResource(R.drawable.search_toolbar_modern_bg);
+        updateStatusBarColor(mSearchBackgroundColor);
 
         updateDisplayStyleIfNecessary();
     }
@@ -646,8 +630,8 @@ public class SelectableListToolbar<E>
         if (!mHasSearchView) return;
         MenuItem searchMenuItem = getMenu().findItem(mSearchMenuItemId);
         if (searchMenuItem != null) {
-            searchMenuItem.setVisible(mSelectableListHasItems && !mIsSelectionEnabled
-                    && !mIsSearching && !mIsVrEnabled);
+            searchMenuItem.setVisible(
+                    mSearchEnabled && !mIsSelectionEnabled && !mIsSearching && !mIsVrEnabled);
         }
     }
 
@@ -788,6 +772,10 @@ public class SelectableListToolbar<E>
             View child = getChildAt(i);
             if (!(child instanceof TextView)) continue;
             child.setFocusable(true);
+
+            // setFocusableInTouchMode is problematic for buttons, see
+            // https://crbug.com/813422.
+            if ((child instanceof Button)) continue;
             child.setFocusableInTouchMode(true);
         }
     }

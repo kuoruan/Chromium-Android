@@ -9,6 +9,8 @@ import android.support.customtabs.CustomTabsSessionToken;
 
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.tab.Tab.TabHidingType;
+import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.components.security_state.ConnectionSecurityLevel;
 
 /**
@@ -44,13 +46,13 @@ public class CustomTabNavigationEventObserver extends EmptyTabObserver {
     }
 
     @Override
-    public void onShown(Tab tab) {
+    public void onShown(Tab tab, @TabSelectionType int type) {
         CustomTabsConnection.getInstance().notifyNavigationEvent(
                 mSessionToken, CustomTabsCallback.TAB_SHOWN);
     }
 
     @Override
-    public void onHidden(Tab tab) {
+    public void onHidden(Tab tab, @TabHidingType int type) {
         CustomTabsConnection.getInstance().notifyNavigationEvent(
                 mSessionToken, CustomTabsCallback.TAB_HIDDEN);
     }

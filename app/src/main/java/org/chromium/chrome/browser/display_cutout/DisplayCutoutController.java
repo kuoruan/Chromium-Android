@@ -17,6 +17,7 @@ import org.chromium.chrome.browser.InsetObserverView;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabObserver;
+import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.browser.WebContentsObserver;
 
@@ -48,7 +49,7 @@ public class DisplayCutoutController implements InsetObserverView.WindowInsetObs
     /** Listens to various Tab events. */
     private final TabObserver mTabObserver = new EmptyTabObserver() {
         @Override
-        public void onShown(Tab tab) {
+        public void onShown(Tab tab, @TabSelectionType int type) {
             assert tab == mTab;
 
             // Force a layout update if we are now being shown.

@@ -46,14 +46,11 @@ public abstract class CafBaseMediaRouteProvider
     protected final Map<String, MediaRoute> mRoutes = new HashMap<String, MediaRoute>();
     protected Handler mHandler = new Handler();
 
-    // There can be only one Cast session at the same time on Android.
-    private final CastSessionController mSessionController;
     private CreateRouteRequestInfo mPendingCreateRouteRequestInfo;
 
     protected CafBaseMediaRouteProvider(MediaRouter androidMediaRouter, MediaRouteManager manager) {
         mAndroidMediaRouter = androidMediaRouter;
         mManager = manager;
-        mSessionController = new CastSessionController(this);
     }
 
     /**
@@ -149,9 +146,19 @@ public abstract class CafBaseMediaRouteProvider
     public final void createRoute(String sourceId, String sinkId, String presentationId,
             String origin, int tabId, boolean isIncognito, int nativeRequestId) {
         Log.d(TAG, "createRoute");
-        if (mPendingCreateRouteRequestInfo != null) {
-            // TODO(zqzhang): do something.
+        if (sessionController().isConnected()) {
+            // If there is an active session or a pending create route request, force end the
+            // current session and clean up the routes (can't wait for session ending as the signal
+            // might be delayed).
+            sessionController().endSession();
+            handleSessionEnd();
         }
+        if (mPendingCreateRouteRequestInfo != null) {
+            cancelPendingRequest("Request repaced");
+        }
+
+        CastUtils.getCastContext().getSessionManager().addSessionManagerListener(
+                this, CastSession.class);
 
         MediaSink sink = MediaSink.fromSinkId(sinkId, mAndroidMediaRouter);
         if (sink == null) {
@@ -165,10 +172,21 @@ public abstract class CafBaseMediaRouteProvider
             return;
         }
 
-        mPendingCreateRouteRequestInfo = new CreateRouteRequestInfo(
-                source, sink, presentationId, origin, tabId, isIncognito, nativeRequestId);
+        MediaRouter.RouteInfo targetRouteInfo = null;
+        for (MediaRouter.RouteInfo routeInfo : getAndroidMediaRouter().getRoutes()) {
+            if (routeInfo.getId().equals(sink.getId())) {
+                targetRouteInfo = routeInfo;
+                break;
+            }
+        }
+        if (targetRouteInfo == null) {
+            mManager.onRouteRequestError("The sink does not exist", nativeRequestId);
+        }
 
-        mSessionController.requestSessionLaunch(mPendingCreateRouteRequestInfo);
+        mPendingCreateRouteRequestInfo = new CreateRouteRequestInfo(source, sink, presentationId,
+                origin, tabId, isIncognito, nativeRequestId, targetRouteInfo);
+
+        sessionController().requestSessionLaunch();
     }
 
     @Override
@@ -181,7 +199,12 @@ public abstract class CafBaseMediaRouteProvider
             return;
         }
 
-        mSessionController.endSession();
+        sessionController().endSession();
+    }
+
+    @Override
+    public void detachRoute(String routeId) {
+        removeRoute(routeId, /* error= */ null);
     }
 
     ///////////////////////////////////////////////////////
@@ -195,13 +218,15 @@ public abstract class CafBaseMediaRouteProvider
 
     @Override
     public void onSessionStartFailed(CastSession session, int error) {
-        removeAllRoutesWithError("Launch error");
+        removeAllRoutes("Launch error");
+        cancelPendingRequest("Launch error");
     }
 
     @Override
     public void onSessionStarted(CastSession session, String sessionId) {
         Log.d(TAG, "onSessionStarted");
-        mSessionController.attachToCastSession(session);
+        sessionController().attachToCastSession(session);
+        sessionController().onSessionStarted();
 
         MediaSink sink = mPendingCreateRouteRequestInfo.sink;
         MediaSource source = mPendingCreateRouteRequestInfo.source;
@@ -215,7 +240,7 @@ public abstract class CafBaseMediaRouteProvider
 
     @Override
     public final void onSessionResumed(CastSession session, boolean wasSuspended) {
-        mSessionController.attachToCastSession(session);
+        sessionController().attachToCastSession(session);
     }
 
     @Override
@@ -226,34 +251,56 @@ public abstract class CafBaseMediaRouteProvider
 
     @Override
     public final void onSessionEnding(CastSession session) {
-        mSessionController.detachFromCastSession(session);
-        getAndroidMediaRouter().selectRoute(getAndroidMediaRouter().getDefaultRoute());
-        removeAllRoutesWithError(/* error= */ null);
+        handleSessionEnd();
     }
 
     @Override
-    public final void onSessionEnded(CastSession session, int error) {}
+    public final void onSessionEnded(CastSession session, int error) {
+        Log.d(TAG, "Session ended with error code " + error);
+        handleSessionEnd();
+    }
 
     @Override
     public final void onSessionSuspended(CastSession session, int reason) {
-        mSessionController.detachFromCastSession(session);
+        sessionController().detachFromCastSession();
     }
 
     ///////////////////////////////////////////////////////
     // SessionManagerListener implementation end
     ///////////////////////////////////////////////////////
 
+    private void handleSessionEnd() {
+        if (mPendingCreateRouteRequestInfo != null) {
+            // The Cast SDK notifies about session ending when a route is unselected, even when
+            // there's no current session. Because CastSessionController unselects the route to set
+            // the receiver app ID, this needs to be guarded by a pending request null check to make
+            // sure the listener is not unregistered during a session relaunch.
+            return;
+        }
+        sessionController().onSessionEnded();
+        sessionController().detachFromCastSession();
+        getAndroidMediaRouter().selectRoute(getAndroidMediaRouter().getDefaultRoute());
+        terminateAllRoutes();
+        CastUtils.getCastContext().getSessionManager().removeSessionManagerListener(
+                this, CastSession.class);
+    }
+
+    private void cancelPendingRequest(String error) {
+        if (mPendingCreateRouteRequestInfo == null) return;
+
+        mManager.onRouteRequestError(error, mPendingCreateRouteRequestInfo.nativeRequestId);
+        mPendingCreateRouteRequestInfo = null;
+    }
+
     public @NonNull MediaRouter getAndroidMediaRouter() {
         return mAndroidMediaRouter;
     }
 
     protected boolean hasSession() {
-        return mSessionController.isConnected();
+        return sessionController().isConnected();
     }
 
-    protected CastSessionController sessionController() {
-        return mSessionController;
-    }
+    abstract public BaseSessionController sessionController();
 
     public CafMessageHandler getMessageHandler() {
         return null;
@@ -264,30 +311,62 @@ public abstract class CafBaseMediaRouteProvider
             MediaRoute route, String origin, int tabId, int nativeRequestId, boolean wasLaunched) {
         mRoutes.put(route.id, route);
         mManager.onRouteCreated(route.id, route.sinkId,
-                mPendingCreateRouteRequestInfo.nativeRequestId, this, wasLaunched);
+                sessionController().getRouteCreationInfo().nativeRequestId, this, wasLaunched);
     }
 
-    /** Removes a route for bookkeeping. A null {@code error} indicates no error. */
-    protected void removeRoute(String routeId, @Nullable String error) {
-        mRoutes.remove(routeId);
-        if (error == null) {
-            mManager.onRouteClosed(routeId);
-        } else {
-            mManager.onRouteClosedWithError(routeId, error);
-        }
+    /**
+     * Removes a route for bookkeeping and notify the reason. This should be called whenever a route
+     * is closed.
+     *
+     * @param error the reason for the route close, {@code null} indicates no error.
+     */
+    protected final void removeRoute(String routeId, @Nullable String error) {
+        removeRouteFromRecord(routeId);
+        mManager.onRouteClosed(routeId, error);
     }
 
-    /** Removes all routes for bookkeeping. A null {@code error} indicates no error. */
-    protected void removeAllRoutesWithError(@Nullable String error) {
+    /**
+     * Removes all routes for bookkeeping and notify the reason. This should be called whenever all
+     * routes should be closed.
+     *
+     * @param error the reason for the route close, {@code null} indicates no error.
+     */
+    protected final void removeAllRoutes(@Nullable String error) {
         Set<String> routeIds = new HashSet<>(mRoutes.keySet());
         for (String routeId : routeIds) {
             removeRoute(routeId, error);
         }
     }
 
+    /**
+     * Removes all routes for bookkeeping. This should be called whenever the receiver app is
+     * terminated.
+     */
+    protected final void terminateAllRoutes() {
+        Set<String> routeIds = new HashSet<>(mRoutes.keySet());
+        for (String routeId : routeIds) {
+            removeRouteFromRecord(routeId);
+            mManager.onRouteTerminated(routeId);
+        }
+    }
+
+    /**
+     * Removes a route for bookkeeping. This method can only be called from {@link #removeRoute()},
+     * {@link #removeAllRoutes()} and {@link #terminateAllRoutes()}.
+     *
+     * Sub-classes can extend this method for additional cleanup.
+     */
+    protected void removeRouteFromRecord(String routeId) {
+        mRoutes.remove(routeId);
+    }
+
     @Override
     @Nullable
     public FlingingController getFlingingController(String routeId) {
         return null;
+    }
+
+    public CreateRouteRequestInfo getPendingCreateRouteRequestInfo() {
+        return mPendingCreateRouteRequestInfo;
     }
 }

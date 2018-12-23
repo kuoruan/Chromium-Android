@@ -36,9 +36,8 @@ import org.chromium.base.Log;
 import org.chromium.base.SysUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.chrome.browser.WindowDelegate;
-import org.chromium.chrome.browser.omnibox.UrlBar.ScrollType;
 import org.chromium.chrome.browser.toolbar.ToolbarManager;
-import org.chromium.ui.UiUtils;
+import org.chromium.ui.KeyboardVisibilityDelegate;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -70,6 +69,7 @@ public class UrlBar extends AutocompleteEditText {
     private int mUrlDirection;
 
     private UrlBarDelegate mUrlBarDelegate;
+    private UrlTextChangeListener mTextChangeListener;
     private UrlBarTextContextMenuDelegate mTextContextMenuDelegate;
     private UrlDirectionListener mUrlDirectionListener;
 
@@ -157,12 +157,6 @@ public class UrlBar extends AutocompleteEditText {
         boolean allowKeyboardLearning();
 
         /**
-         * Called when the text state has changed and the autocomplete suggestions should be
-         * refreshed.
-         */
-        void onTextChangedForAutocomplete();
-
-        /**
          * Called to notify that back key has been pressed while the URL bar has focus.
          */
         void backKeyPressed();
@@ -177,6 +171,15 @@ public class UrlBar extends AutocompleteEditText {
          *         whatever's in the URL bar verbatim.
          */
         boolean shouldCutCopyVerbatim();
+    }
+
+    /** Provides updates about the URL text changes. */
+    public interface UrlTextChangeListener {
+        /**
+         * Called when the text state has changed and the autocomplete suggestions should be
+         * refreshed.
+         */
+        void onTextChangedForAutocomplete();
     }
 
     /** Delegate that provides the additional functionality to the textual context menus. */
@@ -340,7 +343,7 @@ public class UrlBar extends AutocompleteEditText {
                 post(new Runnable() {
                     @Override
                     public void run() {
-                        UiUtils.showKeyboard(UrlBar.this);
+                        KeyboardVisibilityDelegate.getInstance().showKeyboard(UrlBar.this);
                     }
                 });
             }
@@ -526,6 +529,14 @@ public class UrlBar extends AutocompleteEditText {
         mUrlBarDelegate = delegate;
     }
 
+    /**
+     * Set the listener to be notified when the URL text has changed.
+     * @param listener The listener to be notified.
+     */
+    public void setUrlTextChangeListener(UrlTextChangeListener listener) {
+        mTextChangeListener = listener;
+    }
+
     @Override
     public boolean onTextContextMenuItem(int id) {
         if (mTextContextMenuDelegate == null) return super.onTextContextMenuItem(id);
@@ -695,20 +706,48 @@ public class UrlBar extends AutocompleteEditText {
         Editable url = getText();
         int measuredWidth = getMeasuredWidth() - (getPaddingLeft() + getPaddingRight());
 
+        Layout textLayout = getLayout();
         assert getLayout().getLineCount() == 1;
-        float endPointX = getLayout().getPrimaryHorizontal(mOriginEndIndex);
-        // Using 1 instead of 0 as zero does not return a valid value in RTL (always returns 0
-        // instead of the valid scroll position).
-        float startPointX = url.length() == 1 ? 0 : getLayout().getPrimaryHorizontal(1);
+        final int originEndIndex = Math.min(mOriginEndIndex, url.length());
+        if (mOriginEndIndex > url.length()) {
+            // If discovered locally, please update crbug.com/859219 with the steps to reproduce.
+            assert false : "Attempting to scroll past the end of the URL: " + url + ", end index: "
+                           + mOriginEndIndex;
+        }
+        float endPointX = textLayout.getPrimaryHorizontal(originEndIndex);
+        // Compare the position offset of the last character and the character prior to determine
+        // the LTR-ness of the final component of the URL.
+        float priorToEndPointX = url.length() == 1
+                ? 0
+                : textLayout.getPrimaryHorizontal(Math.max(0, originEndIndex - 1));
 
         float scrollPos;
-        if (startPointX < endPointX) {
+        if (priorToEndPointX < endPointX) {
             // LTR
             scrollPos = Math.max(0, endPointX - measuredWidth);
         } else {
             // RTL
-            float width = getLayout().getPaint().measureText(
-                    url.subSequence(0, mOriginEndIndex).toString());
+
+            // To handle BiDirectional text, search backward from the two existing offsets to find
+            // the first LTR character.  Ensure the final RTL component of the domain is visible
+            // above any of the prior LTR pieces.
+            int rtlStartIndexForEndingRun = originEndIndex - 1;
+            for (int i = originEndIndex - 2; i >= 0; i--) {
+                float indexOffsetDrawPosition = textLayout.getPrimaryHorizontal(i);
+                if (indexOffsetDrawPosition > endPointX) {
+                    rtlStartIndexForEndingRun = i;
+                } else {
+                    // getPrimaryHorizontal determines the index position for the next character
+                    // based on the previous characters.  In bi-directional text, the first RTL
+                    // character following LTR text will have an LTR-appearing horizontal offset
+                    // as it is based on the preceding LTR text.  Thus, the start of the RTL
+                    // character run will be after and including the first LTR horizontal index.
+                    rtlStartIndexForEndingRun = Math.max(0, rtlStartIndexForEndingRun - 1);
+                    break;
+                }
+            }
+            float width = textLayout.getPaint().measureText(
+                    url.subSequence(rtlStartIndexForEndingRun, originEndIndex).toString());
             if (width < measuredWidth) {
                 scrollPos = Math.max(0, endPointX + width - measuredWidth);
             } else {
@@ -823,12 +862,12 @@ public class UrlBar extends AutocompleteEditText {
         if (DEBUG) {
             Log.i(TAG, "onAutocompleteTextStateChanged: DIS[%b]", updateDisplay);
         }
-        if (mUrlBarDelegate == null) return;
+        if (mTextChangeListener == null) return;
         if (updateDisplay) limitDisplayableLength();
         // crbug.com/764749
         Log.w(TAG, "Text change observed, triggering autocomplete.");
 
-        mUrlBarDelegate.onTextChangedForAutocomplete();
+        mTextChangeListener.onTextChangedForAutocomplete();
     }
 
     /**

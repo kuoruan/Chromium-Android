@@ -16,6 +16,8 @@ import android.text.method.PasswordTransformationMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
@@ -60,6 +62,11 @@ class PasswordAccessorySheetViewBinder {
                     return new TextViewHolder(
                             LayoutInflater.from(parent.getContext())
                                     .inflate(R.layout.password_accessory_sheet_option, parent,
+                                            false));
+                case ItemType.TOP_DIVIDER:
+                    return new ItemViewHolder(
+                            LayoutInflater.from(parent.getContext())
+                                    .inflate(R.layout.password_accessory_sheet_top_divider, parent,
                                             false));
             }
             assert false : viewType;
@@ -150,7 +157,9 @@ class PasswordAccessorySheetViewBinder {
             // Jelly Bean, so the padding should be set after the background.
             if (!item.isPassword()) {
                 setIconForBitmap(null); // Set the default icon, then try to get a better one.
-                item.fetchFavicon(this::setIconForBitmap);
+                item.fetchFavicon(itemView.getContext().getResources().getDimensionPixelSize(
+                                          R.dimen.keyboard_accessory_suggestion_icon_size),
+                        this::setIconForBitmap);
                 mSuggestionText.setPadding(mPadding, 0, mPadding, 0);
             } else {
                 ApiCompatibilityUtils.setCompoundDrawablesRelative(
@@ -181,5 +190,16 @@ class PasswordAccessorySheetViewBinder {
                 new LinearLayoutManager(view.getContext(), LinearLayoutManager.VERTICAL, false));
         view.setItemAnimator(null);
         view.setAdapter(adapter);
+        // TODO(fhorschig): Move the shadow into the sheet and reflect visibility in its model.
+        final ImageView topShadow =
+                ((FrameLayout) view.getParent()).findViewById(R.id.accessory_sheet_shadow);
+        view.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (recyclerView == null) return;
+                topShadow.setVisibility(
+                        recyclerView.canScrollVertically(-1) ? View.VISIBLE : View.GONE);
+            }
+        });
     }
 }

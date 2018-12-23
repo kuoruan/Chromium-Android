@@ -6,7 +6,6 @@ package org.chromium.chrome.browser.ntp.cards;
 
 import org.chromium.base.Log;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder.PartialBindCallback;
 import org.chromium.chrome.browser.ntp.snippets.CategoryInt;
 import org.chromium.chrome.browser.ntp.snippets.CategoryStatus;
@@ -84,10 +83,6 @@ public class SectionList extends InnerNode<NewTabPageViewHolder, PartialBindCall
             }
         }
 
-        if (!ChromeFeatureList.isEnabled(
-                    ChromeFeatureList.NTP_ARTICLE_SUGGESTIONS_EXPANDABLE_HEADER)) {
-            maybeHideArticlesHeader();
-        }
         recordDisplayedSuggestions(categories);
     }
 
@@ -324,26 +319,12 @@ public class SectionList extends InnerNode<NewTabPageViewHolder, PartialBindCall
         removeChildren();
     }
 
-    /** Hides the header for the {@link KnownCategories#ARTICLES} section when necessary. */
-    private void maybeHideArticlesHeader() {
-        // If there is more than a section we want to show the headers for disambiguation purposes.
-        if (mSections.size() != 1) return;
-
-        SuggestionsSection articlesSection = mSections.get(KnownCategories.ARTICLES);
-        if (articlesSection == null) return;
-
-        articlesSection.setHeaderVisibility(false);
-    }
-
     /**
      * A section that allows zero items should be created for showing the section header if it is
      * not yet created.
      * @param category The category that needs a correspond section shown for the header.
      */
     private void maybeAddSectionForHeader(@CategoryInt int category) {
-        if (!ChromeFeatureList.isEnabled(
-                    ChromeFeatureList.NTP_ARTICLE_SUGGESTIONS_EXPANDABLE_HEADER))
-            return;
         if (category != KnownCategories.ARTICLES) return;
 
         // Don't add a header if the entire articles section is disabled by policy.

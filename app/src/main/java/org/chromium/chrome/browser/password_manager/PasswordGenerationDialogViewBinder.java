@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.password_manager;
 
 import org.chromium.base.Callback;
+import org.chromium.chrome.browser.modaldialog.DialogDismissalCause;
 import org.chromium.chrome.browser.modaldialog.ModalDialogView;
 
 /** Class responsible for binding the model and the view. On bind, it lazily initializes the view
@@ -33,12 +34,7 @@ public class PasswordGenerationDialogViewBinder {
         }
 
         @Override
-        public void onCancel() {
-            mPasswordActionCallback.onResult(false);
-        }
-
-        @Override
-        public void onDismiss() {
+        public void onDismiss(@DialogDismissalCause int dismissalCause) {
             mPasswordActionCallback.onResult(false);
         }
     }
@@ -46,11 +42,11 @@ public class PasswordGenerationDialogViewBinder {
     public static void bind(
             PasswordGenerationDialogModel model, PasswordGenerationDialogViewHolder viewHolder) {
         viewHolder.setController(new PasswordGenerationDialogController(
-                model.getValue(PasswordGenerationDialogModel.PASSWORD_ACTION_CALLBACK)));
+                model.get(PasswordGenerationDialogModel.PASSWORD_ACTION_CALLBACK)));
         viewHolder.setGeneratedPassword(
-                model.getValue(PasswordGenerationDialogModel.GENERATED_PASSWORD));
+                model.get(PasswordGenerationDialogModel.GENERATED_PASSWORD));
         viewHolder.setSaveExplanationText(
-                model.getValue(PasswordGenerationDialogModel.SAVE_EXPLANATION_TEXT));
+                model.get(PasswordGenerationDialogModel.SAVE_EXPLANATION_TEXT));
         viewHolder.initializeView();
     }
 }

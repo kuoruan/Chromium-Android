@@ -4,6 +4,8 @@
 
 package org.chromium.chrome.browser.compositor.layouts.phone;
 
+import static org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.AnimatableAnimation.createAnimation;
+
 import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -19,6 +21,7 @@ import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.compositor.LayerTitleCache;
+import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation;
 import org.chromium.chrome.browser.compositor.layouts.ChromeAnimation.Animatable;
 import org.chromium.chrome.browser.compositor.layouts.Layout;
 import org.chromium.chrome.browser.compositor.layouts.LayoutManager;
@@ -29,7 +32,6 @@ import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.EventFilter;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.GestureEventFilter;
 import org.chromium.chrome.browser.compositor.layouts.eventfilter.GestureHandler;
-import org.chromium.chrome.browser.compositor.layouts.eventfilter.ScrollDirection;
 import org.chromium.chrome.browser.compositor.layouts.phone.stack.NonOverlappingStack;
 import org.chromium.chrome.browser.compositor.layouts.phone.stack.OverlappingStack;
 import org.chromium.chrome.browser.compositor.layouts.phone.stack.Stack;
@@ -41,6 +43,7 @@ import org.chromium.chrome.browser.partnercustomizations.HomepageManager;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabList;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
+import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabModelObserver;
 import org.chromium.chrome.browser.tabmodel.TabModelUtils;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.MathUtils;
@@ -189,6 +192,8 @@ public abstract class StackLayoutBase extends Layout implements Animatable {
     private final TabListSceneLayer mSceneLayer;
 
     private StackLayoutGestureHandler mGestureHandler;
+
+    private ChromeAnimation<Animatable> mLayoutAnimations;
 
     private class StackLayoutGestureHandler implements GestureHandler {
         @Override
@@ -434,7 +439,23 @@ public abstract class StackLayoutBase extends Layout implements Animatable {
         super.setTabModelSelector(modelSelector, manager);
         mSceneLayer.setTabModelSelector(modelSelector);
         resetScrollData();
+
+        new TabModelSelectorTabModelObserver(mTabModelSelector) {
+            @Override
+            public void tabClosureUndone(Tab tab) {
+                if (!isActive()) return;
+                onTabClosureCancelled(LayoutManager.time(), tab.getId(), tab.isIncognito());
+            }
+        };
     }
+
+    /**
+     * Called when a tab close has been undone and the tab has been restored.
+     * @param time      The current time of the app in ms.
+     * @param id        The id of the Tab.
+     * @param incognito True if the tab is incognito
+     */
+    public void onTabClosureCancelled(long time, int id, boolean incognito) {}
 
     /**
      * Get the tab stack at the specified index.
@@ -522,11 +543,6 @@ public abstract class StackLayoutBase extends Layout implements Animatable {
     @Override
     public void onTabsAllClosing(long time, boolean incognito) {
         super.onTabsAllClosing(time, incognito);
-    }
-
-    @Override
-    public void onTabClosureCancelled(long time, int id, boolean incognito) {
-        super.onTabClosureCancelled(time, id, incognito);
     }
 
     @Override
@@ -628,7 +644,20 @@ public abstract class StackLayoutBase extends Layout implements Animatable {
 
     @Override
     public boolean onUpdateAnimation(long time, boolean jumpToEnd) {
-        boolean animationsWasDone = super.onUpdateAnimation(time, jumpToEnd);
+        boolean animationsWasDone = true;
+        if (mLayoutAnimations != null) {
+            if (jumpToEnd) {
+                animationsWasDone = mLayoutAnimations.finished();
+                mLayoutAnimations.updateAndFinish();
+            } else {
+                animationsWasDone = mLayoutAnimations.update(time);
+            }
+
+            if (animationsWasDone || jumpToEnd) {
+                mLayoutAnimations = null;
+                onAnimationFinished();
+            }
+        }
 
         boolean finishedAllViews = true;
         for (int i = 0; i < mStacks.size(); i++) {
@@ -660,14 +689,16 @@ public abstract class StackLayoutBase extends Layout implements Animatable {
      */
     public void onSwitchToFinished() {}
 
-    @Override
+    /**
+     * Called when layout-specific actions are needed after the animation finishes.
+     */
     protected void onAnimationStarted() {
-        if (mStackAnimationCount == 0) super.onAnimationStarted();
     }
 
-    @Override
+    /**
+     * Called when layout-specific actions are needed after the animation finishes.
+     */
     protected void onAnimationFinished() {
-        if (mStackAnimationCount == 0) super.onAnimationFinished();
     }
 
     /**
@@ -817,32 +848,6 @@ public abstract class StackLayoutBase extends Layout implements Animatable {
         // We will render before we get a call to updateLayout.  Need to make sure all of the tabs
         // we need to render are up to date.
         updateLayout(time, 0);
-    }
-
-    @Override
-    public void swipeStarted(long time, @ScrollDirection int direction, float x, float y) {
-        mStacks.get(getTabStackIndex()).swipeStarted(time, direction, x, y);
-    }
-
-    @Override
-    public void swipeUpdated(long time, float x, float y, float dx, float dy, float tx, float ty) {
-        mStacks.get(getTabStackIndex()).swipeUpdated(time, x, y, dx, dy, tx, ty);
-    }
-
-    @Override
-    public void swipeFinished(long time) {
-        mStacks.get(getTabStackIndex()).swipeFinished(time);
-    }
-
-    @Override
-    public void swipeCancelled(long time) {
-        mStacks.get(getTabStackIndex()).swipeCancelled(time);
-    }
-
-    @Override
-    public void swipeFlingOccurred(
-            long time, float x, float y, float tx, float ty, float vx, float vy) {
-        mStacks.get(getTabStackIndex()).swipeFlingOccurred(time, x, y, tx, ty, vx, vy);
     }
 
     @Override
@@ -1509,7 +1514,6 @@ public abstract class StackLayoutBase extends Layout implements Animatable {
      * Called by the stacks whenever they start an animation.
      */
     public void onStackAnimationStarted() {
-        if (mStackAnimationCount == 0) super.onAnimationStarted();
         mStackAnimationCount++;
     }
 
@@ -1518,7 +1522,6 @@ public abstract class StackLayoutBase extends Layout implements Animatable {
      */
     public void onStackAnimationFinished() {
         mStackAnimationCount--;
-        if (mStackAnimationCount == 0) super.onAnimationFinished();
     }
 
     @Override
@@ -1541,5 +1544,47 @@ public abstract class StackLayoutBase extends Layout implements Animatable {
 
         mSceneLayer.pushLayers(getContext(), viewport, contentViewport, this, layerTitleCache,
                 tabContentManager, resourceManager, fullscreenManager);
+    }
+
+    /**
+     * Creates an {@link org.chromium.chrome.browser.compositor.layouts.ChromeAnimation
+     * .AnimatableAnimation} and adds it to the animation.
+     * Automatically sets the start value at the beginning of the animation.
+     */
+    protected void addToAnimation(
+            Animatable object, int prop, float start, float end, long duration, long startTime) {
+        ChromeAnimation.Animation<Animatable> component = createAnimation(object, prop, start, end,
+                duration, startTime, false, ChromeAnimation.getDecelerateInterpolator());
+        if (mLayoutAnimations == null || mLayoutAnimations.finished()) {
+            mLayoutAnimations = new ChromeAnimation<Animatable>();
+            mLayoutAnimations.start();
+        }
+        component.start();
+        mLayoutAnimations.add(component);
+        requestUpdate();
+    }
+
+    @Override
+    protected void forceAnimationToFinish() {
+        super.forceAnimationToFinish();
+        if (mLayoutAnimations != null) {
+            mLayoutAnimations.updateAndFinish();
+            mLayoutAnimations = null;
+        }
+    }
+
+    /**
+     * Cancels any animation for the given object and property.
+     * @param object The object being animated.
+     * @param prop   The property to search for.
+     */
+    protected void cancelAnimation(Animatable object, int prop) {
+        if (mLayoutAnimations != null) mLayoutAnimations.cancel(object, prop);
+    }
+
+    @Override
+    @VisibleForTesting
+    public boolean isLayoutAnimating() {
+        return mLayoutAnimations != null && !mLayoutAnimations.finished();
     }
 }

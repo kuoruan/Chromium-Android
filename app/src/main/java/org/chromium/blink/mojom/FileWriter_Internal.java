@@ -49,7 +49,9 @@ class FileWriter_Internal {
 
     private static final int WRITE_ORDINAL = 0;
 
-    private static final int TRUNCATE_ORDINAL = 1;
+    private static final int WRITE_STREAM_ORDINAL = 1;
+
+    private static final int TRUNCATE_ORDINAL = 2;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements FileWriter.Proxy {
@@ -80,6 +82,30 @@ WriteResponse callback) {
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
                                     0)),
                     new FileWriterWriteResponseParamsForwardToCallback(callback));
+
+        }
+
+
+        @Override
+        public void writeStream(
+long position, org.chromium.mojo.system.DataPipe.ConsumerHandle stream, 
+WriteStreamResponse callback) {
+
+            FileWriterWriteStreamParams _message = new FileWriterWriteStreamParams();
+
+            _message.position = position;
+
+            _message.stream = stream;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    WRITE_STREAM_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new FileWriterWriteStreamResponseParamsForwardToCallback(callback));
 
         }
 
@@ -134,6 +160,8 @@ TruncateResponse callback) {
 
 
 
+
+
                     default:
                         return false;
                 }
@@ -170,6 +198,21 @@ TruncateResponse callback) {
                                 FileWriterWriteParams.deserialize(messageWithHeader.getPayload());
 
                         getImpl().write(data.position, data.blob, new FileWriterWriteResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
+
+
+
+
+
+                    case WRITE_STREAM_ORDINAL: {
+
+                        FileWriterWriteStreamParams data =
+                                FileWriterWriteStreamParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().writeStream(data.position, data.stream, new FileWriterWriteStreamResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
 
@@ -396,6 +439,211 @@ TruncateResponse callback) {
                             mCore,
                             new org.chromium.mojo.bindings.MessageHeader(
                                     WRITE_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
+
+
+    
+    static final class FileWriterWriteStreamParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public long position;
+        public org.chromium.mojo.system.DataPipe.ConsumerHandle stream;
+
+        private FileWriterWriteStreamParams(int version) {
+            super(STRUCT_SIZE, version);
+            this.stream = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+        }
+
+        public FileWriterWriteStreamParams() {
+            this(0);
+        }
+
+        public static FileWriterWriteStreamParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static FileWriterWriteStreamParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static FileWriterWriteStreamParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            FileWriterWriteStreamParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new FileWriterWriteStreamParams(elementsOrVersion);
+                    {
+                        
+                    result.position = decoder0.readLong(8);
+                    }
+                    {
+                        
+                    result.stream = decoder0.readConsumerHandle(16, false);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.position, 8);
+            
+            encoder0.encode(this.stream, 16, false);
+        }
+    }
+
+
+
+    
+    static final class FileWriterWriteStreamResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int result;
+        public long bytesWritten;
+
+        private FileWriterWriteStreamResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public FileWriterWriteStreamResponseParams() {
+            this(0);
+        }
+
+        public static FileWriterWriteStreamResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static FileWriterWriteStreamResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static FileWriterWriteStreamResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            FileWriterWriteStreamResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new FileWriterWriteStreamResponseParams(elementsOrVersion);
+                    {
+                        
+                    result.result = decoder0.readInt(8);
+                        org.chromium.mojo_base.mojom.FileError.validate(result.result);
+                    }
+                    {
+                        
+                    result.bytesWritten = decoder0.readLong(16);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.result, 8);
+            
+            encoder0.encode(this.bytesWritten, 16);
+        }
+    }
+
+    static class FileWriterWriteStreamResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final FileWriter.WriteStreamResponse mCallback;
+
+        FileWriterWriteStreamResponseParamsForwardToCallback(FileWriter.WriteStreamResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(WRITE_STREAM_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                FileWriterWriteStreamResponseParams response = FileWriterWriteStreamResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.result, response.bytesWritten);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class FileWriterWriteStreamResponseParamsProxyToResponder implements FileWriter.WriteStreamResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        FileWriterWriteStreamResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(Integer result, Long bytesWritten) {
+            FileWriterWriteStreamResponseParams _response = new FileWriterWriteStreamResponseParams();
+
+            _response.result = result;
+
+            _response.bytesWritten = bytesWritten;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    WRITE_STREAM_ORDINAL,
                                     org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
                                     mRequestId));
             mMessageReceiver.accept(_message);

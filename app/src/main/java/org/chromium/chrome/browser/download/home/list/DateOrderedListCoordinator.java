@@ -5,15 +5,24 @@
 package org.chromium.chrome.browser.download.home.list;
 
 import android.content.Context;
+import android.content.Intent;
+import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 import org.chromium.base.Callback;
-import org.chromium.chrome.browser.download.home.PrefetchStatusProvider;
+import org.chromium.chrome.R;
+import org.chromium.chrome.browser.download.home.DownloadManagerUiConfig;
+import org.chromium.chrome.browser.download.home.StableIds;
 import org.chromium.chrome.browser.download.home.empty.EmptyCoordinator;
 import org.chromium.chrome.browser.download.home.filter.FilterCoordinator;
 import org.chromium.chrome.browser.download.home.filter.Filters.FilterType;
 import org.chromium.chrome.browser.download.home.list.ListItem.ViewListItem;
+import org.chromium.chrome.browser.download.home.metrics.FilterChangeLogger;
 import org.chromium.chrome.browser.download.home.storage.StorageCoordinator;
+import org.chromium.chrome.browser.download.home.toolbar.ToolbarCoordinator;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate;
 import org.chromium.components.offline_items_collection.OfflineContentProvider;
 import org.chromium.components.offline_items_collection.OfflineItem;
@@ -24,7 +33,7 @@ import java.util.List;
  * The top level coordinator for the download home UI.  This is currently an in progress class and
  * is not fully fleshed out yet.
  */
-public class DateOrderedListCoordinator {
+public class DateOrderedListCoordinator implements ToolbarCoordinator.ToolbarListActionDelegate {
     /**
      * A helper interface for exposing the decision for whether or not to delete
      * {@link OfflineItem}s to an external layer.
@@ -45,50 +54,91 @@ public class DateOrderedListCoordinator {
         void canDelete(List<OfflineItem> items, Callback<Boolean> callback);
     }
 
+    /**
+     * An observer to be notified about certain changes about the recycler view and the underlying
+     * list.
+     */
+    public interface DateOrderedListObserver {
+        /**
+         * Called after a scroll operation on the view.
+         * @param canScrollUp Whether the scroll position can scroll vertically further up.
+         */
+        void onListScroll(boolean canScrollUp);
+
+        /**
+         * Called when the empty state of the list has changed.
+         * @param isEmpty Whether the list is now empty.
+         */
+        void onEmptyStateChanged(boolean isEmpty);
+    }
+
+    private final Context mContext;
     private final StorageCoordinator mStorageCoordinator;
     private final FilterCoordinator mFilterCoordinator;
     private final EmptyCoordinator mEmptyCoordinator;
     private final DateOrderedListMediator mMediator;
-    private final DateOrderedListView mView;
+    private final DateOrderedListView mListView;
+    private ViewGroup mMainView;
 
-    /** Creates an instance of a DateOrderedListCoordinator, which will visually represent
+    /**
+     * Creates an instance of a DateOrderedListCoordinator, which will visually represent
      * {@code provider} as a list of items.
-     * @param context          The {@link Context} to use to build the views.
-     * @param offTheRecord     Whether or not to include off the record items.
-     * @param provider         The {@link OfflineContentProvider} to visually represent.
+     * @param context The {@link Context} to use to build the views.
+     * @param config The {@link DownloadManagerUiConfig} to provide UI configuration params.
+     * @param provider The {@link OfflineContentProvider} to visually represent.
      * @param deleteController A class to manage whether or not items can be deleted.
-     * @param filterObserver   A {@link FilterCoordinator.Observer} that should be notified of
-     *                         filter changes.  This is meant to be used for external components
-     *                         that need to take action based on the visual state of the list.
+     * @param filterObserver A {@link FilterCoordinator.Observer} that should be notified of
+     *                       filter changes.  This is meant to be used for external components that
+     *                       need to take action based on the visual state of the list.
+     * @param dateOrderedListObserver A {@link DateOrderedListObserver}.
      */
-    public DateOrderedListCoordinator(Context context, Boolean offTheRecord,
+    public DateOrderedListCoordinator(Context context, DownloadManagerUiConfig config,
             OfflineContentProvider provider, DeleteController deleteController,
             SelectionDelegate<ListItem> selectionDelegate,
-            FilterCoordinator.Observer filterObserver) {
-        // TODO(shaktisahu): Use a real provider/have this provider query the real data source.
-        PrefetchStatusProvider prefetchProvider = new PrefetchStatusProvider();
+            FilterCoordinator.Observer filterObserver,
+            DateOrderedListObserver dateOrderedListObserver) {
+        mContext = context;
 
         ListItemModel model = new ListItemModel();
         DecoratedListItemModel decoratedModel = new DecoratedListItemModel(model);
-        mView = new DateOrderedListView(context, decoratedModel);
-        mMediator = new DateOrderedListMediator(offTheRecord, provider, context::startActivity,
-                deleteController, selectionDelegate, model);
+        mListView =
+                new DateOrderedListView(context, config, decoratedModel, dateOrderedListObserver);
+        mMediator = new DateOrderedListMediator(provider, this ::startShareIntent, deleteController,
+                selectionDelegate, config, dateOrderedListObserver, model);
 
-        mEmptyCoordinator =
-                new EmptyCoordinator(context, prefetchProvider, mMediator.getEmptySource());
+        mEmptyCoordinator = new EmptyCoordinator(context, mMediator.getEmptySource());
 
         mStorageCoordinator = new StorageCoordinator(context, mMediator.getFilterSource());
 
-        mFilterCoordinator =
-                new FilterCoordinator(context, prefetchProvider, mMediator.getFilterSource());
+        mFilterCoordinator = new FilterCoordinator(context, mMediator.getFilterSource());
         mFilterCoordinator.addObserver(mMediator::onFilterTypeSelected);
         mFilterCoordinator.addObserver(filterObserver);
         mFilterCoordinator.addObserver(mEmptyCoordinator);
+        mFilterCoordinator.addObserver(new FilterChangeLogger());
 
         decoratedModel.addHeader(
-                new ViewListItem(Long.MAX_VALUE - 1L, mStorageCoordinator.getView()));
+                new ViewListItem(StableIds.STORAGE_HEADER, mStorageCoordinator.getView()));
         decoratedModel.addHeader(
-                new ViewListItem(Long.MAX_VALUE - 2L, mFilterCoordinator.getView()));
+                new ViewListItem(StableIds.FILTERS_HEADER, mFilterCoordinator.getView()));
+        initializeView(context);
+    }
+
+    /**
+     * Creates a top-level view containing the {@link DateOrderedListView} and {@link EmptyView}.
+     * The list view is added on top of the empty view so that the empty view will show up when the
+     * list has no items or is loading.
+     * @param context The current context.
+     */
+    private void initializeView(Context context) {
+        mMainView = new FrameLayout(context);
+        FrameLayout.LayoutParams emptyViewParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+        emptyViewParams.gravity = Gravity.CENTER;
+        mMainView.addView(mEmptyCoordinator.getView(), emptyViewParams);
+
+        FrameLayout.LayoutParams listParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
+        mMainView.addView(mListView.getView(), listParams);
     }
 
     /** Tears down this coordinator. */
@@ -98,11 +148,28 @@ public class DateOrderedListCoordinator {
 
     /** @return The {@link View} representing downloads home. */
     public View getView() {
-        return mView.getView();
+        return mMainView;
     }
 
-    /** Sets the string filter query to {@code query}. */
+    // ToolbarListActionDelegate implementation.
+    @Override
+    public int deleteSelectedItems() {
+        return mMediator.deleteSelectedItems();
+    }
+
+    @Override
+    public int shareSelectedItems() {
+        return mMediator.shareSelectedItems();
+    }
+
+    /** Called to handle a back press event. */
+    public boolean handleBackPressed() {
+        return mMediator.handleBackPressed();
+    }
+
+    @Override
     public void setSearchQuery(String query) {
+        mEmptyCoordinator.setInSearchMode(!TextUtils.isEmpty(query));
         mMediator.onFilterStringChanged(query);
     }
 
@@ -111,13 +178,8 @@ public class DateOrderedListCoordinator {
         mFilterCoordinator.setSelectedFilter(filter);
     }
 
-    /** Called to delete a list of items specified by {@code items}. */
-    public void onDeletionRequested(List<ListItem> items) {
-        mMediator.onDeletionRequested(items);
-    }
-
-    /** Called to share a list of items specified by {@code items}. */
-    public void onShareRequested(List<ListItem> items) {
-        mMediator.onShareRequested(items);
+    private void startShareIntent(Intent intent) {
+        mContext.startActivity(Intent.createChooser(
+                intent, mContext.getString(R.string.share_link_chooser_title)));
     }
 }

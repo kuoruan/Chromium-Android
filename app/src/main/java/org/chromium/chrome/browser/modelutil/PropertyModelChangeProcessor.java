@@ -14,8 +14,7 @@ import org.chromium.chrome.browser.modelutil.PropertyObservable.PropertyObserver
  * @param <V> The view object that is changing.
  * @param <P> The property of the view that changed.
  */
-public class PropertyModelChangeProcessor<M extends PropertyObservable<P>, V, P>
-        implements PropertyObserver<P> {
+public class PropertyModelChangeProcessor<M extends PropertyObservable<P>, V, P> {
     /**
      * A generic view binder that associates a view with a model.
      * @param <M> The {@link PropertyObservable} model.
@@ -28,21 +27,46 @@ public class PropertyModelChangeProcessor<M extends PropertyObservable<P>, V, P>
     private final M mModel;
     private final ViewBinder<M, V, P> mViewBinder;
 
+    private final PropertyObserver<P> mPropertyObserver = this::onPropertyChanged;
+
     /**
      * Construct a new PropertyModelChangeProcessor.
      * @param model The model containing the data to be bound.
      * @param view The view to which data will be bound.
      * @param viewBinder A class that binds the model to the view.
      */
-    public PropertyModelChangeProcessor(M model, V view, ViewBinder<M, V, P> viewBinder) {
+    private PropertyModelChangeProcessor(M model, V view, ViewBinder<M, V, P> viewBinder) {
         mModel = model;
         mView = view;
         mViewBinder = viewBinder;
+        for (P property : model.getAllSetProperties()) {
+            onPropertyChanged(model, property);
+        }
+        model.addObserver(mPropertyObserver);
     }
 
-    @Override
-    public void onPropertyChanged(PropertyObservable<P> source, P propertyKey) {
-        // TODO(bauerb): Add support for batching and for full model updates.
+    /**
+     * Creates a new PropertyModelChangeProcessor observing the given {@code model}.
+     * @param model The model containing the data to be bound.
+     * @param view The view to which data will be bound.
+     * @param viewBinder A class that binds the model to the view.
+     */
+    public static <M extends PropertyObservable<P>, V, P>
+    PropertyModelChangeProcessor<M, V, P> create(M model, V view, ViewBinder<M, V, P> viewBinder) {
+        return new PropertyModelChangeProcessor<>(model, view, viewBinder);
+    }
+
+    /**
+     * To be called when the model should no longer be observed.
+     */
+    public void destroy() {
+        mModel.removeObserver(mPropertyObserver);
+    }
+
+    private void onPropertyChanged(PropertyObservable<P> source, P propertyKey) {
+        assert source == mModel;
+
+        // TODO(bauerb): Add support for batching updates.
         mViewBinder.bind(mModel, mView, propertyKey);
     }
 }

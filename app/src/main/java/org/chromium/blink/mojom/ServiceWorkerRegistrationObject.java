@@ -24,8 +24,8 @@ public interface ServiceWorkerRegistrationObject extends org.chromium.mojo.bindi
     Manager<ServiceWorkerRegistrationObject, ServiceWorkerRegistrationObject.Proxy> MANAGER = ServiceWorkerRegistrationObject_Internal.MANAGER;
 
 
-    void setVersionAttributes(
-int changedMask, ServiceWorkerObjectInfo installing, ServiceWorkerObjectInfo waiting, ServiceWorkerObjectInfo active);
+    void setServiceWorkerObjects(
+ChangedServiceWorkerObjectsMask changedMask, ServiceWorkerObjectInfo installing, ServiceWorkerObjectInfo waiting, ServiceWorkerObjectInfo active);
 
 
 

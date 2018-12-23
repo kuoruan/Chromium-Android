@@ -17,6 +17,7 @@ import android.util.SparseArray;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
+import org.chromium.base.compat.ApiHelperForM;
 
 import java.lang.ref.WeakReference;
 
@@ -60,7 +61,7 @@ public class ActivityAndroidPermissionDelegate implements AndroidPermissionDeleg
             return false;
         }
 
-        if (activity.shouldShowRequestPermissionRationale(permission)) {
+        if (ApiHelperForM.shouldShowRequestPermissionRationale(activity, permission)) {
             return true;
         }
 
@@ -81,8 +82,7 @@ public class ActivityAndroidPermissionDelegate implements AndroidPermissionDeleg
         Activity activity = mActivity.get();
         if (activity == null) return false;
 
-        return activity.getPackageManager().isPermissionRevokedByPolicy(
-                permission, activity.getPackageName());
+        return ApiHelperForM.isPermissionRevokedByPolicy(activity, permission);
     }
 
     @Override
@@ -138,7 +138,7 @@ public class ActivityAndroidPermissionDelegate implements AndroidPermissionDeleg
         int requestCode = REQUEST_CODE_PREFIX + mNextRequestCode;
         mNextRequestCode = (mNextRequestCode + 1) % REQUEST_CODE_RANGE_SIZE;
         mOutstandingPermissionRequests.put(requestCode, callback);
-        activity.requestPermissions(permissions, requestCode);
+        ApiHelperForM.requestActivityPermissions(activity, permissions, requestCode);
         return true;
     }
 

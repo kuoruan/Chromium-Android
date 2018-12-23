@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.widget;
 import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.util.LruCache;
 import android.text.TextUtils;
 
 import org.chromium.base.DiscardableReferencePool;
@@ -33,7 +34,20 @@ public class ThumbnailProviderImpl implements ThumbnailProvider, ThumbnailStorag
     /** 5 MB of thumbnails should be enough for everyone. */
     private static final int MAX_CACHE_BYTES = 5 * ConversionUtils.BYTES_PER_MEGABYTE;
 
+    /**
+     * Helper object to store in the LruCache when we don't really need a value but can't use null.
+     */
+    private static final Object NO_BITMAP_PLACEHOLDER = new Object();
+
     private BitmapCache mBitmapCache;
+
+    /**
+     * Tracks a set of Content Ids where thumbnail generation or retrieval failed.  This should
+     * prevent making subsequent (potentially expensive) thumbnail generation requests when there
+     * would be no point.
+     */
+    private LruCache<String /* Content Id */, Object /* Placeholder */> mNoBitmapCache =
+            new LruCache<>(100);
 
     /** Queue of files to retrieve thumbnails for. */
     private final Deque<ThumbnailRequest> mRequestQueue = new ArrayDeque<>();
@@ -67,6 +81,11 @@ public class ThumbnailProviderImpl implements ThumbnailProvider, ThumbnailStorag
         ThreadUtils.assertOnUiThread();
 
         if (TextUtils.isEmpty(request.getContentId())) {
+            return;
+        }
+
+        if (mNoBitmapCache.get(request.getContentId()) != null) {
+            request.onThumbnailRetrieved(request.getContentId(), null);
             return;
         }
 
@@ -169,8 +188,10 @@ public class ThumbnailProviderImpl implements ThumbnailProvider, ThumbnailStorag
             // fetches of this thumbnail can recognise the key in the cache.
             String key = getKey(contentId, mCurrentRequest.getIconSize());
             mBitmapCache.putBitmap(key, bitmap);
+            mNoBitmapCache.remove(contentId);
             mCurrentRequest.onThumbnailRetrieved(contentId, bitmap);
         } else {
+            mNoBitmapCache.put(contentId, NO_BITMAP_PLACEHOLDER);
             mCurrentRequest.onThumbnailRetrieved(contentId, null);
         }
 

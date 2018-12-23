@@ -15,10 +15,10 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 
 import org.chromium.base.metrics.RecordHistogram;
-import org.chromium.chrome.R;
 import org.chromium.chrome.browser.download.DirectoryOption;
 import org.chromium.chrome.browser.download.DownloadUtils;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
+import org.chromium.chrome.download.R;
 
 /**
  * Class used to provide data shown in the download location preference in download settings page.

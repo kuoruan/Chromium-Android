@@ -171,8 +171,6 @@ public class OverlayPanelManager {
         // TODO(mdjones): peekPanel should not be exposed publicly since the manager
         // controls if a panel should show or not.
         overlayPanel.peekPanel(reason);
-        Thread.dumpStack();
-        android.util.Log.w("mdjones", "--------- SHOWING: " + overlayPanel);
         for (OverlayPanelManagerObserver o : mObservers) o.onOverlayPanelShown();
     }
 

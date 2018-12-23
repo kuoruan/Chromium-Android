@@ -16,7 +16,6 @@ import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
-import org.chromium.ui.UiUtils;
 
 import java.lang.ref.WeakReference;
 
@@ -74,7 +73,7 @@ public class ActivityWindowAndroid
         Activity activity = getActivity().get();
         if (activity == null) return;
         View content = activity.findViewById(android.R.id.content);
-        mIsKeyboardShowing = UiUtils.isKeyboardShowing(getActivity().get(), content);
+        mIsKeyboardShowing = getKeyboardDelegate().isKeyboardShowing(getActivity().get(), content);
         content.addOnLayoutChangeListener(this);
     }
 
@@ -194,7 +193,8 @@ public class ActivityWindowAndroid
     @Override
     public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft,
             int oldTop, int oldRight, int oldBottom) {
-        keyboardVisibilityPossiblyChanged(UiUtils.isKeyboardShowing(getActivity().get(), v));
+        keyboardVisibilityPossiblyChanged(
+                getKeyboardDelegate().isKeyboardShowing(getActivity().get(), v));
     }
 
     private int generateNextRequestCode() {

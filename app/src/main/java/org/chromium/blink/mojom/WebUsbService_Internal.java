@@ -127,7 +127,7 @@ GetPermissionResponse callback) {
 
         @Override
         public void setClient(
-org.chromium.device.mojom.UsbDeviceManagerClient client) {
+org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client) {
 
             WebUsbServiceSetClientParams _message = new WebUsbServiceSetClientParams();
 
@@ -743,7 +743,7 @@ org.chromium.device.mojom.UsbDeviceManagerClient client) {
         private static final int STRUCT_SIZE = 16;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public org.chromium.device.mojom.UsbDeviceManagerClient client;
+        public org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client;
 
         private WebUsbServiceSetClientParams(int version) {
             super(STRUCT_SIZE, version);
@@ -780,7 +780,7 @@ org.chromium.device.mojom.UsbDeviceManagerClient client) {
                 result = new WebUsbServiceSetClientParams(elementsOrVersion);
                     {
                         
-                    result.client = decoder0.readServiceInterface(8, false, org.chromium.device.mojom.UsbDeviceManagerClient.MANAGER);
+                    result.client = decoder0.readAssociatedServiceInterfaceNotSupported(8, false);
                     }
 
             } finally {
@@ -794,7 +794,7 @@ org.chromium.device.mojom.UsbDeviceManagerClient client) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.client, 8, false, org.chromium.device.mojom.UsbDeviceManagerClient.MANAGER);
+            encoder0.encode(this.client, 8, false);
         }
     }
 

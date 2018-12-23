@@ -46,7 +46,7 @@ GetPermissionResponse callback);
 
 
     void setClient(
-org.chromium.device.mojom.UsbDeviceManagerClient client);
+org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client);
 
 
 }

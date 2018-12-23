@@ -21,7 +21,7 @@ import org.chromium.chrome.browser.appmenu.AppMenuHandler;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager.TabCreator;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.widget.incognitotoggle.IncognitoToggleButtonTablet;
-import org.chromium.ui.UiUtils;
+import org.chromium.ui.KeyboardVisibilityDelegate;
 
 /**
  * Represents the background screen that shows when no tabs are visible.  This {@link View}
@@ -111,7 +111,7 @@ public class EmptyBackgroundViewTablet extends FrameLayout {
         if (shouldShow && getVisibility() != View.VISIBLE
                 && mCurrentTransitionAnimation != mAnimateInAnimation) {
             nextAnimator = mAnimateInAnimation;
-            UiUtils.hideKeyboard(this);
+            KeyboardVisibilityDelegate.getInstance().hideKeyboard(this);
         } else if (!shouldShow && getVisibility() != View.GONE
                 && mCurrentTransitionAnimation != mAnimateOutAnimation) {
             nextAnimator = mAnimateOutAnimation;

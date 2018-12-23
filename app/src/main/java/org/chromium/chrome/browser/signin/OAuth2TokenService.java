@@ -224,6 +224,10 @@ public final class OAuth2TokenService
      */
     @CalledByNative
     public static boolean hasOAuth2RefreshToken(String accountName) {
+        if (!AccountManagerFacade.get().isCachePopulated()) {
+            return false;
+        }
+
         // Temporarily allowing disk read while fixing. TODO: http://crbug.com/618096.
         // This function is called in RefreshTokenIsAvailable of OAuth2TokenService which is
         // expected to be called in the UI thread synchronously.
@@ -300,19 +304,6 @@ public final class OAuth2TokenService
         return true;
     }
 
-    /**
-     * Triggers a notification to all observers of the native and Java instance of the
-     * OAuth2TokenService that a refresh token is now available. This may cause observers to retry
-     * operations that require authentication.
-     */
-    @VisibleForTesting
-    public void fireRefreshTokenAvailable(Account account) {
-        ThreadUtils.assertOnUiThread();
-        assert account != null;
-        nativeFireRefreshTokenAvailableFromJava(
-                mNativeOAuth2TokenServiceDelegateAndroid, account.name);
-    }
-
     @CalledByNative
     private void notifyRefreshTokenAvailable(String accountName) {
         assert accountName != null;
@@ -322,18 +313,6 @@ public final class OAuth2TokenService
         }
     }
 
-    /**
-     * Triggers a notification to all observers of the native and Java instance of the
-     * OAuth2TokenService that a refresh token is now revoked.
-     */
-    @VisibleForTesting
-    public void fireRefreshTokenRevoked(Account account) {
-        ThreadUtils.assertOnUiThread();
-        assert account != null;
-        nativeFireRefreshTokenRevokedFromJava(
-                mNativeOAuth2TokenServiceDelegateAndroid, account.name);
-    }
-
     @CalledByNative
     public void notifyRefreshTokenRevoked(String accountName) {
         assert accountName != null;
@@ -341,16 +320,6 @@ public final class OAuth2TokenService
         for (OAuth2TokenServiceObserver observer : mObservers) {
             observer.onRefreshTokenRevoked(account);
         }
-    }
-
-    /**
-     * Triggers a notification to all observers of the native and Java instance of the
-     * OAuth2TokenService that all refresh tokens now have been loaded.
-     */
-    @VisibleForTesting
-    public void fireRefreshTokensLoaded() {
-        ThreadUtils.assertOnUiThread();
-        nativeFireRefreshTokensLoadedFromJava(mNativeOAuth2TokenServiceDelegateAndroid);
     }
 
     @CalledByNative
@@ -378,10 +347,4 @@ public final class OAuth2TokenService
             String authToken, boolean isTransientError, long nativeCallback);
     private native void nativeValidateAccounts(long nativeOAuth2TokenServiceDelegateAndroid,
             String currentlySignedInAccount, boolean forceNotifications);
-    private native void nativeFireRefreshTokenAvailableFromJava(
-            long nativeOAuth2TokenServiceDelegateAndroid, String accountName);
-    private native void nativeFireRefreshTokenRevokedFromJava(
-            long nativeOAuth2TokenServiceDelegateAndroid, String accountName);
-    private native void nativeFireRefreshTokensLoadedFromJava(
-            long nativeOAuth2TokenServiceDelegateAndroid);
 }

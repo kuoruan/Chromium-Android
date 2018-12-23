@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.bookmarks;
 
-import android.accounts.Account;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.IntDef;
@@ -18,13 +17,13 @@ import android.view.ViewGroup;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.signin.DisplayableProfileData;
 import org.chromium.chrome.browser.signin.PersonalizedSigninPromoView;
 import org.chromium.chrome.browser.signin.ProfileDataCache;
 import org.chromium.chrome.browser.signin.SigninAccessPoint;
 import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.signin.SigninManager.SignInStateObserver;
 import org.chromium.chrome.browser.signin.SigninPromoController;
+import org.chromium.chrome.browser.signin.SigninPromoUtil;
 import org.chromium.chrome.browser.signin.SyncPromoView;
 import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.AccountsChangeObserver;
@@ -34,7 +33,6 @@ import org.chromium.components.sync.AndroidSyncSettings.AndroidSyncSettingsObser
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.Collections;
 
 /**
  * Class that manages all the logic and UI behind the signin promo header in the bookmark
@@ -160,15 +158,8 @@ class BookmarkPromoHeader implements AndroidSyncSettingsObserver, SignInStateObs
      * @param view The view to be configured.
      */
     void setupPersonalizedSigninPromo(PersonalizedSigninPromoView view) {
-        DisplayableProfileData profileData = null;
-        Account[] accounts = AccountManagerFacade.get().tryGetGoogleAccounts();
-        if (accounts.length > 0) {
-            String defaultAccountName = accounts[0].name;
-            mProfileDataCache.update(Collections.singletonList(defaultAccountName));
-            profileData = mProfileDataCache.getProfileDataOrDefault(defaultAccountName);
-        }
-        SigninPromoController.OnDismissListener listener = this::setPersonalizedSigninPromoDeclined;
-        mSigninPromoController.setupPromoView(mContext, view, profileData, listener);
+        SigninPromoUtil.setupPromoViewFromCache(mSigninPromoController, mProfileDataCache, view,
+                this::setPersonalizedSigninPromoDeclined);
     }
 
     /**

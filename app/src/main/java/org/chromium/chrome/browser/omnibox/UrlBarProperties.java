@@ -9,12 +9,13 @@ import android.view.ActionMode;
 import org.chromium.base.Callback;
 import org.chromium.chrome.browser.WindowDelegate;
 import org.chromium.chrome.browser.modelutil.PropertyKey;
-import org.chromium.chrome.browser.modelutil.PropertyModel.BooleanPropertyKey;
-import org.chromium.chrome.browser.modelutil.PropertyModel.ObjectPropertyKey;
+import org.chromium.chrome.browser.modelutil.PropertyModel.WritableBooleanPropertyKey;
+import org.chromium.chrome.browser.modelutil.PropertyModel.WritableObjectPropertyKey;
 import org.chromium.chrome.browser.omnibox.UrlBar.ScrollType;
 import org.chromium.chrome.browser.omnibox.UrlBar.UrlBarDelegate;
 import org.chromium.chrome.browser.omnibox.UrlBar.UrlBarTextContextMenuDelegate;
 import org.chromium.chrome.browser.omnibox.UrlBar.UrlDirectionListener;
+import org.chromium.chrome.browser.omnibox.UrlBar.UrlTextChangeListener;
 import org.chromium.chrome.browser.omnibox.UrlBarCoordinator.SelectionState;
 
 import java.util.Locale;
@@ -77,46 +78,53 @@ class UrlBarProperties {
     }
 
     /** The callback for contextual action modes (cut, copy, etc...). */
-    public static final ObjectPropertyKey<ActionMode.Callback> ACTION_MODE_CALLBACK =
-            new ObjectPropertyKey<>();
+    public static final WritableObjectPropertyKey<ActionMode.Callback> ACTION_MODE_CALLBACK =
+            new WritableObjectPropertyKey<>();
 
     /** Whether focus should be allowed on the view. */
-    public static final BooleanPropertyKey ALLOW_FOCUS = new BooleanPropertyKey();
+    public static final WritableBooleanPropertyKey ALLOW_FOCUS = new WritableBooleanPropertyKey();
 
     /** Specified the autocomplete text to be shown to the user. */
-    public static final ObjectPropertyKey<AutocompleteText> AUTOCOMPLETE_TEXT =
-            new ObjectPropertyKey<>();
+    public static final WritableObjectPropertyKey<AutocompleteText> AUTOCOMPLETE_TEXT =
+            new WritableObjectPropertyKey<>();
 
     /** The main delegate that provides additional capabilities to the UrlBar. */
-    public static final ObjectPropertyKey<UrlBarDelegate> DELEGATE = new ObjectPropertyKey<>();
+    public static final WritableObjectPropertyKey<UrlBarDelegate> DELEGATE =
+            new WritableObjectPropertyKey<>();
 
     /** The callback to be notified on focus changes. */
-    public static final ObjectPropertyKey<Callback<Boolean>> FOCUS_CHANGE_CALLBACK =
-            new ObjectPropertyKey<>();
+    public static final WritableObjectPropertyKey<Callback<Boolean>> FOCUS_CHANGE_CALLBACK =
+            new WritableObjectPropertyKey<>();
 
     /** Whether the cursor should be shown in the view. */
-    public static final BooleanPropertyKey SHOW_CURSOR = new BooleanPropertyKey();
+    public static final WritableBooleanPropertyKey SHOW_CURSOR = new WritableBooleanPropertyKey();
 
     /** Delegate that provides additional functionality to the textual context actions. */
-    public static final ObjectPropertyKey<UrlBarTextContextMenuDelegate>
-            TEXT_CONTEXT_MENU_DELEGATE = new ObjectPropertyKey<>();
+    public static final WritableObjectPropertyKey<UrlBarTextContextMenuDelegate>
+            TEXT_CONTEXT_MENU_DELEGATE = new WritableObjectPropertyKey<>();
 
     /** The primary text state for what is shown in the view. */
-    public static final ObjectPropertyKey<UrlBarTextState> TEXT_STATE = new ObjectPropertyKey<>();
+    public static final WritableObjectPropertyKey<UrlBarTextState> TEXT_STATE =
+            new WritableObjectPropertyKey<>();
 
     /** The listener to be notified of URL direction changes. */
-    public static final ObjectPropertyKey<UrlDirectionListener> URL_DIRECTION_LISTENER =
-            new ObjectPropertyKey<>();
+    public static final WritableObjectPropertyKey<UrlDirectionListener> URL_DIRECTION_LISTENER =
+            new WritableObjectPropertyKey<>();
+
+    /** The callback to be notified on text changes. */
+    public static final WritableObjectPropertyKey<UrlTextChangeListener> URL_TEXT_CHANGE_LISTENER =
+            new WritableObjectPropertyKey<>();
 
     /** Specifies whether dark text colors should be used in the view. */
-    public static final BooleanPropertyKey USE_DARK_TEXT_COLORS = new BooleanPropertyKey();
+    public static final WritableBooleanPropertyKey USE_DARK_TEXT_COLORS =
+            new WritableBooleanPropertyKey();
 
     /** The delegate that provides Window capabilities to the view. */
-    public static final ObjectPropertyKey<WindowDelegate> WINDOW_DELEGATE =
-            new ObjectPropertyKey<>();
+    public static final WritableObjectPropertyKey<WindowDelegate> WINDOW_DELEGATE =
+            new WritableObjectPropertyKey<>();
 
-    public static final PropertyKey[] ALL_KEYS =
-            new PropertyKey[] {ACTION_MODE_CALLBACK, ALLOW_FOCUS, AUTOCOMPLETE_TEXT, DELEGATE,
-                    FOCUS_CHANGE_CALLBACK, SHOW_CURSOR, TEXT_CONTEXT_MENU_DELEGATE, TEXT_STATE,
-                    URL_DIRECTION_LISTENER, USE_DARK_TEXT_COLORS, WINDOW_DELEGATE};
+    public static final PropertyKey[] ALL_KEYS = new PropertyKey[] {ACTION_MODE_CALLBACK,
+            ALLOW_FOCUS, AUTOCOMPLETE_TEXT, DELEGATE, FOCUS_CHANGE_CALLBACK, SHOW_CURSOR,
+            TEXT_CONTEXT_MENU_DELEGATE, TEXT_STATE, URL_DIRECTION_LISTENER,
+            URL_TEXT_CHANGE_LISTENER, USE_DARK_TEXT_COLORS, WINDOW_DELEGATE};
 }

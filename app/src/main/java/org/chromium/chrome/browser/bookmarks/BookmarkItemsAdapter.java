@@ -291,6 +291,7 @@ class BookmarkItemsAdapter
 
         mPromoHeaderManager = new BookmarkPromoHeader(mContext, promoHeaderChangeAction);
         populateTopLevelFoldersList();
+        notifyDataSetChanged();
     }
 
     // BookmarkUIObserver implementations.

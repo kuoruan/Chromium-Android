@@ -41,6 +41,7 @@ public class TabBrowserControlsOffsetHelper implements VrModeObserver, UserData 
 
     private final Tab mTab;
     private final ObserverList<Observer> mObservers = new ObserverList<>();
+    private final TabObserver mTabObserver;
 
     private float mPreviousTopControlsOffsetY = Float.NaN;
     private float mPreviousBottomControlsOffsetY = Float.NaN;
@@ -74,6 +75,18 @@ public class TabBrowserControlsOffsetHelper implements VrModeObserver, UserData 
      */
     private TabBrowserControlsOffsetHelper(Tab tab) {
         mTab = tab;
+        mTabObserver = new EmptyTabObserver() {
+            @Override
+            public void onCrash(Tab tab) {
+                if (SadTab.isShowing(tab)) showAndroidControls(false);
+            }
+            @Override
+            public void onRendererResponsiveStateChanged(boolean isResponsive) {
+                if (!isResponsive) showAndroidControls(false);
+            }
+        };
+
+        mTab.addObserver(mTabObserver);
         VrModuleProvider.registerVrModeObserver(this);
         if (VrModuleProvider.getDelegate().isInVr()) onEnterVr();
     }
@@ -128,7 +141,7 @@ public class TabBrowserControlsOffsetHelper implements VrModeObserver, UserData 
         if (!Float.isNaN(contentOffsetY)) mPreviousContentOffsetY = contentOffsetY;
 
         if (mTab.getFullscreenManager() == null) return;
-        if (mTab.isShowingSadTab() || mTab.isNativePage()) {
+        if (SadTab.isShowing(mTab) || mTab.isNativePage()) {
             showAndroidControls(false);
         } else {
             updateFullscreenManagerOffsets(false, mPreviousTopControlsOffsetY,
@@ -141,7 +154,7 @@ public class TabBrowserControlsOffsetHelper implements VrModeObserver, UserData 
      * Shows the Android browser controls view.
      * @param animate Whether a slide-in animation should be run.
      */
-    void showAndroidControls(boolean animate) {
+    public void showAndroidControls(boolean animate) {
         if (mTab.getFullscreenManager() == null) return;
 
         if (animate) {
@@ -154,7 +167,7 @@ public class TabBrowserControlsOffsetHelper implements VrModeObserver, UserData 
     /**
      * Resets the controls positions in {@link FullscreenManager} to the cached positions.
      */
-    void resetPositions() {
+    public void resetPositions() {
         resetControlsOffsetOverridden();
         if (mTab.getFullscreenManager() == null) return;
 
@@ -281,5 +294,6 @@ public class TabBrowserControlsOffsetHelper implements VrModeObserver, UserData 
     public void destroy() {
         clearPreviousPositions();
         VrModuleProvider.unregisterVrModeObserver(this);
+        mTab.removeObserver(mTabObserver);
     }
 }

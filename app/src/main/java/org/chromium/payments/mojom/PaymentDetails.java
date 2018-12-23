@@ -16,14 +16,15 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class PaymentDetails extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 56;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(56, 0)};
+    private static final int STRUCT_SIZE = 64;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(64, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public PaymentItem total;
     public PaymentItem[] displayItems;
     public PaymentShippingOption[] shippingOptions;
     public PaymentDetailsModifier[] modifiers;
     public String error;
+    public AddressErrors shippingAddressErrors;
     public String id;
 
     private PaymentDetails(int version) {
@@ -110,7 +111,12 @@ public final class PaymentDetails extends org.chromium.mojo.bindings.Struct {
                 }
                 {
                     
-                result.id = decoder0.readString(48, true);
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(48, true);
+                result.shippingAddressErrors = AddressErrors.decode(decoder1);
+                }
+                {
+                    
+                result.id = decoder0.readString(56, true);
                 }
 
         } finally {
@@ -158,6 +164,8 @@ public final class PaymentDetails extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.error, 40, false);
         
-        encoder0.encode(this.id, 48, true);
+        encoder0.encode(this.shippingAddressErrors, 48, true);
+        
+        encoder0.encode(this.id, 56, true);
     }
 }

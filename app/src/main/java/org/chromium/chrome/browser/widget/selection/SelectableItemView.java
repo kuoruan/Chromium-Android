@@ -11,13 +11,13 @@ import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat;
 import android.support.v7.content.res.AppCompatResources;
+import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.TintedDrawable;
-import org.chromium.chrome.browser.widget.TintedImageView;
 
 /**
  * Default implementation of SelectableItemViewBase.
@@ -29,7 +29,7 @@ public abstract class SelectableItemView<E> extends SelectableItemViewBase<E> {
     protected final int mSelectedLevel;
     protected final AnimatedVectorDrawableCompat mCheckDrawable;
 
-    protected TintedImageView mIconView;
+    protected AppCompatImageView mIconView;
     protected TextView mTitleView;
     protected TextView mDescriptionView;
     protected ColorStateList mIconColorList;
@@ -53,16 +53,13 @@ public abstract class SelectableItemView<E> extends SelectableItemViewBase<E> {
     protected void onFinishInflate() {
         super.onFinishInflate();
 
-        mIconView = (TintedImageView) findViewById(R.id.icon_view);
+        mIconView = (AppCompatImageView) findViewById(R.id.icon_view);
         mTitleView = (TextView) findViewById(R.id.title);
         mDescriptionView = (TextView) findViewById(R.id.description);
 
         if (mIconView != null) {
             mIconView.setBackgroundResource(R.drawable.list_item_icon_modern_bg);
-            mIconView.setTint(getDefaultIconTint());
-            if (!FeatureUtilities.isChromeModernDesignEnabled()) {
-                mIconView.getBackground().setAlpha(0);
-            }
+            ApiCompatibilityUtils.setImageTintList(mIconView, getDefaultIconTint());
         }
     }
 
@@ -86,16 +83,12 @@ public abstract class SelectableItemView<E> extends SelectableItemViewBase<E> {
         if (isChecked()) {
             mIconView.getBackground().setLevel(mSelectedLevel);
             mIconView.setImageDrawable(mCheckDrawable);
-            mIconView.setTint(mIconColorList);
+            ApiCompatibilityUtils.setImageTintList(mIconView, mIconColorList);
             mCheckDrawable.start();
         } else {
             mIconView.getBackground().setLevel(mDefaultLevel);
             mIconView.setImageDrawable(mIconDrawable);
-            mIconView.setTint(getDefaultIconTint());
-        }
-
-        if (!FeatureUtilities.isChromeModernDesignEnabled()) {
-            mIconView.getBackground().setAlpha(isChecked() ? 255 : 0);
+            ApiCompatibilityUtils.setImageTintList(mIconView, getDefaultIconTint());
         }
     }
 
@@ -120,7 +113,7 @@ public abstract class SelectableItemView<E> extends SelectableItemViewBase<E> {
      * @param isSelected    Whether the item is selected or not.
      */
     public static void applyModernIconStyle(
-            TintedImageView imageView, Drawable defaultIcon, boolean isSelected) {
+            AppCompatImageView imageView, Drawable defaultIcon, boolean isSelected) {
         imageView.setBackgroundResource(R.drawable.list_item_icon_modern_bg);
         imageView.setImageDrawable(isSelected
                         ? TintedDrawable.constructTintedDrawable(imageView.getContext(),

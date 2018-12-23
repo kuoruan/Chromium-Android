@@ -21,7 +21,8 @@ import java.lang.annotation.RetentionPolicy;
     WebApkUpdateReason.SCOPE_DIFFERS, WebApkUpdateReason.START_URL_DIFFERS,
     WebApkUpdateReason.SHORT_NAME_DIFFERS, WebApkUpdateReason.NAME_DIFFERS,
     WebApkUpdateReason.BACKGROUND_COLOR_DIFFERS, WebApkUpdateReason.THEME_COLOR_DIFFERS,
-    WebApkUpdateReason.ORIENTATION_DIFFERS, WebApkUpdateReason.DISPLAY_MODE_DIFFERS
+    WebApkUpdateReason.ORIENTATION_DIFFERS, WebApkUpdateReason.DISPLAY_MODE_DIFFERS,
+    WebApkUpdateReason.WEB_SHARE_TARGET_DIFFERS
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface WebApkUpdateReason {
@@ -37,4 +38,5 @@ public @interface WebApkUpdateReason {
   int THEME_COLOR_DIFFERS = 9;
   int ORIENTATION_DIFFERS = 10;
   int DISPLAY_MODE_DIFFERS = 11;
+  int WEB_SHARE_TARGET_DIFFERS = 12;
 }

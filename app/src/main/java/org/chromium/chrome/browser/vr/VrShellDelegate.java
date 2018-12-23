@@ -40,7 +40,6 @@ import com.google.vr.ndk.base.GvrUiLayout;
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ApplicationStatus;
-import org.chromium.base.AsyncTask;
 import org.chromium.base.CollectionUtil;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
@@ -51,6 +50,7 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.base.metrics.RecordUserAction;
+import org.chromium.base.task.AsyncTask;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ApplicationLifetime;
 import org.chromium.chrome.browser.ChromeActivity;
@@ -156,7 +156,7 @@ public class VrShellDelegate
     private static boolean sRegisteredDaydreamHook;
     private static boolean sRegisteredVrAssetsComponent;
     private static @VrSupportLevel Integer sVrSupportLevel;
-    private static Boolean sBootsToVr = null;
+    private static Boolean sBootsToVr;
     private static boolean sTestVrShellDelegateOnStartup;
 
     private ChromeActivity mActivity;
@@ -190,8 +190,8 @@ public class VrShellDelegate
     private boolean mExitedDueToUnsupportedMode;
     private boolean mPaused;
     private boolean mVisible;
-    private boolean mRestoreSystemUiVisibility = false;
-    private Integer mRestoreOrientation = null;
+    private boolean mRestoreSystemUiVisibility;
+    private Integer mRestoreOrientation;
     private boolean mRequestedWebVr;
     private boolean mListeningForWebVrActivate;
     private boolean mMaybeActivateAfterHeadsetInsertion;

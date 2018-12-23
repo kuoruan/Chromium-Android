@@ -11,7 +11,7 @@ import org.chromium.base.annotations.CalledByNative;
  * All methods and members must be called on the UI thread.
  */
 public final class TestSubresourceFilterPublisher {
-    private boolean mPublished = false;
+    private boolean mPublished;
 
     public void createAndPublishRulesetDisallowingSuffixForTesting(String suffix) {
         nativeCreateAndPublishRulesetDisallowingSuffixForTesting(suffix);

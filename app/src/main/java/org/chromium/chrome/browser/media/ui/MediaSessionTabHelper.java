@@ -23,6 +23,7 @@ import org.chromium.chrome.browser.metrics.MediaSessionUMA;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabObserver;
+import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.components.url_formatter.UrlFormatter;
 import org.chromium.content_public.browser.MediaSession;
 import org.chromium.content_public.browser.MediaSessionObserver;
@@ -355,7 +356,7 @@ public class MediaSessionTabHelper implements MediaImageCallback {
         }
 
         @Override
-        public void onShown(Tab tab) {
+        public void onShown(Tab tab, @TabSelectionType int type) {
             assert tab == mTab;
             MediaNotificationManager.activateAndroidMediaSession(
                     tab.getId(), R.id.media_playback_notification);

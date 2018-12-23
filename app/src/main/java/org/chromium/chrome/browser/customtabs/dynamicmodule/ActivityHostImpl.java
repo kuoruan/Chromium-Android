@@ -12,7 +12,7 @@ import org.chromium.chrome.browser.customtabs.CustomTabActivity;
 /**
  * The implementation of {@link IActivityHost}.
  */
-public class ActivityHostImpl extends IActivityHost.Stub {
+public class ActivityHostImpl extends BaseActivityHost {
     private final CustomTabActivity mActivity;
 
     public ActivityHostImpl(CustomTabActivity activity) {
@@ -42,5 +42,10 @@ public class ActivityHostImpl extends IActivityHost.Stub {
     @Override
     public void loadUri(Uri uri) {
         mActivity.loadUri(uri);
+    }
+
+    @Override
+    public void setTopBarView(IObjectWrapper topBarView) {
+        mActivity.setTopBarContentView(ObjectWrapper.unwrap(topBarView, View.class));
     }
 }

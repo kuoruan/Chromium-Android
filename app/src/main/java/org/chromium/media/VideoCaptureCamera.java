@@ -484,6 +484,10 @@ public class VideoCaptureCamera
     @Override
     public void getPhotoCapabilitiesAsync(long callbackId) {
         final android.hardware.Camera.Parameters parameters = getCameraParameters(mCamera);
+        if (parameters == null) {
+            nativeOnGetPhotoCapabilitiesReply(mNativeVideoCaptureDeviceAndroid, callbackId, null);
+            return;
+        }
         PhotoCapabilities.Builder builder = new PhotoCapabilities.Builder();
         Log.i(TAG, " CAM params: %s", parameters.flatten());
 
@@ -640,12 +644,15 @@ public class VideoCaptureCamera
     }
 
     @Override
-    public void setPhotoOptions(double zoom, int focusMode, int exposureMode, double width,
-            double height, float[] pointsOfInterest2D, boolean hasExposureCompensation,
-            double exposureCompensation, int whiteBalanceMode, double iso,
-            boolean hasRedEyeReduction, boolean redEyeReduction, int fillLightMode,
-            boolean hasTorch, boolean torch, double colorTemperature) {
+    public void setPhotoOptions(double zoom, int focusMode, double focusDistance, int exposureMode,
+            double width, double height, float[] pointsOfInterest2D,
+            boolean hasExposureCompensation, double exposureCompensation, double exposureTime,
+            int whiteBalanceMode, double iso, boolean hasRedEyeReduction, boolean redEyeReduction,
+            int fillLightMode, boolean hasTorch, boolean torch, double colorTemperature) {
         android.hardware.Camera.Parameters parameters = getCameraParameters(mCamera);
+        if (parameters == null) {
+            return;
+        }
 
         if (parameters.isZoomSupported() && zoom > 0) {
             // |zoomRatios| is an ordered list; need the closest zoom index for parameters.setZoom()
@@ -794,8 +801,16 @@ public class VideoCaptureCamera
             mPhotoTakenCallbackId = callbackId;
         }
         mPreviewParameters = getCameraParameters(mCamera);
+        if (mPreviewParameters == null) {
+            notifyTakePhotoError(callbackId);
+            return;
+        }
 
         android.hardware.Camera.Parameters photoParameters = getCameraParameters(mCamera);
+        if (photoParameters == null) {
+            notifyTakePhotoError(callbackId);
+            return;
+        }
         photoParameters.setRotation(getCameraRotation());
 
         if (mPhotoWidth > 0 || mPhotoHeight > 0) {

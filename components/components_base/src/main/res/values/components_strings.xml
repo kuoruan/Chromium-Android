@@ -23,7 +23,7 @@
 <string name="autofill_card_unmask_expiration_date_separator">"/"</string>
 <string name="autofill_card_unmask_new_card_link">"Update card"</string>
 <string name="autofill_enable_profiles_toggle_sublabel">"Includes information like phone numbers, email addresses, and shipping addresses"</string>
-<string name="autofill_enable_credit_cards_toggle_sublabel">"Makes it faster to pay for things online"</string>
+<string name="autofill_enable_credit_cards_toggle_sublabel">"Fills in payment forms with your saved payment methods"</string>
 <string name="autofill_addresses_settings_title">"Addresses and more"</string>
 <string name="autofill_payment_methods">"Payment methods"</string>
 <string name="autofill_enable_profiles_toggle_label">"Save and fill addresses"</string>
@@ -64,7 +64,7 @@
         &lt;/ul&gt;"</string>
 <string name="ntp_title_no_suggestions">"That’s all for now"</string>
 <string name="ntp_article_suggestions_section_header">"Articles for you"</string>
-<string name="page_info_permission_ads_subtitle">"Site tends to show intrusive ads"</string>
+<string name="page_info_permission_ads_subtitle">"Site shows intrusive or misleading ads"</string>
 <string name="payments_method_of_payment_label">"Payment method"</string>
 <string name="payments_contact_details_label">"Contact info"</string>
 <string name="payments_add_contact_details_label">"Add contact info"</string>

@@ -33,7 +33,7 @@ public class VibrationManagerImpl implements VibrationManager {
     private final boolean mHasVibratePermission;
 
     private static long sVibrateMilliSecondsForTesting = -1;
-    private static boolean sVibrateCancelledForTesting = false;
+    private static boolean sVibrateCancelledForTesting;
 
     public VibrationManagerImpl() {
         Context appContext = ContextUtils.getApplicationContext();

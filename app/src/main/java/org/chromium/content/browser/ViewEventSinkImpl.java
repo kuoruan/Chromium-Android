@@ -7,9 +7,9 @@ package org.chromium.content.browser;
 import android.content.res.Configuration;
 
 import org.chromium.base.TraceEvent;
+import org.chromium.base.UserData;
 import org.chromium.content.browser.webcontents.WebContentsImpl;
 import org.chromium.content.browser.webcontents.WebContentsImpl.UserDataFactory;
-import org.chromium.content.browser.webcontents.WebContentsUserData;
 import org.chromium.content_public.browser.ViewEventSink;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.ViewAndroidDelegate;
@@ -18,7 +18,7 @@ import org.chromium.ui.base.WindowAndroid.ActivityStateObserver;
 /**
  * Implementation of the interface {@link ViewEventSink}.
  */
-public final class ViewEventSinkImpl implements ViewEventSink, ActivityStateObserver {
+public final class ViewEventSinkImpl implements ViewEventSink, ActivityStateObserver, UserData {
     private final WebContentsImpl mWebContents;
 
     // Whether the container view has view-level focus.
@@ -40,8 +40,8 @@ public final class ViewEventSinkImpl implements ViewEventSink, ActivityStateObse
     }
 
     public static ViewEventSinkImpl from(WebContents webContents) {
-        return WebContentsUserData.fromWebContents(
-                webContents, ViewEventSinkImpl.class, UserDataFactoryLazyHolder.INSTANCE);
+        return ((WebContentsImpl) webContents)
+                .getOrSetUserData(ViewEventSinkImpl.class, UserDataFactoryLazyHolder.INSTANCE);
     }
 
     public ViewEventSinkImpl(WebContents webContents) {

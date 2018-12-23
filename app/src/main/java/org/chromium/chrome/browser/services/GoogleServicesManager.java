@@ -16,6 +16,7 @@ import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.signin.SigninHelper;
 import org.chromium.chrome.browser.signin.SigninManager;
+import org.chromium.chrome.browser.signin.SignoutReason;
 import org.chromium.chrome.browser.sync.SyncController;
 import org.chromium.components.signin.ChromeSigninController;
 
@@ -73,7 +74,7 @@ public class GoogleServicesManager implements ApplicationStateListener {
             mContext = context.getApplicationContext();
 
             mChromeSigninController = ChromeSigninController.get();
-            mSigninHelper = SigninHelper.get(mContext);
+            mSigninHelper = SigninHelper.get();
 
             // The sign out flow starts by clearing the signed in user in the ChromeSigninController
             // on the Java side, and then performs a sign out on the native side. If there is a
@@ -83,7 +84,8 @@ public class GoogleServicesManager implements ApplicationStateListener {
             SigninManager signinManager = SigninManager.get();
             if (!mChromeSigninController.isSignedIn() && signinManager.isSignedInOnNative()) {
                 Log.w(TAG, "Signed in state got out of sync, forcing native sign out");
-                signinManager.signOut();
+                // TODO(https://crbug.com/873116): Pass the correct reason for the signout.
+                signinManager.signOut(SignoutReason.USER_CLICKED_SIGNOUT_SETTINGS);
             }
 
             // Initialize sync.
@@ -103,7 +105,7 @@ public class GoogleServicesManager implements ApplicationStateListener {
     public void onMainActivityStart() {
         try {
             TraceEvent.begin("GoogleServicesManager.onMainActivityStart");
-            boolean accountsChanged = SigninHelper.checkAndClearAccountsChangedPref(mContext);
+            boolean accountsChanged = SigninHelper.checkAndClearAccountsChangedPref();
             mSigninHelper.validateAccountSettings(accountsChanged);
         } finally {
             TraceEvent.end("GoogleServicesManager.onMainActivityStart");

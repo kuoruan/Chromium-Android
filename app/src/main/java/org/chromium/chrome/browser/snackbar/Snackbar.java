@@ -255,4 +255,8 @@ public class Snackbar {
     boolean isTypePersistent() {
         return mType == TYPE_PERSISTENT;
     }
+
+    /** So tests can trigger a press on a Snackbar. */
+    @VisibleForTesting
+    public Object getActionDataForTesting() { return mActionData; }
 }

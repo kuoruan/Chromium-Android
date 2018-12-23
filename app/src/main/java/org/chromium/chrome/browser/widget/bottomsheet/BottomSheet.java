@@ -12,7 +12,6 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.graphics.Region;
 import android.os.Build;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
@@ -48,7 +47,6 @@ import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.SelectionPopupController;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.common.BrowserControlsState;
-import org.chromium.ui.UiUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -91,7 +89,7 @@ public class BottomSheet extends FrameLayout
     /** The different reasons that the sheet's state can change. */
     @IntDef({StateChangeReason.NONE, StateChangeReason.SWIPE, StateChangeReason.BACK_PRESS,
             StateChangeReason.TAP_SCRIM, StateChangeReason.NAVIGATION,
-            StateChangeReason.COMPOSITED_UI})
+            StateChangeReason.COMPOSITED_UI, StateChangeReason.VR})
     @Retention(RetentionPolicy.SOURCE)
     public @interface StateChangeReason {
         int NONE = 0;
@@ -100,6 +98,7 @@ public class BottomSheet extends FrameLayout
         int TAP_SCRIM = 3;
         int NAVIGATION = 4;
         int COMPOSITED_UI = 5;
+        int VR = 6;
     }
 
     /** The different priorities that the sheet's content can have. */
@@ -130,7 +129,7 @@ public class BottomSheet extends FrameLayout
     private static final float THRESHOLD_TO_NEXT_STATE_2 = 0.3f;
 
     /** The height ratio for the sheet in the SheetState.HALF state. */
-    private static final float HALF_HEIGHT_RATIO = 0.65f;
+    private static final float HALF_HEIGHT_RATIO = 0.75f;
 
     /** The fraction of the width of the screen that, when swiped, will cause the sheet to move. */
     private static final float SWIPE_ALLOWED_FRACTION = 0.2f;
@@ -167,6 +166,9 @@ public class BottomSheet extends FrameLayout
 
     /** The {@link BottomSheetMetrics} used to record user actions and histograms. */
     private final BottomSheetMetrics mMetrics;
+
+    /** The view that contains the sheet. */
+    private ViewGroup mSheetContainer;
 
     /** For detecting scroll and fling events on the bottom sheet. */
     private BottomSheetSwipeDetector mGestureDetector;
@@ -262,9 +264,6 @@ public class BottomSheet extends FrameLayout
     /** Whether or not scroll events are currently being blocked for the 'velocity' swipe logic. */
     private boolean mVelocityLogicBlockSwipe;
 
-    /** Whether or not the slim peek UI should be used for the current sheet content. */
-    private boolean mUseSlimPeek;
-
     /**
      * An interface defining content that can be displayed inside of the bottom sheet for Chrome
      * Home.
@@ -313,9 +312,29 @@ public class BottomSheet extends FrameLayout
         boolean isPeekStateEnabled();
 
         /**
-         * @return Whether a slimmer peek UI should be used for this content.
+         * @return The resource id of the content description for the bottom sheet. This is
+         *         generally the name of the feature/content that is showing. 'Swipe down to close.'
+         *         will be automatically appended after the content description.
          */
-        boolean useSlimPeek();
+        int getSheetContentDescriptionStringId();
+
+        /**
+         * @return The resource id of the string announced when the sheet is opened at half height.
+         *         This is typically the name of your feature followed by 'opened at half height'.
+         */
+        int getSheetHalfHeightAccessibilityStringId();
+
+        /**
+         * @return The resource id of the string announced when the sheet is opened at full height.
+         *         This is typically the name of your feature followed by 'opened at full height'.
+         */
+        int getSheetFullHeightAccessibilityStringId();
+
+        /**
+         * @return The resource id of the string announced when the sheet is closed. This is
+         *         typically the name of your feature followed by 'closed'.
+         */
+        int getSheetClosedAccessibilityStringId();
     }
 
     /**
@@ -403,7 +422,7 @@ public class BottomSheet extends FrameLayout
         super(context, atts);
 
         mMinHalfFullDistance =
-                getResources().getDimensionPixelSize(R.dimen.chrome_home_min_full_half_distance);
+                getResources().getDimensionPixelSize(R.dimen.bottom_sheet_min_full_half_distance);
         mToolbarShadowHeight =
                 getResources().getDimensionPixelOffset(R.dimen.toolbar_shadow_height);
 
@@ -495,14 +514,6 @@ public class BottomSheet extends FrameLayout
         return true;
     }
 
-    @Override
-    public boolean gatherTransparentRegion(Region region) {
-        // TODO(mdjones): Figure out what this should actually be set to since the view animates
-        // without necessarily calling this method again.
-        region.setEmpty();
-        return true;
-    }
-
     /**
      * @return Whether or not the toolbar Android View is hidden due to being scrolled off-screen.
      */
@@ -534,8 +545,8 @@ public class BottomSheet extends FrameLayout
         mToolbarHolder =
                 (TouchRestrictingFrameLayout) findViewById(R.id.bottom_sheet_toolbar_container);
         mDefaultToolbarView = mToolbarHolder.findViewById(R.id.bottom_sheet_toolbar);
-        mToolbarHeight = activity.getResources().getDimensionPixelSize(
-                R.dimen.bottom_control_container_peek_height);
+        mToolbarHeight =
+                activity.getResources().getDimensionPixelSize(R.dimen.bottom_sheet_peek_height);
 
         mActivity = activity;
         mActionBarDelegate = new ViewShiftingActionBarDelegate(mActivity, this);
@@ -609,8 +620,9 @@ public class BottomSheet extends FrameLayout
                     // If we are in the middle of a touch event stream (i.e. scrolling while
                     // keyboard is up) don't set the sheet state. Instead allow the gesture detector
                     // to position the sheet and make sure the keyboard hides.
-                    if (mGestureDetector.isScrolling()) {
-                        UiUtils.hideKeyboard(BottomSheet.this);
+                    if (mGestureDetector.isScrolling() && mActivity.getWindowAndroid() != null) {
+                        mActivity.getWindowAndroid().getKeyboardDelegate().hideKeyboard(
+                                BottomSheet.this);
                     } else {
                         cancelAnimation();
                         setSheetState(mCurrentState, false);
@@ -669,6 +681,9 @@ public class BottomSheet extends FrameLayout
             @Override
             public void onBottomControlsHeightChanged(int bottomControlsHeight) {}
         });
+
+        mSheetContainer = (ViewGroup) this.getParent();
+        mSheetContainer.removeView(this);
     }
 
     @Override
@@ -777,9 +792,6 @@ public class BottomSheet extends FrameLayout
         // If the desired content is already showing, do nothing.
         if (mSheetContent == content) return;
 
-        // TODO(twellington): Handle updates to the peek UI while the sheet is showing?
-        if (content != null && mUseSlimPeek != content.useSlimPeek()) updatePeekUI(content);
-
         List<Animator> animators = new ArrayList<>();
         mContentSwapAnimatorSet = new AnimatorSet();
         mContentSwapAnimatorSet.addListener(new AnimatorListenerAdapter() {
@@ -847,24 +859,6 @@ public class BottomSheet extends FrameLayout
         if (mSheetContent == null || isInOverviewMode() || SysUtils.isLowEndDevice()) {
             mContentSwapAnimatorSet.end();
         }
-    }
-
-    /**
-     * Updates the peek UI for the current BottomSheetcontent.
-     * @param content The current {@link BottomSheetContent}
-     */
-    private void updatePeekUI(BottomSheetContent content) {
-        mUseSlimPeek = content.useSlimPeek();
-
-        int peekHeightId = mUseSlimPeek ? R.dimen.bottom_control_container_slim_expanded_height
-                                        : R.dimen.bottom_control_container_peek_height;
-        mDefaultToolbarView.getLayoutParams().height =
-                getResources().getDimensionPixelSize(peekHeightId);
-
-        int toolbarHeightId = mUseSlimPeek ? R.dimen.bottom_control_container_slim_peek_height
-                                           : R.dimen.bottom_control_container_peek_height;
-        mToolbarHeight = getResources().getDimensionPixelSize(toolbarHeightId);
-        updateSheetStateRatios();
     }
 
     /**
@@ -997,7 +991,12 @@ public class BottomSheet extends FrameLayout
                 mPersistentControlsToken);
 
         for (BottomSheetObserver o : mObservers) o.onSheetClosed(reason);
-        announceForAccessibility(getResources().getString(R.string.bottom_sheet_closed));
+        // If the sheet contents are cleared out before #onSheetClosed is called, do not try to
+        // retrieve the accessibility string.
+        if (getCurrentSheetContent() != null) {
+            announceForAccessibility(getResources().getString(
+                    getCurrentSheetContent().getSheetClosedAccessibilityStringId()));
+        }
         clearFocus();
         mActivity.removeViewObscuringAllTabs(this);
 
@@ -1097,6 +1096,13 @@ public class BottomSheet extends FrameLayout
         if (MathUtils.areFloatsEqual(translationY, getTranslationY())) return;
 
         setTranslationY(translationY);
+
+        float hiddenHeight = getHiddenRatio() * mContainerHeight;
+        if (mCurrentOffsetPx <= hiddenHeight && this.getParent() != null) {
+            mSheetContainer.removeView(this);
+        } else if (mCurrentOffsetPx > hiddenHeight && this.getParent() == null) {
+            mSheetContainer.addView(this);
+        }
 
         float peekHeight = getSheetHeightForState(SheetState.PEEK);
         boolean isAtPeekingHeight = MathUtils.areFloatsEqual(getCurrentOffsetPx(), peekHeight);
@@ -1322,20 +1328,23 @@ public class BottomSheet extends FrameLayout
         mCurrentState = state;
 
         if (mCurrentState == SheetState.HALF || mCurrentState == SheetState.FULL) {
-            announceForAccessibility(mCurrentState == SheetState.FULL
-                            ? getResources().getString(R.string.bottom_sheet_opened_full)
-                            : getResources().getString(R.string.bottom_sheet_opened_half));
+            int resId = mCurrentState == SheetState.FULL
+                    ? getCurrentSheetContent().getSheetFullHeightAccessibilityStringId()
+                    : getCurrentSheetContent().getSheetHalfHeightAccessibilityStringId();
+            announceForAccessibility(getResources().getString(resId));
 
             // TalkBack will announce the content description if it has changed, so wait to set the
             // content description until after announcing full/half height.
             setFocusable(true);
             setFocusableInTouchMode(true);
+            String swipeToClose = ". "
+                    + getResources().getString(R.string.bottom_sheet_accessibility_description);
             setContentDescription(
-                    getResources().getString(R.string.bottom_sheet_accessibility_description));
+                    getResources().getString(
+                            getCurrentSheetContent().getSheetContentDescriptionStringId())
+                    + swipeToClose);
             if (getFocusedChild() == null) requestFocus();
         }
-
-        setVisibility(mCurrentState == SheetState.HIDDEN ? GONE : VISIBLE);
 
         for (BottomSheetObserver o : mObservers) {
             o.onSheetStateChanged(mCurrentState);

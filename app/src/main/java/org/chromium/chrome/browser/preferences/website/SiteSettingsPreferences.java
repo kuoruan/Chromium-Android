@@ -17,6 +17,7 @@ import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.preferences.LocationSettings;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.PreferenceUtils;
+import org.chromium.chrome.browser.preferences.website.SiteSettingsCategory.Type;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,9 +55,9 @@ public class SiteSettingsPreferences extends PreferenceFragment
 
         mProtectedContentMenuAvailable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
 
-        String category = "";
         if (getArguments() != null) {
-            category = getArguments().getString(SingleCategoryPreferences.EXTRA_CATEGORY, "");
+            String category =
+                    getArguments().getString(SingleCategoryPreferences.EXTRA_CATEGORY, "");
             if (MEDIA_KEY.equals(category)) {
                 mMediaSubMenu = true;
                 getActivity().setTitle(findPreference(MEDIA_KEY).getTitle().toString());
@@ -73,7 +74,7 @@ public class SiteSettingsPreferences extends PreferenceFragment
         ((ListView) getView().findViewById(android.R.id.list)).setDivider(null);
     }
 
-    private Preference findPreference(@SiteSettingsCategory.Type int type) {
+    private Preference findPreference(@Type int type) {
         return findPreference(SiteSettingsCategory.preferenceKey(type));
     }
 
@@ -81,11 +82,8 @@ public class SiteSettingsPreferences extends PreferenceFragment
         if (mMediaSubMenu) {
             // The Media sub-menu only contains Protected Content and Autoplay, so remove all other
             // menus.
-            for (@SiteSettingsCategory.Type int i = 0; i < SiteSettingsCategory.Type.NUM_ENTRIES;
-                    i++) {
-                if (i == SiteSettingsCategory.Type.AUTOPLAY
-                        || i == SiteSettingsCategory.Type.PROTECTED_MEDIA)
-                    continue;
+            for (@Type int i = 0; i < Type.NUM_ENTRIES; i++) {
+                if (i == Type.AUTOPLAY || i == Type.PROTECTED_MEDIA) continue;
                 getPreferenceScreen().removePreference(findPreference(i));
             }
             getPreferenceScreen().removePreference(findPreference(MEDIA_KEY));
@@ -97,24 +95,19 @@ public class SiteSettingsPreferences extends PreferenceFragment
                 getPreferenceScreen().removePreference(findPreference(MEDIA_KEY));
             } else {
                 // This will be tucked under the Media subkey, so no reason to show them now.
-                getPreferenceScreen().removePreference(
-                        findPreference(SiteSettingsCategory.Type.AUTOPLAY));
+                getPreferenceScreen().removePreference(findPreference(Type.AUTOPLAY));
             }
-            getPreferenceScreen().removePreference(
-                    findPreference(SiteSettingsCategory.Type.PROTECTED_MEDIA));
+            getPreferenceScreen().removePreference(findPreference(Type.PROTECTED_MEDIA));
             // TODO(csharrison): Remove this condition once the experimental UI lands. It is not
             // great to dynamically remove the preference in this way.
             if (!SiteSettingsCategory.adsCategoryEnabled()) {
-                getPreferenceScreen().removePreference(
-                        findPreference(SiteSettingsCategory.Type.ADS));
+                getPreferenceScreen().removePreference(findPreference(Type.ADS));
             }
             if (!ChromeFeatureList.isEnabled(ChromeFeatureList.SOUND_CONTENT_SETTING)) {
-                getPreferenceScreen().removePreference(
-                        findPreference(SiteSettingsCategory.Type.SOUND));
+                getPreferenceScreen().removePreference(findPreference(Type.SOUND));
             }
             if (!ChromeFeatureList.isEnabled(ChromeFeatureList.CLIPBOARD_CONTENT_SETTING)) {
-                getPreferenceScreen().removePreference(
-                        findPreference(SiteSettingsCategory.Type.CLIPBOARD));
+                getPreferenceScreen().removePreference(findPreference(Type.CLIPBOARD));
             }
             // The new Languages Preference *feature* is an advanced version of this translate
             // preference. Once Languages Preference is enabled, remove this setting.
@@ -122,8 +115,7 @@ public class SiteSettingsPreferences extends PreferenceFragment
                 getPreferenceScreen().removePreference(findPreference(TRANSLATE_KEY));
             }
             if (!ChromeFeatureList.isEnabled(ChromeFeatureList.GENERIC_SENSOR_EXTRA_CLASSES)) {
-                getPreferenceScreen().removePreference(
-                        findPreference(SiteSettingsCategory.Type.SENSORS));
+                getPreferenceScreen().removePreference(findPreference(Type.SENSORS));
             }
         }
     }
@@ -138,40 +130,42 @@ public class SiteSettingsPreferences extends PreferenceFragment
         // Preferences that navigate to Website Settings.
         List<Integer> websitePrefs = new ArrayList<Integer>();
         if (mMediaSubMenu) {
-            websitePrefs.add(SiteSettingsCategory.Type.PROTECTED_MEDIA);
-            websitePrefs.add(SiteSettingsCategory.Type.AUTOPLAY);
+            websitePrefs.add(Type.PROTECTED_MEDIA);
+            websitePrefs.add(Type.AUTOPLAY);
         } else {
             if (SiteSettingsCategory.adsCategoryEnabled()) {
-                websitePrefs.add(SiteSettingsCategory.Type.ADS);
+                websitePrefs.add(Type.ADS);
             }
+            websitePrefs.add(Type.AUTOMATIC_DOWNLOADS);
+
             // When showing the main menu, if Protected Content is not available, only Autoplay
             // will be visible.
             if (!mProtectedContentMenuAvailable) {
-                websitePrefs.add(SiteSettingsCategory.Type.AUTOPLAY);
+                websitePrefs.add(Type.AUTOPLAY);
             }
-            websitePrefs.add(SiteSettingsCategory.Type.BACKGROUND_SYNC);
-            websitePrefs.add(SiteSettingsCategory.Type.CAMERA);
+            websitePrefs.add(Type.BACKGROUND_SYNC);
+            websitePrefs.add(Type.CAMERA);
             if (ChromeFeatureList.isEnabled(ChromeFeatureList.CLIPBOARD_CONTENT_SETTING)) {
-                websitePrefs.add(SiteSettingsCategory.Type.CLIPBOARD);
+                websitePrefs.add(Type.CLIPBOARD);
             }
-            websitePrefs.add(SiteSettingsCategory.Type.COOKIES);
-            websitePrefs.add(SiteSettingsCategory.Type.JAVASCRIPT);
-            websitePrefs.add(SiteSettingsCategory.Type.DEVICE_LOCATION);
-            websitePrefs.add(SiteSettingsCategory.Type.MICROPHONE);
-            websitePrefs.add(SiteSettingsCategory.Type.NOTIFICATIONS);
-            websitePrefs.add(SiteSettingsCategory.Type.POPUPS);
+            websitePrefs.add(Type.COOKIES);
+            websitePrefs.add(Type.JAVASCRIPT);
+            websitePrefs.add(Type.DEVICE_LOCATION);
+            websitePrefs.add(Type.MICROPHONE);
+            websitePrefs.add(Type.NOTIFICATIONS);
+            websitePrefs.add(Type.POPUPS);
             if (ChromeFeatureList.isEnabled(ChromeFeatureList.GENERIC_SENSOR_EXTRA_CLASSES)) {
-                websitePrefs.add(SiteSettingsCategory.Type.SENSORS);
+                websitePrefs.add(Type.SENSORS);
             }
             if (ChromeFeatureList.isEnabled(ChromeFeatureList.SOUND_CONTENT_SETTING)) {
-                websitePrefs.add(SiteSettingsCategory.Type.SOUND);
+                websitePrefs.add(Type.SOUND);
             }
-            websitePrefs.add(SiteSettingsCategory.Type.USB);
+            websitePrefs.add(Type.USB);
         }
 
         // Initialize the summary and icon for all preferences that have an
         // associated content settings entry.
-        for (@SiteSettingsCategory.Type int prefCategory : websitePrefs) {
+        for (@Type int prefCategory : websitePrefs) {
             Preference p = findPreference(prefCategory);
             int contentType = SiteSettingsCategory.contentSettingsType(prefCategory);
             boolean requiresTriStateSetting =
@@ -180,7 +174,7 @@ public class SiteSettingsPreferences extends PreferenceFragment
             boolean checked = false;
             ContentSetting setting = ContentSetting.DEFAULT;
 
-            if (prefCategory == SiteSettingsCategory.Type.DEVICE_LOCATION) {
+            if (prefCategory == Type.DEVICE_LOCATION) {
                 checked = LocationSettings.getInstance().areAllLocationSettingsEnabled();
             } else if (requiresTriStateSetting) {
                 setting = ContentSetting.fromInt(prefServiceBridge.getContentSetting(contentType));
@@ -191,22 +185,27 @@ public class SiteSettingsPreferences extends PreferenceFragment
             p.setTitle(ContentSettingsResources.getTitle(contentType));
             p.setOnPreferenceClickListener(this);
 
-            // Disable autoplay preference if Data Saver is ON.
-            if (SiteSettingsCategory.Type.AUTOPLAY == prefCategory
+            if ((Type.CAMERA == prefCategory || Type.MICROPHONE == prefCategory)
+                    && SiteSettingsCategory.createFromType(prefCategory)
+                               .showPermissionBlockedMessage(getActivity())) {
+                // Show 'disabled' message when permission is not granted in Android.
+                p.setSummary(ContentSettingsResources.getCategorySummary(contentType, false));
+            } else if (Type.AUTOPLAY == prefCategory
                     && DataReductionProxySettings.getInstance().isDataReductionProxyEnabled()) {
+                // Disable autoplay preference if Data Saver is ON.
                 p.setSummary(ContentSettingsResources.getAutoplayDisabledByDataSaverSummary());
                 p.setEnabled(false);
-            } else if (SiteSettingsCategory.Type.COOKIES == prefCategory && checked
+            } else if (Type.COOKIES == prefCategory && checked
                     && prefServiceBridge.isBlockThirdPartyCookiesEnabled()) {
                 p.setSummary(ContentSettingsResources.getCookieAllowedExceptThirdPartySummary());
-            } else if (SiteSettingsCategory.Type.CLIPBOARD == prefCategory && !checked) {
-                p.setSummary(ContentSettingsResources.getClipboardBlockedListSummary());
-            } else if (SiteSettingsCategory.Type.DEVICE_LOCATION == prefCategory && checked
+            } else if (Type.DEVICE_LOCATION == prefCategory && checked
                     && prefServiceBridge.isLocationAllowedByPolicy()) {
                 p.setSummary(ContentSettingsResources.getGeolocationAllowedSummary());
-            } else if (SiteSettingsCategory.Type.ADS == prefCategory && !checked) {
+            } else if (Type.CLIPBOARD == prefCategory && !checked) {
+                p.setSummary(ContentSettingsResources.getClipboardBlockedListSummary());
+            } else if (Type.ADS == prefCategory && !checked) {
                 p.setSummary(ContentSettingsResources.getAdsBlockedListSummary());
-            } else if (SiteSettingsCategory.Type.SOUND == prefCategory && !checked) {
+            } else if (Type.SOUND == prefCategory && !checked) {
                 p.setSummary(ContentSettingsResources.getSoundBlockedListSummary());
             } else if (requiresTriStateSetting) {
                 p.setSummary(ContentSettingsResources.getCategorySummary(setting));
@@ -222,12 +221,12 @@ public class SiteSettingsPreferences extends PreferenceFragment
             }
         }
 
-        Preference p = findPreference(SiteSettingsCategory.Type.ALL_SITES);
+        Preference p = findPreference(Type.ALL_SITES);
         if (p != null) p.setOnPreferenceClickListener(this);
         p = findPreference(MEDIA_KEY);
         if (p != null) p.setOnPreferenceClickListener(this);
         // TODO(finnur): Re-move this for Storage once it can be moved to the 'Usage' menu.
-        p = findPreference(SiteSettingsCategory.Type.USE_STORAGE);
+        p = findPreference(Type.USE_STORAGE);
         if (p != null) p.setOnPreferenceClickListener(this);
     }
 

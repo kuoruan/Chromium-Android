@@ -124,6 +124,14 @@ CloseAllConnectionsResponse callback);
 
 
 
+    void closeIdleConnections(
+
+CloseIdleConnectionsResponse callback);
+
+    interface CloseIdleConnectionsResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
+
+
+
     void setNetworkConditions(
 org.chromium.mojo_base.mojom.UnguessableToken throttlingProfileId, NetworkConditions conditions);
 
@@ -144,6 +152,30 @@ String[] requiredHosts, String[] excludedHosts, String[] excludedSpkis, String[]
 
 
 
+    void addExpectCt(
+String host, org.chromium.mojo_base.mojom.Time expiry, boolean enforce, org.chromium.url.mojom.Url reportUri, 
+AddExpectCtResponse callback);
+
+    interface AddExpectCtResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Boolean> { }
+
+
+
+    void setExpectCtTestReport(
+org.chromium.url.mojom.Url reportUri, 
+SetExpectCtTestReportResponse callback);
+
+    interface SetExpectCtTestReportResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Boolean> { }
+
+
+
+    void getExpectCtState(
+String domain, 
+GetExpectCtStateResponse callback);
+
+    interface GetExpectCtStateResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<org.chromium.mojo_base.mojom.DictionaryValue> { }
+
+
+
     void createUdpSocket(
 org.chromium.mojo.bindings.InterfaceRequest<UdpSocket> request, UdpSocketReceiver receiver);
 
@@ -158,10 +190,18 @@ CreateTcpServerSocketResponse callback);
 
 
     void createTcpConnectedSocket(
-org.chromium.net.interfaces.IpEndPoint localAddr, org.chromium.net.interfaces.AddressList remoteAddrList, MutableNetworkTrafficAnnotationTag trafficAnnotation, org.chromium.mojo.bindings.InterfaceRequest<TcpConnectedSocket> socket, SocketObserver observer, 
+org.chromium.net.interfaces.IpEndPoint localAddr, org.chromium.net.interfaces.AddressList remoteAddrList, TcpConnectedSocketOptions tcpConnectedSocketOptions, MutableNetworkTrafficAnnotationTag trafficAnnotation, org.chromium.mojo.bindings.InterfaceRequest<TcpConnectedSocket> socket, SocketObserver observer, 
 CreateTcpConnectedSocketResponse callback);
 
     interface CreateTcpConnectedSocketResponse extends org.chromium.mojo.bindings.Callbacks.Callback5<Integer, org.chromium.net.interfaces.IpEndPoint, org.chromium.net.interfaces.IpEndPoint, org.chromium.mojo.system.DataPipe.ConsumerHandle, org.chromium.mojo.system.DataPipe.ProducerHandle> { }
+
+
+
+    void createTcpBoundSocket(
+org.chromium.net.interfaces.IpEndPoint localAddr, MutableNetworkTrafficAnnotationTag trafficAnnotation, org.chromium.mojo.bindings.InterfaceRequest<TcpBoundSocket> socket, 
+CreateTcpBoundSocketResponse callback);
+
+    interface CreateTcpBoundSocketResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Integer, org.chromium.net.interfaces.IpEndPoint> { }
 
 
 
@@ -177,6 +217,22 @@ org.chromium.mojo.bindings.InterfaceRequest<WebSocket> request, int processId, i
 
     void lookUpProxyForUrl(
 org.chromium.url.mojom.Url url, ProxyLookupClient proxyLookupClient);
+
+
+
+    void forceReloadProxyConfig(
+
+ForceReloadProxyConfigResponse callback);
+
+    interface ForceReloadProxyConfigResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
+
+
+
+    void clearBadProxiesCache(
+
+ClearBadProxiesCacheResponse callback);
+
+    interface ClearBadProxiesCacheResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
 
 
 
@@ -231,11 +287,35 @@ IsHstsActiveForHostResponse callback);
 
 
 
-    void addHstsForTesting(
-String host, org.chromium.mojo_base.mojom.Time expiry, boolean includeSubdomains, 
-AddHstsForTestingResponse callback);
+    void setCorsOriginAccessListsForOrigin(
+org.chromium.url.mojom.Origin sourceOrigin, CorsOriginPattern[] allowPatterns, CorsOriginPattern[] blockPatterns, 
+SetCorsOriginAccessListsForOriginResponse callback);
 
-    interface AddHstsForTestingResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
+    interface SetCorsOriginAccessListsForOriginResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
+
+
+
+    void addHsts(
+String host, org.chromium.mojo_base.mojom.Time expiry, boolean includeSubdomains, 
+AddHstsResponse callback);
+
+    interface AddHstsResponse extends org.chromium.mojo.bindings.Callbacks.Callback0 { }
+
+
+
+    void getHstsState(
+String domain, 
+GetHstsStateResponse callback);
+
+    interface GetHstsStateResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<org.chromium.mojo_base.mojom.DictionaryValue> { }
+
+
+
+    void deleteDynamicDataForHost(
+String host, 
+DeleteDynamicDataForHostResponse callback);
+
+    interface DeleteDynamicDataForHostResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<Boolean> { }
 
 
 

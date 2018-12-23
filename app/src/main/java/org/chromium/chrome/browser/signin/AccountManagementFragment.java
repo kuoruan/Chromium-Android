@@ -142,7 +142,7 @@ public class AccountManagementFragment extends PreferenceFragment
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        ListView list = (ListView) getView().findViewById(android.R.id.list);
+        ListView list = getView().findViewById(android.R.id.list);
         list.setDivider(null);
     }
 
@@ -442,19 +442,20 @@ public class AccountManagementFragment extends PreferenceFragment
 
         final Activity activity = getActivity();
         final DialogFragment clearDataProgressDialog = new ClearDataProgressDialog();
-        SigninManager.get().signOut(null, new SigninManager.WipeDataHooks() {
-            @Override
-            public void preWipeData() {
-                clearDataProgressDialog.show(
-                        activity.getFragmentManager(), CLEAR_DATA_PROGRESS_DIALOG_TAG);
-            }
-            @Override
-            public void postWipeData() {
-                if (clearDataProgressDialog.isAdded()) {
-                    clearDataProgressDialog.dismissAllowingStateLoss();
-                }
-            }
-        });
+        SigninManager.get().signOut(SignoutReason.USER_CLICKED_SIGNOUT_SETTINGS, null,
+                new SigninManager.WipeDataHooks() {
+                    @Override
+                    public void preWipeData() {
+                        clearDataProgressDialog.show(
+                                activity.getFragmentManager(), CLEAR_DATA_PROGRESS_DIALOG_TAG);
+                    }
+                    @Override
+                    public void postWipeData() {
+                        if (clearDataProgressDialog.isAdded()) {
+                            clearDataProgressDialog.dismissAllowingStateLoss();
+                        }
+                    }
+                });
         AccountManagementScreenHelper.logEvent(
                 ProfileAccountManagementMetrics.SIGNOUT_SIGNOUT,
                 mGaiaServiceType);

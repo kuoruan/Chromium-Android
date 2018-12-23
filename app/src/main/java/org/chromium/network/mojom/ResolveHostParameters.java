@@ -16,8 +16,8 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class ResolveHostParameters extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 24;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+    private static final int STRUCT_SIZE = 32;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
 
     public static final class DnsQueryType {
@@ -52,8 +52,46 @@ public final class ResolveHostParameters extends org.chromium.mojo.bindings.Stru
         private DnsQueryType() {}
 
     }
+
+    public static final class Source {
+
+
+        public static final int ANY = 0;
+
+        public static final int SYSTEM = ANY + 1;
+
+        public static final int DNS = SYSTEM + 1;
+
+        public static final int MULTICAST_DNS = DNS + 1;
+
+
+        private static final boolean IS_EXTENSIBLE = false;
+
+        public static boolean isKnownValue(int value) {
+            switch (value) {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                    return true;
+            }
+            return false;
+        }
+
+        public static void validate(int value) {
+            if (IS_EXTENSIBLE || isKnownValue(value))
+                return;
+
+            throw new DeserializationException("Invalid enum value.");
+        }
+
+        private Source() {}
+
+    }
     public int dnsQueryType;
     public int initialPriority;
+    public int source;
+    public boolean allowCachedResponse;
     public org.chromium.mojo.bindings.InterfaceRequest<ResolveHostHandle> controlHandle;
     public boolean includeCanonicalName;
     public boolean loopbackOnly;
@@ -63,6 +101,8 @@ public final class ResolveHostParameters extends org.chromium.mojo.bindings.Stru
         super(STRUCT_SIZE, version);
         this.dnsQueryType = (int) ResolveHostParameters.DnsQueryType.UNSPECIFIED;
         this.initialPriority = (int) RequestPriority.LOWEST;
+        this.source = (int) ResolveHostParameters.Source.ANY;
+        this.allowCachedResponse = (boolean) true;
         this.includeCanonicalName = (boolean) false;
         this.loopbackOnly = (boolean) false;
         this.isSpeculative = (boolean) false;
@@ -109,19 +149,28 @@ public final class ResolveHostParameters extends org.chromium.mojo.bindings.Stru
                 }
                 {
                     
-                result.controlHandle = decoder0.readInterfaceRequest(16, true);
+                result.source = decoder0.readInt(16);
+                    ResolveHostParameters.Source.validate(result.source);
                 }
                 {
                     
-                result.includeCanonicalName = decoder0.readBoolean(20, 0);
+                result.allowCachedResponse = decoder0.readBoolean(20, 0);
                 }
                 {
                     
-                result.loopbackOnly = decoder0.readBoolean(20, 1);
+                result.includeCanonicalName = decoder0.readBoolean(20, 1);
                 }
                 {
                     
-                result.isSpeculative = decoder0.readBoolean(20, 2);
+                result.loopbackOnly = decoder0.readBoolean(20, 2);
+                }
+                {
+                    
+                result.isSpeculative = decoder0.readBoolean(20, 3);
+                }
+                {
+                    
+                result.controlHandle = decoder0.readInterfaceRequest(24, true);
                 }
 
         } finally {
@@ -139,12 +188,16 @@ public final class ResolveHostParameters extends org.chromium.mojo.bindings.Stru
         
         encoder0.encode(this.initialPriority, 12);
         
-        encoder0.encode(this.controlHandle, 16, true);
+        encoder0.encode(this.source, 16);
         
-        encoder0.encode(this.includeCanonicalName, 20, 0);
+        encoder0.encode(this.allowCachedResponse, 20, 0);
         
-        encoder0.encode(this.loopbackOnly, 20, 1);
+        encoder0.encode(this.includeCanonicalName, 20, 1);
         
-        encoder0.encode(this.isSpeculative, 20, 2);
+        encoder0.encode(this.loopbackOnly, 20, 2);
+        
+        encoder0.encode(this.isSpeculative, 20, 3);
+        
+        encoder0.encode(this.controlHandle, 24, true);
     }
 }

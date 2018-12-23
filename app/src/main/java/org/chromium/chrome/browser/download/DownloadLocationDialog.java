@@ -15,11 +15,11 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import org.chromium.chrome.R;
 import org.chromium.chrome.browser.modaldialog.ModalDialogView;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.download.DownloadDirectoryAdapter;
 import org.chromium.chrome.browser.widget.AlertDialogEditText;
+import org.chromium.chrome.download.R;
 
 import java.io.File;
 

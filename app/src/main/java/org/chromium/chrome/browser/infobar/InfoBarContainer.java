@@ -6,6 +6,7 @@ package org.chromium.chrome.browser.infobar;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.app.Activity;
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.view.Gravity;
@@ -14,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import org.chromium.base.ObserverList;
+import org.chromium.base.UserData;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.chrome.R;
@@ -29,7 +31,8 @@ import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheetObserver;
 import org.chromium.chrome.browser.widget.bottomsheet.EmptyBottomSheetObserver;
 import org.chromium.content_public.browser.WebContents;
-import org.chromium.ui.UiUtils;
+import org.chromium.ui.KeyboardVisibilityDelegate;
+import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.display.DisplayAndroid;
 import org.chromium.ui.display.DisplayUtil;
 
@@ -41,8 +44,10 @@ import java.util.ArrayList;
  * When initiated from native code, special code is needed to keep the Java and native infobar in
  * sync, see NativeInfoBar.
  */
-public class InfoBarContainer extends SwipableOverlayView {
+public class InfoBarContainer extends SwipableOverlayView implements UserData {
     private static final String TAG = "InfoBarContainer";
+
+    private static final Class<InfoBarContainer> USER_DATA_KEY = InfoBarContainer.class;
 
     /** Top margin, including the toolbar and tabstrip height and 48dp of web contents. */
     private static final int TOP_MARGIN_PHONE_DP = 104;
@@ -122,6 +127,12 @@ public class InfoBarContainer extends SwipableOverlayView {
 
         @Override
         public void onContentChanged(Tab tab) {
+            WebContents webContents = tab.getWebContents();
+            if (webContents != null && webContents != getWebContents()) {
+                setWebContents(webContents);
+                nativeSetWebContents(mNativeInfoBarContainer, webContents);
+            }
+
             mTabView.removeOnAttachStateChangeListener(mAttachedStateListener);
             mTabView = tab.getView();
             mTabView.addOnAttachStateChangeListener(mAttachedStateListener);
@@ -195,8 +206,26 @@ public class InfoBarContainer extends SwipableOverlayView {
     /** The tab that hosts this infobar container. */
     private Tab mTab;
 
-    public InfoBarContainer(Context context, final ViewGroup parentView, Tab tab) {
-        super(context, null);
+    public static InfoBarContainer from(Tab tab) {
+        InfoBarContainer container = get(tab);
+        if (container == null) {
+            container = tab.getUserDataHost().setUserData(USER_DATA_KEY, new InfoBarContainer(tab));
+        }
+        return container;
+    }
+
+    /**
+     * Returns {@link InfoBarContainer} object for a given {@link Tab}, or {@code null}
+     * if there is no object available.
+     */
+    @Nullable
+    public static InfoBarContainer get(Tab tab) {
+        return tab.getUserDataHost().getUserData(USER_DATA_KEY);
+    }
+
+    private InfoBarContainer(Tab tab) {
+        super(tab.getThemedApplicationContext(), null);
+
         tab.addObserver(mTabObserver);
         mTabView = tab.getView();
         mTab = tab;
@@ -207,9 +236,10 @@ public class InfoBarContainer extends SwipableOverlayView {
 
         updateLayoutParams(tab.getActivity());
 
-        mParentView = parentView;
+        mParentView = getBottomContainer(tab);
 
         Runnable makeContainerVisibleRunnable = () -> runUpEventAnimation(true);
+        Context context = tab.getThemedApplicationContext();
         mLayout = new InfoBarContainerLayout(context, makeContainerVisibleRunnable);
         addView(mLayout, new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT, Gravity.CENTER_HORIZONTAL));
@@ -222,6 +252,12 @@ public class InfoBarContainer extends SwipableOverlayView {
         // Chromium's InfoBarContainer may add an InfoBar immediately during this initialization
         // call, so make sure everything in the InfoBarContainer is completely ready beforehand.
         mNativeInfoBarContainer = nativeInit();
+    }
+
+    private static ViewGroup getBottomContainer(Tab tab) {
+        WindowAndroid windowAndroid = tab.getWindowAndroid();
+        Activity activity = windowAndroid == null ? null : windowAndroid.getActivity().get();
+        return activity == null ? null : (ViewGroup) activity.findViewById(R.id.bottom_container);
     }
 
     private void updateLayoutParams(@Nullable ChromeActivity activity) {
@@ -266,12 +302,6 @@ public class InfoBarContainer extends SwipableOverlayView {
         for (InfoBarContainerObserver observer : mObservers) {
             observer.onInfoBarContainerShownRatioChanged(this, shownFraction);
         }
-    }
-
-    @Override
-    public void setWebContents(WebContents webContents) {
-        super.setWebContents(webContents);
-        if (webContents != null) nativeSetWebContents(mNativeInfoBarContainer, webContents);
     }
 
     /**
@@ -385,7 +415,11 @@ public class InfoBarContainer extends SwipableOverlayView {
         return mDestroyed;
     }
 
+    @Override
     public void destroy() {
+        removeFromParentView();
+        setWebContents(null);
+
         ChromeActivity activity = mTab.getActivity();
         if (activity != null && mBottomSheetObserver != null && activity.getBottomSheet() != null) {
             activity.getBottomSheet().removeObserver(mBottomSheetObserver);
@@ -484,7 +518,8 @@ public class InfoBarContainer extends SwipableOverlayView {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         // Hide the View when the keyboard is showing.
         boolean isShowing = (getVisibility() == View.VISIBLE);
-        if (UiUtils.isKeyboardShowing(getContext(), InfoBarContainer.this)) {
+        if (KeyboardVisibilityDelegate.getInstance().isKeyboardShowing(
+                    getContext(), InfoBarContainer.this)) {
             if (isShowing) {
                 // Set to invisible (instead of gone) so that onLayout() will be called when the
                 // keyboard is dismissed.

@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
     ItemType.LABEL, ItemType.SUGGESTION, ItemType.NON_INTERACTIVE_SUGGESTION, ItemType.DIVIDER,
-    ItemType.OPTION
+    ItemType.OPTION, ItemType.TOP_DIVIDER
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface ItemType {
@@ -41,4 +41,9 @@ public @interface ItemType {
    * A single, usually static and interactive suggestion.
    */
   int OPTION = 5;
+  /**
+   * A horizontal, non-interactive divider used to visually divide the accessory sheet from the
+   * accessory bar.
+   */
+  int TOP_DIVIDER = 6;
 }

@@ -50,6 +50,7 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
     public boolean glShaderIntermOutput;
     public boolean emulateShaderPrecision;
     public int maxActiveWebglContexts;
+    public boolean enableAndroidSurfaceControl;
     public boolean enableGpuServiceLogging;
     public boolean enableGpuServiceTracing;
     public boolean usePassthroughCmdDecoder;
@@ -59,6 +60,7 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
     public boolean ignoreGpuBlacklist;
     public boolean enableOopRasterization;
     public boolean disableOopRasterization;
+    public boolean enableOopRasterizationDdl;
     public boolean watchdogStartsBackgrounded;
     public boolean enableVulkan;
     public boolean enableGpuBenchmarkingExtension;
@@ -207,23 +209,23 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
                 }
                 {
                     
-                result.enableGpuServiceLogging = decoder0.readBoolean(11, 3);
+                result.enableAndroidSurfaceControl = decoder0.readBoolean(11, 3);
                 }
                 {
                     
-                result.enableGpuServiceTracing = decoder0.readBoolean(11, 4);
+                result.enableGpuServiceLogging = decoder0.readBoolean(11, 4);
                 }
                 {
                     
-                result.usePassthroughCmdDecoder = decoder0.readBoolean(11, 5);
+                result.enableGpuServiceTracing = decoder0.readBoolean(11, 5);
                 }
                 {
                     
-                result.disableBiplanarGpuMemoryBuffersForVideoFrames = decoder0.readBoolean(11, 6);
+                result.usePassthroughCmdDecoder = decoder0.readBoolean(11, 6);
                 }
                 {
                     
-                result.disableGpuDriverBugWorkarounds = decoder0.readBoolean(11, 7);
+                result.disableBiplanarGpuMemoryBuffersForVideoFrames = decoder0.readBoolean(11, 7);
                 }
                 {
                     
@@ -244,31 +246,39 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
                 }
                 {
                     
-                result.ignoreGpuBlacklist = decoder0.readBoolean(28, 0);
+                result.disableGpuDriverBugWorkarounds = decoder0.readBoolean(28, 0);
                 }
                 {
                     
-                result.enableOopRasterization = decoder0.readBoolean(28, 1);
+                result.ignoreGpuBlacklist = decoder0.readBoolean(28, 1);
                 }
                 {
                     
-                result.disableOopRasterization = decoder0.readBoolean(28, 2);
+                result.enableOopRasterization = decoder0.readBoolean(28, 2);
                 }
                 {
                     
-                result.watchdogStartsBackgrounded = decoder0.readBoolean(28, 3);
+                result.disableOopRasterization = decoder0.readBoolean(28, 3);
                 }
                 {
                     
-                result.enableVulkan = decoder0.readBoolean(28, 4);
+                result.enableOopRasterizationDdl = decoder0.readBoolean(28, 4);
                 }
                 {
                     
-                result.enableGpuBenchmarkingExtension = decoder0.readBoolean(28, 5);
+                result.watchdogStartsBackgrounded = decoder0.readBoolean(28, 5);
                 }
                 {
                     
-                result.enableWebgpu = decoder0.readBoolean(28, 6);
+                result.enableVulkan = decoder0.readBoolean(28, 6);
+                }
+                {
+                    
+                result.enableGpuBenchmarkingExtension = decoder0.readBoolean(28, 7);
+                }
+                {
+                    
+                result.enableWebgpu = decoder0.readBoolean(29, 0);
                 }
                 {
                     
@@ -349,15 +359,15 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.emulateShaderPrecision, 11, 2);
         
-        encoder0.encode(this.enableGpuServiceLogging, 11, 3);
+        encoder0.encode(this.enableAndroidSurfaceControl, 11, 3);
         
-        encoder0.encode(this.enableGpuServiceTracing, 11, 4);
+        encoder0.encode(this.enableGpuServiceLogging, 11, 4);
         
-        encoder0.encode(this.usePassthroughCmdDecoder, 11, 5);
+        encoder0.encode(this.enableGpuServiceTracing, 11, 5);
         
-        encoder0.encode(this.disableBiplanarGpuMemoryBuffersForVideoFrames, 11, 6);
+        encoder0.encode(this.usePassthroughCmdDecoder, 11, 6);
         
-        encoder0.encode(this.disableGpuDriverBugWorkarounds, 11, 7);
+        encoder0.encode(this.disableBiplanarGpuMemoryBuffersForVideoFrames, 11, 7);
         
         encoder0.encode(this.enableAcceleratedVpxDecode, 12);
         
@@ -367,19 +377,23 @@ public final class GpuPreferences extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.maxActiveWebglContexts, 24);
         
-        encoder0.encode(this.ignoreGpuBlacklist, 28, 0);
+        encoder0.encode(this.disableGpuDriverBugWorkarounds, 28, 0);
         
-        encoder0.encode(this.enableOopRasterization, 28, 1);
+        encoder0.encode(this.ignoreGpuBlacklist, 28, 1);
         
-        encoder0.encode(this.disableOopRasterization, 28, 2);
+        encoder0.encode(this.enableOopRasterization, 28, 2);
         
-        encoder0.encode(this.watchdogStartsBackgrounded, 28, 3);
+        encoder0.encode(this.disableOopRasterization, 28, 3);
         
-        encoder0.encode(this.enableVulkan, 28, 4);
+        encoder0.encode(this.enableOopRasterizationDdl, 28, 4);
         
-        encoder0.encode(this.enableGpuBenchmarkingExtension, 28, 5);
+        encoder0.encode(this.watchdogStartsBackgrounded, 28, 5);
         
-        encoder0.encode(this.enableWebgpu, 28, 6);
+        encoder0.encode(this.enableVulkan, 28, 6);
+        
+        encoder0.encode(this.enableGpuBenchmarkingExtension, 28, 7);
+        
+        encoder0.encode(this.enableWebgpu, 29, 0);
         
         if (this.textureTargetExceptionList == null) {
             encoder0.encodeNullPointer(32, false);

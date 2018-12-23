@@ -20,6 +20,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.favicon.FaviconHelper.DefaultFaviconHelper;
 import org.chromium.chrome.browser.history.HistoryProvider.BrowsingHistoryObserver;
 import org.chromium.chrome.browser.preferences.Pref;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
@@ -43,6 +44,7 @@ public class HistoryAdapter extends DateDividedAdapter implements BrowsingHistor
     private final HistoryProvider mHistoryProvider;
     private final HistoryManager mHistoryManager;
     private final ArrayList<HistoryItemView> mItemViews;
+    private final DefaultFaviconHelper mFaviconHelper;
     private RecyclerView mRecyclerView;
 
     private View mPrivacyDisclaimerBottomSpace;
@@ -68,6 +70,7 @@ public class HistoryAdapter extends DateDividedAdapter implements BrowsingHistor
         mHistoryProvider = provider;
         mHistoryProvider.setObserver(this);
         mHistoryManager = manager;
+        mFaviconHelper = new DefaultFaviconHelper();
         mItemViews = new ArrayList<>();
     }
 
@@ -78,6 +81,7 @@ public class HistoryAdapter extends DateDividedAdapter implements BrowsingHistor
         mHistoryProvider.destroy();
         mIsDestroyed = true;
         mRecyclerView = null;
+        mFaviconHelper.clearCache();
     }
 
     /**
@@ -193,6 +197,7 @@ public class HistoryAdapter extends DateDividedAdapter implements BrowsingHistor
                 new SelectableItemViewHolder<>(v, mSelectionDelegate);
         HistoryItemView itemView = (HistoryItemView) viewHolder.itemView;
         itemView.setRemoveButtonVisible(!mSelectionDelegate.isSelectionEnabled());
+        itemView.setFaviconHelper(mFaviconHelper);
         mItemViews.add(itemView);
         return viewHolder;
     }

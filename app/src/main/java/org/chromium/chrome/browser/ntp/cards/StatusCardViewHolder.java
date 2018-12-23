@@ -13,8 +13,7 @@ import android.widget.TextView;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.metrics.ImpressionTracker.Listener;
-import org.chromium.chrome.browser.ntp.ContextMenuManager;
-import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
+import org.chromium.chrome.browser.native_page.ContextMenuManager;
 import org.chromium.chrome.browser.suggestions.SuggestionsMetrics;
 import org.chromium.chrome.browser.suggestions.SuggestionsRecyclerView;
 import org.chromium.chrome.browser.widget.displaystyle.UiConfig;
@@ -87,7 +86,6 @@ public class StatusCardViewHolder extends CardViewHolder {
 
     @LayoutRes
     private static int getLayout() {
-        return SuggestionsConfig.useModernLayout() ? R.layout.content_suggestions_status_card_modern
-                                                   : R.layout.new_tab_page_status_card;
+        return R.layout.content_suggestions_status_card_modern;
     }
 }

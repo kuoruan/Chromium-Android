@@ -4,9 +4,15 @@
 
 package org.chromium.chrome.browser.customtabs.dynamicmodule;
 
+import android.os.Bundle;
+
 import org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper;
 
+/**
+ * Runtime providing additional features to a Chrome activity.
+ */
 interface IActivityDelegate {
+
   void onCreate(in Bundle savedInstanceState) = 0;
 
   void onPostCreate(in Bundle savedInstanceState) = 1;
@@ -36,4 +42,12 @@ interface IActivityDelegate {
    * Introduced in API version 2.
    */
   void onBackPressedAsync(in IObjectWrapper /* Runnable */ notHandledRunnable) = 11;
+
+  /**
+   * Notify module about navigation events.
+   * {@see android.support.customtabs.CustomTabsCallback#onNavigationEvent}
+   *
+   * Introduced in API version 4.
+   */
+  void onNavigationEvent(int navigationEvent, in Bundle extras) = 12;
 }

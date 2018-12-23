@@ -63,8 +63,8 @@ public class ChartNetworkSeriesView extends View {
     /** Series will be extended to reach this end time. */
     private long mEndTime = Long.MIN_VALUE;
 
-    private boolean mPathValid = false;
-    private boolean mEstimateVisible = false;
+    private boolean mPathValid;
+    private boolean mEstimateVisible;
 
     private long mMax;
     private long mMaxEstimate;

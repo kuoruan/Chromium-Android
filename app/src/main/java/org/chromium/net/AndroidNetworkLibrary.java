@@ -28,6 +28,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.CalledByNativeUnchecked;
+import org.chromium.base.compat.ApiHelperForM;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -54,6 +55,9 @@ import java.util.List;
 class AndroidNetworkLibrary {
 
     private static final String TAG = "AndroidNetworkLibrary";
+
+    // Cached Method for LinkProperties.isPrivateDnsActive().
+    private static Method sIsPrivateDnsActiveMethod;
 
     /**
      * @return the mime type (if any) that is associated with the file
@@ -205,7 +209,7 @@ class AndroidNetworkLibrary {
                         Context.CONNECTIVITY_SERVICE);
         if (connectivityManager == null) return false;
 
-        Network network = connectivityManager.getActiveNetwork();
+        Network network = ApiHelperForM.getActiveNetwork(connectivityManager);
         if (network == null) return false;
 
         NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
@@ -283,6 +287,27 @@ class AndroidNetworkLibrary {
     }
 
     /**
+     * @returns result of linkProperties.isPrivateDnsActive().
+     */
+    static boolean isPrivateDnsActive(LinkProperties linkProperties) {
+        if (BuildInfo.isAtLeastP() && linkProperties != null) {
+            // TODO(pauljensen): When Android P SDK is available, remove reflection.
+            try {
+                // This could be racy if called on multiple threads, but races will
+                // end in the same result so it's not a problem.
+                if (sIsPrivateDnsActiveMethod == null) {
+                    sIsPrivateDnsActiveMethod =
+                            linkProperties.getClass().getMethod("isPrivateDnsActive");
+                }
+                return ((Boolean) sIsPrivateDnsActiveMethod.invoke(linkProperties)).booleanValue();
+            } catch (Exception e) {
+                Log.e(TAG, "Can not call LinkProperties.isPrivateDnsActive():", e);
+            }
+        }
+        return false;
+    }
+
+    /**
      * Returns list of IP addresses of DNS servers.
      * If private DNS is active, then returns a 1x1 array.
      */
@@ -295,7 +320,7 @@ class AndroidNetworkLibrary {
         if (connectivityManager == null) {
             return new byte[0][0];
         }
-        Network network = connectivityManager.getActiveNetwork();
+        Network network = ApiHelperForM.getActiveNetwork(connectivityManager);
         if (network == null) {
             return new byte[0][0];
         }
@@ -303,18 +328,8 @@ class AndroidNetworkLibrary {
         if (linkProperties == null) {
             return new byte[0][0];
         }
-        if (BuildInfo.isAtLeastP()) {
-            // TODO(pauljensen): When Android P SDK is available, remove reflection.
-            try {
-                if (((Boolean) linkProperties.getClass()
-                                    .getMethod("isPrivateDnsActive")
-                                    .invoke(linkProperties))
-                                .booleanValue()) {
-                    return new byte[1][1];
-                }
-            } catch (Exception e) {
-                Log.e(TAG, "Can not call LinkProperties.isPrivateDnsActive():", e);
-            }
+        if (isPrivateDnsActive(linkProperties)) {
+            return new byte[1][1];
         }
         List<InetAddress> dnsServersList = linkProperties.getDnsServers();
         byte[][] dnsServers = new byte[dnsServersList.size()][];

@@ -5,9 +5,11 @@
 package org.chromium.components.location;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Process;
 import android.provider.Settings;
@@ -70,16 +72,50 @@ public class LocationUtils {
      * Returns whether location services are enabled system-wide, i.e. whether any application is
      * able to access location.
      */
+    @SuppressLint("NewApi")
     @SuppressWarnings("deprecation")
     public boolean isSystemLocationSettingEnabled() {
         Context context = ContextUtils.getApplicationContext();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            LocationManager locationManager =
+                    (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+            return locationManager != null && locationManager.isLocationEnabled();
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             return Settings.Secure.getInt(context.getContentResolver(),
                            Settings.Secure.LOCATION_MODE, Settings.Secure.LOCATION_MODE_OFF)
                     != Settings.Secure.LOCATION_MODE_OFF;
         } else {
             return !TextUtils.isEmpty(Settings.Secure.getString(
                     context.getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED));
+        }
+    }
+
+    /**
+     * Returns whether location services are enabled in sensors-only mode, i.e. when network
+     * location services are disabled but GPS and other sensors are enabled.
+     */
+    @SuppressLint("NewApi")
+    @SuppressWarnings("deprecation")
+    public boolean isSystemLocationSettingSensorsOnly() {
+        Context context = ContextUtils.getApplicationContext();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            LocationManager locationManager =
+                    (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+            return locationManager != null && locationManager.isLocationEnabled()
+                    && locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                    && !locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            return Settings.Secure.getInt(context.getContentResolver(),
+                           Settings.Secure.LOCATION_MODE, Settings.Secure.LOCATION_MODE_OFF)
+                    == Settings.Secure.LOCATION_MODE_SENSORS_ONLY;
+        } else {
+            // Before Android K, location provider settings were stored as a comma-delimited list
+            // containing the names of enabled providers. In sensors-only mode, the GPS provider is
+            // present and the network provider is absent.
+            String locationProviders = Settings.Secure.getString(
+                    context.getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+            return locationProviders.contains(LocationManager.GPS_PROVIDER)
+                    && !locationProviders.contains(LocationManager.NETWORK_PROVIDER);
         }
     }
 

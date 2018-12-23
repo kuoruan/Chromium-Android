@@ -18,4 +18,7 @@
 <string name="video_call_notification_text_2">"Accessing video input"</string>
 <string name="audio_call_notification_text_2">"Accessing audio input"</string>
 <string name="video_audio_call_notification_text_2">"Accessing audio and video input"</string>
+<string name="video_call_incognito_notification_text_2">"A site is accessing video input"</string>
+<string name="audio_call_incognito_notification_text_2">"A site is accessing audio input"</string>
+<string name="video_audio_call_incognito_notification_text_2">"A site is accessing audio and video input"</string>
 </resources>

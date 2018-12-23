@@ -29,7 +29,7 @@ import java.lang.annotation.RetentionPolicy;
     OmniboxSuggestionType.VOICE_SUGGEST, OmniboxSuggestionType.PHYSICAL_WEB_DEPRECATED,
     OmniboxSuggestionType.PHYSICAL_WEB_OVERFLOW_DEPRECATED,
     OmniboxSuggestionType.TAB_SEARCH_DEPRECATED, OmniboxSuggestionType.DOCUMENT_SUGGESTION,
-    OmniboxSuggestionType.NUM_TYPES
+    OmniboxSuggestionType.PEDAL, OmniboxSuggestionType.NUM_TYPES
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface OmniboxSuggestionType {
@@ -97,5 +97,6 @@ public @interface OmniboxSuggestionType {
    * URL or title, via HQP (deprecated).
    */
   int DOCUMENT_SUGGESTION = 24;
-  int NUM_TYPES = 25;
+  int PEDAL = 25;
+  int NUM_TYPES = 26;
 }

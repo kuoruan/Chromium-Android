@@ -149,9 +149,17 @@ public class PlatformSensor implements SensorEventListener {
 
         // Unregister old listener if polling frequency has changed.
         unregisterListener();
+
         mProvider.sensorStarted(this);
-        boolean sensorStarted = mProvider.getSensorManager().registerListener(
-                this, mSensor, getSamplingPeriod(frequency), mProvider.getHandler());
+        boolean sensorStarted;
+        try {
+            sensorStarted = mProvider.getSensorManager().registerListener(
+                    this, mSensor, getSamplingPeriod(frequency), mProvider.getHandler());
+        } catch (RuntimeException e) {
+            // This can fail due to internal framework errors. https://crbug.com/884190
+            Log.w(TAG, "Failed to register sensor listener.", e);
+            sensorStarted = false;
+        }
 
         if (!sensorStarted) {
             stopSensor();

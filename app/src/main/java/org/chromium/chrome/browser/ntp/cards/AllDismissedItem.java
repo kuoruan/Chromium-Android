@@ -12,7 +12,6 @@ import android.widget.TextView;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ntp.NewTabPageUma;
-import org.chromium.chrome.browser.suggestions.SuggestionsConfig;
 
 import java.util.Calendar;
 
@@ -72,9 +71,7 @@ public class AllDismissedItem extends OptionalLeaf {
 
         @LayoutRes
         private static int getLayout() {
-            return SuggestionsConfig.useModernLayout()
-                    ? R.layout.content_suggestions_all_dismissed_card_modern
-                    : R.layout.new_tab_page_all_dismissed;
+            return R.layout.content_suggestions_all_dismissed_card_modern;
         }
     }
 }

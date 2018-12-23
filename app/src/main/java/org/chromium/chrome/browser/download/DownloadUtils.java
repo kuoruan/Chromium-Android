@@ -35,6 +35,7 @@ import org.chromium.chrome.browser.ChromeTabbedActivity;
 import org.chromium.chrome.browser.FileProviderHelper;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.download.home.metrics.FileExtensions;
 import org.chromium.chrome.browser.download.items.OfflineContentAggregatorFactory;
 import org.chromium.chrome.browser.download.ui.DownloadFilter;
 import org.chromium.chrome.browser.download.ui.DownloadHistoryItemWrapper;
@@ -387,8 +388,7 @@ public class DownloadUtils {
             if (wrappedItem.getFilterType() == DownloadFilter.Type.OTHER) {
                 RecordHistogram.recordEnumeratedHistogram(
                         "Android.DownloadManager.OtherExtensions.Share",
-                        wrappedItem.getFileExtensionType(),
-                        DownloadHistoryItemWrapper.FileExtension.NUM_ENTRIES);
+                        wrappedItem.getFileExtensionType(), FileExtensions.Type.NUM_ENTRIES);
             }
 
             // If a mime type was not retrieved from the backend or could not be normalized,
@@ -910,21 +910,11 @@ public class DownloadUtils {
      * @return String representing the current download status.
      */
     public static String getFailStatusString(@FailState int failState) {
+        if (BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
+                        .isStartupSuccessfullyCompleted()) {
+            return nativeGetFailStateMessage(failState);
+        }
         Context context = ContextUtils.getApplicationContext();
-
-        // TODO(cmsy): Return correct status for failure reasons once strings are finalized.
-        // if (BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
-        //                .isStartupSuccessfullyCompleted()
-        //        && ChromeFeatureList.isEnabled(
-        //                   ChromeFeatureList.OFFLINE_PAGES_DESCRIPTIVE_FAIL_STATUS)) {
-        //    switch (failState) {
-        //        case FailState.CANNOT_DOWNLOAD:
-        //        case FailState.NETWORK_INSTABILITY:
-        //        default:
-        //          return context.getString(R.string.download_notification_failed);
-        //    }
-        // }
-
         return context.getString(R.string.download_notification_failed);
     }
 
@@ -1139,6 +1129,15 @@ public class DownloadUtils {
     }
 
     /**
+     * Returns |true| if the offline item is not null and has already been viewed by the user.
+     * @param offlineItem The offline item to check.
+     * @return true if the item is valid has been viewed by the user.
+     */
+    public static boolean isOfflineItemViewed(OfflineItem offlineItem) {
+        return offlineItem != null && offlineItem.lastAccessedTimeMs > offlineItem.completionTimeMs;
+    }
+
+    /**
      * Given two timestamps, calculates if both occur on the same date.
      * @return True if they belong in the same day. False otherwise.
      */
@@ -1173,4 +1172,6 @@ public class DownloadUtils {
         String primaryPath = primaryDir.getAbsolutePath();
         return primaryPath == null ? false : path.contains(primaryPath);
     }
+
+    private static native String nativeGetFailStateMessage(@FailState int failState);
 }

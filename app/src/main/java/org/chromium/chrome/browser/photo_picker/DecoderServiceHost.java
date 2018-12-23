@@ -40,13 +40,13 @@ public class DecoderServiceHost extends IDecoderServiceCallback.Stub {
     private static final String TAG = "ImageDecoderHost";
 
     // The number of successful decodes, per batch.
-    private int mSuccessfulDecodes = 0;
+    private int mSuccessfulDecodes;
 
     // The number of runtime failures during decoding, per batch.
-    private int mFailedDecodesRuntime = 0;
+    private int mFailedDecodesRuntime;
 
     // The number of out of memory failures during decoding, per batch.
-    private int mFailedDecodesMemory = 0;
+    private int mFailedDecodesMemory;
 
     // A callback to use for testing to see if decoder is ready.
     static ServiceReadyCallback sReadyCallbackForTesting;

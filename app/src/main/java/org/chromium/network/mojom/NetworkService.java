@@ -30,7 +30,12 @@ NetworkServiceClient client);
 
 
     void startNetLog(
-org.chromium.mojo_base.mojom.File file, org.chromium.mojo_base.mojom.DictionaryValue constants);
+org.chromium.mojo_base.mojom.File file, int captureMode, org.chromium.mojo_base.mojom.DictionaryValue constants);
+
+
+
+    void setSslKeyLogFile(
+org.chromium.mojo_base.mojom.FilePath file);
 
 
 
@@ -99,6 +104,11 @@ int processId);
 
     void removeCorbExceptionForPlugin(
 int processId);
+
+
+
+    void onApplicationStateChange(
+int state);
 
 
 }

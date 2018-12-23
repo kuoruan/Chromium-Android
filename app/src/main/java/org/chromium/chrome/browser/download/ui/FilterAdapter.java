@@ -16,8 +16,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
-import org.chromium.chrome.R;
-import org.chromium.chrome.browser.util.FeatureUtilities;
+import org.chromium.chrome.download.R;
 
 /** An adapter that allows selecting an item from a dropdown spinner. */
 class FilterAdapter extends BaseAdapter implements AdapterView.OnItemSelectedListener {
@@ -29,7 +28,8 @@ class FilterAdapter extends BaseAdapter implements AdapterView.OnItemSelectedLis
      */
     FilterAdapter(Resources resources) {
         super();
-        mIconColor = ApiCompatibilityUtils.getColor(resources, R.color.default_icon_color);
+        mIconColor = ApiCompatibilityUtils.getColor(
+                resources, org.chromium.chrome.R.color.default_icon_color);
     }
 
     @Override
@@ -72,9 +72,6 @@ class FilterAdapter extends BaseAdapter implements AdapterView.OnItemSelectedLis
                         : DownloadFilter.getStringIdForFilter(position));
         labelView.setText(title);
 
-        if (!FeatureUtilities.isChromeModernDesignEnabled()) {
-            ApiCompatibilityUtils.setTextAppearance(labelView, R.style.BlackHeadline2);
-        }
         return labelView;
     }
 

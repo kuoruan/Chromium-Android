@@ -360,7 +360,7 @@ public class VideoCaptureCamera2 extends VideoCapture {
                 maxIso = iso_range.getUpper();
             }
             builder.setMinIso(minIso).setMaxIso(maxIso).setStepIso(1);
-            if (mPreviewRequestBuilder.get(CaptureRequest.SENSOR_SENSITIVITY) != null) {
+            if (mPreviewRequest.get(CaptureRequest.SENSOR_SENSITIVITY) != null) {
                 builder.setCurrentIso(mPreviewRequest.get(CaptureRequest.SENSOR_SENSITIVITY));
             }
 
@@ -383,10 +383,15 @@ public class VideoCaptureCamera2 extends VideoCapture {
                     (mPhotoHeight > 0) ? mPhotoHeight : mCaptureFormat.getHeight());
             builder.setCurrentWidth((mPhotoWidth > 0) ? mPhotoWidth : mCaptureFormat.getWidth());
 
-            final float currentZoom =
-                    cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
-                            .width()
-                    / (float) mPreviewRequest.get(CaptureRequest.SCALER_CROP_REGION).width();
+            float currentZoom = 1.0f;
+            if (cameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
+                            != null
+                    && mPreviewRequest.get(CaptureRequest.SCALER_CROP_REGION) != null) {
+                currentZoom = cameraCharacteristics
+                                      .get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
+                                      .width()
+                        / (float) mPreviewRequest.get(CaptureRequest.SCALER_CROP_REGION).width();
+            }
             // There is no min-zoom per se, so clamp it to always 1.
             builder.setMinZoom(1.0).setMaxZoom(mMaxZoom);
             builder.setCurrentZoom(currentZoom).setStepZoom(0.1);
@@ -396,9 +401,64 @@ public class VideoCaptureCamera2 extends VideoCapture {
             final int[] jniFocusModes =
                     cameraCharacteristics.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
             ArrayList<Integer> focusModes = new ArrayList<Integer>(3);
+
+            // Android reports the focus metadata in units of diopters (1/meter), so
+            // 0.0f represents focusing at infinity, and increasing positive numbers represent
+            // focusing closer and closer to the camera device.
+            float minFocusDistance = 0; // >= 0
+            float maxFocusDistance = 0; // (0.0f, android.lens.info.minimumFocusDistance]
+            if (cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE)
+                    != null) {
+                minFocusDistance = cameraCharacteristics.get(
+                        CameraCharacteristics.LENS_INFO_MINIMUM_FOCUS_DISTANCE);
+                if (minFocusDistance == 0) {
+                    Log.d(TAG, "lens is fixed-focus");
+                } else if (minFocusDistance > 0) {
+                    // Android provides focusDistance in diopters, but specs is in SI units
+                    // (meters).
+                    minFocusDistance = 1 / minFocusDistance;
+                }
+            } else { //  null value
+                Log.d(TAG, "LENS_INFO_MINIMUM_FOCUS_DISTANCE is null");
+            }
+            if (cameraCharacteristics.get(CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE)
+                    != null) {
+                maxFocusDistance = cameraCharacteristics.get(
+                        CameraCharacteristics.LENS_INFO_HYPERFOCAL_DISTANCE);
+                if (maxFocusDistance == 0) {
+                    maxFocusDistance = (long) Double.POSITIVE_INFINITY;
+                } else if (maxFocusDistance > 0) {
+                    // Android provides focusDistance in diopters, but specs is in SI units
+                    // (meters).
+                    maxFocusDistance = 1 / maxFocusDistance;
+                }
+            } else { //  null value
+                Log.d(TAG, "LENS_INFO_HYPERFOCAL_DISTANCE is null");
+            }
+            if (mPreviewRequest.get(CaptureRequest.LENS_FOCUS_DISTANCE) != null) {
+                mCurrentFocusDistance = mPreviewRequest.get(CaptureRequest.LENS_FOCUS_DISTANCE);
+
+                // LENS_FOCUS_DISTANCE is in the range [0.0f,
+                // android.lens.info.minimumFocusDistance] Android provides focusDistance in
+                // diopters, but specs is in SI units (meters).
+                if (mCurrentFocusDistance == 0) {
+                    Log.d(TAG, "infinity focus.");
+                    mCurrentFocusDistance = (long) Double.POSITIVE_INFINITY;
+                } else if (mCurrentFocusDistance > 0)
+                    builder.setCurrentFocusDistance(1 / mCurrentFocusDistance);
+            } else { //  null value
+                Log.d(TAG, "LENS_FOCUS_DISTANCE is null");
+            }
+
             for (int mode : jniFocusModes) {
                 if (mode == CameraMetadata.CONTROL_AF_MODE_OFF) {
                     focusModes.add(Integer.valueOf(AndroidMeteringMode.FIXED));
+                    builder.setMinFocusDistance(minFocusDistance);
+                    builder.setMaxFocusDistance(maxFocusDistance);
+                    // Smallest step by which focus distance can be changed. This value is not
+                    // exposed by Android.
+                    float mStepFocusDistance = 0.01f;
+                    builder.setStepFocusDistance(mStepFocusDistance);
                 } else if (mode == CameraMetadata.CONTROL_AF_MODE_AUTO
                         || mode == CameraMetadata.CONTROL_AF_MODE_MACRO) {
                     // CONTROL_AF_MODE_{AUTO,MACRO} do not imply continuously focusing.
@@ -415,18 +475,23 @@ public class VideoCaptureCamera2 extends VideoCapture {
             }
             builder.setFocusModes(integerArrayListToArray(focusModes));
 
-            final int focusMode = mPreviewRequest.get(CaptureRequest.CONTROL_AF_MODE);
             int jniFocusMode = AndroidMeteringMode.NONE;
-            if (focusMode == CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_VIDEO
-                    || focusMode == CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_PICTURE) {
-                jniFocusMode = AndroidMeteringMode.CONTINUOUS;
-            } else if (focusMode == CameraMetadata.CONTROL_AF_MODE_AUTO
-                    || focusMode == CameraMetadata.CONTROL_AF_MODE_MACRO) {
-                jniFocusMode = AndroidMeteringMode.SINGLE_SHOT;
-            } else if (focusMode == CameraMetadata.CONTROL_AF_MODE_OFF) {
-                jniFocusMode = AndroidMeteringMode.FIXED;
-            } else {
-                assert jniFocusMode == CameraMetadata.CONTROL_AF_MODE_EDOF;
+            if (mPreviewRequest.get(CaptureRequest.CONTROL_AF_MODE) != null) {
+                final int focusMode = mPreviewRequest.get(CaptureRequest.CONTROL_AF_MODE);
+                if (focusMode == CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_VIDEO
+                        || focusMode == CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_PICTURE) {
+                    jniFocusMode = AndroidMeteringMode.CONTINUOUS;
+                } else if (focusMode == CameraMetadata.CONTROL_AF_MODE_AUTO
+                        || focusMode == CameraMetadata.CONTROL_AF_MODE_MACRO) {
+                    jniFocusMode = AndroidMeteringMode.SINGLE_SHOT;
+                } else if (focusMode == CameraMetadata.CONTROL_AF_MODE_OFF) {
+                    jniFocusMode = AndroidMeteringMode.FIXED;
+                    // Set focus distance here.
+                    if (mCurrentFocusDistance > 0)
+                        builder.setCurrentFocusDistance(1 / mCurrentFocusDistance);
+                } else {
+                    assert jniFocusMode == CameraMetadata.CONTROL_AF_MODE_EDOF;
+                }
             }
             builder.setFocusMode(jniFocusMode);
 
@@ -443,6 +508,36 @@ public class VideoCaptureCamera2 extends VideoCapture {
                         || mode == CameraMetadata.CONTROL_AE_MODE_ON_AUTO_FLASH_REDEYE) {
                     exposureModes.add(Integer.valueOf(AndroidMeteringMode.CONTINUOUS));
                     break;
+                } else {
+                    // Exposure mode is Manual. Here we can set exposure time.
+                    // All exposure time values from Android are in nano seconds.
+                    // Spec (https://w3c.github.io/mediacapture-image/#exposure-time)
+                    // expects exposureTime to be in 100 microsecond units.
+                    // A value of 1.0 means an exposure time of 1/10000th of a second
+                    // and a value of 10000.0 means an exposure time of 1 second.
+                    if (cameraCharacteristics.get(
+                                CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE)
+                            != null) {
+                        // The minimum exposure time will be less than 100 micro-seconds.
+                        // For FULL capability devices (android.info.supportedHardwareLevel ==
+                        // FULL), the maximum exposure time will be greater than 100 millisecond.
+                        Range<Long> range = cameraCharacteristics.get(
+                                CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+                        final long minExposureTime = range.getLower();
+                        final long maxExposureTime = range.getUpper();
+
+                        if (minExposureTime != 0 && maxExposureTime != 0) {
+                            builder.setMaxExposureTime(
+                                    maxExposureTime / kNanosecondsPer100Microsecond);
+                            builder.setMinExposureTime(
+                                    minExposureTime / kNanosecondsPer100Microsecond);
+                        }
+                        // Smallest step by which exposure time can be changed. This value is not
+                        // exposed by Android.
+                        builder.setStepExposureTime(10000 / kNanosecondsPer100Microsecond);
+                        builder.setCurrentExposureTime(
+                                mLastExposureTimeNs / kNanosecondsPer100Microsecond);
+                    }
                 }
             }
             try {
@@ -455,8 +550,9 @@ public class VideoCaptureCamera2 extends VideoCapture {
             builder.setExposureModes(integerArrayListToArray(exposureModes));
 
             int jniExposureMode = AndroidMeteringMode.CONTINUOUS;
-            if (mPreviewRequest.get(CaptureRequest.CONTROL_AE_MODE)
-                    == CameraMetadata.CONTROL_AE_MODE_OFF) {
+            if ((mPreviewRequest.get(CaptureRequest.CONTROL_AE_MODE) != null)
+                    && mPreviewRequest.get(CaptureRequest.CONTROL_AE_MODE)
+                            == CameraMetadata.CONTROL_AE_MODE_OFF) {
                 jniExposureMode = AndroidMeteringMode.NONE;
             }
             if (mPreviewRequest.get(CaptureRequest.CONTROL_AE_LOCK)) {
@@ -472,8 +568,11 @@ public class VideoCaptureCamera2 extends VideoCapture {
                     cameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE);
             builder.setMinExposureCompensation(exposureCompensationRange.getLower() * step);
             builder.setMaxExposureCompensation(exposureCompensationRange.getUpper() * step);
-            builder.setCurrentExposureCompensation(
-                    mPreviewRequest.get(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION) * step);
+            if (mPreviewRequest.get(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION) != null) {
+                builder.setCurrentExposureCompensation(
+                        mPreviewRequest.get(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION)
+                        * step);
+            }
 
             final int[] jniWhiteBalanceMode =
                     cameraCharacteristics.get(CameraCharacteristics.CONTROL_AWB_AVAILABLE_MODES);
@@ -493,13 +592,16 @@ public class VideoCaptureCamera2 extends VideoCapture {
             }
             builder.setWhiteBalanceModes(integerArrayListToArray(whiteBalanceModes));
 
-            final int whiteBalanceMode = mPreviewRequest.get(CaptureRequest.CONTROL_AWB_MODE);
-            if (whiteBalanceMode == CameraMetadata.CONTROL_AWB_MODE_OFF) {
-                builder.setWhiteBalanceMode(AndroidMeteringMode.NONE);
-            } else if (whiteBalanceMode == CameraMetadata.CONTROL_AWB_MODE_AUTO) {
-                builder.setWhiteBalanceMode(AndroidMeteringMode.CONTINUOUS);
-            } else {
-                builder.setWhiteBalanceMode(AndroidMeteringMode.FIXED);
+            int whiteBalanceMode = CameraMetadata.CONTROL_AWB_MODE_AUTO;
+            if (mPreviewRequest.get(CaptureRequest.CONTROL_AWB_MODE) != null) {
+                whiteBalanceMode = mPreviewRequest.get(CaptureRequest.CONTROL_AWB_MODE);
+                if (whiteBalanceMode == CameraMetadata.CONTROL_AWB_MODE_OFF) {
+                    builder.setWhiteBalanceMode(AndroidMeteringMode.NONE);
+                } else if (whiteBalanceMode == CameraMetadata.CONTROL_AWB_MODE_AUTO) {
+                    builder.setWhiteBalanceMode(AndroidMeteringMode.CONTINUOUS);
+                } else {
+                    builder.setWhiteBalanceMode(AndroidMeteringMode.FIXED);
+                }
             }
             builder.setMinColorTemperature(COLOR_TEMPERATURES_MAP.keyAt(0));
             builder.setMaxColorTemperature(
@@ -517,8 +619,10 @@ public class VideoCaptureCamera2 extends VideoCapture {
                 // There's no way to query if torch and/or red eye reduction modes are available
                 // using Camera2 API but since there's a Flash unit, we assume so.
                 builder.setSupportsTorch(true);
-                builder.setTorch(mPreviewRequest.get(CaptureRequest.FLASH_MODE)
-                        == CameraMetadata.FLASH_MODE_TORCH);
+                if (mPreviewRequest.get(CaptureRequest.FLASH_MODE) != null) {
+                    builder.setTorch(mPreviewRequest.get(CaptureRequest.FLASH_MODE)
+                            == CameraMetadata.FLASH_MODE_TORCH);
+                }
 
                 builder.setRedEyeReduction(true);
 
@@ -545,12 +649,14 @@ public class VideoCaptureCamera2 extends VideoCapture {
     private class PhotoOptions {
         public final double zoom;
         public final int focusMode;
+        public final double currentFocusDistance;
         public final int exposureMode;
         public final double width;
         public final double height;
         public final float[] pointsOfInterest2D;
         public final boolean hasExposureCompensation;
         public final double exposureCompensation;
+        public final double exposureTime;
         public final int whiteBalanceMode;
         public final double iso;
         public final boolean hasRedEyeReduction;
@@ -560,19 +666,22 @@ public class VideoCaptureCamera2 extends VideoCapture {
         public final boolean torch;
         public final double colorTemperature;
 
-        public PhotoOptions(double zoom, int focusMode, int exposureMode, double width,
-                double height, float[] pointsOfInterest2D, boolean hasExposureCompensation,
-                double exposureCompensation, int whiteBalanceMode, double iso,
-                boolean hasRedEyeReduction, boolean redEyeReduction, int fillLightMode,
-                boolean hasTorch, boolean torch, double colorTemperature) {
+        public PhotoOptions(double zoom, int focusMode, double currentFocusDistance,
+                int exposureMode, double width, double height, float[] pointsOfInterest2D,
+                boolean hasExposureCompensation, double exposureCompensation, double exposureTime,
+                int whiteBalanceMode, double iso, boolean hasRedEyeReduction,
+                boolean redEyeReduction, int fillLightMode, boolean hasTorch, boolean torch,
+                double colorTemperature) {
             this.zoom = zoom;
             this.focusMode = focusMode;
+            this.currentFocusDistance = currentFocusDistance;
             this.exposureMode = exposureMode;
             this.width = width;
             this.height = height;
             this.pointsOfInterest2D = pointsOfInterest2D;
             this.hasExposureCompensation = hasExposureCompensation;
             this.exposureCompensation = exposureCompensation;
+            this.exposureTime = exposureTime;
             this.whiteBalanceMode = whiteBalanceMode;
             this.iso = iso;
             this.hasRedEyeReduction = hasRedEyeReduction;
@@ -612,8 +721,11 @@ public class VideoCaptureCamera2 extends VideoCapture {
             }
 
             if (mOptions.focusMode != AndroidMeteringMode.NOT_SET) mFocusMode = mOptions.focusMode;
+            if (mOptions.currentFocusDistance != 0)
+                mCurrentFocusDistance = (float) mOptions.currentFocusDistance;
             if (mOptions.exposureMode != AndroidMeteringMode.NOT_SET)
                 mExposureMode = mOptions.exposureMode;
+            if (mOptions.exposureTime != 0) mLastExposureTimeNs = (long) mOptions.exposureTime;
             if (mOptions.whiteBalanceMode != AndroidMeteringMode.NOT_SET)
                 mWhiteBalanceMode = mOptions.whiteBalanceMode;
 
@@ -771,6 +883,7 @@ public class VideoCaptureCamera2 extends VideoCapture {
     }
 
     private static final double kNanosecondsPerSecond = 1000000000;
+    private static final long kNanosecondsPer100Microsecond = 100000;
     private static final String TAG = "VideoCapture";
 
     // Map of the equivalent color temperature in Kelvin for the White Balance setting. The
@@ -796,7 +909,7 @@ public class VideoCaptureCamera2 extends VideoCapture {
     private CameraCaptureSession mPreviewSession;
     private CaptureRequest mPreviewRequest;
     private CaptureRequest.Builder mPreviewRequestBuilder;
-    private ImageReader mImageReader = null;
+    private ImageReader mImageReader;
     // We create a dedicated HandlerThread for operating the camera on. This
     // is needed, because the camera APIs requires a Looper for posting
     // asynchronous callbacks to. The native thread that calls the constructor
@@ -812,6 +925,7 @@ public class VideoCaptureCamera2 extends VideoCapture {
     private int mPhotoWidth;
     private int mPhotoHeight;
     private int mFocusMode = AndroidMeteringMode.CONTINUOUS;
+    private float mCurrentFocusDistance = 1.0f;
     private int mExposureMode = AndroidMeteringMode.CONTINUOUS;
     private long mLastExposureTimeNs;
     private MeteringRectangle mAreaOfInterest;
@@ -931,7 +1045,7 @@ public class VideoCaptureCamera2 extends VideoCapture {
             requestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
             requestBuilder.set(
                     CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_IDLE);
-            // TODO(mcasas): Support manual focus (LENS_FOCUS_DISTANCE), https://crbug.com/732807.
+            requestBuilder.set(CaptureRequest.LENS_FOCUS_DISTANCE, 1 / mCurrentFocusDistance);
         }
 
         // |mExposureMode|, |mFillLightMode| and |mTorch| interact to configure the AE and Flash
@@ -945,15 +1059,18 @@ public class VideoCaptureCamera2 extends VideoCapture {
             // We need to configure by hand the exposure time when AE mode is off.  Set it to the
             // last known exposure interval if known, otherwise set it to the middle of the allowed
             // range. Further tuning will be done via |mIso| and |mExposureCompensation|.
+            // mLastExposureTimeNs and range are in nanoseconds (from Android platform), but spec
+            // expects exposureTime to be in 100 microsecond units.
+            // https://w3c.github.io/mediacapture-image/#exposure-time
             if (mLastExposureTimeNs != 0) {
-                requestBuilder.set(
-                        CaptureRequest.SENSOR_EXPOSURE_TIME, mLastExposureTimeNs /* nanoseconds*/);
+                requestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,
+                        mLastExposureTimeNs / kNanosecondsPer100Microsecond);
             } else {
                 Range<Long> range = cameraCharacteristics.get(
                         CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
                 requestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,
-                        range.getLower()
-                                + (range.getUpper() + range.getLower()) / 2 /* nanoseconds*/);
+                        (range.getLower() + (range.getUpper() + range.getLower()) / 2)
+                                / kNanosecondsPer100Microsecond);
             }
 
         } else {
@@ -1326,16 +1443,17 @@ public class VideoCaptureCamera2 extends VideoCapture {
     }
 
     @Override
-    public void setPhotoOptions(double zoom, int focusMode, int exposureMode, double width,
-            double height, float[] pointsOfInterest2D, boolean hasExposureCompensation,
-            double exposureCompensation, int whiteBalanceMode, double iso,
-            boolean hasRedEyeReduction, boolean redEyeReduction, int fillLightMode,
-            boolean hasTorch, boolean torch, double colorTemperature) {
+    public void setPhotoOptions(double zoom, int focusMode, double currentFocusDistance,
+            int exposureMode, double width, double height, float[] pointsOfInterest2D,
+            boolean hasExposureCompensation, double exposureCompensation, double exposureTime,
+            int whiteBalanceMode, double iso, boolean hasRedEyeReduction, boolean redEyeReduction,
+            int fillLightMode, boolean hasTorch, boolean torch, double colorTemperature) {
         nativeDCheckCurrentlyOnIncomingTaskRunner(mNativeVideoCaptureDeviceAndroid);
-        mCameraThreadHandler.post(new SetPhotoOptionsTask(new PhotoOptions(zoom, focusMode,
-                exposureMode, width, height, pointsOfInterest2D, hasExposureCompensation,
-                exposureCompensation, whiteBalanceMode, iso, hasRedEyeReduction, redEyeReduction,
-                fillLightMode, hasTorch, torch, colorTemperature)));
+        mCameraThreadHandler.post(new SetPhotoOptionsTask(
+                new PhotoOptions(zoom, focusMode, currentFocusDistance, exposureMode, width, height,
+                        pointsOfInterest2D, hasExposureCompensation, exposureCompensation,
+                        exposureTime, whiteBalanceMode, iso, hasRedEyeReduction, redEyeReduction,
+                        fillLightMode, hasTorch, torch, colorTemperature)));
     }
 
     @Override

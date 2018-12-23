@@ -34,6 +34,7 @@ import org.chromium.chrome.browser.feature_engagement.TrackerFactory;
 import org.chromium.chrome.browser.gsa.GSAContextDisplaySelection;
 import org.chromium.chrome.browser.infobar.InfoBarContainer;
 import org.chromium.chrome.browser.profiles.Profile;
+import org.chromium.chrome.browser.tab.SadTab;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabRedirectHandler;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModelObserver;
@@ -71,6 +72,15 @@ import java.util.regex.Pattern;
 public class ContextualSearchManager
         implements ContextualSearchManagementDelegate, ContextualSearchTranslateInterface,
                    ContextualSearchNetworkCommunicator, ContextualSearchSelectionHandler {
+    /** A delegate for reporting selected context to GSA for search quality. */
+    public interface ContextReporterDelegate {
+        /**
+         * Reports that the given display selection has been established for the current tab.
+         * @param displaySelection The information about the selection being displayed.
+         */
+        void reportDisplaySelection(@Nullable GSAContextDisplaySelection displaySelection);
+    }
+
     // TODO(donnd): provide an inner class that implements some of these interfaces (like the
     // ContextualSearchTranslateInterface) rather than having the manager itself implement the
     // interface because that exposes all the public methods of that interface at the manager level.
@@ -187,6 +197,9 @@ public class ContextualSearchManager
     /** Whether ContextualSearch UI is suppressed for Smart Selection. */
     private boolean mDoSuppressContextualSearchForSmartSelection;
 
+    /** An observer that reports selected context to GSA for search quality. */
+    private ContextualSearchObserver mContextReportingObserver;
+
     /**
      * The delegate that is responsible for promoting a {@link WebContents} to a {@link Tab}
      * when necessary.
@@ -263,7 +276,7 @@ public class ContextualSearchManager
 
         mInProductHelp.setParentView(parentView);
 
-        mTabRedirectHandler = new TabRedirectHandler(mActivity);
+        mTabRedirectHandler = TabRedirectHandler.create(mActivity);
 
         mPolicy.initialize();
 
@@ -555,7 +568,7 @@ public class ContextualSearchManager
     /** Accessor for the {@code InfoBarContainer} currently attached to the {@code Tab}. */
     private InfoBarContainer getInfoBarContainer() {
         Tab tab = mActivity.getActivityTab();
-        return tab == null ? null : tab.getInfoBarContainer();
+        return tab == null ? null : InfoBarContainer.get(tab);
     }
 
     /** Listens for notifications that should hide the Contextual Search bar. */
@@ -570,8 +583,8 @@ public class ContextualSearchManager
             }
 
             @Override
-            public void onCrash(Tab tab, boolean sadTabShown) {
-                if (sadTabShown) {
+            public void onCrash(Tab tab) {
+                if (SadTab.isShowing(tab)) {
                     // Hide contextual search if the foreground tab crashed
                     hideContextualSearch(StateChangeReason.UNKNOWN);
                 }
@@ -904,13 +917,13 @@ public class ContextualSearchManager
     // ============================================================================================
 
     /** @param observer An observer to notify when the user performs a contextual search. */
-    public void addObserver(ContextualSearchObserver observer) {
+    void addObserver(ContextualSearchObserver observer) {
         mObservers.addObserver(observer);
     }
 
     /** @param observer An observer to no longer notify when the user performs a contextual search.
      */
-    public void removeObserver(ContextualSearchObserver observer) {
+    void removeObserver(ContextualSearchObserver observer) {
         mObservers.removeObserver(observer);
     }
 
@@ -1314,6 +1327,14 @@ public class ContextualSearchManager
             if (didSelect) {
                 assert mContext != null;
                 mContext.onSelectionAdjusted(startAdjust, endAdjust);
+                // There's a race condition when we select the word between this Ack response and
+                // the onSelectionChanged call.  Update the selection in case this method won the
+                // race so we ensure that there's a valid selected word.
+                // See https://crbug.com/889657 for details.
+                String adjustedSelection = mContext.getSelection();
+                if (!TextUtils.isEmpty(adjustedSelection)) {
+                    mSelectionController.setSelectedText(adjustedSelection);
+                }
                 showSelectionAsSearchInBar(mSelectionController.getSelectedText());
                 mInternalStateController.notifyFinishedWorkOn(InternalState.START_SHOWING_TAP_UI);
             } else {
@@ -1712,6 +1733,33 @@ public class ContextualSearchManager
                         InternalState.SHOWING_LONGPRESS_SEARCH);
             }
         };
+    }
+
+    /**
+     * @param reporter A context reporter for the feature to report the current selection when
+     *                 triggered.
+     */
+    public void enableContextReporting(ContextReporterDelegate reporter) {
+        mContextReportingObserver = new ContextualSearchObserver() {
+            @Override
+            public void onShowContextualSearch(GSAContextDisplaySelection contextSelection) {
+                if (contextSelection != null) reporter.reportDisplaySelection(contextSelection);
+            }
+
+            @Override
+            public void onHideContextualSearch() {
+                reporter.reportDisplaySelection(null);
+            }
+        };
+        addObserver(mContextReportingObserver);
+    }
+
+    /**
+     * Disable context reporting for Contextual Search.
+     */
+    public void disableContextReporting() {
+        removeObserver(mContextReportingObserver);
+        mContextReportingObserver = null;
     }
 
     // ============================================================================================

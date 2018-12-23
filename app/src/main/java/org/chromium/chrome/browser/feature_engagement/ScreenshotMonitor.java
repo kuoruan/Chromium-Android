@@ -33,9 +33,9 @@ public class ScreenshotMonitor {
      * This tracks whether monitoring is on (i.e. started but not stopped). It must only be accessed
      * on the UI thread.
      */
-    private boolean mIsMonitoring = false;
+    private boolean mIsMonitoring;
 
-    private boolean mSkipOsCallsForUnitTesting = false;
+    private boolean mSkipOsCallsForUnitTesting;
 
     /**
      * Observe content changes in the Media database looking for screenshots.

@@ -76,6 +76,18 @@ public class LoginPrompt implements ChromeHttpAuthHandler.AutofillObserver {
         mUsernameView.requestFocus();
     }
 
+    /**
+     * Dismisses the dialog.
+     */
+    public void dismiss() {
+        mDialog.dismiss();
+    }
+
+    /** Return whether the dialog is being shown. */
+    public boolean isShowing() {
+        return mDialog != null && mDialog.isShowing();
+    }
+
     private String getUsername() {
         return mUsernameView.getText().toString();
     }

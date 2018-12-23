@@ -12,11 +12,12 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 
-import org.chromium.base.AsyncTask;
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.PathUtils;
 import org.chromium.base.ThreadUtils;
+import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.base.task.AsyncTask;
 import org.chromium.chrome.browser.download.DirectoryOption.DownloadLocationDirectoryType;
 
 import java.io.File;
@@ -60,6 +61,7 @@ public class DownloadDirectoryProvider {
             DirectoryOption defaultOption = toDirectoryOption(
                     defaultDirectory, DirectoryOption.DownloadLocationDirectoryType.DEFAULT);
             dirs.add(defaultOption);
+            recordDirectoryType(DirectoryOption.DownloadLocationDirectoryType.DEFAULT);
 
             // Retrieve additional directories, i.e. the external SD card directory.
             mExternalStorageDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -74,6 +76,7 @@ public class DownloadDirectoryProvider {
 
             if (files.length <= 1) return dirs;
 
+            boolean hasAddtionalDirectory = false;
             for (int i = 0; i < files.length; ++i) {
                 if (files[i] == null) continue;
 
@@ -81,7 +84,12 @@ public class DownloadDirectoryProvider {
                 if (files[i].getAbsolutePath().contains(mExternalStorageDirectory)) continue;
                 dirs.add(toDirectoryOption(
                         files[i], DirectoryOption.DownloadLocationDirectoryType.ADDITIONAL));
+                hasAddtionalDirectory = true;
             }
+
+            if (hasAddtionalDirectory)
+                recordDirectoryType(DirectoryOption.DownloadLocationDirectoryType.ADDITIONAL);
+
             return dirs;
         }
 
@@ -194,5 +202,10 @@ public class DownloadDirectoryProvider {
         filter.addDataScheme("file");
         mExternalSDCardReceiver = new ExternalSDCardReceiver();
         ContextUtils.getApplicationContext().registerReceiver(mExternalSDCardReceiver, filter);
+    }
+
+    private void recordDirectoryType(@DirectoryOption.DownloadLocationDirectoryType int type) {
+        RecordHistogram.recordEnumeratedHistogram("MobileDownload.Location.DirectoryType", type,
+                DirectoryOption.DownloadLocationDirectoryType.NUM_ENTRIES);
     }
 }

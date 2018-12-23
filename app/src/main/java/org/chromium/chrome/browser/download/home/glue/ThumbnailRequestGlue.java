@@ -5,20 +5,19 @@
 package org.chromium.chrome.browser.download.home.glue;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
 import org.chromium.base.Callback;
-import org.chromium.base.ContextUtils;
-import org.chromium.chrome.R;
+import org.chromium.chrome.browser.widget.ThumbnailProvider;
 import org.chromium.chrome.browser.widget.ThumbnailProvider.ThumbnailRequest;
+import org.chromium.chrome.browser.widget.ThumbnailProviderImpl;
+import org.chromium.components.offline_items_collection.OfflineContentProvider;
 import org.chromium.components.offline_items_collection.OfflineItem;
-import org.chromium.components.offline_items_collection.OfflineItemFilter;
 import org.chromium.components.offline_items_collection.OfflineItemVisuals;
 import org.chromium.components.offline_items_collection.VisualsCallback;
 
 /**
  * Glue class responsible for connecting the current downloads and {@link OfflineContentProvider}
- * thumbnail work to the {@link ThumbnailProvider} via a custon {@link ThumbnailProviderImpl}.
+ * thumbnail work to the {@link ThumbnailProvider} via a custom {@link ThumbnailProviderImpl}.
  */
 public class ThumbnailRequestGlue implements ThumbnailRequest {
     private final OfflineContentProviderGlue mProvider;
@@ -44,6 +43,11 @@ public class ThumbnailRequestGlue implements ThumbnailRequest {
     }
 
     @Override
+    public String getMimeType() {
+        return mItem.mimeType;
+    }
+
+    @Override
     public String getContentId() {
         return mItem.id.id;
     }
@@ -66,20 +70,23 @@ public class ThumbnailRequestGlue implements ThumbnailRequest {
 
     @Override
     public boolean getThumbnail(Callback<Bitmap> callback) {
-        // TODO(shaktisahu, xingliu): Remove this after video thumbnail generation pipeline is done.
-        if (mItem.filter == OfflineItemFilter.FILTER_VIDEO) {
-            callback.onResult(BitmapFactory.decodeResource(
-                    ContextUtils.getApplicationContext().getResources(),
-                    R.drawable.audio_playing_square));
-            return true;
-        }
-
         return mProvider.getVisualsForItem(mItem.id, (id, visuals) -> {
-            if (visuals == null) {
+            if (visuals == null || visuals.icon == null) {
                 callback.onResult(null);
             } else {
-                callback.onResult(Bitmap.createScaledBitmap(
-                        visuals.icon, mIconWidthPx, mIconHeightPx, false));
+                Bitmap bitmap = visuals.icon;
+
+                int minDimension = Math.min(bitmap.getWidth(), bitmap.getHeight());
+                // Note that we have to use width here because the ThumbnailProviderImpl only keys
+                // off of width as well.
+                if (minDimension > mIconWidthPx) {
+                    int newWidth = (int) (((long) bitmap.getWidth()) * mIconWidthPx / minDimension);
+                    int newHeight =
+                            (int) (((long) bitmap.getHeight()) * mIconWidthPx / minDimension);
+                    bitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, false);
+                }
+
+                callback.onResult(bitmap);
             }
         });
     }

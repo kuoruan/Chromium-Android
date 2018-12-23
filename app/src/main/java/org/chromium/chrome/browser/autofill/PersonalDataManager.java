@@ -12,8 +12,8 @@ import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ResourceId;
+import org.chromium.chrome.browser.preferences.MainPreferences;
 import org.chromium.chrome.browser.preferences.Pref;
-import org.chromium.chrome.browser.preferences.autofill.AutofillAndPaymentsPreferences;
 import org.chromium.content_public.browser.WebContents;
 
 import java.util.ArrayList;
@@ -156,10 +156,10 @@ public class PersonalDataManager {
          * locale. All other fields are empty strings, because JNI does not handle null strings.
          */
         public AutofillProfile() {
-            this("" /* guid */, AutofillAndPaymentsPreferences.SETTINGS_ORIGIN /* origin */,
-                    true /* isLocal */, "" /* fullName */, "" /* companyName */,
-                    "" /* streetAddress */, "" /* region */, "" /* locality */,
-                    "" /* dependentLocality */, "" /* postalCode */, "" /* sortingCode */,
+            this("" /* guid */, MainPreferences.SETTINGS_ORIGIN /* origin */, true /* isLocal */,
+                    "" /* fullName */, "" /* companyName */, "" /* streetAddress */,
+                    "" /* region */, "" /* locality */, "" /* dependentLocality */,
+                    "" /* postalCode */, "" /* sortingCode */,
                     Locale.getDefault().getCountry() /* country */, "" /* phoneNumber */,
                     "" /* emailAddress */, "" /* languageCode */);
         }
@@ -402,11 +402,11 @@ public class PersonalDataManager {
         }
 
         public CreditCard() {
-            this("" /* guid */, AutofillAndPaymentsPreferences.SETTINGS_ORIGIN /*origin */,
-                    true /* isLocal */, false /* isCached */, "" /* name */, "" /* number */,
-                    "" /* obfuscatedNumber */, "" /* month */, "" /* year */,
-                    "" /* basicCardIssuerNetwork */, 0 /* issuerIconDrawableId */, CardType.UNKNOWN,
-                    "" /* billingAddressId */, "" /* serverId */);
+            this("" /* guid */, MainPreferences.SETTINGS_ORIGIN /*origin */, true /* isLocal */,
+                    false /* isCached */, "" /* name */, "" /* number */, "" /* obfuscatedNumber */,
+                    "" /* month */, "" /* year */, "" /* basicCardIssuerNetwork */,
+                    0 /* issuerIconDrawableId */, CardType.UNKNOWN, "" /* billingAddressId */,
+                    "" /* serverId */);
         }
 
         /** TODO(estade): remove this constructor. */
@@ -615,7 +615,7 @@ public class PersonalDataManager {
      * @param includeNameInLabel Whether to include the name in the profile's label.
      * @return The list of profiles to suggest to the user.
      */
-    public List<AutofillProfile> getProfilesToSuggest(boolean includeNameInLabel) {
+    public ArrayList<AutofillProfile> getProfilesToSuggest(boolean includeNameInLabel) {
         ThreadUtils.assertOnUiThread();
         return getProfilesWithLabels(
                 nativeGetProfileLabelsToSuggest(
@@ -632,7 +632,7 @@ public class PersonalDataManager {
      *
      * @return The list of billing addresses to suggest to the user.
      */
-    public List<AutofillProfile> getBillingAddressesToSuggest() {
+    public ArrayList<AutofillProfile> getBillingAddressesToSuggest() {
         ThreadUtils.assertOnUiThread();
         return getProfilesWithLabels(
                 nativeGetProfileLabelsToSuggest(
@@ -641,9 +641,9 @@ public class PersonalDataManager {
                 nativeGetProfileGUIDsToSuggest(mPersonalDataManagerAndroid));
     }
 
-    private List<AutofillProfile> getProfilesWithLabels(
+    private ArrayList<AutofillProfile> getProfilesWithLabels(
             String[] profileLabels, String[] profileGUIDs) {
-        List<AutofillProfile> profiles = new ArrayList<AutofillProfile>(profileGUIDs.length);
+        ArrayList<AutofillProfile> profiles = new ArrayList<AutofillProfile>(profileGUIDs.length);
         for (int i = 0; i < profileGUIDs.length; i++) {
             AutofillProfile profile =
                     nativeGetProfileByGUID(mPersonalDataManagerAndroid, profileGUIDs[i]);
@@ -688,14 +688,14 @@ public class PersonalDataManager {
      * will have been processed to be more relevant to the user.
      * @param includeServerCards Whether server cards should be included in the response.
      */
-    public List<CreditCard> getCreditCardsToSuggest(boolean includeServerCards) {
+    public ArrayList<CreditCard> getCreditCardsToSuggest(boolean includeServerCards) {
         ThreadUtils.assertOnUiThread();
         return getCreditCards(
                 nativeGetCreditCardGUIDsToSuggest(mPersonalDataManagerAndroid, includeServerCards));
     }
 
-    private List<CreditCard> getCreditCards(String[] creditCardGUIDs) {
-        List<CreditCard> cards = new ArrayList<CreditCard>(creditCardGUIDs.length);
+    private ArrayList<CreditCard> getCreditCards(String[] creditCardGUIDs) {
+        ArrayList<CreditCard> cards = new ArrayList<CreditCard>(creditCardGUIDs.length);
         for (int i = 0; i < creditCardGUIDs.length; i++) {
             cards.add(nativeGetCreditCardByGUID(mPersonalDataManagerAndroid, creditCardGUIDs[i]));
         }
@@ -909,15 +909,6 @@ public class PersonalDataManager {
     }
 
     /**
-     * TODO(crbug.com/879420): Remove this once Clank downstream uses isAutofillProfileEnabled and
-     *                         isAutofillCreditCardEnabled.
-     * @return Whether the Autofill feature is enabled.
-     */
-    public static boolean isAutofillEnabled() {
-        return isAutofillProfileEnabled() && isAutofillCreditCardEnabled();
-    }
-
-    /**
      * @return Whether the Autofill feature for Profiles (addresses) is enabled.
      */
     public static boolean isAutofillProfileEnabled() {
@@ -929,17 +920,6 @@ public class PersonalDataManager {
      */
     public static boolean isAutofillCreditCardEnabled() {
         return nativeGetPref(Pref.AUTOFILL_CREDIT_CARD_ENABLED);
-    }
-
-    /**
-     * Enables or disables the Autofill feature.
-     * TODO(crbug.com/879420): Remove this once Clank downstream uses setAutofillProfileEnabled and
-     *                         setAutofillCreditCardEnabled.
-     * @param enable True to disable Autofill, false otherwise.
-     */
-    public static void setAutofillEnabled(boolean enable) {
-        setAutofillProfileEnabled(enable);
-        setAutofillCreditCardEnabled(enable);
     }
 
     /**

@@ -30,7 +30,9 @@ import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.feature_engagement.TrackerFactory;
 import org.chromium.chrome.browser.instantapps.InstantAppsHandler;
+import org.chromium.chrome.browser.modaldialog.DialogDismissalCause;
 import org.chromium.chrome.browser.modaldialog.ModalDialogView;
 import org.chromium.chrome.browser.modaldialog.ModalDialogView.ButtonType;
 import org.chromium.chrome.browser.offlinepages.OfflinePageItem;
@@ -42,16 +44,24 @@ import org.chromium.chrome.browser.preferences.Preferences;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
 import org.chromium.chrome.browser.preferences.website.ContentSetting;
 import org.chromium.chrome.browser.preferences.website.SingleWebsitePreferences;
+import org.chromium.chrome.browser.previews.PreviewsAndroidBridge;
+import org.chromium.chrome.browser.previews.PreviewsUma;
+import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.ssl.SecurityStateModel;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.UrlUtilities;
 import org.chromium.chrome.browser.vr.VrModuleProvider;
+import org.chromium.components.feature_engagement.EventConstants;
+import org.chromium.components.feature_engagement.Tracker;
 import org.chromium.components.security_state.ConnectionSecurityLevel;
 import org.chromium.components.url_formatter.UrlFormatter;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.browser.WebContentsObserver;
 import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.base.WindowAndroid;
+import org.chromium.ui.text.NoUnderlineClickableSpan;
+import org.chromium.ui.text.SpanApplier;
+import org.chromium.ui.text.SpanApplier.SpanInfo;
 import org.chromium.ui.widget.Toast;
 
 import java.lang.annotation.Retention;
@@ -81,6 +91,15 @@ public class PageInfoController
         int NOT_OFFLINE_PAGE = 1;
         int TRUSTED_OFFLINE_PAGE = 2;
         int UNTRUSTED_OFFLINE_PAGE = 3;
+    }
+
+    @IntDef({PreviewPageState.NOT_PREVIEW, PreviewPageState.SECURE_PAGE_PREVIEW,
+            PreviewPageState.INSECURE_PAGE_PREVIEW})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface PreviewPageState {
+        int NOT_PREVIEW = 1;
+        int SECURE_PAGE_PREVIEW = 2;
+        int INSECURE_PAGE_PREVIEW = 3;
     }
 
     private final Context mContext;
@@ -115,6 +134,9 @@ public class PageInfoController
     // Creation date of an offline copy, if web contents contains an offline page.
     private String mOfflinePageCreationDate;
 
+    // The state of the preview of the page (not preview, preview on a [in]secure page).
+    private @PreviewPageState int mPreviewPageState;
+
     // The state of offline page in the web contents (not offline page, trusted/untrusted offline
     // page).
     private @OfflinePageState int mOfflinePageState;
@@ -134,17 +156,22 @@ public class PageInfoController
      * C++ object and saves a pointer to it.
      * @param activity                 Activity which is used for showing a popup.
      * @param tab                      Tab for which the pop up is shown.
+     * @param securityLevel            The security level of the page being shown.
      * @param offlinePageUrl           URL that the offline page claims to be generated from.
      * @param offlinePageCreationDate  Date when the offline page was created.
      * @param offlinePageState         State of the tab showing offline page.
+     * @param previewPageState         State of the tab showing the preview.
      * @param publisher                The name of the content publisher, if any.
      */
-    protected PageInfoController(Activity activity, Tab tab, String offlinePageUrl,
-            String offlinePageCreationDate, @OfflinePageState int offlinePageState,
+    protected PageInfoController(Activity activity, Tab tab, int securityLevel,
+            String offlinePageUrl, String offlinePageCreationDate,
+            @OfflinePageState int offlinePageState, @PreviewPageState int previewPageState,
             String publisher) {
         mContext = activity;
         mTab = tab;
+        mSecurityLevel = securityLevel;
         mOfflinePageState = offlinePageState;
+        mPreviewPageState = previewPageState;
         PageInfoViewParams viewParams = new PageInfoViewParams();
 
         if (mOfflinePageState != OfflinePageState.NOT_OFFLINE_PAGE) {
@@ -179,11 +206,10 @@ public class PageInfoController
             mParsedUrl = null;
             mIsInternalPage = false;
         }
-        mSecurityLevel = SecurityStateModel.getSecurityLevelForWebContents(mTab.getWebContents());
 
         String displayUrl = UrlFormatter.formatUrlForCopy(mFullUrl);
         if (isShowingOfflinePage()) {
-            displayUrl = OfflinePageUtils.stripSchemeFromOnlineUrl(mFullUrl);
+            displayUrl = UrlUtilities.stripScheme(mFullUrl);
         }
         SpannableStringBuilder displayUrlBuilder = new SpannableStringBuilder(displayUrl);
         OmniboxUrlEmphasizer.emphasizeUrl(displayUrlBuilder, mContext.getResources(),
@@ -202,11 +228,7 @@ public class PageInfoController
         viewParams.urlOriginLength = OmniboxUrlEmphasizer.getOriginEndIndex(
                 displayUrlBuilder.toString(), mTab.getProfile());
 
-        if (mParsedUrl == null || mParsedUrl.getScheme() == null || isShowingOfflinePage()
-                || !(mParsedUrl.getScheme().equals(UrlConstants.HTTP_SCHEME)
-                           || mParsedUrl.getScheme().equals(UrlConstants.HTTPS_SCHEME))) {
-            viewParams.siteSettingsButtonShown = false;
-        } else {
+        if (shouldShowSiteSettingsButton(mParsedUrl)) {
             viewParams.siteSettingsButtonClickCallback = () -> {
                 // Delay while the dialog closes.
                 runAfterDismiss(() -> {
@@ -223,7 +245,11 @@ public class PageInfoController
                     }
                 });
             };
+        } else {
+            viewParams.siteSettingsButtonShown = false;
         }
+
+        initPreviewUiParams(viewParams);
 
         if (isShowingOfflinePage()) {
             boolean isConnected = OfflinePageUtils.isConnected();
@@ -249,7 +275,7 @@ public class PageInfoController
         }
 
         InstantAppsHandler instantAppsHandler = InstantAppsHandler.getInstance();
-        if (!mIsInternalPage && !isShowingOfflinePage()
+        if (!mIsInternalPage && !isShowingOfflinePage() && !isShowingPreview()
                 && instantAppsHandler.isInstantAppAvailable(mFullUrl, false /* checkHoldback */,
                            false /* includeUserPrefersBrowser */)) {
             final Intent instantAppIntent = instantAppsHandler.getInstantAppIntentForUrl(mFullUrl);
@@ -303,12 +329,47 @@ public class PageInfoController
     }
 
     /**
+     * Initializes the state in viewParams with respect to showing the previews UI.
+     *
+     * @param viewParams The PageInfoViewParams to set state on.
+     */
+    private void initPreviewUiParams(PageInfoViewParams viewParams) {
+        final PreviewsAndroidBridge bridge = PreviewsAndroidBridge.getInstance();
+        viewParams.separatorShown = mPreviewPageState == PreviewPageState.INSECURE_PAGE_PREVIEW;
+        viewParams.previewUIShown = isShowingPreview();
+        if (isShowingPreview()) {
+            viewParams.urlTitleShown = false;
+            viewParams.connectionMessageShown = false;
+
+            viewParams.previewShowOriginalClickCallback = () -> {
+                runAfterDismiss(() -> {
+                    PreviewsUma.recordOptOut(bridge.getPreviewsType(mTab.getWebContents()));
+                    bridge.loadOriginal(mTab.getWebContents());
+                });
+            };
+            final String previewOriginalHost = bridge.getOriginalHost(mTab.getWebContents());
+            final String loadOriginalText = mContext.getString(
+                    R.string.page_info_preview_load_original, previewOriginalHost);
+            final SpannableString loadOriginalSpan = SpanApplier.applySpans(loadOriginalText,
+                    new SpanInfo("<link>", "</link>",
+                            // The callback given to NoUnderlineClickableSpan is overridden in
+                            // PageInfoView so use previewShowOriginalClickCallback (above) instead
+                            // because the entire TextView will be clickable.
+                            new NoUnderlineClickableSpan((view) -> {})));
+            viewParams.previewLoadOriginalMessage = loadOriginalSpan;
+
+            viewParams.previewStaleTimestamp =
+                    bridge.getStalePreviewTimestamp(mTab.getWebContents());
+        }
+    }
+
+    /**
      * Whether to show a 'Details' link to the connection info popup. The link is only shown for
      * HTTPS connections.
      */
     private boolean isConnectionDetailsLinkVisible() {
-        return mContentPublisher == null && !isShowingOfflinePage() && mParsedUrl != null
-                && mParsedUrl.getScheme() != null
+        return mContentPublisher == null && !isShowingOfflinePage() && !isShowingPreview()
+                && mParsedUrl != null && mParsedUrl.getScheme() != null
                 && mParsedUrl.getScheme().equals(UrlConstants.HTTPS_SCHEME);
     }
 
@@ -346,6 +407,10 @@ public class PageInfoController
         if (mContentPublisher != null) {
             messageBuilder.append(
                     mContext.getString(R.string.page_info_domain_hidden, mContentPublisher));
+        } else if (isShowingPreview()) {
+            if (mPreviewPageState == PreviewPageState.INSECURE_PAGE_PREVIEW) {
+                connectionInfoParams.summary = summary;
+            }
         } else if (mOfflinePageState == OfflinePageState.TRUSTED_OFFLINE_PAGE) {
             messageBuilder.append(
                     String.format(mContext.getString(R.string.page_info_connection_offline),
@@ -379,7 +444,11 @@ public class PageInfoController
             messageBuilder.append(detailsText);
         }
 
-        connectionInfoParams.message = messageBuilder;
+        // When a preview is being shown for a secure page, the security message is not shown. Thus,
+        // messageBuilder maybe empty.
+        if (messageBuilder.length() > 0) {
+            connectionInfoParams.message = messageBuilder;
+        }
         if (isConnectionDetailsLinkVisible()) {
             connectionInfoParams.clickCallback = () -> {
                 runAfterDismiss(() -> {
@@ -420,10 +489,7 @@ public class PageInfoController
     public void onClick(@ButtonType int buttonType) {}
 
     @Override
-    public void onCancel() {}
-
-    @Override
-    public void onDismiss() {
+    public void onDismiss(@DialogDismissalCause int dismissalCause) {
         assert mNativePageInfoController != 0;
         if (mPendingRunAfterDismissTask != null) {
             mPendingRunAfterDismissTask.run();
@@ -441,10 +507,35 @@ public class PageInfoController
     }
 
     /**
+     * Whether website dialog is displayed for a preview.
+     */
+    private boolean isShowingPreview() {
+        return mPreviewPageState != PreviewPageState.NOT_PREVIEW;
+    }
+
+    /**
      * Whether website dialog is displayed for an offline page.
      */
     private boolean isShowingOfflinePage() {
-        return mOfflinePageState != OfflinePageState.NOT_OFFLINE_PAGE;
+        return mOfflinePageState != OfflinePageState.NOT_OFFLINE_PAGE && !isShowingPreview();
+    }
+
+    /**
+     *  Whether the site settings button should be displayed for the given URI.
+     *
+     * @param uri The URI used to determine if the site settings button should be displayed.
+     */
+    private boolean shouldShowSiteSettingsButton(URI uri) {
+        if (uri == null || uri.getScheme() == null) {
+            return false;
+        }
+
+        if (isShowingOfflinePage() || isShowingPreview()) {
+            return false;
+        }
+
+        return uri.getScheme().equals(UrlConstants.HTTP_SCHEME)
+                || uri.getScheme().equals(UrlConstants.HTTPS_SCHEME);
     }
 
     private boolean isSheet() {
@@ -479,6 +570,22 @@ public class PageInfoController
             assert false : "Invalid source passed";
         }
 
+        final int securityLevel =
+                SecurityStateModel.getSecurityLevelForWebContents(tab.getWebContents());
+
+        @PreviewPageState
+        int previewPageState = PreviewPageState.NOT_PREVIEW;
+        final PreviewsAndroidBridge bridge = PreviewsAndroidBridge.getInstance();
+        if (bridge.shouldShowPreviewUI(tab.getWebContents())) {
+            previewPageState = securityLevel == ConnectionSecurityLevel.SECURE
+                    ? PreviewPageState.SECURE_PAGE_PREVIEW
+                    : PreviewPageState.INSECURE_PAGE_PREVIEW;
+
+            PreviewsUma.recordPageInfoOpened(bridge.getPreviewsType(tab.getWebContents()));
+            Tracker tracker = TrackerFactory.getTrackerForProfile(Profile.getLastUsedProfile());
+            tracker.notifyEvent(EventConstants.PREVIEWS_VERBOSE_STATUS_OPENED);
+        }
+
         String offlinePageUrl = null;
         String offlinePageCreationDate = null;
         @OfflinePageState
@@ -503,8 +610,8 @@ public class PageInfoController
             }
         }
 
-        new PageInfoController(activity, tab, offlinePageUrl, offlinePageCreationDate,
-                offlinePageState, contentPublisher);
+        new PageInfoController(activity, tab, securityLevel, offlinePageUrl,
+                offlinePageCreationDate, offlinePageState, previewPageState, contentPublisher);
     }
 
     private static native long nativeInit(PageInfoController controller, WebContents webContents);

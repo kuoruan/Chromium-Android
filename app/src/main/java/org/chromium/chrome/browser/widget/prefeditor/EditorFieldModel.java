@@ -159,7 +159,7 @@ public class EditorFieldModel {
     private int mActionIconResourceId;
     private int mActionIconDescriptionForAccessibility;
     private boolean mIsFullLine = true;
-    private boolean mPlusIconIsDisplayed = false;
+    private boolean mPlusIconIsDisplayed;
 
     /**
      * Constructs a label to show in the editor. This can be, for example, description of a server

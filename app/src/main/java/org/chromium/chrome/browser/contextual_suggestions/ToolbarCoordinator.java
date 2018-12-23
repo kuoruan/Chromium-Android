@@ -18,9 +18,8 @@ import org.chromium.chrome.browser.modelutil.PropertyModelChangeProcessor;
  * {@link ContextualSuggestionsCoordinator} and lifecycle of sub-component objects.
  */
 class ToolbarCoordinator {
-    private final ContextualSuggestionsModel mModel;
-    private ToolbarView mToolbarView;
-    private PropertyModelChangeProcessor<ContextualSuggestionsModel, ToolbarView, PropertyKey>
+    private final ToolbarView mToolbarView;
+    private final PropertyModelChangeProcessor<ContextualSuggestionsModel, ToolbarView, PropertyKey>
             mModelChangeProcessor;
 
     /**
@@ -30,24 +29,11 @@ class ToolbarCoordinator {
      * @param model The {@link ContextualSuggestionsModel} for the component.
      */
     ToolbarCoordinator(Context context, ViewGroup parentView, ContextualSuggestionsModel model) {
-        mModel = model;
-
         mToolbarView = (ToolbarView) LayoutInflater.from(context).inflate(
                 R.layout.contextual_suggestions_toolbar, parentView, false);
 
         mModelChangeProcessor =
-                new PropertyModelChangeProcessor<>(mModel, mToolbarView, new ToolbarViewBinder());
-        mModel.addObserver(mModelChangeProcessor);
-
-        // The ToolbarCoordinator is created dynamically as needed, so the initial model state
-        // needs to be bound on creation.
-        mModelChangeProcessor.onPropertyChanged(mModel, PropertyKey.CLOSE_BUTTON_ON_CLICK_LISTENER);
-        mModelChangeProcessor.onPropertyChanged(mModel, PropertyKey.MENU_BUTTON_VISIBILITY);
-        mModelChangeProcessor.onPropertyChanged(mModel, PropertyKey.MENU_BUTTON_DELEGATE);
-        mModelChangeProcessor.onPropertyChanged(mModel, PropertyKey.TITLE);
-        mModelChangeProcessor.onPropertyChanged(
-                mModel, PropertyKey.DEFAULT_TOOLBAR_ON_CLICK_LISTENER);
-        mModelChangeProcessor.onPropertyChanged(mModel, PropertyKey.SLIM_PEEK_ENABLED);
+                PropertyModelChangeProcessor.create(model, mToolbarView, new ToolbarViewBinder());
     }
 
     /** @return The content {@link View}. */
@@ -57,8 +43,6 @@ class ToolbarCoordinator {
 
     /** Destroy the toolbar component. */
     void destroy() {
-        // The model outlives the toolbar sub-component. Remove the observer so that this object
-        // can be garbage collected.
-        mModel.removeObserver(mModelChangeProcessor);
+        mModelChangeProcessor.destroy();
     }
 }

@@ -15,7 +15,6 @@ import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.util.ColorUtils;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.common.BrowserControlsState;
 
@@ -41,8 +40,7 @@ public abstract class BasicNativePage extends EmptyTabObserver implements Native
         mActivity = activity;
         mHost = host;
 
-        mThemeColor = ColorUtils.getDefaultThemeColor(activity.getResources(),
-                FeatureUtilities.isChromeModernDesignEnabled(), isIncognito);
+        mThemeColor = ColorUtils.getDefaultThemeColor(activity.getResources(), isIncognito);
         mBackgroundColor = isIncognito
                 ? ApiCompatibilityUtils.getColor(activity.getResources(), R.color.ntp_bg_incognito)
                 : mThemeColor;

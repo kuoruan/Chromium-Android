@@ -24,6 +24,14 @@ public interface VideoDecoder extends org.chromium.mojo.bindings.Interface {
     Manager<VideoDecoder, VideoDecoder.Proxy> MANAGER = VideoDecoder_Internal.MANAGER;
 
 
+    void getSupportedConfigs(
+
+GetSupportedConfigsResponse callback);
+
+    interface GetSupportedConfigsResponse extends org.chromium.mojo.bindings.Callbacks.Callback1<SupportedVideoDecoderConfig[]> { }
+
+
+
     void construct(
 org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client, org.chromium.mojo.bindings.AssociatedInterfaceNotSupported mediaLog, org.chromium.mojo.bindings.InterfaceRequest<VideoFrameHandleReleaser> videoFrameHandleReleaser, org.chromium.mojo.system.DataPipe.ConsumerHandle decoderBufferPipe, CommandBufferId commandBufferId, org.chromium.gfx.mojom.ColorSpace targetColorSpace);
 

@@ -20,7 +20,7 @@ import android.widget.TextView;
 
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.preferences.autofill.AutofillProfileBridge.DropdownKeyValue;
-import org.chromium.ui.UiUtils;
+import org.chromium.ui.KeyboardVisibilityDelegate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -179,7 +179,7 @@ class EditorDropdownField implements EditorFieldView {
     }
 
     private void requestFocusAndHideKeyboard() {
-        UiUtils.hideKeyboard(mDropdown);
+        KeyboardVisibilityDelegate.getInstance().hideKeyboard(mDropdown);
         ViewGroup parent = (ViewGroup) mDropdown.getParent();
         if (parent != null) parent.requestChildFocus(mDropdown, mDropdown);
         mDropdown.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED);

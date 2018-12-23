@@ -33,11 +33,11 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import org.chromium.base.ApplicationStatus;
-import org.chromium.base.AsyncTask;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.chrome.R;
+import org.chromium.base.task.AsyncTask;
 import org.chromium.chrome.browser.content.ContentUtils;
+import org.chromium.chrome.download.R;
 
 import java.io.DataOutputStream;
 import java.io.File;

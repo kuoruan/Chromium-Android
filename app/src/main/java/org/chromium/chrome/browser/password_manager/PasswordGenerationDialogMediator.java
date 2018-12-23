@@ -11,9 +11,9 @@ public class PasswordGenerationDialogMediator {
     public static void initializeState(PasswordGenerationDialogModel model, String password,
             String saveExplanationText,
             Callback<Boolean> onPasswordAcceptedOrRejected) {
-        model.setValue(PasswordGenerationDialogModel.GENERATED_PASSWORD, password);
-        model.setValue(PasswordGenerationDialogModel.SAVE_EXPLANATION_TEXT, saveExplanationText);
-        model.setValue(PasswordGenerationDialogModel.PASSWORD_ACTION_CALLBACK,
+        model.set(PasswordGenerationDialogModel.GENERATED_PASSWORD, password);
+        model.set(PasswordGenerationDialogModel.SAVE_EXPLANATION_TEXT, saveExplanationText);
+        model.set(PasswordGenerationDialogModel.PASSWORD_ACTION_CALLBACK,
                 onPasswordAcceptedOrRejected);
     }
 }

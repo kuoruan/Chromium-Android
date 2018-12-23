@@ -4,6 +4,7 @@
 
 package org.chromium.chrome.browser.contextual_suggestions;
 
+import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.modelutil.RecyclerViewAdapter;
 import org.chromium.chrome.browser.ntp.cards.InnerNode;
 import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder;
@@ -40,5 +41,10 @@ class ClusterList
         for (RecyclerViewAdapter.Delegate c : getChildren()) {
             ((ContextualSuggestionsCluster) c).destroy();
         }
+    }
+
+    @VisibleForTesting
+    public ContextualSuggestionsCluster getClusterForTesting(int index) {
+        return (ContextualSuggestionsCluster) getChildren().get(index);
     }
 }

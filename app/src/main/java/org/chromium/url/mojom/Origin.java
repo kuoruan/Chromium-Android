@@ -16,13 +16,13 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class Origin extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 32;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
+    private static final int STRUCT_SIZE = 40;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public String scheme;
     public String host;
     public short port;
-    public boolean unique;
+    public org.chromium.mojo_base.mojom.UnguessableToken nonceIfOpaque;
 
     private Origin(int version) {
         super(STRUCT_SIZE, version);
@@ -71,7 +71,8 @@ public final class Origin extends org.chromium.mojo.bindings.Struct {
                 }
                 {
                     
-                result.unique = decoder0.readBoolean(26, 0);
+                org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, true);
+                result.nonceIfOpaque = org.chromium.mojo_base.mojom.UnguessableToken.decode(decoder1);
                 }
 
         } finally {
@@ -91,6 +92,6 @@ public final class Origin extends org.chromium.mojo.bindings.Struct {
         
         encoder0.encode(this.port, 24);
         
-        encoder0.encode(this.unique, 26, 0);
+        encoder0.encode(this.nonceIfOpaque, 32, true);
     }
 }

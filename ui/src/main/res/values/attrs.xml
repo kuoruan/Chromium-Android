@@ -31,5 +31,6 @@
         <attr name="cornerRadiusTopEnd" format="dimension" />
         <attr name="cornerRadiusBottomStart" format="dimension" />
         <attr name="cornerRadiusBottomEnd" format="dimension" />
+        <attr name="roundedfillColor" format="reference|color" />
     </declare-styleable>
 </resources>

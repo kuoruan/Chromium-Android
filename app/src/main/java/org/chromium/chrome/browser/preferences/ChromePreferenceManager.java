@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.preferences;
 
 import android.content.SharedPreferences;
+import android.support.annotation.Nullable;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.browser.crash.MinidumpUploadService.ProcessType;
@@ -221,6 +222,14 @@ public class ChromePreferenceManager {
      * Default value is true.
      */
     public static final String ACCESSIBILITY_TAB_SWITCHER = "accessibility_tab_switcher";
+
+    /**
+     * When the user is shown a badge that the current Android OS version is unsupported, and they
+     * tap it to display the menu (which has additional information), we store the current version
+     * of Chrome to this preference to ensure we only show the badge once. The value is cleared
+     * if the Chrome version later changes.
+     */
+    public static final String LATEST_UNSUPPORTED_VERSION = "android_os_unsupported_chrome_version";
 
     /**
      * Deprecated keys for Chrome Home.
@@ -562,10 +571,21 @@ public class ChromePreferenceManager {
      * @param key The name of the preference to modify.
      * @param value The new value for the preference.
      */
-    private void writeString(String key, String value) {
+    public void writeString(String key, String value) {
         SharedPreferences.Editor ed = mSharedPreferences.edit();
         ed.putString(key, value);
         ed.apply();
+    }
+
+    /**
+     * Reads the given String value from the named shared preference.
+     *
+     * @param key The name of the preference to return.
+     * @param defaultValue The default value to return if there's no value stored.
+     * @return The value of the preference if stored; defaultValue otherwise.
+     */
+    public String readString(String key, @Nullable String defaultValue) {
+        return mSharedPreferences.getString(key, defaultValue);
     }
 
     /**
@@ -573,7 +593,7 @@ public class ChromePreferenceManager {
      *
      * @param key The key of the preference to remove.
      */
-    private void removeKey(String key) {
+    public void removeKey(String key) {
         SharedPreferences.Editor ed = mSharedPreferences.edit();
         ed.remove(key);
         ed.apply();

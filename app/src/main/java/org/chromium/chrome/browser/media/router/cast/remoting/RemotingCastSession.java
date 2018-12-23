@@ -35,6 +35,7 @@ import java.util.Set;
 /**
  * A wrapper around a RemoteMediaPlayer, used in remote playback.
  */
+// Migrated to RemotingSessionController. See https://crbug.com/711860.
 public class RemotingCastSession
         implements MediaNotificationListener, CastSession, Cast.MessageReceivedCallback {
     private static final String TAG = "MediaRouter";
@@ -48,7 +49,7 @@ public class RemotingCastSession
     private ApplicationMetadata mApplicationMetadata;
     private MediaNotificationInfo.Builder mNotificationBuilder;
     private RemoteMediaPlayerWrapper mMediaPlayerWrapper;
-    private boolean mStoppingApplication = false;
+    private boolean mStoppingApplication;
 
     public RemotingCastSession(GoogleApiClient apiClient, String sessionId,
             ApplicationMetadata metadata, String applicationStatus, CastDevice castDevice,
@@ -81,10 +82,8 @@ public class RemotingCastSession
             Log.e(TAG, "Failed to register media namespace listener", e);
         }
 
-        mMediaPlayerWrapper =
-                new RemoteMediaPlayerWrapper(mApiClient, mNotificationBuilder, mCastDevice);
-
-        mMediaPlayerWrapper.load(((RemotingMediaSource) source).getMediaUrl());
+        mMediaPlayerWrapper = new RemoteMediaPlayerWrapper(mApiClient, mNotificationBuilder,
+                mCastDevice, ((RemotingMediaSource) source).getMediaUrl());
     }
 
     /**

@@ -37,7 +37,7 @@ public final class SslConfig extends org.chromium.mojo.bindings.Struct {
         this.symantecEnforcementDisabled = (boolean) false;
         this.versionMin = (int) SslVersion.TLS1;
         this.versionMax = (int) SslVersion.TLS12;
-        this.tls13Variant = (int) Tls13Variant.DRAFT23;
+        this.tls13Variant = (int) Tls13Variant.FINAL;
     }
 
     public SslConfig() {

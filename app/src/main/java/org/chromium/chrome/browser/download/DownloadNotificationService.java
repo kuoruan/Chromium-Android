@@ -59,6 +59,7 @@ import org.chromium.chrome.browser.notifications.channels.ChannelDefinitions;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.components.offline_items_collection.ContentId;
+import org.chromium.components.offline_items_collection.FailState;
 import org.chromium.components.offline_items_collection.LegacyHelpers;
 import org.chromium.components.offline_items_collection.OfflineItem.Progress;
 import org.chromium.content_public.browser.BrowserStartupController;
@@ -812,7 +813,7 @@ public class DownloadNotificationService extends Service {
                             downloadHomeIntent, PendingIntent.FLAG_UPDATE_CURRENT));
         }
         builder.setAutoCancel(false);
-        if (icon != null) builder.setLargeIcon(icon);
+        if (icon != null && !isOffTheRecord) builder.setLargeIcon(icon);
 
         Intent pauseIntent = buildActionIntent(
                 ContextUtils.getApplicationContext(), ACTION_DOWNLOAD_PAUSE, id, isOffTheRecord);
@@ -888,7 +889,8 @@ public class DownloadNotificationService extends Service {
         DownloadSharedPreferenceEntry entry =
                 mDownloadSharedPreferenceHelper.getDownloadSharedPreferenceEntry(id);
         if (!isResumable) {
-            notifyDownloadFailed(id, fileName, icon);
+            notifyDownloadFailed(
+                    id, fileName, isOffTheRecord ? null : icon, FailState.CANNOT_DOWNLOAD);
             return;
         }
         // Download is already paused.
@@ -920,7 +922,7 @@ public class DownloadNotificationService extends Service {
                             downloadHomeIntent, PendingIntent.FLAG_UPDATE_CURRENT));
         }
         builder.setAutoCancel(false);
-        if (icon != null) builder.setLargeIcon(icon);
+        if (icon != null && !isOffTheRecord) builder.setLargeIcon(icon);
 
         Intent resumeIntent = buildActionIntent(
                 ContextUtils.getApplicationContext(), ACTION_DOWNLOAD_RESUME, id, isOffTheRecord);
@@ -1001,7 +1003,7 @@ public class DownloadNotificationService extends Service {
             mDownloadSuccessLargeIcon = getLargeNotificationIcon(bitmap);
         }
         builder.setDeleteIntent(buildSummaryIconIntent(notificationId));
-        builder.setLargeIcon(icon != null ? icon : mDownloadSuccessLargeIcon);
+        builder.setLargeIcon(icon != null && !isOffTheRecord ? icon : mDownloadSuccessLargeIcon);
         updateNotification(notificationId, builder.build(), id, null);
         stopTrackingInProgressDownload(id, true);
         return notificationId;
@@ -1012,9 +1014,11 @@ public class DownloadNotificationService extends Service {
      * @param id       The {@link ContentId} of the download.
      * @param fileName Filename of the download.
      * @param icon     A {@link Bitmap} to be used as the large icon for display.
+     * @param failState Reason of the failure.
      */
     @VisibleForTesting
-    public void notifyDownloadFailed(ContentId id, String fileName, Bitmap icon) {
+    public void notifyDownloadFailed(
+            ContentId id, String fileName, Bitmap icon, @FailState int failState) {
         // If the download is not in history db, fileName could be empty. Get it from
         // SharedPreferences.
         if (TextUtils.isEmpty(fileName)) {
@@ -1025,10 +1029,9 @@ public class DownloadNotificationService extends Service {
         }
 
         int notificationId = getNotificationId(id);
+        String message = DownloadUtils.getFailStatusString(failState);
         ChromeNotificationBuilder builder =
-                buildNotification(android.R.drawable.stat_sys_download_done, fileName,
-                        ContextUtils.getApplicationContext().getResources().getString(
-                                R.string.download_notification_failed));
+                buildNotification(android.R.drawable.stat_sys_download_done, fileName, message);
         if (icon != null) builder.setLargeIcon(icon);
         builder.setDeleteIntent(buildSummaryIconIntent(notificationId));
         updateNotification(notificationId, builder.build(), id, null);
@@ -1200,9 +1203,6 @@ public class DownloadNotificationService extends Service {
         BrowserParts parts = new EmptyBrowserParts() {
             @Override
             public void finishNativeInitialization() {
-                // Make sure the OfflineContentAggregator bridge is initialized.
-                OfflineContentAggregatorNotificationBridgeUiFactory.instance();
-
                 DownloadServiceDelegate downloadServiceDelegate =
                         isDownloadOpenOrNotificationClickedAction(intent) ? null
                                                                           : getServiceDelegate(id);

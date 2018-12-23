@@ -13,9 +13,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.chromium.chrome.R;
 import org.chromium.chrome.browser.download.home.empty.EmptyProperties.State;
 import org.chromium.chrome.browser.widget.LoadingView;
+import org.chromium.chrome.download.R;
 
 /** A view that represents the visuals required for the empty state of the download home list. */
 class EmptyView {

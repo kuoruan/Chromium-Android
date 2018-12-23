@@ -13,6 +13,7 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.StringRes;
 import android.support.v7.widget.AppCompatTextView;
 import android.text.Layout;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -153,17 +154,24 @@ public class PageInfoView extends FrameLayout implements OnClickListener, OnLong
 
     /**  Parameters to configure the view of the page info popup. */
     public static class PageInfoViewParams {
+        public boolean urlTitleShown = true;
+        public boolean connectionMessageShown = true;
         public boolean instantAppButtonShown = true;
         public boolean siteSettingsButtonShown = true;
         public boolean openOnlineButtonShown = true;
+        public boolean previewUIShown = true;
+        public boolean separatorShown = true;
 
         public Runnable urlTitleClickCallback;
         public Runnable urlTitleLongClickCallback;
         public Runnable instantAppButtonClickCallback;
         public Runnable siteSettingsButtonClickCallback;
         public Runnable openOnlineButtonClickCallback;
+        public Runnable previewShowOriginalClickCallback;
 
         public CharSequence url;
+        public CharSequence previewLoadOriginalMessage;
+        public CharSequence previewStaleTimestamp;
         public int urlOriginLength;
     }
 
@@ -191,7 +199,11 @@ public class PageInfoView extends FrameLayout implements OnClickListener, OnLong
     private final ElidedUrlTextView mUrlTitle;
     private final TextView mConnectionSummary;
     private final TextView mConnectionMessage;
+    private final TextView mPreviewMessage;
+    private final TextView mPreviewStaleTimestamp;
+    private final TextView mPreviewLoadOriginal;
     private final LinearLayout mPermissionsList;
+    private final View mSeparator;
     private final Button mInstantAppButton;
     private final Button mSiteSettingsButton;
     private final Button mOpenOnlineButton;
@@ -205,7 +217,11 @@ public class PageInfoView extends FrameLayout implements OnClickListener, OnLong
         mUrlTitle = (ElidedUrlTextView) findViewById(R.id.page_info_url);
         mConnectionSummary = (TextView) findViewById(R.id.page_info_connection_summary);
         mConnectionMessage = (TextView) findViewById(R.id.page_info_connection_message);
+        mPreviewMessage = (TextView) findViewById(R.id.page_info_preview_message);
+        mPreviewStaleTimestamp = (TextView) findViewById(R.id.page_info_stale_preview_timestamp);
+        mPreviewLoadOriginal = (TextView) findViewById(R.id.page_info_preview_load_original);
         mPermissionsList = (LinearLayout) findViewById(R.id.page_info_permissions_list);
+        mSeparator = (View) findViewById(R.id.page_info_separator);
         mInstantAppButton = (Button) findViewById(R.id.page_info_instant_app_button);
         mSiteSettingsButton = (Button) findViewById(R.id.page_info_site_settings_button);
         mOpenOnlineButton = (Button) findViewById(R.id.page_info_open_online_button);
@@ -216,10 +232,11 @@ public class PageInfoView extends FrameLayout implements OnClickListener, OnLong
             mUrlTitle.setOnLongClickListener(this);
         }
 
-        initializePageInfoViewChild(mUrlTitle, true, 0f, params.urlTitleClickCallback);
+        initializePageInfoViewChild(
+                mUrlTitle, params.urlTitleShown, 0f, params.urlTitleClickCallback);
         // Hide the summary until its text is set.
         initializePageInfoViewChild(mConnectionSummary, false, 0f, null);
-        initializePageInfoViewChild(mConnectionMessage, true, 0f, null);
+        initializePageInfoViewChild(mConnectionMessage, params.connectionMessageShown, 0f, null);
         // Hide the permissions list for sites with no permissions.
         initializePageInfoViewChild(mPermissionsList, false, 1f, null);
         initializePageInfoViewChild(mInstantAppButton, params.instantAppButtonShown, 0f,
@@ -229,6 +246,18 @@ public class PageInfoView extends FrameLayout implements OnClickListener, OnLong
         // The open online button should not fade in.
         initializePageInfoViewChild(mOpenOnlineButton, params.openOnlineButtonShown, 1f,
                 params.openOnlineButtonClickCallback);
+        // Previews UI initialization.
+        initializePageInfoViewChild(mPreviewMessage, params.previewUIShown, 0f, null);
+        initializePageInfoViewChild(mPreviewLoadOriginal, params.previewUIShown, 0f,
+                params.previewShowOriginalClickCallback);
+        initializePageInfoViewChild(mPreviewStaleTimestamp,
+                params.previewUIShown && !TextUtils.isEmpty(params.previewStaleTimestamp), 0f,
+                null);
+        initializePageInfoViewChild(mSeparator, params.separatorShown, 0f, null);
+        mPreviewLoadOriginal.setText(params.previewLoadOriginalMessage);
+        if (!TextUtils.isEmpty(params.previewStaleTimestamp)) {
+            mPreviewStaleTimestamp.setText(params.previewStaleTimestamp);
+        }
     }
 
     public void setPermissions(List<PermissionParams> permissionParamsList) {
@@ -241,14 +270,17 @@ public class PageInfoView extends FrameLayout implements OnClickListener, OnLong
     }
 
     public void setConnectionInfo(ConnectionInfoParams params) {
-        mConnectionMessage.setText(params.message);
         if (params.summary != null) {
             mConnectionSummary.setVisibility(View.VISIBLE);
             mConnectionSummary.setText(params.summary);
         }
-        if (params.clickCallback != null) {
-            mConnectionMessage.setTag(R.id.page_info_click_callback, params.clickCallback);
-            mConnectionMessage.setOnClickListener(this);
+        if (params.message != null) {
+            mConnectionMessage.setVisibility(View.VISIBLE);
+            mConnectionMessage.setText(params.message);
+            if (params.clickCallback != null) {
+                mConnectionMessage.setTag(R.id.page_info_click_callback, params.clickCallback);
+                mConnectionMessage.setOnClickListener(this);
+            }
         }
     }
 
@@ -339,10 +371,12 @@ public class PageInfoView extends FrameLayout implements OnClickListener, OnLong
     private List<View> collectAnimatableViews() {
         List<View> animatableViews = new ArrayList<View>();
         animatableViews.add(mUrlTitle);
-        if (mConnectionSummary.getVisibility() == View.VISIBLE) {
-            animatableViews.add(mConnectionSummary);
-        }
+        animatableViews.add(mConnectionSummary);
         animatableViews.add(mConnectionMessage);
+        animatableViews.add(mPreviewMessage);
+        animatableViews.add(mPreviewStaleTimestamp);
+        animatableViews.add(mPreviewLoadOriginal);
+        animatableViews.add(mSeparator);
         animatableViews.add(mInstantAppButton);
         for (int i = 0; i < mPermissionsList.getChildCount(); i++) {
             animatableViews.add(mPermissionsList.getChildAt(i));
@@ -380,8 +414,10 @@ public class PageInfoView extends FrameLayout implements OnClickListener, OnLong
         List<View> animatableViews = collectAnimatableViews();
         for (int i = 0; i < animatableViews.size(); i++) {
             View view = animatableViews.get(i);
-            Animator anim = createInnerFadeAnimation(view, i, isEnter);
-            builder.with(anim);
+            if (view.getVisibility() == View.VISIBLE) {
+                Animator anim = createInnerFadeAnimation(view, i, isEnter);
+                builder.with(anim);
+            }
         }
 
         return animation;

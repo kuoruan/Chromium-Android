@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 
 import org.chromium.base.DiscardableReferencePool;
 import org.chromium.chrome.browser.native_page.NativePageHost;
+import org.chromium.chrome.browser.ntp.snippets.EmptySuggestionsSource;
 import org.chromium.chrome.browser.ntp.snippets.SuggestionsSource;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
@@ -20,7 +21,7 @@ import java.util.List;
  */
 public class SuggestionsUiDelegateImpl implements SuggestionsUiDelegate {
     private final List<DestructionObserver> mDestructionObservers = new ArrayList<>();
-    private final SuggestionsSource mSuggestionsSource;
+    private SuggestionsSource mSuggestionsSource;
     private final SuggestionsRanker mSuggestionsRanker;
     private final SuggestionsEventReporter mSuggestionsEventReporter;
     private final SuggestionsNavigationDelegate mSuggestionsNavigationDelegate;
@@ -106,6 +107,10 @@ public class SuggestionsUiDelegateImpl implements SuggestionsUiDelegate {
         // instead explicitly destroyed last so that the other destruction observers can use it
         // while they are called.
         mSuggestionsSource.destroy();
+
+        // Now replacing suggestions source with an empty one, which serves as a sentinel here.
+        // This prevents crashes when SnippetsBridge being access after being destroyed.
+        mSuggestionsSource = new EmptySuggestionsSource();
 
         mIsDestroyed = true;
     }

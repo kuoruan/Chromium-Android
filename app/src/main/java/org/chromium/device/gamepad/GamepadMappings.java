@@ -270,8 +270,8 @@ abstract class GamepadMappings {
     }
 
     private static class XboxOneS2016FirmwareMappings extends GamepadMappings {
-        private boolean mLeftTriggerActivated = false;
-        private boolean mRightTriggerActivated = false;
+        private boolean mLeftTriggerActivated;
+        private boolean mRightTriggerActivated;
 
         /**
          * Method for mapping Xbox One S controller (in Bluetooth mode) to

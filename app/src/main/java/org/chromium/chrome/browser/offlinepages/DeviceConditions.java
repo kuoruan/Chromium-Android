@@ -24,13 +24,13 @@ import org.chromium.net.NetworkChangeNotifier;
  */
 public class DeviceConditions {
     // Battery and power related variables.
-    private boolean mPowerConnected = false;
-    private int mBatteryPercentage = 0;
-    private boolean mPowerSaveOn = false;
+    private boolean mPowerConnected;
+    private int mBatteryPercentage;
+    private boolean mPowerSaveOn;
 
     // Network related variables.
     private int mNetConnectionType = ConnectionType.CONNECTION_NONE;
-    private boolean mActiveNetworkMetered = false;
+    private boolean mActiveNetworkMetered;
 
     /**
      * Creates a DeviceConditions instance that stores a snapshot of the current set of device

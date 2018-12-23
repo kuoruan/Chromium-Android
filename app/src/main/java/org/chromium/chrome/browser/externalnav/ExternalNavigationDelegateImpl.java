@@ -28,6 +28,7 @@ import org.chromium.base.ApplicationState;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.PathUtils;
+import org.chromium.base.StrictModeContext;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordUserAction;
@@ -45,6 +46,7 @@ import org.chromium.chrome.browser.instantapps.InstantAppsHandler;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabObserver;
+import org.chromium.chrome.browser.tab.TabRedirectHandler;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.util.UrlUtilities;
 import org.chromium.chrome.browser.webapps.WebappActivity;
@@ -341,7 +343,9 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
      */
     public static boolean isPackageSpecializedHandler(String packageName, Intent intent) {
         Context context = ContextUtils.getApplicationContext();
-        try {
+        // On certain Samsung devices, queryIntentActivities can trigger a
+        // StrictModeDiskReadViolation (https://crbug.com/894160).
+        try (StrictModeContext unused = StrictModeContext.allowDiskReads()){
             List<ResolveInfo> handlers = context.getPackageManager().queryIntentActivities(
                     intent, PackageManager.GET_RESOLVED_FILTER);
             return getSpecializedHandlersWithFilter(handlers, packageName, intent).size() > 0;
@@ -641,9 +645,8 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
         if (!hasValidTab() || mTab.getWebContents() == null) return false;
 
         InstantAppsHandler handler = InstantAppsHandler.getInstance();
-        Intent intent = mTab.getTabRedirectHandler() != null
-                ? mTab.getTabRedirectHandler().getInitialIntent()
-                : null;
+        TabRedirectHandler redirect = TabRedirectHandler.get(mTab);
+        Intent intent = redirect != null ? redirect.getInitialIntent() : null;
         // TODO(mariakhomenko): consider also handling NDEF_DISCOVER action redirects.
         if (isIncomingRedirect && intent != null && Intent.ACTION_VIEW.equals(intent.getAction())) {
             // Set the URL the redirect was resolved to for checking the existence of the
@@ -685,5 +688,10 @@ public class ExternalNavigationDelegateImpl implements ExternalNavigationDelegat
      */
     private boolean hasValidTab() {
         return mTab != null && !mIsTabDestroyed;
+    }
+
+    @Override
+    public boolean isIntentForTrustedCallingApp(Intent intent) {
+        return false;
     }
 }

@@ -4,94 +4,100 @@
 
 package org.chromium.chrome.browser.autofill.keyboard_accessory;
 
-import static org.chromium.chrome.browser.autofill.keyboard_accessory.AccessorySheetModel.NO_ACTIVE_TAB;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.AccessorySheetProperties.ACTIVE_TAB_INDEX;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.AccessorySheetProperties.NO_ACTIVE_TAB;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.AccessorySheetProperties.TABS;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.AccessorySheetProperties.VISIBLE;
 
 import android.support.annotation.Nullable;
 import android.support.annotation.Px;
 
 import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.browser.modelutil.PropertyKey;
+import org.chromium.chrome.browser.modelutil.PropertyModel;
 import org.chromium.chrome.browser.modelutil.PropertyObservable;
 
 /**
  * Contains the controller logic of the AccessorySheet component.
- * It communicates with data providers and native backends to update a {@link AccessorySheetModel}.
+ * It communicates with data providers and native backends to update a model based on {@link
+ * AccessorySheetProperties}.
  */
-class AccessorySheetMediator
-        implements PropertyObservable.PropertyObserver<AccessorySheetModel.PropertyKey> {
-    private final AccessorySheetModel mModel;
+class AccessorySheetMediator implements PropertyObservable.PropertyObserver<PropertyKey> {
+    private final PropertyModel mModel;
 
-    AccessorySheetMediator(AccessorySheetModel model) {
+    AccessorySheetMediator(PropertyModel model) {
         mModel = model;
         mModel.addObserver(this);
     }
 
     @Nullable
     KeyboardAccessoryData.Tab getTab() {
-        if (mModel.getActiveTabIndex() == NO_ACTIVE_TAB) return null;
-        return mModel.getTabList().get(mModel.getActiveTabIndex());
+        if (mModel.get(ACTIVE_TAB_INDEX) == NO_ACTIVE_TAB) return null;
+        return mModel.get(TABS).get(mModel.get(ACTIVE_TAB_INDEX));
     }
 
     @VisibleForTesting
-    AccessorySheetModel getModelForTesting() {
+    PropertyModel getModelForTesting() {
         return mModel;
     }
 
     void show() {
-        mModel.setVisible(true);
+        mModel.set(VISIBLE, true);
     }
 
     void setHeight(int height) {
-        mModel.setHeight(height);
+        mModel.set(AccessorySheetProperties.HEIGHT, height);
     }
 
     public @Px int getHeight() {
-        return mModel.getHeight();
+        return mModel.get(AccessorySheetProperties.HEIGHT);
     }
 
     void hide() {
-        mModel.setVisible(false);
+        mModel.set(VISIBLE, false);
     }
 
     boolean isShown() {
-        return mModel.isVisible();
+        return mModel.get(VISIBLE);
     }
 
     void addTab(KeyboardAccessoryData.Tab tab) {
-        mModel.getTabList().add(tab);
-        if (mModel.getActiveTabIndex() == NO_ACTIVE_TAB) {
-            mModel.setActiveTabIndex(mModel.getTabList().size() - 1);
+        mModel.get(TABS).add(tab);
+        if (mModel.get(ACTIVE_TAB_INDEX) == NO_ACTIVE_TAB) {
+            mModel.set(ACTIVE_TAB_INDEX, mModel.get(TABS).size() - 1);
         }
     }
 
     void removeTab(KeyboardAccessoryData.Tab tab) {
-        assert mModel.getActiveTabIndex() != NO_ACTIVE_TAB;
-        mModel.setActiveTabIndex(getNextActiveTab(tab));
-        mModel.getTabList().remove(tab);
-        if (mModel.getActiveTabIndex() == NO_ACTIVE_TAB) hide();
+        assert mModel.get(ACTIVE_TAB_INDEX) != NO_ACTIVE_TAB;
+        mModel.set(ACTIVE_TAB_INDEX, getNextActiveTab(tab));
+        mModel.get(TABS).remove(tab);
+        if (mModel.get(ACTIVE_TAB_INDEX) == NO_ACTIVE_TAB) hide();
     }
 
     void setTabs(KeyboardAccessoryData.Tab[] tabs) {
-        mModel.getTabList().set(tabs);
-        mModel.setActiveTabIndex(mModel.getTabList().size() - 1);
+        mModel.get(TABS).set(tabs);
+        mModel.set(ACTIVE_TAB_INDEX, mModel.get(TABS).size() - 1);
     }
 
     void setActiveTab(int position) {
-        assert position < mModel.getTabList().size()
+        assert position < mModel.get(TABS).size()
                 || position >= 0 : position + " is not a valid tab index!";
-        mModel.setActiveTabIndex(position);
+        mModel.set(ACTIVE_TAB_INDEX, position);
     }
 
     /**
      * Returns the position of a tab which needs to become the active tab. If the tab to be deleted
      * is the active tab, return the item on its left. If it was the first item in the list, return
-     * the new first item. If no items remain, return {@link AccessorySheetModel#NO_ACTIVE_TAB}.
+     * the new first item. If no items remain, return {@link
+     * AccessorySheetProperties#NO_ACTIVE_TAB}.
      * @param tabToBeDeleted The tab to be removed from the list.
      * @return The position of the tab which should become active.
      */
     private int getNextActiveTab(KeyboardAccessoryData.Tab tabToBeDeleted) {
-        int activeTab = mModel.getActiveTabIndex();
+        int activeTab = mModel.get(ACTIVE_TAB_INDEX);
         for (int i = 0; i <= activeTab; i++) {
-            KeyboardAccessoryData.Tab tabLeftToActiveTab = mModel.getTabList().get(i);
+            KeyboardAccessoryData.Tab tabLeftToActiveTab = mModel.get(TABS).get(i);
             // If we delete the active tab or a tab left to it, the new active tab moves left.
             if (tabLeftToActiveTab == tabToBeDeleted) {
                 --activeTab;
@@ -100,21 +106,19 @@ class AccessorySheetMediator
         }
         if (activeTab >= 0) return activeTab; // The new active tab is valid.
         // If there are items left, take the first one.
-        int itemCountAfterDeletion = mModel.getTabList().size() - 1;
+        int itemCountAfterDeletion = mModel.get(TABS).size() - 1;
         return itemCountAfterDeletion > 0 ? 0 : NO_ACTIVE_TAB;
     }
 
     @Override
-    public void onPropertyChanged(PropertyObservable<AccessorySheetModel.PropertyKey> source,
-            @Nullable AccessorySheetModel.PropertyKey propertyKey) {
-        if (propertyKey == AccessorySheetModel.PropertyKey.VISIBLE) {
-            if (mModel.isVisible() && getTab() != null && getTab().getListener() != null) {
+    public void onPropertyChanged(PropertyObservable<PropertyKey> source, PropertyKey propertyKey) {
+        if (propertyKey == VISIBLE) {
+            if (mModel.get(VISIBLE) && getTab() != null && getTab().getListener() != null) {
                 getTab().getListener().onTabShown();
             }
             return;
         }
-        if (propertyKey == AccessorySheetModel.PropertyKey.ACTIVE_TAB_INDEX
-                || propertyKey == AccessorySheetModel.PropertyKey.HEIGHT) {
+        if (propertyKey == ACTIVE_TAB_INDEX || propertyKey == AccessorySheetProperties.HEIGHT) {
             return;
         }
         assert false : "Every property update needs to be handled explicitly!";

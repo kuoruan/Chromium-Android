@@ -27,12 +27,12 @@ import org.chromium.base.metrics.RecordUserAction;
 import org.chromium.chrome.browser.ChromeSwitches;
 import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.UrlConstants;
+import org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider.LaunchSourceType;
 import org.chromium.chrome.browser.instantapps.InstantAppsHandler;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabRedirectHandler;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.util.UrlUtilities;
-import org.chromium.chrome.browser.webapps.WebappActivity.ActivityType;
 import org.chromium.chrome.browser.webapps.WebappScopePolicy;
 import org.chromium.content_public.common.ContentUrlConstants;
 import org.chromium.ui.base.PageTransition;
@@ -280,10 +280,12 @@ public class ExternalNavigationHandler {
 
         // http://crbug/331571 : Do not override a navigation started from user typing.
         // http://crbug/424029 : Need to stay in Chrome for an intent heading explicitly to Chrome.
+        // http://crbug/881740 : Relax stay in Chrome restriction for Custom Tabs.
         if (params.getRedirectHandler() != null) {
             TabRedirectHandler handler = params.getRedirectHandler();
-            if (handler.shouldStayInChrome(isExternalProtocol)
-                    || handler.shouldNotOverrideUrlLoading()) {
+            boolean shouldStayInChrome = handler.shouldStayInChrome(
+                    isExternalProtocol, mDelegate.isIntentForTrustedCallingApp(intent));
+            if (shouldStayInChrome || handler.shouldNotOverrideUrlLoading()) {
                 // http://crbug.com/659301: Handle redirects to Instant Apps out of Custom Tabs.
                 if (handler.isFromCustomTabIntent() && !isExternalProtocol && incomingIntentRedirect
                         && !handler.shouldNavigationTypeStayInChrome()
@@ -770,16 +772,17 @@ public class ExternalNavigationHandler {
         }
 
         int launchSource = IntentUtils.safeGetIntExtra(
-                tab.getActivity().getIntent(), EXTRA_BROWSER_LAUNCH_SOURCE, ActivityType.OTHER);
-        if (launchSource != ActivityType.WEBAPK && launchSource != ActivityType.TWA) return false;
+                tab.getActivity().getIntent(), EXTRA_BROWSER_LAUNCH_SOURCE, LaunchSourceType.OTHER);
+        if (launchSource != LaunchSourceType.WEBAPK) {
+            return false;
+        }
 
         String appId = IntentUtils.safeGetStringExtra(
                 tab.getActivity().getIntent(), Browser.EXTRA_APPLICATION_ID);
         if (appId == null) return false;
 
-        Intent intent;
         try {
-            intent = Intent.parseUri(params.getUrl(), Intent.URI_INTENT_SCHEME);
+            Intent.parseUri(params.getUrl(), Intent.URI_INTENT_SCHEME);
         } catch (URISyntaxException ex) {
             return false;
         }

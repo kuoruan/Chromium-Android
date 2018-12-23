@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
-import org.chromium.chrome.browser.ntp.ContextMenuManager;
+import org.chromium.chrome.browser.native_page.ContextMenuManager;
 import org.chromium.chrome.browser.ntp.cards.ItemViewType;
 import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder;
 import org.chromium.chrome.browser.ntp.cards.OptionalLeaf;
@@ -115,9 +115,6 @@ public class SiteSection extends OptionalLeaf implements TileGroup.Observer {
 
     @LayoutRes
     private static int getLayout() {
-        if (SuggestionsConfig.useModernLayout()) {
-            return R.layout.suggestions_site_tile_grid_modern;
-        }
-        return R.layout.suggestions_site_tile_grid;
+        return R.layout.suggestions_site_tile_grid_modern;
     }
 }

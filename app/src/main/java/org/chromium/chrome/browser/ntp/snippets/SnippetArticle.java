@@ -14,6 +14,8 @@ import org.chromium.chrome.browser.ntp.cards.NewTabPageViewHolder.PartialBindCal
 import org.chromium.chrome.browser.suggestions.OfflinableSuggestion;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Represents the data for an article card on the NTP.
@@ -308,5 +310,10 @@ public class SnippetArticle
 
     public int getPerSectionRank() {
         return mPerSectionRank;
+    }
+
+    @Override
+    public Collection<PartialBindCallback> getAllSetProperties() {
+        return Collections.emptyList();
     }
 }

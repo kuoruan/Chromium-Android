@@ -21,13 +21,15 @@ public final class TlsClientSocketOptions extends org.chromium.mojo.bindings.Str
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public int versionMin;
     public int versionMax;
-    public boolean skipCertVerification;
+    public boolean sendSslInfo;
+    public boolean unsafelySkipCertVerification;
 
     private TlsClientSocketOptions(int version) {
         super(STRUCT_SIZE, version);
         this.versionMin = (int) SslVersion.TLS1;
         this.versionMax = (int) SslVersion.TLS12;
-        this.skipCertVerification = (boolean) false;
+        this.sendSslInfo = (boolean) false;
+        this.unsafelySkipCertVerification = (boolean) false;
     }
 
     public TlsClientSocketOptions() {
@@ -71,7 +73,11 @@ public final class TlsClientSocketOptions extends org.chromium.mojo.bindings.Str
                 }
                 {
                     
-                result.skipCertVerification = decoder0.readBoolean(16, 0);
+                result.sendSslInfo = decoder0.readBoolean(16, 0);
+                }
+                {
+                    
+                result.unsafelySkipCertVerification = decoder0.readBoolean(16, 1);
                 }
 
         } finally {
@@ -89,6 +95,8 @@ public final class TlsClientSocketOptions extends org.chromium.mojo.bindings.Str
         
         encoder0.encode(this.versionMax, 12);
         
-        encoder0.encode(this.skipCertVerification, 16, 0);
+        encoder0.encode(this.sendSslInfo, 16, 0);
+        
+        encoder0.encode(this.unsafelySkipCertVerification, 16, 1);
     }
 }

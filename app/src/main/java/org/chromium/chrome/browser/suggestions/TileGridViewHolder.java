@@ -28,17 +28,12 @@ public class TileGridViewHolder extends SiteSectionViewHolder {
         mSectionView.setMaxRows(maxRows);
         mSectionView.setMaxColumns(maxColumns);
 
-        if (SuggestionsConfig.useModernLayout()) {
-            Resources res = itemView.getResources();
-            int defaultLateralMargin =
-                    res.getDimensionPixelSize(R.dimen.tile_grid_layout_padding_start);
-            int wideLateralMargin =
-                    res.getDimensionPixelSize(R.dimen.ntp_wide_card_lateral_margins);
-            mMarginResizer =
-                    new MarginResizer(itemView, uiConfig, defaultLateralMargin, wideLateralMargin);
-        } else {
-            mMarginResizer = null;
-        }
+        Resources res = itemView.getResources();
+        int defaultLateralMargin =
+                res.getDimensionPixelSize(R.dimen.tile_grid_layout_padding_start);
+        int wideLateralMargin = res.getDimensionPixelSize(R.dimen.ntp_wide_card_lateral_margins);
+        mMarginResizer =
+                new MarginResizer(itemView, uiConfig, defaultLateralMargin, wideLateralMargin);
     }
 
     @Override
@@ -52,7 +47,7 @@ public class TileGridViewHolder extends SiteSectionViewHolder {
     }
 
     @Override
-    public TileView findTileView(SiteSuggestion data) {
+    public SuggestionsTileView findTileView(SiteSuggestion data) {
         return mSectionView.getTileView(data);
     }
 

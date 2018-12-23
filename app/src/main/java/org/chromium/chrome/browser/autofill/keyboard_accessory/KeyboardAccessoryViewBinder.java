@@ -4,7 +4,15 @@
 
 package org.chromium.chrome.browser.autofill.keyboard_accessory;
 
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.ACTIONS;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.ACTIVE_TAB;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.BOTTOM_OFFSET_PX;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.TABS;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.TAB_SELECTION_CALLBACKS;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.VISIBLE;
+
 import android.os.Build;
+import android.support.design.widget.TabLayout;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,18 +23,16 @@ import android.widget.TextView;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryData.Action;
 import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryData.Tab;
-import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryModel.PropertyKey;
-import org.chromium.chrome.browser.modelutil.LazyViewBinderAdapter;
 import org.chromium.chrome.browser.modelutil.ListModel;
 import org.chromium.chrome.browser.modelutil.ListModelChangeProcessor;
+import org.chromium.chrome.browser.modelutil.PropertyKey;
+import org.chromium.chrome.browser.modelutil.PropertyModel;
 
 /**
- * Observes {@link KeyboardAccessoryModel} changes (like a newly available tab) and triggers the
- * {@link KeyboardAccessoryViewBinder} which will modify the view accordingly.
+ * Observes {@link KeyboardAccessoryProperties} changes (like a newly available tab) and triggers
+ * the {@link KeyboardAccessoryViewBinder} which will modify the view accordingly.
  */
-class KeyboardAccessoryViewBinder
-        implements LazyViewBinderAdapter.SimpleViewBinder<KeyboardAccessoryModel,
-                KeyboardAccessoryView, PropertyKey> {
+class KeyboardAccessoryViewBinder {
     static class ActionViewHolder extends RecyclerView.ViewHolder {
         public ActionViewHolder(View actionView) {
             super(actionView);
@@ -66,10 +72,9 @@ class KeyboardAccessoryViewBinder
         public void onItemsInserted(
                 ListModel<Tab> model, KeyboardAccessoryView view, int index, int count) {
             assert count > 0 : "Tried to insert invalid amount of tabs - must be at least one.";
-            while (count-- > 0) {
-                Tab tab = model.get(index);
-                view.addTabAt(index, tab.getIcon(), tab.getContentDescription());
-                ++index;
+            for (int i = index; i < index + count; i++) {
+                Tab tab = model.get(i);
+                view.addTabAt(i, tab.getIcon(), tab.getContentDescription());
             }
         }
 
@@ -91,85 +96,53 @@ class KeyboardAccessoryViewBinder
 
         void updateAllTabs(KeyboardAccessoryView view, ListModel<Tab> model) {
             view.clearTabs();
-            for (int i = 0; i < model.size(); ++i) {
-                Tab tab = model.get(i);
-                // Mutate tab icons so we can apply color filters.
-                view.addTabAt(i, tab.getIcon().mutate(), tab.getContentDescription());
-            }
+            if (model.size() > 0) onItemsInserted(model, view, 0, model.size());
         }
     }
 
-    @Override
-    public PropertyKey getVisibilityProperty() {
-        return PropertyKey.VISIBLE;
-    }
-
-    @Override
-    public boolean isVisible(KeyboardAccessoryModel model) {
-        return model.isVisible();
-    }
-
-    @Override
-    public void onInitialInflation(
-            KeyboardAccessoryModel model, KeyboardAccessoryView inflatedView) {
-        for (PropertyKey key : PropertyKey.ALL_PROPERTIES) {
-            bind(model, inflatedView, key);
-        }
-
-        inflatedView.setActionsAdapter(KeyboardAccessoryCoordinator.createActionsAdapter(model));
-        KeyboardAccessoryCoordinator.createTabViewBinder(model, inflatedView)
-                .updateAllTabs(inflatedView, model.getTabList());
-    }
-
-    @Override
-    public void bind(
-            KeyboardAccessoryModel model, KeyboardAccessoryView view, PropertyKey propertyKey) {
-        if (propertyKey == PropertyKey.VISIBLE) {
-            view.setActiveTabColor(model.activeTab());
+    public static void bind(
+            PropertyModel model, KeyboardAccessoryView view, PropertyKey propertyKey) {
+        if (propertyKey == ACTIONS) {
+            view.setActionsAdapter(
+                    KeyboardAccessoryCoordinator.createActionsAdapter(model.get(ACTIONS)));
+        } else if (propertyKey == TABS) {
+            KeyboardAccessoryCoordinator.createTabViewBinder(model, view)
+                    .updateAllTabs(view, model.get(TABS));
+        } else if (propertyKey == VISIBLE) {
+            view.setActiveTabColor(model.get(ACTIVE_TAB));
             setActiveTabHint(model, view);
-            view.setVisible(model.isVisible());
-            requestLayout(view);
-            return;
-        }
-        if (propertyKey == PropertyKey.ACTIVE_TAB) {
-            view.setActiveTabColor(model.activeTab());
+            view.setVisible(model.get(VISIBLE));
+        } else if (propertyKey == ACTIVE_TAB) {
+            view.setActiveTabColor(model.get(ACTIVE_TAB));
             setActiveTabHint(model, view);
-            requestLayout(view);
-            return;
-        }
-        if (propertyKey == PropertyKey.BOTTOM_OFFSET) {
-            view.setBottomOffset(model.bottomOffset());
-            requestLayout(view);
-            return;
-        }
-        if (propertyKey == PropertyKey.TAB_SELECTION_CALLBACKS) {
+        } else if (propertyKey == BOTTOM_OFFSET_PX) {
+            view.setBottomOffset(model.get(BOTTOM_OFFSET_PX));
+        } else if (propertyKey == TAB_SELECTION_CALLBACKS) {
             // Don't add null as listener. It's a valid state but an invalid argument.
-            if (model.getTabSelectionCallbacks() == null) return;
-            view.setTabSelectionAdapter(model.getTabSelectionCallbacks());
-            requestLayout(view);
-            return;
+            TabLayout.OnTabSelectedListener listener = model.get(TAB_SELECTION_CALLBACKS);
+            if (listener == null) return;
+            view.setTabSelectionAdapter(listener);
+        } else {
+            assert false : "Every possible property update needs to be handled!";
         }
-        assert false : "Every possible property update needs to be handled!";
+        // Layout requests happen automatically since Kitkat and redundant requests cause warnings.
+        if (view != null && Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            view.post(() -> {
+                ViewParent parent = view.getParent();
+                if (parent != null) {
+                    parent.requestLayout();
+                }
+            });
+        }
     }
 
-    private static void requestLayout(KeyboardAccessoryView view) {
-         // Layout requests happen automatically since Kitkat and redundant requests cause warnings.
-        if (view == null || Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) return;
-        view.post(() -> {
-            ViewParent parent = view.getParent();
-            if (parent != null) {
-                parent.requestLayout();
-            }
-        });
-    }
-
-    private static void setActiveTabHint(KeyboardAccessoryModel model, KeyboardAccessoryView view) {
+    private static void setActiveTabHint(PropertyModel model, KeyboardAccessoryView view) {
         int activeTab = -1;
-        if (model.activeTab() != null) {
-            activeTab = model.activeTab();
+        if (model.get(ACTIVE_TAB) != null) {
+            activeTab = model.get(ACTIVE_TAB);
         }
-        for (int i = 0; i < model.getTabList().size(); ++i) {
-            Tab tab = model.getTabList().get(i);
+        for (int i = 0; i < model.get(TABS).size(); ++i) {
+            Tab tab = model.get(TABS).get(i);
             if (activeTab == i) {
                 view.setTabDescription(i, R.string.keyboard_accessory_sheet_hide);
             } else {

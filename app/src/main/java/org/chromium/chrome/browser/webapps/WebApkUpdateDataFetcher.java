@@ -99,7 +99,8 @@ public class WebApkUpdateDataFetcher extends EmptyTabObserver {
             String shortName, String primaryIconUrl, String primaryIconMurmur2Hash,
             Bitmap primaryIconBitmap, String badgeIconUrl, String badgeIconMurmur2Hash,
             Bitmap badgeIconBitmap, String[] iconUrls, @WebDisplayMode int displayMode,
-            int orientation, long themeColor, long backgroundColor) {
+            int orientation, long themeColor, long backgroundColor, String shareAction,
+            String shareParamsTitle, String shareParamsText, String shareParamsUrl) {
         HashMap<String, String> iconUrlToMurmur2HashMap = new HashMap<String, String>();
         for (String iconUrl : iconUrls) {
             String murmur2Hash = null;
@@ -111,12 +112,15 @@ public class WebApkUpdateDataFetcher extends EmptyTabObserver {
             iconUrlToMurmur2HashMap.put(iconUrl, murmur2Hash);
         }
 
+        String serializedShareTarget = WebApkInfo.getSerializedShareTarget(
+                shareAction, shareParamsTitle, shareParamsText, shareParamsUrl);
+
         WebApkInfo info = WebApkInfo.create(mOldInfo.id(), mOldInfo.uri().toString(), scopeUrl,
                 new WebApkInfo.Icon(primaryIconBitmap), new WebApkInfo.Icon(badgeIconBitmap), null,
                 name, shortName, displayMode, orientation, mOldInfo.source(), themeColor,
                 backgroundColor, mOldInfo.apkPackageName(), mOldInfo.shellApkVersion(),
                 mOldInfo.manifestUrl(), manifestStartUrl, WebApkInfo.WebApkDistributor.BROWSER,
-                iconUrlToMurmur2HashMap, mOldInfo.shouldForceNavigation());
+                iconUrlToMurmur2HashMap, serializedShareTarget, mOldInfo.shouldForceNavigation());
         mObserver.onGotManifestData(info, primaryIconUrl, badgeIconUrl);
     }
 

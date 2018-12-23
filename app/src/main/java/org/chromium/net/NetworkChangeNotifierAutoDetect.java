@@ -19,6 +19,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.ConnectivityManager.NetworkCallback;
+import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
@@ -33,8 +34,10 @@ import android.telephony.TelephonyManager;
 import org.chromium.base.ApplicationState;
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.BuildConfig;
+import org.chromium.base.BuildInfo;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.base.compat.ApiHelperForM;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -60,12 +63,16 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
         // WIFI SSID of the connection on pre-Marshmallow, NetID starting with Marshmallow. Always
         // non-null (i.e. instead of null it'll be an empty string) to facilitate .equals().
         private final String mNetworkIdentifier;
+        // Indicates if this network is using DNS-over-TLS.
+        private final boolean mIsPrivateDnsActive;
 
-        public NetworkState(boolean connected, int type, int subtype, String networkIdentifier) {
+        public NetworkState(boolean connected, int type, int subtype, String networkIdentifier,
+                boolean isPrivateDnsActive) {
             mConnected = connected;
             mType = type;
             mSubtype = subtype;
             mNetworkIdentifier = networkIdentifier == null ? "" : networkIdentifier;
+            mIsPrivateDnsActive = isPrivateDnsActive;
         }
 
         public boolean isConnected() {
@@ -150,6 +157,13 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
                     return ConnectionSubtype.SUBTYPE_UNKNOWN;
             }
         }
+
+        /**
+         * Returns boolean indicating if this network uses DNS-over-TLS.
+         */
+        public boolean isPrivateDnsActive() {
+            return mIsPrivateDnsActive;
+        }
     }
 
     /** Queries the ConnectivityManager for information about the current connection. */
@@ -212,17 +226,20 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
             NetworkInfo networkInfo;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 network = getDefaultNetwork();
-                networkInfo = mConnectivityManager.getNetworkInfo(network);
+                networkInfo = ApiHelperForM.getNetworkInfo(mConnectivityManager, network);
             } else {
                 networkInfo = mConnectivityManager.getActiveNetworkInfo();
             }
             networkInfo = processActiveNetworkInfo(networkInfo);
             if (networkInfo == null) {
-                return new NetworkState(false, -1, -1, null);
+                return new NetworkState(false, -1, -1, null, false);
             }
             if (network != null) {
                 return new NetworkState(true, networkInfo.getType(), networkInfo.getSubtype(),
-                        String.valueOf(networkToNetId(network)));
+                        String.valueOf(networkToNetId(network)),
+                        BuildInfo.isAtLeastP()
+                                && AndroidNetworkLibrary.isPrivateDnsActive(
+                                           mConnectivityManager.getLinkProperties(network)));
             }
             assert Build.VERSION.SDK_INT < Build.VERSION_CODES.M;
             // If Wifi, then fetch SSID also
@@ -230,13 +247,14 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
                 // Since Android 4.2 the SSID can be retrieved from NetworkInfo.getExtraInfo().
                 if (networkInfo.getExtraInfo() != null && !"".equals(networkInfo.getExtraInfo())) {
                     return new NetworkState(true, networkInfo.getType(), networkInfo.getSubtype(),
-                            networkInfo.getExtraInfo());
+                            networkInfo.getExtraInfo(), false);
                 }
                 // Fetch WiFi SSID directly from WifiManagerDelegate if not in NetworkInfo.
                 return new NetworkState(true, networkInfo.getType(), networkInfo.getSubtype(),
-                        wifiManagerDelegate.getWifiSsid());
+                        wifiManagerDelegate.getWifiSsid(), false);
             }
-            return new NetworkState(true, networkInfo.getType(), networkInfo.getSubtype(), null);
+            return new NetworkState(
+                    true, networkInfo.getType(), networkInfo.getSubtype(), null, false);
         }
 
         // Fetches NetworkInfo and records UMA for NullPointerExceptions.
@@ -331,8 +349,23 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
          */
         @TargetApi(Build.VERSION_CODES.LOLLIPOP)
         void registerNetworkCallback(
-                NetworkRequest networkRequest, NetworkCallback networkCallback) {
-            mConnectivityManager.registerNetworkCallback(networkRequest, networkCallback);
+                NetworkRequest networkRequest, NetworkCallback networkCallback, Handler handler) {
+            // Starting with Oreo specifying a Handler is allowed.  Use this to avoid thread-hops.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                mConnectivityManager.registerNetworkCallback(
+                        networkRequest, networkCallback, handler);
+            } else {
+                mConnectivityManager.registerNetworkCallback(networkRequest, networkCallback);
+            }
+        }
+
+        /**
+         * Registers networkCallback to receive notifications about default network.
+         * Only callable on P and newer releases.
+         */
+        @TargetApi(Build.VERSION_CODES.P)
+        void registerDefaultNetworkCallback(NetworkCallback networkCallback, Handler handler) {
+            mConnectivityManager.registerDefaultNetworkCallback(networkCallback, handler);
         }
 
         /**
@@ -352,7 +385,7 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
         Network getDefaultNetwork() {
             Network defaultNetwork = null;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                defaultNetwork = mConnectivityManager.getActiveNetwork();
+                defaultNetwork = ApiHelperForM.getActiveNetwork(mConnectivityManager);
                 // getActiveNetwork() returning null cannot be trusted to indicate disconnected
                 // as it suffers from https://crbug.com/677365.
                 if (defaultNetwork != null) {
@@ -466,6 +499,29 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
                     return null;
                 }
             }
+        }
+    }
+
+    // NetworkCallback used for listening for changes to the default network.
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private class DefaultNetworkCallback extends NetworkCallback {
+        // If registered, notify connectionTypeChanged() to look for changes.
+        @Override
+        public void onAvailable(Network network) {
+            if (mRegistered) {
+                connectionTypeChanged();
+            }
+        }
+
+        @Override
+        public void onLost(final Network network) {
+            onAvailable(null);
+        }
+
+        // LinkProperties changes include enabling/disabling DNS-over-TLS.
+        @Override
+        public void onLinkPropertiesChanged(Network network, LinkProperties linkProperties) {
+            onAvailable(null);
         }
     }
 
@@ -672,6 +728,8 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
     // Notifications are sent to this {@link Observer}.
     private final Observer mObserver;
     private final RegistrationPolicy mRegistrationPolicy;
+    // Starting with Android Pie, used to detect changes in default network.
+    private final DefaultNetworkCallback mDefaultNetworkCallback;
 
     // mConnectivityManagerDelegates and mWifiManagerDelegate are only non-final for testing.
     private ConnectivityManagerDelegate mConnectivityManagerDelegate;
@@ -772,6 +830,7 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
             mNetworkCallback = null;
             mNetworkRequest = null;
         }
+        mDefaultNetworkCallback = BuildInfo.isAtLeastP() ? new DefaultNetworkCallback() : null;
         mNetworkState = getCurrentNetworkState();
         mIntentFilter = new NetworkConnectivityIntentFilter();
         mIgnoreNextBroadcast = false;
@@ -843,19 +902,26 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
         if (mShouldSignalObserver) {
             connectionTypeChanged();
         }
-        // When registering for a sticky broadcast, like CONNECTIVITY_ACTION, if registerReceiver
-        // returns non-null, it means the broadcast was previously issued and onReceive() will be
-        // immediately called with this previous Intent. Since this initial callback doesn't
-        // actually indicate a network change, we can ignore it by setting mIgnoreNextBroadcast.
-        mIgnoreNextBroadcast =
-                ContextUtils.getApplicationContext().registerReceiver(this, mIntentFilter) != null;
+        if (mDefaultNetworkCallback != null) {
+            mConnectivityManagerDelegate.registerDefaultNetworkCallback(
+                    mDefaultNetworkCallback, mHandler);
+        } else {
+            // When registering for a sticky broadcast, like CONNECTIVITY_ACTION, if
+            // registerReceiver returns non-null, it means the broadcast was previously issued and
+            // onReceive() will be immediately called with this previous Intent. Since this initial
+            // callback doesn't actually indicate a network change, we can ignore it by setting
+            // mIgnoreNextBroadcast.
+            mIgnoreNextBroadcast =
+                    ContextUtils.getApplicationContext().registerReceiver(this, mIntentFilter)
+                    != null;
+        }
         mRegistered = true;
 
         if (mNetworkCallback != null) {
             mNetworkCallback.initializeVpnInPlace();
             try {
                 mConnectivityManagerDelegate.registerNetworkCallback(
-                        mNetworkRequest, mNetworkCallback);
+                        mNetworkRequest, mNetworkCallback, mHandler);
             } catch (IllegalArgumentException e) {
                 mRegisterNetworkCallbackFailed = true;
                 // If Android thinks this app has used up all available NetworkRequests, don't
@@ -889,10 +955,14 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
     public void unregister() {
         assertOnThread();
         if (!mRegistered) return;
-        ContextUtils.getApplicationContext().unregisterReceiver(this);
         mRegistered = false;
         if (mNetworkCallback != null) {
             mConnectivityManagerDelegate.unregisterNetworkCallback(mNetworkCallback);
+        }
+        if (mDefaultNetworkCallback != null) {
+            mConnectivityManagerDelegate.unregisterNetworkCallback(mDefaultNetworkCallback);
+        } else {
+            ContextUtils.getApplicationContext().unregisterReceiver(this);
         }
     }
 
@@ -1046,8 +1116,8 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
     private void connectionTypeChanged() {
         NetworkState networkState = getCurrentNetworkState();
         if (networkState.getConnectionType() != mNetworkState.getConnectionType()
-                || !networkState.getNetworkIdentifier().equals(
-                           mNetworkState.getNetworkIdentifier())) {
+                || !networkState.getNetworkIdentifier().equals(mNetworkState.getNetworkIdentifier())
+                || networkState.isPrivateDnsActive() != mNetworkState.isPrivateDnsActive()) {
             mObserver.onConnectionTypeChanged(networkState.getConnectionType());
         }
         if (networkState.getConnectionType() != mNetworkState.getConnectionType()
@@ -1073,7 +1143,7 @@ public class NetworkChangeNotifierAutoDetect extends BroadcastReceiver {
     @VisibleForTesting
     static long networkToNetId(Network network) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return network.getNetworkHandle();
+            return ApiHelperForM.getNetworkHandle(network);
         } else {
             // NOTE(pauljensen): This depends on Android framework implementation details. These
             // details cannot change because Lollipop is long since released.

@@ -98,7 +98,7 @@ public class InterceptNavigationDelegateImpl implements InterceptNavigationDeleg
 
         TabRedirectHandler tabRedirectHandler = null;
         if (navigationParams.isMainFrame) {
-            tabRedirectHandler = mTab.getTabRedirectHandler();
+            tabRedirectHandler = TabRedirectHandler.from(mTab);
         } else if (navigationParams.isExternalProtocol) {
             // Only external protocol navigations are intercepted for iframe navigations.  Since
             // we do not see all previous navigations for the iframe, we can not build a complete
@@ -110,7 +110,7 @@ public class InterceptNavigationDelegateImpl implements InterceptNavigationDeleg
             // not covering the case where a gesture is carried over via a redirect.  This is
             // currently not feasible because we do not see all navigations for iframes and it is
             // better to error on the side of caution and require direct user gestures for iframes.
-            tabRedirectHandler = new TabRedirectHandler(associatedActivity);
+            tabRedirectHandler = TabRedirectHandler.create(associatedActivity);
         } else {
             assert false;
             return false;
@@ -200,8 +200,9 @@ public class InterceptNavigationDelegateImpl implements InterceptNavigationDeleg
             // redirect history to be consistent.
             NavigationController navigationController =
                     webContents.getNavigationController();
-            int indexBeforeRedirection = mTab.getTabRedirectHandler()
-                    .getLastCommittedEntryIndexBeforeStartingNavigation();
+            int indexBeforeRedirection =
+                    TabRedirectHandler.from(mTab)
+                            .getLastCommittedEntryIndexBeforeStartingNavigation();
             int lastCommittedEntryIndex = getLastCommittedEntryIndex();
             for (int i = lastCommittedEntryIndex - 1; i > indexBeforeRedirection; --i) {
                 boolean ret = navigationController.removeEntryAtIndex(i);
@@ -229,8 +230,9 @@ public class InterceptNavigationDelegateImpl implements InterceptNavigationDeleg
         // navigation is invalid, it means that this navigation is the first one since this tab was
         // created.
         // In such case, we would like to close this tab.
-        if (mTab.getTabRedirectHandler().isOnNavigation()) {
-            return mTab.getTabRedirectHandler().getLastCommittedEntryIndexBeforeStartingNavigation()
+        if (TabRedirectHandler.from(mTab).isOnNavigation()) {
+            return TabRedirectHandler.from(mTab)
+                           .getLastCommittedEntryIndexBeforeStartingNavigation()
                     == TabRedirectHandler.INVALID_ENTRY_INDEX;
         }
         return false;
@@ -262,9 +264,10 @@ public class InterceptNavigationDelegateImpl implements InterceptNavigationDeleg
                     mTab.getTabModelSelector().closeTab(mTab);
                 }
             });
-        } else if (mTab.getTabRedirectHandler().isOnNavigation()) {
-            int lastCommittedEntryIndexBeforeNavigation = mTab.getTabRedirectHandler()
-                    .getLastCommittedEntryIndexBeforeStartingNavigation();
+        } else if (TabRedirectHandler.from(mTab).isOnNavigation()) {
+            int lastCommittedEntryIndexBeforeNavigation =
+                    TabRedirectHandler.from(mTab)
+                            .getLastCommittedEntryIndexBeforeStartingNavigation();
             if (getLastCommittedEntryIndex() > lastCommittedEntryIndexBeforeNavigation) {
                 // http://crbug/426679 : we want to go back to the last committed entry index which
                 // was saved before this navigation, and remove the empty entries from the

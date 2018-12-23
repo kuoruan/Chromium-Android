@@ -126,8 +126,8 @@ public class DownloadBroadcastManager extends Service {
         switch (action) {
             case ACTION_DOWNLOAD_PAUSE:
                 mDownloadNotificationService.notifyDownloadPaused(entry.id, entry.fileName, true,
-                        false, entry.isOffTheRecord, entry.isTransient, null, true, false,
-                        PendingState.NOT_PENDING);
+                        false, entry.isOffTheRecord, entry.isTransient, null, null, false, true,
+                        false, PendingState.NOT_PENDING);
                 break;
 
             case ACTION_DOWNLOAD_CANCEL:
@@ -148,7 +148,7 @@ public class DownloadBroadcastManager extends Service {
 
                 mDownloadNotificationService.notifyDownloadPending(entry.id, entry.fileName,
                         entry.isOffTheRecord, entry.canDownloadWhileMetered, entry.isTransient,
-                        null, true, PendingState.PENDING_NETWORK);
+                        null, null, false, true, PendingState.PENDING_NETWORK);
                 break;
 
             default:
@@ -174,8 +174,6 @@ public class DownloadBroadcastManager extends Service {
                 // Delay the stop of the service by WAIT_TIME_MS after native library is loaded.
                 mHandler.postDelayed(mStopSelfRunnable, WAIT_TIME_MS);
 
-                // Make sure the OfflineContentAggregator bridge is initialized.
-                OfflineContentAggregatorNotificationBridgeUiFactory.instance();
                 propagateInteraction(intent);
             }
 

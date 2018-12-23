@@ -34,6 +34,11 @@ String shippingOptionId);
 
 
 
+    void onPayerDetailChange(
+PayerDetail detail);
+
+
+
     void onPaymentResponse(
 PaymentResponse response);
 

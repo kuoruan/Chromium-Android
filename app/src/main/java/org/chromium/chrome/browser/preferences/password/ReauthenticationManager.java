@@ -71,7 +71,7 @@ public final class ReauthenticationManager {
     private static int sApiOverride = OverrideState.NOT_OVERRIDDEN;
 
     // Used in tests to avoid displaying the OS reauth dialog.
-    private static boolean sSkipSystemReauth = false;
+    private static boolean sSkipSystemReauth;
 
     /**
      * Clears the record of the last reauth so that a call to authenticationStillValid will return

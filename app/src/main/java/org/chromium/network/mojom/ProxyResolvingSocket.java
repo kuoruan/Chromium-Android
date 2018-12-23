@@ -23,4 +23,12 @@ public interface ProxyResolvingSocket extends org.chromium.mojo.bindings.Interfa
 
     Manager<ProxyResolvingSocket, ProxyResolvingSocket.Proxy> MANAGER = ProxyResolvingSocket_Internal.MANAGER;
 
+
+    void upgradeToTls(
+HostPortPair hostPortPair, MutableNetworkTrafficAnnotationTag trafficAnnotation, org.chromium.mojo.bindings.InterfaceRequest<TlsClientSocket> request, SocketObserver observer, 
+UpgradeToTlsResponse callback);
+
+    interface UpgradeToTlsResponse extends org.chromium.mojo.bindings.Callbacks.Callback3<Integer, org.chromium.mojo.system.DataPipe.ConsumerHandle, org.chromium.mojo.system.DataPipe.ProducerHandle> { }
+
+
 }

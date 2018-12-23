@@ -60,7 +60,7 @@ class ProxyResolvingSocketFactory_Internal {
 
         @Override
         public void createProxyResolvingSocket(
-org.chromium.url.mojom.Url url, boolean useTls, MutableNetworkTrafficAnnotationTag trafficAnnotation, org.chromium.mojo.bindings.InterfaceRequest<ProxyResolvingSocket> socket, 
+org.chromium.url.mojom.Url url, boolean useTls, MutableNetworkTrafficAnnotationTag trafficAnnotation, org.chromium.mojo.bindings.InterfaceRequest<ProxyResolvingSocket> socket, SocketObserver observer, 
 CreateProxyResolvingSocketResponse callback) {
 
             ProxyResolvingSocketFactoryCreateProxyResolvingSocketParams _message = new ProxyResolvingSocketFactoryCreateProxyResolvingSocketParams();
@@ -72,6 +72,8 @@ CreateProxyResolvingSocketResponse callback) {
             _message.trafficAnnotation = trafficAnnotation;
 
             _message.socket = socket;
+
+            _message.observer = observer;
 
 
             getProxyHandler().getMessageReceiver().acceptWithResponder(
@@ -147,7 +149,7 @@ CreateProxyResolvingSocketResponse callback) {
                         ProxyResolvingSocketFactoryCreateProxyResolvingSocketParams data =
                                 ProxyResolvingSocketFactoryCreateProxyResolvingSocketParams.deserialize(messageWithHeader.getPayload());
 
-                        getImpl().createProxyResolvingSocket(data.url, data.useTls, data.trafficAnnotation, data.socket, new ProxyResolvingSocketFactoryCreateProxyResolvingSocketResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().createProxyResolvingSocket(data.url, data.useTls, data.trafficAnnotation, data.socket, data.observer, new ProxyResolvingSocketFactoryCreateProxyResolvingSocketResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
 
@@ -166,13 +168,14 @@ CreateProxyResolvingSocketResponse callback) {
     
     static final class ProxyResolvingSocketFactoryCreateProxyResolvingSocketParams extends org.chromium.mojo.bindings.Struct {
 
-        private static final int STRUCT_SIZE = 32;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
+        private static final int STRUCT_SIZE = 40;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.url.mojom.Url url;
         public boolean useTls;
         public MutableNetworkTrafficAnnotationTag trafficAnnotation;
         public org.chromium.mojo.bindings.InterfaceRequest<ProxyResolvingSocket> socket;
+        public SocketObserver observer;
 
         private ProxyResolvingSocketFactoryCreateProxyResolvingSocketParams(int version) {
             super(STRUCT_SIZE, version);
@@ -225,6 +228,10 @@ CreateProxyResolvingSocketResponse callback) {
                     org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                     result.trafficAnnotation = MutableNetworkTrafficAnnotationTag.decode(decoder1);
                     }
+                    {
+                        
+                    result.observer = decoder0.readServiceInterface(32, true, SocketObserver.MANAGER);
+                    }
 
             } finally {
                 decoder0.decreaseStackDepth();
@@ -244,6 +251,8 @@ CreateProxyResolvingSocketResponse callback) {
             encoder0.encode(this.socket, 20, false);
             
             encoder0.encode(this.trafficAnnotation, 24, false);
+            
+            encoder0.encode(this.observer, 32, true, SocketObserver.MANAGER);
         }
     }
 

@@ -18,9 +18,7 @@ public final class Tls13Variant {
 
     public static final int DRAFT23 = 0;
 
-    public static final int DRAFT28 = DRAFT23 + 1;
-
-    public static final int FINAL = DRAFT28 + 1;
+    public static final int FINAL = DRAFT23 + 1;
 
 
     private static final boolean IS_EXTENSIBLE = false;
@@ -29,7 +27,6 @@ public final class Tls13Variant {
         switch (value) {
             case 0:
             case 1:
-            case 2:
                 return true;
         }
         return false;

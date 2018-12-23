@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 
 @IntDef({
     LaunchLocation.DOWNLOAD_HOME, LaunchLocation.NOTIFICATION, LaunchLocation.PROGRESS_BAR,
-    LaunchLocation.SUGGESTION, LaunchLocation.NET_ERROR_SUGGESTION
+    LaunchLocation.SUGGESTION, LaunchLocation.NET_ERROR_SUGGESTION, LaunchLocation.DOWNLOAD_SHELF
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface LaunchLocation {
@@ -41,4 +41,8 @@ public @interface LaunchLocation {
    * Due to clicking a suggestion on the net error page.
    */
   int NET_ERROR_SUGGESTION = 4;
+  /**
+   * From Download shelf.
+   */
+  int DOWNLOAD_SHELF = 5;
 }

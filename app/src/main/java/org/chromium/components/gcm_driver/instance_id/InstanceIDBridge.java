@@ -4,13 +4,19 @@
 
 package org.chromium.components.gcm_driver.instance_id;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
-import org.chromium.base.AsyncTask;
+import org.chromium.base.ContextUtils;
+import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.base.task.AsyncTask;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -19,6 +25,7 @@ import java.util.concurrent.ExecutionException;
  */
 @JNINamespace("instance_id")
 public class InstanceIDBridge {
+    private static final String FCM_LAZY_SUBSCRIPTIONS = "fcm_lazy_subscriptions";
     private final String mSubtype;
     private long mNativeInstanceIDAndroid;
     /**
@@ -32,6 +39,37 @@ public class InstanceIDBridge {
     private InstanceIDBridge(long nativeInstanceIDAndroid, String subtype) {
         mSubtype = subtype;
         mNativeInstanceIDAndroid = nativeInstanceIDAndroid;
+    }
+
+    /**
+     * Stores the information about lazy subscriptions in SharedPreferences.
+     */
+    @VisibleForTesting
+    public void storeLazinessInformation(final String authorizedEntity, boolean isLazy) {
+        if (isLazy) {
+            SharedPreferences sharedPrefs = ContextUtils.getAppSharedPreferences();
+            Set<String> lazyIds = new HashSet<>(
+                    sharedPrefs.getStringSet(FCM_LAZY_SUBSCRIPTIONS, Collections.emptySet()));
+            lazyIds.add(buildSubscriptionUniqueId(mSubtype, authorizedEntity));
+            sharedPrefs.edit().putStringSet(FCM_LAZY_SUBSCRIPTIONS, lazyIds).apply();
+        }
+        // TODO(https://crbug.com/882887): Check if that
+        // subscription was marked lazy before and handle the change
+        // accordingly.
+    }
+
+    /**
+     * Returns whether the subscription with the |appId| and |senderId| is lazy.
+     */
+    public static boolean isSubscriptionLazy(final String appId, final String senderId) {
+        SharedPreferences sharedPrefs = ContextUtils.getAppSharedPreferences();
+        Set<String> lazyIds = new HashSet<>(
+                sharedPrefs.getStringSet(FCM_LAZY_SUBSCRIPTIONS, Collections.emptySet()));
+        return lazyIds.contains(buildSubscriptionUniqueId(appId, senderId));
+    }
+
+    private static String buildSubscriptionUniqueId(final String appId, final String senderId) {
+        return appId + senderId;
     }
 
     /**
@@ -94,19 +132,24 @@ public class InstanceIDBridge {
         }.execute();
     }
 
-    /** Async wrapper for {@link InstanceID#getToken(String, String, Bundle)}. */
+    /** Async wrapper for {@link InstanceID#getToken(String, String, Bundle)}.
+     * |isLazy| isn't part of the InstanceID.getToken() call and not sent to the
+     * FCM server. It's used to mark the subscription as lazy such that incoming
+     * messages are deferred until there are visible activities.*/
     @CalledByNative
     private void getToken(final int requestId, final String authorizedEntity, final String scope,
-            String[] extrasStrings) {
+            String[] extrasStrings, boolean isLazy) {
         final Bundle extras = new Bundle();
         assert extrasStrings.length % 2 == 0;
         for (int i = 0; i < extrasStrings.length; i += 2) {
             extras.putString(extrasStrings[i], extrasStrings[i + 1]);
         }
+
         new BridgeAsyncTask<String>() {
             @Override
             protected String doBackgroundWork() {
                 try {
+                    storeLazinessInformation(authorizedEntity, isLazy);
                     return mInstanceID.getToken(authorizedEntity, scope, extras);
                 } catch (IOException ex) {
                     return "";

@@ -23,4 +23,10 @@ rm -rf ${PRO_DIR}/data_chart/src/main/res/* \
 rm -rf ${PRO_DIR}/media/src/main/res/* \
 	${PRO_DIR}/media/src/main/java/*
 
+rm -rf ${PRO_DIR}/download/src/main/res/*
+
 rm -rf ${PRO_DIR}/ui/src/main/res/*
+
+rm -rf ${PRO_DIR}/splash/src/main/res/*
+
+rm -rf ${PRO_DIR}/res_base/*

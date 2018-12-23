@@ -27,7 +27,7 @@ import org.chromium.chrome.browser.widget.ToolbarProgressBar;
 import org.chromium.chrome.browser.widget.ViewResourceFrameLayout;
 import org.chromium.ui.AsyncViewProvider;
 import org.chromium.ui.AsyncViewStub;
-import org.chromium.ui.UiUtils;
+import org.chromium.ui.KeyboardVisibilityDelegate;
 import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.resources.dynamics.ViewResourceAdapter;
 import org.chromium.ui.widget.OptimizedFrameLayout;
@@ -70,6 +70,7 @@ public class ToolbarControlContainer extends OptimizedFrameLayout implements Con
 
     @Override
     public void getProgressBarDrawingInfo(DrawingInfo drawingInfoOut) {
+        if (mToolbar == null) return;
         // TODO(yusufo): Avoid casting to the layout without making the interface bigger.
         ToolbarProgressBar progressBar = ((ToolbarLayout) mToolbar).getProgressBar();
         if (progressBar != null) progressBar.getDrawingInfo(drawingInfoOut);
@@ -77,6 +78,7 @@ public class ToolbarControlContainer extends OptimizedFrameLayout implements Con
 
     @Override
     public int getToolbarBackgroundColor() {
+        if (mToolbar == null) return 0;
         return ((ToolbarLayout) mToolbar).getToolbarDataProvider().getPrimaryColor();
     }
 
@@ -95,11 +97,10 @@ public class ToolbarControlContainer extends OptimizedFrameLayout implements Con
             if (viewStub instanceof AsyncViewStub) {
                 AsyncViewStub toolbarStub = (AsyncViewStub) viewStub;
                 toolbarStub.setLayoutResource(toolbarLayoutId);
-                if (DeviceFormFactor.isNonMultiDisplayContextOnTablet(getContext())) {
-                    toolbarStub.inflate(false);
-                } else {
-                    toolbarStub.inflate(FeatureUtilities.shouldInflateToolbarOnBackgroundThread());
-                }
+                toolbarStub.setShouldInflateOnBackgroundThread(
+                        !DeviceFormFactor.isNonMultiDisplayContextOnTablet(getContext())
+                        && FeatureUtilities.shouldInflateToolbarOnBackgroundThread());
+                toolbarStub.inflate();
                 AsyncViewProvider<ToolbarLayout> toolbarProvider =
                         AsyncViewProvider.of(toolbarStub, R.id.toolbar);
                 toolbarProvider.whenLoaded(this ::onToolbarInflationComplete);
@@ -305,8 +306,10 @@ public class ToolbarControlContainer extends OptimizedFrameLayout implements Con
         @Override
         public boolean shouldRecognizeSwipe(MotionEvent e1, MotionEvent e2) {
             if (isOnTabStrip(e1)) return false;
-            if (mToolbar.shouldIgnoreSwipeGesture()) return false;
-            if (UiUtils.isKeyboardShowing(getContext(), ToolbarControlContainer.this)) return false;
+            if (mToolbar != null && mToolbar.shouldIgnoreSwipeGesture()) return false;
+            if (KeyboardVisibilityDelegate.getInstance().isKeyboardShowing(
+                        getContext(), ToolbarControlContainer.this))
+                return false;
             return true;
         }
     }

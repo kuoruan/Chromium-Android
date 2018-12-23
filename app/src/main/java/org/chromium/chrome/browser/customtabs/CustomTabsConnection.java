@@ -37,6 +37,7 @@ import org.chromium.base.ThreadUtils;
 import org.chromium.base.TimeUtils;
 import org.chromium.base.TraceEvent;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.library_loader.ProcessInitException;
@@ -53,6 +54,7 @@ import org.chromium.chrome.browser.WarmupManager;
 import org.chromium.chrome.browser.browserservices.BrowserSessionContentUtils;
 import org.chromium.chrome.browser.browserservices.Origin;
 import org.chromium.chrome.browser.browserservices.PostMessageHandler;
+import org.chromium.chrome.browser.customtabs.dynamicmodule.ActivityDelegate;
 import org.chromium.chrome.browser.customtabs.dynamicmodule.ModuleLoader;
 import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.init.ChainedTasks;
@@ -95,6 +97,7 @@ public class CustomTabsConnection {
     private static final String TAG = "ChromeConnection";
     private static final String LOG_SERVICE_REQUESTS = "custom-tabs-log-service-requests";
 
+    // Callback names for |extraCallback()|.
     @VisibleForTesting
     static final String PAGE_LOAD_METRICS_CALLBACK = "NavigationMetrics";
     static final String BOTTOM_BAR_SCROLL_STATE_CALLBACK = "onBottomBarScrollStateChanged";
@@ -102,6 +105,10 @@ public class CustomTabsConnection {
     static final String OPEN_IN_BROWSER_CALLBACK = "onOpenInBrowser";
     @VisibleForTesting
     static final String ON_WARMUP_COMPLETED = "onWarmupCompleted";
+    @VisibleForTesting
+    static final String ON_DETACHED_REQUEST_REQUESTED = "onDetachedRequestRequested";
+    @VisibleForTesting
+    static final String ON_DETACHED_REQUEST_COMPLETED = "onDetachedRequestCompleted";
 
     // For CustomTabs.SpeculationStatusOnStart, see tools/metrics/enums.xml. Append only.
     private static final int SPECULATION_STATUS_ON_START_ALLOWED = 0;
@@ -185,8 +192,7 @@ public class CustomTabsConnection {
             new EnumeratedHistogramSample(
                     "CustomTabs.ParallelRequestStatusOnStart", ParallelRequestStatus.NUM_ENTRIES);
 
-    private static final CustomTabsConnection sInstance =
-            AppHooks.get().createCustomTabsConnection();
+    private static CustomTabsConnection sInstance;
     private @Nullable String mTrustedPublisherUrlPackage;
 
     /** Holds the parameters for the current hidden tab speculation. */
@@ -219,7 +225,7 @@ public class CustomTabsConnection {
         }
 
         @Override
-        public void onCrash(Tab tab, boolean sadTabShown) {
+        public void onCrash(Tab tab) {
             final CustomTabsConnection connection = mCustomTabsConnection;
             ThreadUtils.postOnUiThread(() -> { connection.cancelSpeculation(null /* session */); });
         }
@@ -241,8 +247,7 @@ public class CustomTabsConnection {
 
     private volatile ChainedTasks mWarmupTasks;
 
-    private ModuleLoader mModuleLoader;
-
+    private @Nullable ModuleLoader mModuleLoader;
     /**
      * <strong>DO NOT CALL</strong>
      * Public to be instanciable from {@link ChromeApplication}. This is however
@@ -259,7 +264,15 @@ public class CustomTabsConnection {
      * @return The unique instance of ChromeCustomTabsConnection.
      */
     public static CustomTabsConnection getInstance() {
+        if (sInstance == null) {
+            sInstance = AppHooks.get().createCustomTabsConnection();
+        }
+
         return sInstance;
+    }
+
+    private static boolean hasInstance() {
+        return sInstance != null;
     }
 
     /**
@@ -390,7 +403,7 @@ public class CustomTabsConnection {
      * @return Whether {@link CustomTabsConnection#warmup(long)} has been called.
      */
     public static boolean hasWarmUpBeenFinished() {
-        return sInstance.mWarmupHasBeenFinished.get();
+        return getInstance().mWarmupHasBeenFinished.get();
     }
 
     /**
@@ -869,6 +882,19 @@ public class CustomTabsConnection {
         if (mLogRequests) {
             Log.w(TAG, "handleParallelRequest() = " + PARALLEL_REQUEST_MESSAGES[status]);
         }
+
+        if ((status != ParallelRequestStatus.NO_REQUEST)
+                && (status != ParallelRequestStatus.FAILURE_NOT_INITIALIZED)
+                && (status != ParallelRequestStatus.FAILURE_NOT_AUTHORIZED)
+                && ChromeFeatureList.isEnabled(
+                           ChromeFeatureList.CCT_REPORT_PARALLEL_REQUEST_STATUS)) {
+            Bundle args = new Bundle();
+            Uri url = intent.getParcelableExtra(PARALLEL_REQUEST_URL_KEY);
+            args.putParcelable("url", url);
+            args.putInt("status", status);
+            safeExtraCallback(session, ON_DETACHED_REQUEST_REQUESTED, args);
+        }
+
         return status;
     }
 
@@ -907,11 +933,13 @@ public class CustomTabsConnection {
 
         String urlString = url.toString();
         String referrerString = referrer.toString();
-        nativeCreateAndStartDetachedResourceRequest(Profile.getLastUsedProfile(), urlString,
-                referrerString, policy, DetachedResourceRequestMotivation.PARALLEL_REQUEST);
+        nativeCreateAndStartDetachedResourceRequest(Profile.getLastUsedProfile(), session,
+                urlString, referrerString, policy,
+                DetachedResourceRequestMotivation.PARALLEL_REQUEST);
         if (mLogRequests) {
             Log.w(TAG, "startParallelRequest(%s, %s, %d)", urlString, referrerString, policy);
         }
+
         return ParallelRequestStatus.SUCCESS;
     }
 
@@ -944,8 +972,10 @@ public class CustomTabsConnection {
             String urlString = url.toString();
             if (urlString.isEmpty() || !isValid(url)) continue;
 
-            nativeCreateAndStartDetachedResourceRequest(Profile.getLastUsedProfile(), urlString,
-                    referrerString, policy, DetachedResourceRequestMotivation.RESOURCE_PREFETCH);
+            // Session is null because we don't need completion notifications.
+            nativeCreateAndStartDetachedResourceRequest(Profile.getLastUsedProfile(), null,
+                    urlString, referrerString, policy,
+                    DetachedResourceRequestMotivation.RESOURCE_PREFETCH);
             ++requestsSent;
 
             if (mLogRequests) {
@@ -1095,6 +1125,14 @@ public class CustomTabsConnection {
      * @return true for success.
      */
     public boolean notifyNavigationEvent(CustomTabsSessionToken session, int navigationEvent) {
+        // Notify dynamic module
+        ClientManager.DynamicModuleSessionParams params =
+                mClientManager.getDynamicModuleParamsForSession(session);
+        if (params != null && params.moduleVersion >= 4) {
+            params.activityDelegate.onNavigationEvent(navigationEvent,
+                    getExtrasBundleForNavigationEventForSession(session));
+        }
+
         CustomTabsCallback callback = mClientManager.getCallbackForSession(session);
         if (callback == null) return false;
 
@@ -1316,6 +1354,19 @@ public class CustomTabsConnection {
         ThreadUtils.runOnUiThread(() -> mClientManager.cleanupSession(session));
     }
 
+    /**
+     * Discards substantial objects that are not currently in use.
+     * @param level The type of signal as defined in {@link android.content.ComponentCallbacks2}.
+     */
+    public static void onTrimMemory(int level) {
+        if (!hasInstance()) return;
+
+        if (ChromeApplication.isSevereMemorySignal(level)) {
+            getInstance().mClientManager.cleanupUnusedSessions();
+        }
+        if (getInstance().mModuleLoader != null) getInstance().mModuleLoader.onTrimMemory(level);
+    }
+
     @VisibleForTesting
     int maySpeculateWithResult(CustomTabsSessionToken session) {
         if (!DeviceClassManager.enablePrerendering()) {
@@ -1461,7 +1512,8 @@ public class CustomTabsConnection {
     }
 
     private static native void nativeCreateAndStartDetachedResourceRequest(Profile profile,
-            String url, String origin, @WebReferrerPolicy int referrerPolicy,
+            CustomTabsSessionToken session, String url, String origin,
+            @WebReferrerPolicy int referrerPolicy,
             @DetachedResourceRequestMotivation int motivation);
 
     public ModuleLoader getModuleLoader(ComponentName componentName) {
@@ -1472,5 +1524,22 @@ public class CustomTabsConnection {
                     + mModuleLoader.getComponentName());
         }
         return mModuleLoader;
+    }
+
+    public void setActivityDelegateForSession(CustomTabsSessionToken sessionToken,
+            ActivityDelegate activityDelegate, int moduleVersion) {
+        mClientManager.setActivityDelegateForSession(sessionToken, activityDelegate, moduleVersion);
+    }
+
+    @CalledByNative
+    public static void notifyClientOfDetachedRequestCompletion(
+            CustomTabsSessionToken session, String url, int status) {
+        if (!ChromeFeatureList.isEnabled(ChromeFeatureList.CCT_REPORT_PARALLEL_REQUEST_STATUS)) {
+            return;
+        }
+        Bundle args = new Bundle();
+        args.putParcelable("url", Uri.parse(url));
+        args.putInt("net_error", status);
+        getInstance().safeExtraCallback(session, ON_DETACHED_REQUEST_COMPLETED, args);
     }
 }

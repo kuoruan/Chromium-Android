@@ -13,7 +13,7 @@ import android.view.Display;
 
 import org.chromium.base.CommandLine;
 import org.chromium.base.Log;
-
+import org.chromium.base.compat.ApiHelperForO;
 
 /**
  * A DisplayAndroid implementation tied to a physical Display.
@@ -137,7 +137,7 @@ import org.chromium.base.Log;
         if (hasForcedDIPScale()) displayMetrics.density = sForcedDIPScale.floatValue();
         boolean isWideColorGamut = false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            isWideColorGamut = display.isWideColorGamut();
+            isWideColorGamut = ApiHelperForO.isWideColorGamut(display);
         }
 
         // JellyBean MR1 and later always uses RGBA_8888.

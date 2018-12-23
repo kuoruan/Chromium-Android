@@ -15,12 +15,12 @@ import android.text.TextUtils;
 
 import com.google.protobuf.ByteString;
 
-import org.chromium.base.AsyncTask;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.StreamUtil;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.base.task.AsyncTask;
 import org.chromium.chrome.browser.util.ConversionUtils;
 import org.chromium.chrome.browser.widget.ThumbnailCacheEntry.ContentId;
 import org.chromium.chrome.browser.widget.ThumbnailCacheEntry.ThumbnailEntry;

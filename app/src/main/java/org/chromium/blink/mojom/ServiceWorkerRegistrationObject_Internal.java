@@ -47,7 +47,7 @@ class ServiceWorkerRegistrationObject_Internal {
     };
 
 
-    private static final int SET_VERSION_ATTRIBUTES_ORDINAL = 0;
+    private static final int SET_SERVICE_WORKER_OBJECTS_ORDINAL = 0;
 
     private static final int SET_UPDATE_VIA_CACHE_ORDINAL = 1;
 
@@ -63,10 +63,10 @@ class ServiceWorkerRegistrationObject_Internal {
 
 
         @Override
-        public void setVersionAttributes(
-int changedMask, ServiceWorkerObjectInfo installing, ServiceWorkerObjectInfo waiting, ServiceWorkerObjectInfo active) {
+        public void setServiceWorkerObjects(
+ChangedServiceWorkerObjectsMask changedMask, ServiceWorkerObjectInfo installing, ServiceWorkerObjectInfo waiting, ServiceWorkerObjectInfo active) {
 
-            ServiceWorkerRegistrationObjectSetVersionAttributesParams _message = new ServiceWorkerRegistrationObjectSetVersionAttributesParams();
+            ServiceWorkerRegistrationObjectSetServiceWorkerObjectsParams _message = new ServiceWorkerRegistrationObjectSetServiceWorkerObjectsParams();
 
             _message.changedMask = changedMask;
 
@@ -80,7 +80,7 @@ int changedMask, ServiceWorkerObjectInfo installing, ServiceWorkerObjectInfo wai
             getProxyHandler().getMessageReceiver().accept(
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(SET_VERSION_ATTRIBUTES_ORDINAL)));
+                            new org.chromium.mojo.bindings.MessageHeader(SET_SERVICE_WORKER_OBJECTS_ORDINAL)));
 
         }
 
@@ -144,12 +144,12 @@ int updateViaCache) {
 
 
 
-                    case SET_VERSION_ATTRIBUTES_ORDINAL: {
+                    case SET_SERVICE_WORKER_OBJECTS_ORDINAL: {
 
-                        ServiceWorkerRegistrationObjectSetVersionAttributesParams data =
-                                ServiceWorkerRegistrationObjectSetVersionAttributesParams.deserialize(messageWithHeader.getPayload());
+                        ServiceWorkerRegistrationObjectSetServiceWorkerObjectsParams data =
+                                ServiceWorkerRegistrationObjectSetServiceWorkerObjectsParams.deserialize(messageWithHeader.getPayload());
 
-                        getImpl().setVersionAttributes(data.changedMask, data.installing, data.waiting, data.active);
+                        getImpl().setServiceWorkerObjects(data.changedMask, data.installing, data.waiting, data.active);
                         return true;
                     }
 
@@ -222,25 +222,25 @@ int updateViaCache) {
 
 
     
-    static final class ServiceWorkerRegistrationObjectSetVersionAttributesParams extends org.chromium.mojo.bindings.Struct {
+    static final class ServiceWorkerRegistrationObjectSetServiceWorkerObjectsParams extends org.chromium.mojo.bindings.Struct {
 
         private static final int STRUCT_SIZE = 40;
         private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-        public int changedMask;
+        public ChangedServiceWorkerObjectsMask changedMask;
         public ServiceWorkerObjectInfo installing;
         public ServiceWorkerObjectInfo waiting;
         public ServiceWorkerObjectInfo active;
 
-        private ServiceWorkerRegistrationObjectSetVersionAttributesParams(int version) {
+        private ServiceWorkerRegistrationObjectSetServiceWorkerObjectsParams(int version) {
             super(STRUCT_SIZE, version);
         }
 
-        public ServiceWorkerRegistrationObjectSetVersionAttributesParams() {
+        public ServiceWorkerRegistrationObjectSetServiceWorkerObjectsParams() {
             this(0);
         }
 
-        public static ServiceWorkerRegistrationObjectSetVersionAttributesParams deserialize(org.chromium.mojo.bindings.Message message) {
+        public static ServiceWorkerRegistrationObjectSetServiceWorkerObjectsParams deserialize(org.chromium.mojo.bindings.Message message) {
             return decode(new org.chromium.mojo.bindings.Decoder(message));
         }
 
@@ -249,25 +249,26 @@ int updateViaCache) {
          *
          * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
          */
-        public static ServiceWorkerRegistrationObjectSetVersionAttributesParams deserialize(java.nio.ByteBuffer data) {
+        public static ServiceWorkerRegistrationObjectSetServiceWorkerObjectsParams deserialize(java.nio.ByteBuffer data) {
             return deserialize(new org.chromium.mojo.bindings.Message(
                     data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
         }
 
         @SuppressWarnings("unchecked")
-        public static ServiceWorkerRegistrationObjectSetVersionAttributesParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+        public static ServiceWorkerRegistrationObjectSetServiceWorkerObjectsParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
             if (decoder0 == null) {
                 return null;
             }
             decoder0.increaseStackDepth();
-            ServiceWorkerRegistrationObjectSetVersionAttributesParams result;
+            ServiceWorkerRegistrationObjectSetServiceWorkerObjectsParams result;
             try {
                 org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
                 final int elementsOrVersion = mainDataHeader.elementsOrVersion;
-                result = new ServiceWorkerRegistrationObjectSetVersionAttributesParams(elementsOrVersion);
+                result = new ServiceWorkerRegistrationObjectSetServiceWorkerObjectsParams(elementsOrVersion);
                     {
                         
-                    result.changedMask = decoder0.readInt(8);
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.changedMask = ChangedServiceWorkerObjectsMask.decode(decoder1);
                     }
                     {
                         
@@ -296,7 +297,7 @@ int updateViaCache) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.changedMask, 8);
+            encoder0.encode(this.changedMask, 8, false);
             
             encoder0.encode(this.installing, 16, true);
             

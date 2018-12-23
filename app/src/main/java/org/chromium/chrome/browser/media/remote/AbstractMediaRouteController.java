@@ -374,6 +374,11 @@ public abstract class AbstractMediaRouteController implements MediaRouteControll
     }
 
     @Override
+    public boolean shouldFilterOutRoute(RouteInfo route) {
+        return false;
+    }
+
+    @Override
     public void onRouteSelected(MediaStateListener player, MediaRouter router, RouteInfo route) {
         if (mMediaStateListener != null) mMediaStateListener.onCastStopping();
         setMediaStateListener(player);

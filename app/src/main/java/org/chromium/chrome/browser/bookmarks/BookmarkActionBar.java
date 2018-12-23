@@ -67,7 +67,7 @@ public class BookmarkActionBar extends SelectableListToolbar<BookmarkId>
 
     @Override
     public void onNavigationBack() {
-        if (mIsSearching) {
+        if (isSearching()) {
             super.onNavigationBack();
             return;
         }

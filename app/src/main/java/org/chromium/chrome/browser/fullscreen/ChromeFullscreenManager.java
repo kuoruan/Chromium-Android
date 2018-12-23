@@ -23,6 +23,7 @@ import org.chromium.base.TraceEvent;
 import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.chrome.browser.fullscreen.FullscreenHtmlApiHandler.FullscreenHtmlApiDelegate;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.tab.TabBrowserControlsOffsetHelper;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabModelObserver;
@@ -332,6 +333,13 @@ public class ChromeFullscreenManager
     }
 
     /**
+     * @return True if the browser controls are currently completely visible.
+     */
+    public boolean areBrowserControlsFullyVisible() {
+        return getBrowserControlHiddenRatio() == 0.f;
+    }
+
+    /**
      * @return Whether the browser controls should be drawn as a texture.
      */
     public boolean drawControlsAsTexture() {
@@ -543,8 +551,16 @@ public class ChromeFullscreenManager
 
     private boolean shouldShowAndroidControls() {
         if (mBrowserControlsAndroidViewHidden) return false;
-        if (getTab() != null && getTab().getControlsOffsetHelper().isControlsOffsetOverridden()) {
-            return true;
+
+        Tab tab = getTab();
+        if (tab != null) {
+            if (tab.isInitialized()) {
+                if (TabBrowserControlsOffsetHelper.from(tab).isControlsOffsetOverridden()) {
+                    return true;
+                }
+            } else {
+                assert false : "Accessing a destroyed tab, setTab should have been called";
+            }
         }
 
         boolean showControls = !drawControlsAsTexture();

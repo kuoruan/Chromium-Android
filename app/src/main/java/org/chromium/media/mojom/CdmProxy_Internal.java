@@ -140,7 +140,8 @@ CreateMediaCryptoSessionResponse callback) {
 
         @Override
         public void setKey(
-int cryptoSessionId, byte[] keyId, byte[] keyBlob) {
+int cryptoSessionId, byte[] keyId, int keyType, byte[] keyBlob, 
+SetKeyResponse callback) {
 
             CdmProxySetKeyParams _message = new CdmProxySetKeyParams();
 
@@ -148,20 +149,27 @@ int cryptoSessionId, byte[] keyId, byte[] keyBlob) {
 
             _message.keyId = keyId;
 
+            _message.keyType = keyType;
+
             _message.keyBlob = keyBlob;
 
 
-            getProxyHandler().getMessageReceiver().accept(
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(SET_KEY_ORDINAL)));
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    SET_KEY_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new CdmProxySetKeyResponseParamsForwardToCallback(callback));
 
         }
 
 
         @Override
         public void removeKey(
-int cryptoSessionId, byte[] keyId) {
+int cryptoSessionId, byte[] keyId, 
+RemoveKeyResponse callback) {
 
             CdmProxyRemoveKeyParams _message = new CdmProxyRemoveKeyParams();
 
@@ -170,10 +178,14 @@ int cryptoSessionId, byte[] keyId) {
             _message.keyId = keyId;
 
 
-            getProxyHandler().getMessageReceiver().accept(
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
-                            new org.chromium.mojo.bindings.MessageHeader(REMOVE_KEY_ORDINAL)));
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    REMOVE_KEY_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new CdmProxyRemoveKeyResponseParamsForwardToCallback(callback));
 
         }
 
@@ -210,28 +222,6 @@ int cryptoSessionId, byte[] keyId) {
 
 
 
-
-                    case SET_KEY_ORDINAL: {
-
-                        CdmProxySetKeyParams data =
-                                CdmProxySetKeyParams.deserialize(messageWithHeader.getPayload());
-
-                        getImpl().setKey(data.cryptoSessionId, data.keyId, data.keyBlob);
-                        return true;
-                    }
-
-
-
-
-
-                    case REMOVE_KEY_ORDINAL: {
-
-                        CdmProxyRemoveKeyParams data =
-                                CdmProxyRemoveKeyParams.deserialize(messageWithHeader.getPayload());
-
-                        getImpl().removeKey(data.cryptoSessionId, data.keyId);
-                        return true;
-                    }
 
 
                     default:
@@ -306,6 +296,32 @@ int cryptoSessionId, byte[] keyId) {
 
 
 
+
+
+
+                    case SET_KEY_ORDINAL: {
+
+                        CdmProxySetKeyParams data =
+                                CdmProxySetKeyParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().setKey(data.cryptoSessionId, data.keyId, data.keyType, data.keyBlob, new CdmProxySetKeyResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
+
+
+
+
+
+                    case REMOVE_KEY_ORDINAL: {
+
+                        CdmProxyRemoveKeyParams data =
+                                CdmProxyRemoveKeyParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().removeKey(data.cryptoSessionId, data.keyId, new CdmProxyRemoveKeyResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
 
 
                     default:
@@ -968,6 +984,7 @@ int cryptoSessionId, byte[] keyId) {
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public int cryptoSessionId;
         public byte[] keyId;
+        public int keyType;
         public byte[] keyBlob;
 
         private CdmProxySetKeyParams(int version) {
@@ -1009,6 +1026,11 @@ int cryptoSessionId, byte[] keyId) {
                     }
                     {
                         
+                    result.keyType = decoder0.readInt(12);
+                        CdmProxy.KeyType.validate(result.keyType);
+                    }
+                    {
+                        
                     result.keyId = decoder0.readBytes(16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
                     }
                     {
@@ -1029,9 +1051,136 @@ int cryptoSessionId, byte[] keyId) {
             
             encoder0.encode(this.cryptoSessionId, 8);
             
+            encoder0.encode(this.keyType, 12);
+            
             encoder0.encode(this.keyId, 16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
             
             encoder0.encode(this.keyBlob, 24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        }
+    }
+
+
+
+    
+    static final class CdmProxySetKeyResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int status;
+
+        private CdmProxySetKeyResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public CdmProxySetKeyResponseParams() {
+            this(0);
+        }
+
+        public static CdmProxySetKeyResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static CdmProxySetKeyResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static CdmProxySetKeyResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            CdmProxySetKeyResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmProxySetKeyResponseParams(elementsOrVersion);
+                    {
+                        
+                    result.status = decoder0.readInt(8);
+                        CdmProxy.Status.validate(result.status);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.status, 8);
+        }
+    }
+
+    static class CdmProxySetKeyResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final CdmProxy.SetKeyResponse mCallback;
+
+        CdmProxySetKeyResponseParamsForwardToCallback(CdmProxy.SetKeyResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(SET_KEY_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                CdmProxySetKeyResponseParams response = CdmProxySetKeyResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.status);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class CdmProxySetKeyResponseParamsProxyToResponder implements CdmProxy.SetKeyResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        CdmProxySetKeyResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(Integer status) {
+            CdmProxySetKeyResponseParams _response = new CdmProxySetKeyResponseParams();
+
+            _response.status = status;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    SET_KEY_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
         }
     }
 
@@ -1102,6 +1251,131 @@ int cryptoSessionId, byte[] keyId) {
             encoder0.encode(this.cryptoSessionId, 8);
             
             encoder0.encode(this.keyId, 16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        }
+    }
+
+
+
+    
+    static final class CdmProxyRemoveKeyResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int status;
+
+        private CdmProxyRemoveKeyResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public CdmProxyRemoveKeyResponseParams() {
+            this(0);
+        }
+
+        public static CdmProxyRemoveKeyResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static CdmProxyRemoveKeyResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static CdmProxyRemoveKeyResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            CdmProxyRemoveKeyResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new CdmProxyRemoveKeyResponseParams(elementsOrVersion);
+                    {
+                        
+                    result.status = decoder0.readInt(8);
+                        CdmProxy.Status.validate(result.status);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.status, 8);
+        }
+    }
+
+    static class CdmProxyRemoveKeyResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final CdmProxy.RemoveKeyResponse mCallback;
+
+        CdmProxyRemoveKeyResponseParamsForwardToCallback(CdmProxy.RemoveKeyResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(REMOVE_KEY_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                CdmProxyRemoveKeyResponseParams response = CdmProxyRemoveKeyResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.status);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class CdmProxyRemoveKeyResponseParamsProxyToResponder implements CdmProxy.RemoveKeyResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        CdmProxyRemoveKeyResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(Integer status) {
+            CdmProxyRemoveKeyResponseParams _response = new CdmProxyRemoveKeyResponseParams();
+
+            _response.status = status;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    REMOVE_KEY_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
         }
     }
 

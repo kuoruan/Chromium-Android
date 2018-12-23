@@ -26,7 +26,6 @@ import android.widget.TextView;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.widget.FadingShadow;
 import org.chromium.chrome.browser.widget.FadingShadowView;
 import org.chromium.chrome.browser.widget.LoadingView;
@@ -83,7 +82,7 @@ public class SelectableListLayout<E>
             // long as the adapter data changes, we show the recycler view, and hide loading view.
             mLoadingView.hideLoadingUI();
 
-            mToolbar.onDataChanged(mAdapter.getItemCount());
+            mToolbar.setSearchEnabled(mAdapter.getItemCount() != 0);
         }
 
         @Override
@@ -337,7 +336,6 @@ public class SelectableListLayout<E>
         if (mToolbar == null || mRecyclerView == null) return;
 
         boolean showShadow = mRecyclerView.canScrollVertically(-1)
-                || (mToolbar.isSearching() && !FeatureUtilities.isChromeModernDesignEnabled())
                 || (mToolbar.getSelectionDelegate().isSelectionEnabled() && mShowShadowOnSelection);
         mToolbarShadow.setVisibility(showShadow ? View.VISIBLE : View.GONE);
     }

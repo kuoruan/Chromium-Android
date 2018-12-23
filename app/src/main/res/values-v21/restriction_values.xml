@@ -6,13 +6,13 @@ IT IS GENERATED FROM policy_templates.json.-->
   <string name="AllowedDomainsForAppsDesc">Enables Chromium\'s restricted log in feature in G Suite and prevents users from changing this setting.
 
 If you define this setting, the user will only be able to access Google
-Apps using accounts from the specified domains (note that this does not
-work for gmail.com/googlemail.com).
+Apps using accounts from the specified domains (note that to allow
+gmail.com/googlemail.com accounts, you should add \\&quot;consumer_accounts\\&quot;
+(without quotes) to the list of domains).
 
-This setting will NOT prevent the user from loging in on a managed device
-that requires Google authentication. The user will still be allowed to
-sign in to accounts from other domains, but they will receive an error
-when trying to use G Suite with those accounts.
+This setting will prevent the user from logging in, and adding a Secondary
+Account, on a managed device that requires Google authentication, if that
+account does not belong to the aforementioned list of allowed domains.
 
 If you leave this setting empty/not-configured, the user will be able to
 access G Suite with any account.
@@ -374,6 +374,10 @@ Note that this policy depends on the operating system still recognizing certific
 If this policy is not set, or it is set to false, then Chromium follows the publicly announced deprecation schedule.
 
 See https://g.co/chrome/symantecpkicerts for more details on this deprecation.</string>
+  <string name="EnterpriseHardwarePlatformAPIEnabledTitle">Enables managed extensions to use the Enterprise Hardware Platform API</string>
+  <string name="EnterpriseHardwarePlatformAPIEnabledDesc">When this policy is set to enabled, extensions installed by enterprise policy are allowed to use the Enterprise Hardware Platform API.
+When this policy is set to disabled or not set, no extensions are allowed to use the Enterprise Hardware Platform API.
+This policy also applies to component extensions such as the Hangout Services extension.</string>
   <string name="ForceGoogleSafeSearchTitle">Force Google SafeSearch</string>
   <string name="ForceGoogleSafeSearchDesc">Forces queries in Google Web Search to be done with SafeSearch set to active and prevents users from changing this setting.
 
@@ -594,7 +598,7 @@ If this policy is not set, all Google accounts on the device will be visible in 
   <string name="SSLErrorOverrideAllowedDesc">Chrome shows a warning page when users navigate to sites that have SSL errors. By default or when this policy is set to true, users are allowed to click through these warning pages.
 Setting this policy to false disallows users to click through any warning page.</string>
   <string name="SSLVersionMaxTitle">Maximum SSL version enabled</string>
-  <string name="SSLVersionMaxDesc">Warning: The max TLS version policy will be entirely removed from Chromium around version 72 (around January 2019).
+  <string name="SSLVersionMaxDesc">Warning: The max TLS version policy will be entirely removed from Chromium around version 75 (around June 2019).
 
 If this policy is not configured then Chromium uses the default maximum version.
 
@@ -662,10 +666,6 @@ NOTE: On Android, Site Isolation is experimental. Support will improve over time
 
 NOTE: This policy applies only to Chrome on Android running on devices with strictly more than 1GB of RAM. To apply the policy on non-Android platforms, use SitePerProcess.
 </string>
-  <string name="SupervisedUserContentProviderEnabledTitle">Enable the supervised user content provider</string>
-  <string name="SupervisedUserContentProviderEnabledDesc">If true and the user is a supervised user then other Android apps can query the user\'s web restrictions through a content provider.
-
-If false or unset then the content provider returns no information.</string>
   <string name="TranslateEnabledTitle">Enable Translate</string>
   <string name="TranslateEnabledDesc">Enables the integrated Google Translate service on Chromium.
 

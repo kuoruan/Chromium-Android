@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.browserservices;
 
-import android.content.res.Resources;
 import android.support.customtabs.CustomTabsService;
 
 import org.chromium.chrome.browser.fullscreen.BrowserStateBrowserControlsVisibilityDelegate;
@@ -22,6 +21,8 @@ import org.chromium.chrome.browser.tab.TabObserver;
  * Thread safety: All methods on this class should be called on the UI thread.
  */
 public class TrustedWebActivityUi {
+    // TODO(peconn): Convert this class to use dependency injection, when you do clean up
+    // CustomTabActivityComponent and TrustedWebActivityDisclosure.
     /** The Digital Asset Link relationship used for Trusted Web Activities. */
     private final static int RELATIONSHIP = CustomTabsService.RELATION_HANDLE_ALL_URLS;
 
@@ -29,6 +30,7 @@ public class TrustedWebActivityUi {
     private final TrustedWebActivityDisclosure mDisclosure;
     private final TrustedWebActivityOpenTimeRecorder mOpenTimeRecorder =
             new TrustedWebActivityOpenTimeRecorder();
+    private final ClientAppDataRecorder mClientAppDataRecorder;
 
     private boolean mInTrustedWebActivity = true;
 
@@ -87,16 +89,21 @@ public class TrustedWebActivityUi {
 
             // This doesn't perform a network request or attempt new verification - it checks to
             // see if a verification already exists for the given inputs.
-            setTrustedWebActivityMode(
-                    OriginVerifier.isValidOrigin(packageName, new Origin(url), RELATIONSHIP), tab);
+            Origin origin = new Origin(url);
+            boolean verified =
+                    OriginVerifier.isValidOrigin(packageName, origin, RELATIONSHIP);
+            if (verified) registerClientAppData(packageName, origin);
+            setTrustedWebActivityMode(verified, tab);
         }
     };
 
 
     /** Creates a TrustedWebActivityUi, providing a delegate from the embedder. */
-    public TrustedWebActivityUi(TrustedWebActivityUiDelegate delegate, Resources resources) {
+    public TrustedWebActivityUi(TrustedWebActivityUiDelegate delegate,
+            TrustedWebActivityDisclosure disclosure, ClientAppDataRecorder clientAppDataRecorder) {
         mDelegate = delegate;
-        mDisclosure = new TrustedWebActivityDisclosure(resources);
+        mClientAppDataRecorder = clientAppDataRecorder;
+        mDisclosure = disclosure;
     }
 
     /**
@@ -144,6 +151,7 @@ public class TrustedWebActivityUi {
             if (!origin.equals(new Origin(tab.getUrl()))) return;
 
             BrowserServicesMetrics.recordTwaOpened();
+            if (verified) registerClientAppData(packageName, origin);
             setTrustedWebActivityMode(verified, tab);
         }, packageName, RELATIONSHIP).start(origin);
     }
@@ -171,6 +179,7 @@ public class TrustedWebActivityUi {
         if (enabled) {
             mDisclosure.showSnackbarIfNeeded(mDelegate.getSnackbarManager(),
                     mDelegate.getClientPackageName());
+
         } else {
             // Force showing the controls for a bit when leaving Trusted Web Activity mode.
             mDelegate.getBrowserStateBrowserControlsVisibilityDelegate().showControlsTransient();
@@ -181,4 +190,26 @@ public class TrustedWebActivityUi {
         tab.updateFullscreenEnabledState();
     }
 
+    /**
+     * Register that we have Chrome data relevant to the Client app.
+     *
+     * We do this here, when the Trusted Web Activity UI is shown instead of in OriginVerifier when
+     * verification completes because when an origin is being verified, we don't know whether it is
+     * for the purposes of Trusted Web Activities or for Post Message (where this behaviour is not
+     * required).
+     *
+     * Additionally we do it on every page navigation because an app can be verified for more than
+     * one Origin, eg:
+     * 1) App verifies with https://www.myfirsttwa.com/.
+     * 2) App verifies with https://www.mysecondtwa.com/.
+     * 3) App launches a TWA to https://www.myfirsttwa.com/.
+     * 4) App navigates to https://www.mysecondtwa.com/.
+     *
+     * At step 2, we don't know why the app is verifying with that origin (it could be for TWAs or
+     * for PostMessage). Only at step 4 do we know that Chrome should associate the browsing data
+     * for that origin with that app.
+     */
+    private void registerClientAppData(String packageName, Origin origin) {
+        mClientAppDataRecorder.register(packageName, origin);
+    }
 }

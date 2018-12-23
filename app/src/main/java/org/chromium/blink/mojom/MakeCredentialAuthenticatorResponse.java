@@ -16,11 +16,12 @@ import org.chromium.mojo.bindings.DeserializationException;
 
 public final class MakeCredentialAuthenticatorResponse extends org.chromium.mojo.bindings.Struct {
 
-    private static final int STRUCT_SIZE = 24;
-    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+    private static final int STRUCT_SIZE = 32;
+    private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
     public CommonCredentialInfo info;
     public byte[] attestationObject;
+    public int[] transports;
 
     private MakeCredentialAuthenticatorResponse(int version) {
         super(STRUCT_SIZE, version);
@@ -64,6 +65,15 @@ public final class MakeCredentialAuthenticatorResponse extends org.chromium.mojo
                     
                 result.attestationObject = decoder0.readBytes(16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
                 }
+                {
+                    
+                result.transports = decoder0.readInts(24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                {
+                    for (int i0 = 0; i0 < result.transports.length; ++i0) {
+                        AuthenticatorTransport.validate(result.transports[i0]);
+                    }
+                }
+                }
 
         } finally {
             decoder0.decreaseStackDepth();
@@ -79,5 +89,7 @@ public final class MakeCredentialAuthenticatorResponse extends org.chromium.mojo
         encoder0.encode(this.info, 8, false);
         
         encoder0.encode(this.attestationObject, 16, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+        
+        encoder0.encode(this.transports, 24, org.chromium.mojo.bindings.BindingsHelper.NOTHING_NULLABLE, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
     }
 }

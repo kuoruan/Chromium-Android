@@ -1,11 +1,11 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: ../../chrome/android/java/src/org/chromium/chrome/browser/customtabs/dynamicmodule/IObjectWrapper.aidl
+ * Original file: ../../third_party/cct_dynamic_module/src/src/java/org/chromium/chrome/browser/customtabs/dynamicmodule/IObjectWrapper.aidl
  */
 package org.chromium.chrome.browser.customtabs.dynamicmodule;
 /**
  * This interface intentionally has no methods, and instances of this should
- * be created from class ObjectWrapper only. This is used as a way of passing
+ * be created from class ObjectWrapper only.  This is used as a way of passing
  * objects that descend from the system classes via AIDL across classloaders
  * without serializing them.
  */

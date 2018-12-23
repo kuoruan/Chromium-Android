@@ -20,7 +20,6 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.ui.widget.Toast;
 
 import java.io.File;
@@ -71,9 +70,6 @@ public class ExportFlow {
     /** Describes at which state the password export flow is. */
     @ExportState
     private int mExportState;
-
-    /** Name of the feature controlling the password export functionality. */
-    private static final String EXPORT_PASSWORDS = "PasswordExport";
 
     /** Name of the subdirectory in cache which stores the exported passwords file. */
     private static final String PASSWORDS_CACHE_DIR = "/passwords";
@@ -594,10 +590,9 @@ public class ExportFlow {
 
     /**
      * Returns whether the password export feature is ready to use.
-     * @return Returns true if the flag is set and the Reauthentication Api is available.
+     * @return Returns true if the Reauthentication Api is available.
      */
     public static boolean providesPasswordExport() {
-        return ChromeFeatureList.isEnabled(EXPORT_PASSWORDS)
-                && ReauthenticationManager.isReauthenticationApiAvailable();
+        return ReauthenticationManager.isReauthenticationApiAvailable();
     }
 }

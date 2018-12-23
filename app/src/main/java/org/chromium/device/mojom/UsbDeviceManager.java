@@ -38,7 +38,7 @@ String guid, org.chromium.mojo.bindings.InterfaceRequest<UsbDevice> deviceReques
 
 
     void setClient(
-UsbDeviceManagerClient client);
+org.chromium.mojo.bindings.AssociatedInterfaceNotSupported client);
 
 
 }

@@ -9,7 +9,6 @@ import android.text.TextUtils;
 
 import org.chromium.base.Callback;
 import org.chromium.base.Log;
-import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.modelutil.ListModelBase;
 import org.chromium.chrome.browser.modelutil.ListObservable;
 import org.chromium.chrome.browser.modelutil.PropertyListModel;
@@ -99,9 +98,7 @@ public class SuggestionsSection extends InnerNode<NewTabPageViewHolder, PartialB
         mSuggestionsSource = uiDelegate.getSuggestionsSource();
         mSuggestionsRanker = ranker;
 
-        boolean isExpandable = ChromeFeatureList.isEnabled(
-                                       ChromeFeatureList.NTP_ARTICLE_SUGGESTIONS_EXPANDABLE_HEADER)
-                && getCategory() == KnownCategories.ARTICLES;
+        boolean isExpandable = getCategory() == KnownCategories.ARTICLES;
         boolean isExpanded =
                 PrefServiceBridge.getInstance().getBoolean(Pref.NTP_ARTICLES_LIST_VISIBLE);
         mHeader = isExpandable ? new SectionHeader(info.getTitle(), isExpanded,

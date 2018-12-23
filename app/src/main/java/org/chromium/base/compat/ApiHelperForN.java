@@ -5,7 +5,15 @@
 package org.chromium.base.compat;
 
 import android.annotation.TargetApi;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ClipData;
+import android.graphics.Bitmap;
+import android.media.MediaCodec.CryptoInfo;
 import android.os.Build;
+import android.view.PointerIcon;
+import android.view.View;
+import android.view.View.DragShadowBuilder;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -29,5 +37,31 @@ public final class ApiHelperForN {
     public static boolean shouldOverrideUrlLoading(
             WebViewClient webViewClient, WebView webView, WebResourceRequest request) {
         return webViewClient.shouldOverrideUrlLoading(webView, request);
+    }
+
+    /** See {@link JobScheduler#getPendingJob(int)}. */
+    public static JobInfo getPendingJob(JobScheduler scheduler, int jobId) {
+        return scheduler.getPendingJob(jobId);
+    }
+
+    /** See {@link View#startDragAndDrop(ClipData, DragShadowBuilder, Object, int)}. */
+    public static boolean startDragAndDrop(View view, ClipData data,
+            DragShadowBuilder shadowBuilder, Object myLocalState, int flags) {
+        return view.startDragAndDrop(data, shadowBuilder, myLocalState, flags);
+    }
+
+    /** See {@link View#setPointerIcon(PointerIcon)}. */
+    public static void setPointerIcon(View view, PointerIcon icon) {
+        view.setPointerIcon(icon);
+    }
+
+    /** See {@link PointerIcon#create(Bitmap, float, float)}. */
+    public static PointerIcon createPointerIcon(Bitmap bitmap, float width, float height) {
+        return PointerIcon.create(bitmap, width, height);
+    }
+
+    /** See {@link CryptoInfo#setPattern(Pattern)}. */
+    public static void setCryptoInfoPattern(CryptoInfo cryptoInfo, int encrypt, int skip) {
+        cryptoInfo.setPattern(new CryptoInfo.Pattern(encrypt, skip));
     }
 }

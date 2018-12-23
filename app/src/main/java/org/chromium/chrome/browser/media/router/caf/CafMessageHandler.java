@@ -72,7 +72,7 @@ public class CafMessageHandler {
 
     // The reference to CastSession, only valid after calling {@link onSessionCreated}, and will be
     // reset to null when calling {@link onApplicationStopped}.
-    private CastSessionController mSessionController;
+    private final CastSessionController mSessionController;
     private final CafMediaRouteProvider mRouteProvider;
     private Handler mHandler;
 
@@ -95,10 +95,12 @@ public class CafMessageHandler {
      * @param session  The {@link CastSession} for communicating with the Cast SDK.
      * @param provider The {@link CafMediaRouteProvider} for communicating with the page.
      */
-    public CafMessageHandler(CafMediaRouteProvider provider) {
+    public CafMessageHandler(
+            CafMediaRouteProvider provider, CastSessionController sessionController) {
         mRouteProvider = provider;
         mRequests = new SparseArray<RequestRecord>();
         mStopRequests = new ArrayMap<String, Queue<Integer>>();
+        mSessionController = sessionController;
         mVolumeRequests = new ArrayDeque<RequestRecord>();
         mHandler = new Handler();
 
@@ -141,15 +143,12 @@ public class CafMessageHandler {
      * Set the session when a session is started, and notify all clients that are not connected.
      * @param session The newly created session.
      */
-    public void onSessionStarted(CastSessionController sessionController) {
-        mSessionController = sessionController;
+    public void onSessionStarted() {
         for (ClientRecord client : mRouteProvider.getClientIdToRecords().values()) {
             if (!client.isConnected) continue;
 
             notifySessionConnectedToClient(client.clientId);
         }
-        // TODO(zqzhang): Register namespaces.
-        // TODO(zqzhang): Request media status.
     }
 
     /** Notify a client that a session has connected. */
@@ -219,31 +218,35 @@ public class CafMessageHandler {
         String sessionId = jsonMessage.getString("message");
         if (!mSessionController.getSession().getSessionId().equals(sessionId)) return false;
 
-        ClientRecord leavingClient = mRouteProvider.getClientIdToRecords().get(clientId);
-        if (leavingClient == null) return false;
+        ClientRecord currentClient = mRouteProvider.getClientIdToRecords().get(clientId);
+        if (currentClient == null) return false;
 
         int sequenceNumber = jsonMessage.optInt("sequenceNumber", VOID_SEQUENCE_NUMBER);
+
+        // The web sender SDK doesn't actually recognize "leave_session" response, but this is to
+        // acknowledge the "leave_session" request.
         mRouteProvider.sendMessageToClient(clientId,
                 buildSimpleSessionMessage("leave_session", sequenceNumber, clientId, null));
 
-        // Send a "disconnect_session" message to all the clients that match with the leaving
-        // client's auto join policy.
+        List<ClientRecord> leavingClients = new ArrayList<>();
+
         for (ClientRecord client : mRouteProvider.getClientIdToRecords().values()) {
             boolean shouldNotifyClient = false;
-            if (CastMediaSource.AUTOJOIN_TAB_AND_ORIGIN_SCOPED.equals(leavingClient.autoJoinPolicy)
-                    && isSameOrigin(client.origin, leavingClient.origin)
-                    && client.tabId == leavingClient.tabId) {
+            if (CastMediaSource.AUTOJOIN_TAB_AND_ORIGIN_SCOPED.equals(currentClient.autoJoinPolicy)
+                    && isSameOrigin(client.origin, currentClient.origin)
+                    && client.tabId == currentClient.tabId) {
                 shouldNotifyClient = true;
-            }
-            if (CastMediaSource.AUTOJOIN_ORIGIN_SCOPED.equals(leavingClient.autoJoinPolicy)
-                    && isSameOrigin(client.origin, leavingClient.origin)) {
+            } else if (CastMediaSource.AUTOJOIN_ORIGIN_SCOPED.equals(currentClient.autoJoinPolicy)
+                    && isSameOrigin(client.origin, currentClient.origin)) {
                 shouldNotifyClient = true;
             }
             if (shouldNotifyClient) {
-                mRouteProvider.sendMessageToClient(client.clientId,
-                        buildSimpleSessionMessage("disconnect_session", VOID_SEQUENCE_NUMBER,
-                                client.clientId, sessionId));
+                leavingClients.add(client);
             }
+        }
+
+        for (ClientRecord client : leavingClients) {
+            mRouteProvider.removeRoute(client.routeId, /* error= */ null);
         }
 
         return true;
@@ -438,7 +441,7 @@ public class CafMessageHandler {
     @VisibleForTesting
     boolean sendJsonCastMessage(JSONObject message, final String namespace, final String clientId,
             final int sequenceNumber) throws JSONException {
-        if (mSessionController == null || !mSessionController.isConnected()) return false;
+        if (!mSessionController.isConnected()) return false;
 
         removeNullFields(message);
 
@@ -495,8 +498,6 @@ public class CafMessageHandler {
      */
     @VisibleForTesting
     void onMediaMessage(String message, RequestRecord request) {
-        mSessionController.updateRemoteMediaClient(message);
-
         if (isMediaStatusMessage(message)) {
             // MEDIA_STATUS needs to be sent to all the clients.
             for (String clientId : mRouteProvider.getClientIdToRecords().keySet()) {
@@ -536,9 +537,9 @@ public class CafMessageHandler {
     }
 
     /**
-     * Notifies the application has stopped to all requesting clients.
+     * Notifies the session has stopped to all requesting clients.
      */
-    public void onApplicationStopped() {
+    public void onSessionEnded() {
         for (String clientId : mRouteProvider.getClientIdToRecords().keySet()) {
             Queue<Integer> sequenceNumbersForClient = mStopRequests.get(clientId);
             if (sequenceNumbersForClient == null) {
@@ -553,7 +554,6 @@ public class CafMessageHandler {
             }
             mStopRequests.remove(clientId);
         }
-        mSessionController = null;
     }
 
     /**
@@ -659,7 +659,7 @@ public class CafMessageHandler {
      * @return A message containing the information of the {@link CastSession}.
      */
     public String buildSessionMessage() {
-        if (mSessionController == null || !mSessionController.isConnected()) return "{}";
+        if (!mSessionController.isConnected()) return "{}";
 
         try {
             // "volume" is a part of "receiver" initialized below.
@@ -778,7 +778,7 @@ public class CafMessageHandler {
 
     private boolean sendStringCastMessage(
             String message, String namespace, String clientId, int sequenceNumber) {
-        if (mSessionController == null || !mSessionController.isConnected()) return false;
+        if (!mSessionController.isConnected()) return false;
 
         PendingResult<Status> pendingResult =
                 mSessionController.getSession().sendMessage(namespace, message);

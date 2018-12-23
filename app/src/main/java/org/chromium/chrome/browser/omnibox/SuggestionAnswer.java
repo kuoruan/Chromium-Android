@@ -115,9 +115,13 @@ public class SuggestionAnswer {
                     ? new TextField(jsonLine.getJSONObject(ANSWERS_JSON_STATUS_TEXT))
                     : null;
 
-            mImage = jsonLine.has(ANSWERS_JSON_IMAGE)
+            String jsonImageData = jsonLine.has(ANSWERS_JSON_IMAGE)
                     ? jsonLine.getJSONObject(ANSWERS_JSON_IMAGE).getString(ANSWERS_JSON_IMAGE_DATA)
                     : null;
+            if (jsonImageData != null) {
+                jsonImageData = "https:" + jsonImageData.replace("\\/", "/");
+            }
+            mImage = jsonImageData;
         }
 
         /**

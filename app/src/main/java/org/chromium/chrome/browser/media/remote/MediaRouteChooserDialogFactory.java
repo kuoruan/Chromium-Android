@@ -101,7 +101,13 @@ public class MediaRouteChooserDialogFactory extends MediaRouteDialogFactory {
                 Context context, Bundle savedInstanceState) {
             mVisibilitySaver.saveSystemVisibility(getActivity());
             mContext = context;
-            return new MediaRouteChooserDialog(context);
+            return new MediaRouteChooserDialog(context) {
+                @Override
+                // Returns true if the route should be shown to the user.
+                public boolean onFilterRoute(MediaRouter.RouteInfo route) {
+                    return super.onFilterRoute(route) && !mController.shouldFilterOutRoute(route);
+                }
+            };
         }
 
         @Override

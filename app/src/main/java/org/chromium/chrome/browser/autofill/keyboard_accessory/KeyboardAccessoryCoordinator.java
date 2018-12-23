@@ -4,18 +4,25 @@
 
 package org.chromium.chrome.browser.autofill.keyboard_accessory;
 
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.ACTIONS;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.ACTIVE_TAB;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.BOTTOM_OFFSET_PX;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.TABS;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.TAB_SELECTION_CALLBACKS;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.VISIBLE;
+
 import android.support.annotation.Px;
-import android.support.v4.view.ViewPager;
-import android.view.ViewStub;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryViewBinder.ActionViewHolder;
 import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryViewBinder.TabViewBinder;
-import org.chromium.chrome.browser.modelutil.LazyViewBinderAdapter;
+import org.chromium.chrome.browser.modelutil.LazyConstructionPropertyMcp;
+import org.chromium.chrome.browser.modelutil.ListModel;
 import org.chromium.chrome.browser.modelutil.ListModelChangeProcessor;
-import org.chromium.chrome.browser.modelutil.PropertyModelChangeProcessor;
+import org.chromium.chrome.browser.modelutil.PropertyModel;
 import org.chromium.chrome.browser.modelutil.RecyclerViewAdapter;
 import org.chromium.chrome.browser.modelutil.SimpleRecyclerViewMcp;
+import org.chromium.ui.ViewProvider;
 
 /**
  * Creates and owns all elements which are part of the keyboard accessory component.
@@ -24,7 +31,6 @@ import org.chromium.chrome.browser.modelutil.SimpleRecyclerViewMcp;
  */
 public class KeyboardAccessoryCoordinator {
     private final KeyboardAccessoryMediator mMediator;
-    private LazyViewBinderAdapter.StubHolder<KeyboardAccessoryView> mViewHolder;
 
     /**
      * The keyboard accessory provides signals when to show or change the accessory sheet below it.
@@ -58,60 +64,57 @@ public class KeyboardAccessoryCoordinator {
     /**
      * Initializes the component as soon as the native library is loaded by e.g. starting to listen
      * to keyboard visibility events.
-     * @param viewStub the stub that will become the accessory.
+     * @param viewProvider A provider for the accessory.
      */
-    public KeyboardAccessoryCoordinator(ViewStub viewStub, VisibilityDelegate visibilityDelegate) {
-        KeyboardAccessoryModel model = new KeyboardAccessoryModel();
+    public KeyboardAccessoryCoordinator(VisibilityDelegate visibilityDelegate,
+            ViewProvider<KeyboardAccessoryView> viewProvider) {
+        PropertyModel model = new PropertyModel
+                                      .Builder(ACTIONS, TABS, VISIBLE, BOTTOM_OFFSET_PX, ACTIVE_TAB,
+                                              TAB_SELECTION_CALLBACKS)
+                                      .with(TABS, new ListModel<>())
+                                      .with(ACTIONS, new ListModel<>())
+                                      .with(ACTIVE_TAB, null)
+                                      .with(VISIBLE, false)
+                                      .build();
         mMediator = new KeyboardAccessoryMediator(model, visibilityDelegate);
-        mViewHolder = new LazyViewBinderAdapter.StubHolder<>(viewStub);
+        viewProvider.whenLoaded(view -> view.setTabSelectionAdapter(mMediator));
 
-        model.addObserver(new PropertyModelChangeProcessor<>(model, mViewHolder,
-                new LazyViewBinderAdapter<>(
-                        new KeyboardAccessoryViewBinder(), this::onViewInflated)));
-        KeyboardAccessoryMetricsRecorder.registerMetricsObserver(model);
+        LazyConstructionPropertyMcp.create(
+                model, VISIBLE, viewProvider, KeyboardAccessoryViewBinder::bind);
+        KeyboardAccessoryMetricsRecorder.registerKeyboardAccessoryModelMetricsObserver(model);
     }
 
     /**
      * Creates an adapter to an {@link ActionViewHolder} that is wired
-     * up to the model change processor which listens to the given {@link KeyboardAccessoryModel}.
-     * @param model the {@link KeyboardAccessoryModel} the adapter gets its data from.
+     * up to the model change processor which listens to the given action list.
+     * @param actions The list of actions shown represented by the adapter.
      * @return Returns a fully initialized and wired adapter to an ActionViewHolder.
      */
     static RecyclerViewAdapter<ActionViewHolder, Void> createActionsAdapter(
-            KeyboardAccessoryModel model) {
+            ListModel<KeyboardAccessoryData.Action> actions) {
         return new RecyclerViewAdapter<>(
-                new SimpleRecyclerViewMcp<>(model.getActionList(),
-                        KeyboardAccessoryData.Action::getActionType, ActionViewHolder::bind),
+                new SimpleRecyclerViewMcp<>(actions, KeyboardAccessoryData.Action::getActionType,
+                        ActionViewHolder::bind),
                 ActionViewHolder::create);
     }
 
     /**
      * Creates the {@link TabViewBinder} that is linked to the {@link ListModelChangeProcessor} that
-     * connects the given {@link KeyboardAccessoryView} to the given {@link KeyboardAccessoryModel}.
-     * @param model the {@link KeyboardAccessoryModel} whose data is used by the TabViewBinder.
+     * connects the given {@link KeyboardAccessoryView} to the given action list.
+     * @param model the {@link KeyboardAccessoryProperties} whose data is used by the TabViewBinder.
      * @param inflatedView the {@link KeyboardAccessoryView} to which the TabViewBinder binds data.
      * @return Returns a fully initialized and wired {@link TabViewBinder}.
      */
     static TabViewBinder createTabViewBinder(
-            KeyboardAccessoryModel model, KeyboardAccessoryView inflatedView) {
+            PropertyModel model, KeyboardAccessoryView inflatedView) {
         TabViewBinder tabViewBinder = new TabViewBinder();
-        model.addTabListObserver(
-                new ListModelChangeProcessor<>(model.getTabList(), inflatedView, tabViewBinder));
+        model.get(TABS).addObserver(
+                new ListModelChangeProcessor<>(model.get(TABS), inflatedView, tabViewBinder));
         return tabViewBinder;
     }
 
     public void closeActiveTab() {
         mMediator.closeActiveTab();
-    }
-
-    /**
-     * Called by the {@link LazyViewBinderAdapter} as soon as the view is inflated so it can be
-     * initialized. This call happens before the {@link KeyboardAccessoryViewBinder} is called for
-     * the first time.
-     * @param view The view that was inflated from the initially given {@link ViewStub}.
-     */
-    private void onViewInflated(KeyboardAccessoryView view) {
-        view.setTabSelectionAdapter(mMediator);
     }
 
     /**
@@ -212,14 +215,5 @@ public class KeyboardAccessoryCoordinator {
     @VisibleForTesting
     KeyboardAccessoryMediator getMediatorForTesting() {
         return mMediator;
-    }
-
-    /**
-     * Provides the PageChangeListener that is needed to wire up the TabLayout with the ViewPager.
-     * @return Returns a {@link ViewPager.OnPageChangeListener}.
-     */
-    ViewPager.OnPageChangeListener getPageChangeListener() {
-        assert mViewHolder.getView() != null : "Requested PageChangeListener before inflation.";
-        return mViewHolder.getView().getPageChangeListener();
     }
 }

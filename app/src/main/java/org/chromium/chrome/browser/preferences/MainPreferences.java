@@ -16,8 +16,7 @@ import org.chromium.base.ContextUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
-import org.chromium.chrome.browser.autofill.PersonalDataManager;
-import org.chromium.chrome.browser.contextual_suggestions.EnabledStateMonitor;
+import org.chromium.chrome.browser.contextual_suggestions.ContextualSuggestionsEnabledStateUtils;
 import org.chromium.chrome.browser.net.spdyproxy.DataReductionProxySettings;
 import org.chromium.chrome.browser.partnercustomizations.HomepageManager;
 import org.chromium.chrome.browser.preferences.datareduction.DataReductionPreferences;
@@ -37,7 +36,6 @@ public class MainPreferences extends PreferenceFragment
     public static final String PREF_ACCOUNT_SECTION = "account_section";
     public static final String PREF_SIGN_IN = "sign_in";
     public static final String PREF_SYNC_AND_SERVICES = "sync_and_services";
-    public static final String PREF_AUTOFILL_SETTINGS = "autofill_settings";
     public static final String PREF_SEARCH_ENGINE = "search_engine";
     public static final String PREF_SAVED_PASSWORDS = "saved_passwords";
     public static final String PREF_CONTEXTUAL_SUGGESTIONS = "contextual_suggestions";
@@ -46,6 +44,11 @@ public class MainPreferences extends PreferenceFragment
     public static final String PREF_NOTIFICATIONS = "notifications";
     public static final String PREF_LANGUAGES = "languages";
     public static final String PREF_DOWNLOADS = "downloads";
+
+    public static final String AUTOFILL_GUID = "guid";
+    // Needs to be in sync with kSettingsOrigin[] in
+    // chrome/browser/ui/webui/options/autofill_options_handler.cc
+    public static final String SETTINGS_ORIGIN = "Chrome settings";
 
     private final ManagedPreferenceDelegate mManagedPreferenceDelegate;
     private final Map<String, Preference> mAllPreferences = new HashMap<>();
@@ -104,7 +107,6 @@ public class MainPreferences extends PreferenceFragment
         }
 
         setManagedPreferenceDelegateForPreference(PREF_SEARCH_ENGINE);
-        setManagedPreferenceDelegateForPreference(PREF_AUTOFILL_SETTINGS);
         setManagedPreferenceDelegateForPreference(PREF_SAVED_PASSWORDS);
         setManagedPreferenceDelegateForPreference(PREF_DATA_REDUCTION);
 
@@ -189,10 +191,12 @@ public class MainPreferences extends PreferenceFragment
             removePreferenceIfPresent(PREF_HOMEPAGE);
         }
 
-        if (FeatureUtilities.areContextualSuggestionsEnabled(getActivity())
-                && EnabledStateMonitor.shouldShowSettings()) {
-            Preference contextualSuggesitons = addPreferenceIfAbsent(PREF_CONTEXTUAL_SUGGESTIONS);
-            setOnOffSummary(contextualSuggesitons, EnabledStateMonitor.getEnabledState());
+        if (!ChromeFeatureList.isEnabled(ChromeFeatureList.UNIFIED_CONSENT)
+                && FeatureUtilities.areContextualSuggestionsEnabled(getActivity())
+                && ContextualSuggestionsEnabledStateUtils.shouldShowSettings()) {
+            Preference contextualSuggestions = addPreferenceIfAbsent(PREF_CONTEXTUAL_SUGGESTIONS);
+            setOnOffSummary(contextualSuggestions,
+                    ContextualSuggestionsEnabledStateUtils.getEnabledState());
         } else {
             removePreferenceIfPresent(PREF_CONTEXTUAL_SUGGESTIONS);
         }
@@ -273,10 +277,6 @@ public class MainPreferences extends PreferenceFragment
         return new ManagedPreferenceDelegate() {
             @Override
             public boolean isPreferenceControlledByPolicy(Preference preference) {
-                if (PREF_AUTOFILL_SETTINGS.equals(preference.getKey())) {
-                    return PersonalDataManager.isAutofillProfileManaged()
-                            || PersonalDataManager.isAutofillCreditCardManaged();
-                }
                 if (PREF_SAVED_PASSWORDS.equals(preference.getKey())) {
                     return PrefServiceBridge.getInstance().isRememberPasswordsManaged();
                 }
@@ -291,14 +291,6 @@ public class MainPreferences extends PreferenceFragment
 
             @Override
             public boolean isPreferenceClickDisabledByPolicy(Preference preference) {
-                if (PREF_AUTOFILL_SETTINGS.equals(preference.getKey())) {
-                    // The whole "Autofill and payments" page is disabled by policy if profiles and
-                    // credit cards are both disabled by policy.
-                    return PersonalDataManager.isAutofillProfileManaged()
-                            && PersonalDataManager.isAutofillCreditCardManaged()
-                            && !PersonalDataManager.isAutofillProfileEnabled()
-                            && !PersonalDataManager.isAutofillCreditCardEnabled();
-                }
                 if (PREF_SAVED_PASSWORDS.equals(preference.getKey())) {
                     PrefServiceBridge prefs = PrefServiceBridge.getInstance();
                     return prefs.isRememberPasswordsManaged()

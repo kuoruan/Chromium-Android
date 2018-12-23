@@ -7,6 +7,7 @@ package org.chromium.chrome.browser.compositor.overlays.strip;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.RectF;
+import android.os.SystemClock;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
@@ -28,6 +29,8 @@ import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager;
 import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
+import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabModelObserver;
+import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabObserver;
 import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.resources.ResourceManager;
 
@@ -40,10 +43,6 @@ import java.util.List;
 public class StripLayoutHelperManager implements SceneOverlay {
     // Caching Variables
     private final RectF mStripFilterArea = new RectF();
-
-    // 1px border colors
-    private static final float BORDER_OPACITY = 0.2f;
-    private static final float BORDER_OPACITY_INCOGNITO = 0.4f;
 
     // Model selector buttons constants.
     private static final float MODEL_SELECTOR_BUTTON_Y_OFFSET_DP = 10.f;
@@ -311,6 +310,83 @@ public class StripLayoutHelperManager implements SceneOverlay {
         mIncognitoHelper.setTabModel(mTabModelSelector.getModel(true),
                 tabCreatorManager.getTabCreator(true));
         tabModelSwitched(mTabModelSelector.isIncognitoSelected());
+
+        new TabModelSelectorTabModelObserver(modelSelector) {
+            /**
+             * @return The actual current time of the app in ms.
+             */
+            public long time() {
+                return SystemClock.uptimeMillis();
+            }
+
+            @Override
+            public void tabRemoved(Tab tab) {
+                getStripLayoutHelper(tab.isIncognito()).tabClosed(time(), tab.getId());
+                updateModelSwitcherButton();
+            }
+
+            @Override
+            public void didMoveTab(Tab tab, int newIndex, int curIndex) {
+                getStripLayoutHelper(tab.isIncognito())
+                        .tabMoved(time(), tab.getId(), curIndex, newIndex);
+            }
+
+            @Override
+            public void tabClosureUndone(Tab tab) {
+                getStripLayoutHelper(tab.isIncognito()).tabClosureCancelled(time(), tab.getId());
+                updateModelSwitcherButton();
+            }
+
+            @Override
+            public void tabPendingClosure(Tab tab) {
+                getStripLayoutHelper(tab.isIncognito()).tabClosed(time(), tab.getId());
+                updateModelSwitcherButton();
+            }
+
+            @Override
+            public void didCloseTab(int tabId, boolean incognito) {
+                getStripLayoutHelper(incognito).tabClosed(time(), tabId);
+                updateModelSwitcherButton();
+            }
+
+            @Override
+            public void didSelectTab(Tab tab, @TabModel.TabSelectionType int type, int lastId) {
+                if (tab.getId() == lastId) return;
+                getStripLayoutHelper(tab.isIncognito()).tabSelected(time(), tab.getId(), lastId);
+            }
+        };
+
+        new TabModelSelectorTabObserver(modelSelector) {
+            @Override
+            public void onLoadStarted(Tab tab, boolean toDifferentDocument) {
+                getStripLayoutHelper(tab.isIncognito()).tabLoadStarted(tab.getId());
+            }
+
+            @Override
+            public void onLoadStopped(Tab tab, boolean toDifferentDocument) {
+                getStripLayoutHelper(tab.isIncognito()).tabLoadFinished(tab.getId());
+            }
+
+            @Override
+            public void onPageLoadStarted(Tab tab, String url) {
+                getStripLayoutHelper(tab.isIncognito()).tabPageLoadStarted(tab.getId());
+            }
+
+            @Override
+            public void onPageLoadFinished(Tab tab) {
+                getStripLayoutHelper(tab.isIncognito()).tabPageLoadFinished(tab.getId());
+            }
+
+            @Override
+            public void onPageLoadFailed(Tab tab, int errorCode) {
+                getStripLayoutHelper(tab.isIncognito()).tabPageLoadFinished(tab.getId());
+            }
+
+            @Override
+            public void onCrash(Tab tab) {
+                getStripLayoutHelper(tab.isIncognito()).tabPageLoadFinished(tab.getId());
+            }
+        };
     }
 
     @Override
@@ -328,10 +404,6 @@ public class StripLayoutHelperManager implements SceneOverlay {
 
     public int getOrientation() {
         return mOrientation;
-    }
-
-    public float getBorderOpacity() {
-        return mIsIncognito ? BORDER_OPACITY_INCOGNITO : BORDER_OPACITY;
     }
 
     /**
@@ -397,50 +469,8 @@ public class StripLayoutHelperManager implements SceneOverlay {
     }
 
     @Override
-    public void tabSelected(long time, boolean incognito, int id, int prevId) {
-        getStripLayoutHelper(incognito).tabSelected(time, id, prevId);
-    }
-
-    @Override
-    public void tabMoved(long time, boolean incognito, int id, int oldIndex, int newIndex) {
-        getStripLayoutHelper(incognito).tabMoved(time, id, oldIndex, newIndex);
-    }
-
-    @Override
-    public void tabClosed(long time, boolean incognito, int id) {
-        getStripLayoutHelper(incognito).tabClosed(time, id);
-        updateModelSwitcherButton();
-    }
-
-    @Override
-    public void tabClosureCancelled(long time, boolean incognito, int id) {
-        getStripLayoutHelper(incognito).tabClosureCancelled(time, id);
-        updateModelSwitcherButton();
-    }
-
-    @Override
     public void tabCreated(long time, boolean incognito, int id, int prevId, boolean selected) {
         getStripLayoutHelper(incognito).tabCreated(time, id, prevId, selected);
-    }
-
-    @Override
-    public void tabPageLoadStarted(int id, boolean incognito) {
-        getStripLayoutHelper(incognito).tabPageLoadStarted(id);
-    }
-
-    @Override
-    public void tabPageLoadFinished(int id, boolean incognito) {
-        getStripLayoutHelper(incognito).tabPageLoadFinished(id);
-    }
-
-    @Override
-    public void tabLoadStarted(int id, boolean incognito) {
-        getStripLayoutHelper(incognito).tabLoadStarted(id);
-    }
-
-    @Override
-    public void tabLoadFinished(int id, boolean incognito) {
-        getStripLayoutHelper(incognito).tabLoadFinished(id);
     }
 
     /**

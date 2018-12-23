@@ -16,17 +16,7 @@ import org.chromium.mojo.bindings.DeserializationException;
 public final class BufferFormat {
 
 
-    public static final int ATC = 0;
-
-    public static final int ATCIA = ATC + 1;
-
-    public static final int DXT1 = ATCIA + 1;
-
-    public static final int DXT5 = DXT1 + 1;
-
-    public static final int ETC1 = DXT5 + 1;
-
-    public static final int R_8 = ETC1 + 1;
+    public static final int R_8 = 0;
 
     public static final int R_16 = R_8 + 1;
 
@@ -78,11 +68,6 @@ public final class BufferFormat {
             case 12:
             case 13:
             case 14:
-            case 15:
-            case 16:
-            case 17:
-            case 18:
-            case 19:
                 return true;
         }
         return false;

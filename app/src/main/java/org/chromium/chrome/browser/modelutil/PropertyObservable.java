@@ -8,12 +8,14 @@ import android.support.annotation.Nullable;
 
 import org.chromium.base.ObserverList;
 
+import java.util.Collection;
+
 /**
  * A base class for models maintaining a set of properties.
  *
  * @param <T> The type of the property key used for uniquely identifying properties.
  */
-public class PropertyObservable<T> {
+public abstract class PropertyObservable<T> {
     /**
      * An observer to be notified of changes to a {@link PropertyObservable}.
      *
@@ -23,7 +25,7 @@ public class PropertyObservable<T> {
         /**
          * Notifies that the given {@code property} of the observed {@code source} has changed.
          * @param source The object whose property has changed
-         * @param property The key of the property that has changed.
+         * @param propertyKey The key of the property that has changed.
          */
         void onPropertyChanged(PropertyObservable<T> source, @Nullable T propertyKey);
     }
@@ -43,6 +45,12 @@ public class PropertyObservable<T> {
     public void removeObserver(PropertyObserver<T> observer) {
         mObservers.removeObserver(observer);
     }
+
+    /**
+     * @return A collection of all properties of this model that have been set. The returned
+     *         collection should not be modified.
+     */
+    public abstract Collection<T> getAllSetProperties();
 
     /**
      * Notifies observers that the property identified by {@code propertyKey} has changed.

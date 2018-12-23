@@ -10,12 +10,13 @@ import android.support.annotation.Nullable;
 import org.chromium.base.Callback;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.tab.Tab.TabHidingType;
+import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.NavigationController;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.browser.WebContentsObserver;
 import org.chromium.ui.base.PageTransition;
-
 
 /**
  * Records stats related to a page visit, such as the time spent on the website, or if the user
@@ -69,12 +70,12 @@ public class NavigationRecorder extends EmptyTabObserver {
     }
 
     @Override
-    public void onShown(Tab tab) {
+    public void onShown(Tab tab, @TabSelectionType int type) {
         if (mStartTimeMs == 0) mStartTimeMs = SystemClock.elapsedRealtime();
     }
 
     @Override
-    public void onHidden(Tab tab) {
+    public void onHidden(Tab tab, @TabHidingType int type) {
         endRecording(tab, null);
     }
 

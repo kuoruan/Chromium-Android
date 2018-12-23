@@ -51,31 +51,35 @@ class NetworkService_Internal {
 
     private static final int START_NET_LOG_ORDINAL = 1;
 
-    private static final int CREATE_NETWORK_CONTEXT_ORDINAL = 2;
+    private static final int SET_SSL_KEY_LOG_FILE_ORDINAL = 2;
 
-    private static final int CONFIGURE_STUB_HOST_RESOLVER_ORDINAL = 3;
+    private static final int CREATE_NETWORK_CONTEXT_ORDINAL = 3;
 
-    private static final int DISABLE_QUIC_ORDINAL = 4;
+    private static final int CONFIGURE_STUB_HOST_RESOLVER_ORDINAL = 4;
 
-    private static final int SET_UP_HTTP_AUTH_ORDINAL = 5;
+    private static final int DISABLE_QUIC_ORDINAL = 5;
 
-    private static final int CONFIGURE_HTTP_AUTH_PREFS_ORDINAL = 6;
+    private static final int SET_UP_HTTP_AUTH_ORDINAL = 6;
 
-    private static final int SET_RAW_HEADERS_ACCESS_ORDINAL = 7;
+    private static final int CONFIGURE_HTTP_AUTH_PREFS_ORDINAL = 7;
 
-    private static final int GET_NETWORK_CHANGE_MANAGER_ORDINAL = 8;
+    private static final int SET_RAW_HEADERS_ACCESS_ORDINAL = 8;
 
-    private static final int GET_NETWORK_QUALITY_ESTIMATOR_MANAGER_ORDINAL = 9;
+    private static final int GET_NETWORK_CHANGE_MANAGER_ORDINAL = 9;
 
-    private static final int GET_TOTAL_NETWORK_USAGES_ORDINAL = 10;
+    private static final int GET_NETWORK_QUALITY_ESTIMATOR_MANAGER_ORDINAL = 10;
 
-    private static final int UPDATE_SIGNED_TREE_HEAD_ORDINAL = 11;
+    private static final int GET_TOTAL_NETWORK_USAGES_ORDINAL = 11;
 
-    private static final int UPDATE_CRL_SET_ORDINAL = 12;
+    private static final int UPDATE_SIGNED_TREE_HEAD_ORDINAL = 12;
 
-    private static final int ADD_CORB_EXCEPTION_FOR_PLUGIN_ORDINAL = 13;
+    private static final int UPDATE_CRL_SET_ORDINAL = 13;
 
-    private static final int REMOVE_CORB_EXCEPTION_FOR_PLUGIN_ORDINAL = 14;
+    private static final int ADD_CORB_EXCEPTION_FOR_PLUGIN_ORDINAL = 14;
+
+    private static final int REMOVE_CORB_EXCEPTION_FOR_PLUGIN_ORDINAL = 15;
+
+    private static final int ON_APPLICATION_STATE_CHANGE_ORDINAL = 16;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements NetworkService.Proxy {
@@ -105,11 +109,13 @@ NetworkServiceClient client) {
 
         @Override
         public void startNetLog(
-org.chromium.mojo_base.mojom.File file, org.chromium.mojo_base.mojom.DictionaryValue constants) {
+org.chromium.mojo_base.mojom.File file, int captureMode, org.chromium.mojo_base.mojom.DictionaryValue constants) {
 
             NetworkServiceStartNetLogParams _message = new NetworkServiceStartNetLogParams();
 
             _message.file = file;
+
+            _message.captureMode = captureMode;
 
             _message.constants = constants;
 
@@ -118,6 +124,23 @@ org.chromium.mojo_base.mojom.File file, org.chromium.mojo_base.mojom.DictionaryV
                     _message.serializeWithHeader(
                             getProxyHandler().getCore(),
                             new org.chromium.mojo.bindings.MessageHeader(START_NET_LOG_ORDINAL)));
+
+        }
+
+
+        @Override
+        public void setSslKeyLogFile(
+org.chromium.mojo_base.mojom.FilePath file) {
+
+            NetworkServiceSetSslKeyLogFileParams _message = new NetworkServiceSetSslKeyLogFileParams();
+
+            _message.file = file;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(SET_SSL_KEY_LOG_FILE_ORDINAL)));
 
         }
 
@@ -350,6 +373,23 @@ int processId) {
         }
 
 
+        @Override
+        public void onApplicationStateChange(
+int state) {
+
+            NetworkServiceOnApplicationStateChangeParams _message = new NetworkServiceOnApplicationStateChangeParams();
+
+            _message.state = state;
+
+
+            getProxyHandler().getMessageReceiver().accept(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(ON_APPLICATION_STATE_CHANGE_ORDINAL)));
+
+        }
+
+
     }
 
     static final class Stub extends org.chromium.mojo.bindings.Interface.Stub<NetworkService> {
@@ -395,7 +435,20 @@ int processId) {
                         NetworkServiceStartNetLogParams data =
                                 NetworkServiceStartNetLogParams.deserialize(messageWithHeader.getPayload());
 
-                        getImpl().startNetLog(data.file, data.constants);
+                        getImpl().startNetLog(data.file, data.captureMode, data.constants);
+                        return true;
+                    }
+
+
+
+
+
+                    case SET_SSL_KEY_LOG_FILE_ORDINAL: {
+
+                        NetworkServiceSetSslKeyLogFileParams data =
+                                NetworkServiceSetSslKeyLogFileParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().setSslKeyLogFile(data.file);
                         return true;
                     }
 
@@ -557,6 +610,19 @@ int processId) {
                     }
 
 
+
+
+
+                    case ON_APPLICATION_STATE_CHANGE_ORDINAL: {
+
+                        NetworkServiceOnApplicationStateChangeParams data =
+                                NetworkServiceOnApplicationStateChangeParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().onApplicationStateChange(data.state);
+                        return true;
+                    }
+
+
                     default:
                         return false;
                 }
@@ -607,6 +673,8 @@ int processId) {
 
 
 
+
+
                     case GET_TOTAL_NETWORK_USAGES_ORDINAL: {
 
                         NetworkServiceGetTotalNetworkUsagesParams.deserialize(messageWithHeader.getPayload());
@@ -614,6 +682,8 @@ int processId) {
                         getImpl().getTotalNetworkUsages(new NetworkServiceGetTotalNetworkUsagesResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
+
+
 
 
 
@@ -701,10 +771,11 @@ int processId) {
     
     static final class NetworkServiceStartNetLogParams extends org.chromium.mojo.bindings.Struct {
 
-        private static final int STRUCT_SIZE = 24;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final int STRUCT_SIZE = 32;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
         public org.chromium.mojo_base.mojom.File file;
+        public int captureMode;
         public org.chromium.mojo_base.mojom.DictionaryValue constants;
 
         private NetworkServiceStartNetLogParams(int version) {
@@ -747,7 +818,12 @@ int processId) {
                     }
                     {
                         
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    result.captureMode = decoder0.readInt(16);
+                        NetLogCaptureMode.validate(result.captureMode);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
                     result.constants = org.chromium.mojo_base.mojom.DictionaryValue.decode(decoder1);
                     }
 
@@ -764,7 +840,73 @@ int processId) {
             
             encoder0.encode(this.file, 8, false);
             
-            encoder0.encode(this.constants, 16, false);
+            encoder0.encode(this.captureMode, 16);
+            
+            encoder0.encode(this.constants, 24, false);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceSetSslKeyLogFileParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public org.chromium.mojo_base.mojom.FilePath file;
+
+        private NetworkServiceSetSslKeyLogFileParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceSetSslKeyLogFileParams() {
+            this(0);
+        }
+
+        public static NetworkServiceSetSslKeyLogFileParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceSetSslKeyLogFileParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceSetSslKeyLogFileParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceSetSslKeyLogFileParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceSetSslKeyLogFileParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.file = org.chromium.mojo_base.mojom.FilePath.decode(decoder1);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.file, 8, false);
         }
     }
 
@@ -1756,6 +1898,70 @@ int processId) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
             encoder0.encode(this.processId, 8);
+        }
+    }
+
+
+
+    
+    static final class NetworkServiceOnApplicationStateChangeParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int state;
+
+        private NetworkServiceOnApplicationStateChangeParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public NetworkServiceOnApplicationStateChangeParams() {
+            this(0);
+        }
+
+        public static NetworkServiceOnApplicationStateChangeParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static NetworkServiceOnApplicationStateChangeParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static NetworkServiceOnApplicationStateChangeParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            NetworkServiceOnApplicationStateChangeParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new NetworkServiceOnApplicationStateChangeParams(elementsOrVersion);
+                    {
+                        
+                    result.state = decoder0.readInt(8);
+                        ApplicationState.validate(result.state);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.state, 8);
         }
     }
 

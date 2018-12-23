@@ -167,31 +167,7 @@ public class ScrollingBottomViewSceneLayer extends SceneOverlayLayer implements 
     public void tabModelSwitched(boolean incognito) {}
 
     @Override
-    public void tabSelected(long time, boolean incognito, int id, int prevId) {}
-
-    @Override
-    public void tabMoved(long time, boolean incognito, int id, int oldIndex, int newIndex) {}
-
-    @Override
-    public void tabClosed(long time, boolean incognito, int id) {}
-
-    @Override
-    public void tabClosureCancelled(long time, boolean incognito, int id) {}
-
-    @Override
     public void tabCreated(long time, boolean incognito, int id, int prevId, boolean selected) {}
-
-    @Override
-    public void tabPageLoadStarted(int id, boolean incognito) {}
-
-    @Override
-    public void tabPageLoadFinished(int id, boolean incognito) {}
-
-    @Override
-    public void tabLoadStarted(int id, boolean incognito) {}
-
-    @Override
-    public void tabLoadFinished(int id, boolean incognito) {}
 
     private native long nativeInit();
     private native void nativeSetContentTree(

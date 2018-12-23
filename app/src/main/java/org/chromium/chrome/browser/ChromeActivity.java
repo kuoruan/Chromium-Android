@@ -69,10 +69,14 @@ import org.chromium.chrome.browser.compositor.layouts.SceneChangeObserver;
 import org.chromium.chrome.browser.compositor.layouts.content.ContentOffsetProvider;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
 import org.chromium.chrome.browser.contextual_suggestions.ContextualSuggestionsCoordinator;
+import org.chromium.chrome.browser.contextual_suggestions.ContextualSuggestionsModule;
 import org.chromium.chrome.browser.contextual_suggestions.PageViewTimer;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchFieldTrial;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchManager;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchManager.ContextualSearchTabPromotionDelegate;
+import org.chromium.chrome.browser.dependency_injection.ChromeActivityCommonsModule;
+import org.chromium.chrome.browser.dependency_injection.ChromeActivityComponent;
+import org.chromium.chrome.browser.dependency_injection.ModuleFactoryOverrides;
 import org.chromium.chrome.browser.device.DeviceClassManager;
 import org.chromium.chrome.browser.dom_distiller.DomDistillerUIUtils;
 import org.chromium.chrome.browser.dom_distiller.ReaderModeManager;
@@ -124,6 +128,7 @@ import org.chromium.chrome.browser.tabmodel.AsyncTabParamsManager;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModel;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager;
 import org.chromium.chrome.browser.tabmodel.TabModel;
+import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabObserver;
 import org.chromium.chrome.browser.tabmodel.TabModelUtils;
@@ -131,6 +136,7 @@ import org.chromium.chrome.browser.tabmodel.TabWindowManager;
 import org.chromium.chrome.browser.toolbar.Toolbar;
 import org.chromium.chrome.browser.toolbar.ToolbarControlContainer;
 import org.chromium.chrome.browser.toolbar.ToolbarManager;
+import org.chromium.chrome.browser.translate.TranslateBridge;
 import org.chromium.chrome.browser.util.AccessibilityUtil;
 import org.chromium.chrome.browser.util.ColorUtils;
 import org.chromium.chrome.browser.util.FeatureUtilities;
@@ -153,6 +159,7 @@ import org.chromium.policy.CombinedPolicyProvider.PolicyChangeListener;
 import org.chromium.printing.PrintManagerDelegateImpl;
 import org.chromium.printing.PrintingController;
 import org.chromium.printing.PrintingControllerImpl;
+import org.chromium.ui.DeferredViewStubInflationProvider;
 import org.chromium.ui.UiUtils;
 import org.chromium.ui.base.ActivityWindowAndroid;
 import org.chromium.ui.base.DeviceFormFactor;
@@ -173,10 +180,12 @@ import javax.annotation.Nullable;
 /**
  * A {@link AsyncInitializationActivity} that builds and manages a {@link CompositorViewHolder}
  * and associated classes.
+ * @param <C> - type of associated Dagger component.
  */
-public abstract class ChromeActivity extends AsyncInitializationActivity
+public abstract class ChromeActivity<C extends ChromeActivityComponent>
+        extends AsyncInitializationActivity
         implements TabCreatorManager, AccessibilityStateChangeListener, PolicyChangeListener,
-        ContextualSearchTabPromotionDelegate, SnackbarManageable, SceneChangeObserver {
+                   ContextualSearchTabPromotionDelegate, SnackbarManageable, SceneChangeObserver {
     /**
      * Factory which creates the AppMenuHandler.
      */
@@ -208,6 +217,8 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     private static AppMenuHandlerFactory sAppMenuHandlerFactory =
             (activity, delegate, menuResourceId) -> new AppMenuHandler(activity, delegate,
                     menuResourceId);
+
+    private C mComponent;
 
     private TabModelSelector mTabModelSelector;
     private TabModelSelectorTabObserver mTabModelSelectorTabObserver;
@@ -297,6 +308,9 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
     private ActivityTabStartupMetricsTracker mActivityTabStartupMetricsTracker;
 
+    /** A means of providing the foreground tab of the activity to different features. */
+    private ActivityTabProvider mActivityTabProvider = new ActivityTabProvider();
+
     /** Whether or not the activity is in started state. */
     private boolean mStarted;
 
@@ -317,6 +331,8 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     public void preInflationStartup() {
         super.preInflationStartup();
 
+        mComponent = createComponent();
+
         VrModuleProvider.getDelegate().doPreInflationStartup(this, getSavedInstanceState());
 
         // Force a partner customizations refresh if it has yet to be initialized.  This can happen
@@ -330,6 +346,52 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
         mFullscreenManager = createFullscreenManager();
         mCreatedFullscreenManager = true;
+    }
+
+    private C createComponent() {
+        ChromeActivityCommonsModule.Factory overridenCommonsFactory =
+                ModuleFactoryOverrides.getOverrideFor(ChromeActivityCommonsModule.Factory.class);
+
+        ChromeActivityCommonsModule commonsModule = overridenCommonsFactory == null
+                ? new ChromeActivityCommonsModule(this)
+                : overridenCommonsFactory.create(this);
+
+        ContextualSuggestionsModule.Factory overridenSuggestionsFactory =
+                ModuleFactoryOverrides.getOverrideFor(ContextualSuggestionsModule.Factory.class);
+
+        ContextualSuggestionsModule suggestionsModule = overridenSuggestionsFactory == null
+                ? new ContextualSuggestionsModule()
+                : overridenSuggestionsFactory.create();
+
+        return createComponent(commonsModule, suggestionsModule);
+    }
+
+    /**
+     * Override this to create a component that represents a richer dependency graph for a
+     * particular subclass of ChromeActivity. The specialized component should be activity-scoped
+     * and include all modules for ChromeActivityComponent, such as
+     * {@link ChromeActivityCommonsModule}, along with any additional modules.
+     *
+     * Example:
+     *
+     * @Subcomponent(modules = {ChromeActivityCommonsModule.class, ChromeTabbedActivityModule.class})
+     * @ActivityScope
+     * public interface ChromeTabbedActivityComponent extends ChromeActivityComponent {
+     *     SomeTabbedActivityClass getSomeTabbedActivityClass();
+     * }
+     */
+    @SuppressWarnings("unchecked")
+    protected C createComponent(ChromeActivityCommonsModule commonsModule,
+            ContextualSuggestionsModule contextualSuggestionsModule) {
+        return (C) ChromeApplication.getComponent().createChromeActivityComponent(
+                commonsModule, contextualSuggestionsModule);
+    }
+
+    /**
+     * @return the activity-scoped component associated with this instance of activity.
+     */
+    public final C getComponent() {
+        return mComponent;
     }
 
     @SuppressLint("NewApi")
@@ -395,10 +457,11 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
                         getTabModelSelector(), getControlContainerHeightResource());
             }
 
-            ((BottomContainer) findViewById(R.id.bottom_container)).initialize(mFullscreenManager);
+            ((BottomContainer) findViewById(R.id.bottom_container))
+                    .initialize(mFullscreenManager,
+                            mManualFillingController.getKeyboardExtensionSizeManager());
 
             mModalDialogManager = createModalDialogManager();
-            mPageViewTimer = new PageViewTimer(mTabModelSelector);
 
             // If onStart was called before postLayoutInflation (because inflation was done in a
             // background thread) then make sure to call the relevant methods belatedly.
@@ -500,8 +563,9 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         mInflateInitialLayoutEndMs = SystemClock.elapsedRealtime();
         // Set the status bar color to white by default.
         boolean isTablet = DeviceFormFactor.isNonMultiDisplayContextOnTablet(this);
-        int defaultThemeColor = ColorUtils.getDefaultThemeColor(getResources(), true, false);
-        setStatusBarColor(isTablet ? Color.BLACK : defaultThemeColor, true);
+        setStatusBarColor(
+                isTablet ? Color.BLACK : ColorUtils.getDefaultThemeColor(getResources(), false),
+                true);
 
         ViewGroup rootView = (ViewGroup) getWindow().getDecorView().getRootView();
         mCompositorViewHolder = (CompositorViewHolder) findViewById(R.id.compositor_view_holder);
@@ -582,6 +646,8 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         if (mTabModelsInitialized) return;
 
         mTabModelSelector = createTabModelSelector();
+        mActivityTabProvider.setTabModelSelector(mTabModelSelector);
+
         if (mTabModelSelector == null) {
             assert isFinishing();
             mTabModelsInitialized = true;
@@ -616,7 +682,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             }
 
             @Override
-            public void onShown(Tab tab) {
+            public void onShown(Tab tab, @TabSelectionType int type) {
                 setStatusBarColor(tab, tab.getThemeColor());
             }
 
@@ -632,7 +698,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             }
 
             @Override
-            public void onCrash(Tab tab, boolean sadTabShown) {
+            public void onCrash(Tab tab) {
                 postDeferredStartupIfNeeded();
             }
 
@@ -850,12 +916,10 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     protected void setStatusBarColor(int color, boolean isDefaultThemeColor) {
         if (UiUtils.isSystemUiThemingDisabled()) return;
 
-        boolean useModernDesign =
-                supportsModernDesign() && FeatureUtilities.isChromeModernDesignEnabled();
         int statusBarColor = color;
         boolean supportsDarkStatusIcons = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
         View root = getWindow().getDecorView().getRootView();
-        if (useModernDesign && supportsDarkStatusIcons) {
+        if (supportsDarkStatusIcons) {
             mBaseStatusBarColor = color;
 
             if (mScrimColor == 0) {
@@ -1245,11 +1309,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             mContextualSuggestionsCoordinator = null;
         }
 
-        if (mTabModelsInitialized) {
-            TabModelSelector selector = getTabModelSelector();
-            if (selector != null) selector.destroy();
-        }
-
         if (mDidAddPolicyChangeListener) {
             CombinedPolicyProvider.get().removePolicyChangeListener(this);
             mDidAddPolicyChangeListener = false;
@@ -1267,12 +1326,24 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             mActivityTabStartupMetricsTracker = null;
         }
 
+        if (mFullscreenManager != null) {
+            mFullscreenManager.destroy();
+            mFullscreenManager = null;
+        }
+
+        if (mTabModelsInitialized) {
+            TabModelSelector selector = getTabModelSelector();
+            if (selector != null) selector.destroy();
+        }
+
         AccessibilityManager manager = (AccessibilityManager)
                 getBaseContext().getSystemService(Context.ACCESSIBILITY_SERVICE);
         manager.removeAccessibilityStateChangeListener(this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             manager.removeTouchExplorationStateChangeListener(mTouchExplorationStateChangeListener);
         }
+
+        mActivityTabProvider.destroy();
 
         super.onDestroy();
     }
@@ -1375,9 +1446,15 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         ViewStub accessorySheetStub = findViewById(R.id.keyboard_accessory_sheet_stub);
         if (accessoryBarStub != null && accessorySheetStub != null) {
             mManualFillingController.initialize(getWindowAndroid(),
-                    findViewById(R.id.keyboard_accessory_stub),
-                    findViewById(R.id.keyboard_accessory_sheet_stub));
+                    new DeferredViewStubInflationProvider<>(accessoryBarStub),
+                    new DeferredViewStubInflationProvider<>(accessorySheetStub));
+            getCompositorViewHolder().setKeyboardExtensionView(
+                    mManualFillingController.getKeyboardExtensionSizeManager());
         }
+
+        // Create after native initialization so subclasses that override this method have a chance
+        // to setup.
+        mPageViewTimer = createPageViewTimer();
 
         if (mToolbarManager != null && mToolbarManager.getToolbar() != null) {
             mToolbarManager.getToolbar().setScrim(mScrimView);
@@ -1391,13 +1468,12 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
             ((BottomContainer) findViewById(R.id.bottom_container)).setBottomSheet(mBottomSheet);
 
-            mBottomSheetController = new BottomSheetController(this, getTabModelSelector(),
-                    getCompositorViewHolder().getLayoutManager(), mScrimView, mBottomSheet,
-                    getContextualSearchManager(),
+            mBottomSheetController = new BottomSheetController(this, mActivityTabProvider,
+                    mScrimView, mBottomSheet,
+                    getCompositorViewHolder().getLayoutManager().getOverlayPanelManager(),
                     !ChromeFeatureList.isEnabled(ChromeFeatureList.CONTEXTUAL_SUGGESTIONS_BUTTON));
 
-            mContextualSuggestionsCoordinator = new ContextualSuggestionsCoordinator(
-                    this, mBottomSheetController, getTabModelSelector());
+            mContextualSuggestionsCoordinator = mComponent.getContextualSuggestionsCoordinator();
         }
     }
 
@@ -1422,9 +1498,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         if (mToolbarManager != null) mToolbarManager.onAccessibilityStatusChanged(enabled);
         if (mContextualSearchManager != null) {
             mContextualSearchManager.onAccessibilityModeChanged(enabled);
-        }
-        if (mContextualSuggestionsCoordinator != null) {
-            mContextualSuggestionsCoordinator.onAccessibilityModeChanged(enabled);
         }
     }
 
@@ -1611,6 +1684,13 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     }
 
     /**
+     * @return The provider of the visible tab in the current activity.
+     */
+    public ActivityTabProvider getActivityTabProvider() {
+        return mActivityTabProvider;
+    }
+
+    /**
      * Returns the {@link InsetObserverView} that has the current system window
      * insets information.
      * @return The {@link InsetObserverView}, possibly null.
@@ -1665,6 +1745,9 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     }
 
     /**
+     * DEPRECATED: Instead, use/hold a reference to {@link #mActivityTabProvider}. See
+     *             https://crbug.com/871279 for more details.
+     *
      * Returns the tab being displayed by this ChromeActivity instance. This allows differentiation
      * between ChromeActivity subclasses that swap between multiple tabs (e.g. ChromeTabbedActivity)
      * and subclasses that only display one Tab (e.g. FullScreenActivity and DocumentActivity).
@@ -1794,6 +1877,8 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             controlContainer.setSwipeHandler(
                     getCompositorViewHolder().getLayoutManager().getToolbarSwipeHandler());
         }
+
+        mActivityTabProvider.setLayoutManager(layoutManager);
     }
 
     /**
@@ -1947,10 +2032,7 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     @Override
     public void onTrimMemory(int level) {
         super.onTrimMemory(level);
-        // The conditions are expressed using ranges to capture intermediate levels possibly added
-        // to the API in the future.
-        if ((level >= TRIM_MEMORY_RUNNING_LOW && level < TRIM_MEMORY_UI_HIDDEN)
-                || level >= TRIM_MEMORY_MODERATE) {
+        if (ChromeApplication.isSevereMemorySignal(level)) {
             mReferencePool.drain();
             clearToolbarResourceCache();
         }
@@ -1992,9 +2074,8 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
 
     /**
      * Callback after UpdateMenuItemHelper#checkForUpdateOnBackgroundThread is complete.
-     * @param updateAvailable Whether an update is available.
      */
-    public void onCheckForUpdate(boolean updateAvailable) {
+    public void onCheckForUpdate() {
         if (UpdateMenuItemHelper.getInstance().shouldShowToolbarBadge(this)) {
             mToolbarManager.showAppMenuUpdateBadge();
             mCompositorViewHolder.requestRender();
@@ -2079,6 +2160,9 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
             }
             RecordUserAction.record("MobileMenuHistory");
             HistoryManagerUtils.showHistoryManager(this, currentTab);
+        } else if (id == R.id.translate_id) {
+            RecordUserAction.record("MobileMenuTranslate");
+            TranslateBridge.translateTab(getActivityTab());
         } else if (id == R.id.share_menu_id || id == R.id.direct_share_menu_id) {
             onShareMenuItemSelected(id == R.id.direct_share_menu_id,
                     getCurrentTabModel().isIncognito());
@@ -2396,13 +2480,6 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
     }
 
     /**
-     * @return Whether this Activity supports modern design.
-     */
-    public boolean supportsModernDesign() {
-        return false;
-    }
-
-    /**
      * @return Whether this Activity supports showing contextual suggestions in a bottom sheet.
      */
     public boolean supportsContextualSuggestionsBottomSheet() {
@@ -2491,8 +2568,18 @@ public abstract class ChromeActivity extends AsyncInitializationActivity
         return mDensityDpi;
     }
 
-    @VisibleForTesting
-    public ContextualSuggestionsCoordinator getContextualSuggestionsCoordinatorForTesting() {
-        return mContextualSuggestionsCoordinator;
+    /**
+     * Create a PageViewTimer that's compatible with this activity. Override in subclasses to
+     * specialize behavior.
+     * @return The PageViewTimer created for this activity.
+     */
+    protected PageViewTimer createPageViewTimer() {
+        return new PageViewTimer(mTabModelSelector);
+    }
+
+    /** Returns {@link BottomSheetController}, if present. */
+    @Nullable
+    public BottomSheetController getBottomSheetController() {
+        return mBottomSheetController;
     }
 }

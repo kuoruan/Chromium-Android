@@ -344,6 +344,20 @@ public class UrlUtilities {
                 + ((parsed.getPort() != -1) ? (":" + parsed.getPort()) : "");
     }
 
+    /**
+     * @param url An HTTP or HTTPS URL.
+     * @return The URL without the scheme.
+     */
+    public static String stripScheme(String url) {
+        String noScheme = url.trim();
+        if (noScheme.startsWith(UrlConstants.HTTPS_URL_PREFIX)) {
+            noScheme = noScheme.substring(8);
+        } else if (noScheme.startsWith(UrlConstants.HTTP_URL_PREFIX)) {
+            noScheme = noScheme.substring(7);
+        }
+        return noScheme;
+    }
+
     private static native boolean nativeIsDownloadable(String url);
     private static native boolean nativeIsValidForIntentFallbackNavigation(String url);
     private static native boolean nativeIsAcceptedScheme(String url);

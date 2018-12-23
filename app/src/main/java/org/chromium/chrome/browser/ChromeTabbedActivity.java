@@ -66,6 +66,7 @@ import org.chromium.chrome.browser.compositor.layouts.LayoutManagerChromePhone;
 import org.chromium.chrome.browser.compositor.layouts.LayoutManagerChromeTablet;
 import org.chromium.chrome.browser.compositor.layouts.OverviewModeBehavior.OverviewModeObserver;
 import org.chromium.chrome.browser.compositor.layouts.phone.StackLayout;
+import org.chromium.chrome.browser.contextual_suggestions.PageViewTimer;
 import org.chromium.chrome.browser.cookies.CookiesFetcher;
 import org.chromium.chrome.browser.crypto.CipherFactory;
 import org.chromium.chrome.browser.device.DeviceClassManager;
@@ -77,7 +78,7 @@ import org.chromium.chrome.browser.feature_engagement.ScreenshotMonitor;
 import org.chromium.chrome.browser.feature_engagement.ScreenshotMonitorDelegate;
 import org.chromium.chrome.browser.feature_engagement.ScreenshotTabObserver;
 import org.chromium.chrome.browser.feature_engagement.TrackerFactory;
-import org.chromium.chrome.browser.feed.FeedEventReporter;
+import org.chromium.chrome.browser.feed.FeedProcessScopeFactory;
 import org.chromium.chrome.browser.firstrun.FirstRunSignInProcessor;
 import org.chromium.chrome.browser.firstrun.FirstRunStatus;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
@@ -118,6 +119,7 @@ import org.chromium.chrome.browser.survey.ChromeSurveyController;
 import org.chromium.chrome.browser.tab.BrowserControlsVisibilityDelegate;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.chrome.browser.tab.TabDelegateFactory;
+import org.chromium.chrome.browser.tab.TabRedirectHandler;
 import org.chromium.chrome.browser.tab.TabStateBrowserControlsVisibilityDelegate;
 import org.chromium.chrome.browser.tabmodel.AsyncTabParamsManager;
 import org.chromium.chrome.browser.tabmodel.ChromeTabCreator;
@@ -623,6 +625,12 @@ public class ChromeTabbedActivity
                 ToolbarButtonInProductHelpController.maybeShowColdStartIPH(this);
             }
 
+            if (ChromeFeatureList.isEnabled(ChromeFeatureList.INTEREST_FEED_CONTENT_SUGGESTIONS)) {
+                // We call getFeedAppLifecycle() here to ensure the app lifecycle is created so that
+                // it can start listening for state changes.
+                FeedProcessScopeFactory.getFeedAppLifecycle();
+            }
+
             super.finishNativeInitialization();
         } finally {
             TraceEvent.end("ChromeTabbedActivity.finishNativeInitialization");
@@ -668,15 +676,14 @@ public class ChromeTabbedActivity
         mLocaleManager.setSnackbarManager(getSnackbarManager());
         mLocaleManager.startObservingPhoneChanges();
 
-        if (ChromeFeatureList.isEnabled(ChromeFeatureList.INTEREST_FEED_CONTENT_SUGGESTIONS)) {
-            FeedEventReporter.onBrowserForegrounded();
-        } else {
+        if (!ChromeFeatureList.isEnabled(ChromeFeatureList.INTEREST_FEED_CONTENT_SUGGESTIONS)) {
             if (isWarmOnResume()) {
                 SuggestionsEventReporterBridge.onActivityWarmResumed();
             } else {
                 SuggestionsEventReporterBridge.onColdStart();
             }
         }
+
         if (!isWarmOnResume()) {
             SuggestionsMetrics.recordArticlesListVisible();
         }
@@ -1235,7 +1242,7 @@ public class ChromeTabbedActivity
                     // can be handled by other applications (e.g. www.youtube.com links).
                     Tab currentTab = getActivityTab();
                     if (currentTab != null) {
-                        currentTab.getTabRedirectHandler().updateIntent(intent);
+                        TabRedirectHandler.from(currentTab).updateIntent(intent);
                         int transitionType = PageTransition.LINK | PageTransition.FROM_API;
                         LoadUrlParams loadUrlParams = new LoadUrlParams(url);
                         loadUrlParams.setIntentReceivedTimestamp(mIntentHandlingTimeMs);
@@ -2020,10 +2027,7 @@ public class ChromeTabbedActivity
     @Override
     public void onTrimMemory(int level) {
         super.onTrimMemory(level);
-        // The conditions are expressed using ranges to capture intermediate levels possibly added
-        // to the API in the future.
-        if ((level >= TRIM_MEMORY_RUNNING_LOW && level < TRIM_MEMORY_UI_HIDDEN)
-                || level >= TRIM_MEMORY_MODERATE) {
+        if (ChromeApplication.isSevereMemorySignal(level)) {
             NativePageAssassin.getInstance().freezeAllHiddenPages();
         }
     }
@@ -2056,8 +2060,21 @@ public class ChromeTabbedActivity
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && !isTablet()) {
             mHandler.removeCallbacks(mShowHistoryRunnable);
+            mShowHistoryRunnable = null;
         }
         return super.onKeyUp(keyCode, event);
+    }
+
+    @VisibleForTesting
+    public NavigationPopup getNavigationPopupForTesting() {
+        ThreadUtils.assertOnUiThread();
+        return mNavigationPopup;
+    }
+
+    @VisibleForTesting
+    public boolean hasPendingNavigationPopupForTesting() {
+        ThreadUtils.assertOnUiThread();
+        return mShowHistoryRunnable != null;
     }
 
     private void showFullHistoryForTab() {
@@ -2069,32 +2086,11 @@ public class ChromeTabbedActivity
         Tab tab = getActivityTab();
         if (tab == null || tab.getWebContents() == null || !tab.isUserInteractable()) return;
 
-        mNavigationPopup = new NavigationPopup(
-                tab.getProfile(), this, tab.getWebContents().getNavigationController(), false);
-        mNavigationPopup.reverseHistoryOrder();
-        mNavigationPopup.setWidth(
-                getResources().getDimensionPixelSize(R.dimen.navigation_popup_width));
-        mNavigationPopup.setAnchorView(findViewById(R.id.navigation_popup_anchor_stub));
-        mNavigationPopup.setOnDismissListener(() -> mNavigationPopup = null);
-
-        positionAndShowNavigationPopup();
-    }
-
-    @Override
-    public void onOrientationChange(int orientation) {
-        super.onOrientationChange(orientation);
-        positionAndShowNavigationPopup();
-    }
-
-    private void positionAndShowNavigationPopup() {
-        if (mNavigationPopup == null) return;
-
-        // Center popup window.
-        ViewGroup coordinator = findViewById(R.id.coordinator);
-        int horizontalOffset = coordinator.getWidth() / 2 - mNavigationPopup.getWidth() / 2;
-        if (horizontalOffset > 0) mNavigationPopup.setHorizontalOffset(horizontalOffset);
-
-        mNavigationPopup.show();
+        mNavigationPopup = new NavigationPopup(tab.getProfile(), this,
+                tab.getWebContents().getNavigationController(),
+                NavigationPopup.Type.ANDROID_SYSTEM_BACK);
+        mNavigationPopup.setOnDismissCallback(() -> mNavigationPopup = null);
+        mNavigationPopup.show(findViewById(R.id.navigation_popup_anchor_stub));
     }
 
     @Override
@@ -2228,15 +2224,14 @@ public class ChromeTabbedActivity
         }
 
         boolean supportsDarkStatusIcons = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
-        if (!supportsDarkStatusIcons || !supportsModernDesign()
-                || !FeatureUtilities.isChromeModernDesignEnabled()) {
+        if (!supportsDarkStatusIcons) {
             super.setStatusBarColor(tab, Color.BLACK);
             return;
         }
 
         if (!ChromeFeatureList.isInitialized()
-                || !ChromeFeatureList.isEnabled(
-                           ChromeFeatureList.HORIZONTAL_TAB_SWITCHER_ANDROID)) {
+                || (!ChromeFeatureList.isEnabled(ChromeFeatureList.HORIZONTAL_TAB_SWITCHER_ANDROID)
+                           && !DeviceClassManager.enableAccessibilityLayout())) {
             super.setStatusBarColor(tab,
                     ApiCompatibilityUtils.getColor(getResources(), R.color.modern_primary_color));
             return;
@@ -2409,11 +2404,6 @@ public class ChromeTabbedActivity
     }
 
     @Override
-    public boolean supportsModernDesign() {
-        return true;
-    }
-
-    @Override
     public boolean supportsContextualSuggestionsBottomSheet() {
         return true;
     }
@@ -2432,5 +2422,10 @@ public class ChromeTabbedActivity
                 if (tabObserver != null) tabObserver.onScreenshotTaken();
             }
         });
+    }
+
+    @Override
+    protected PageViewTimer createPageViewTimer() {
+        return new PageViewTimer(mTabModelSelectorImpl, mLayoutManager);
     }
 }

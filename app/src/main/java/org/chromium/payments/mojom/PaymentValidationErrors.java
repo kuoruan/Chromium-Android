@@ -19,7 +19,7 @@ public final class PaymentValidationErrors extends org.chromium.mojo.bindings.St
     private static final int STRUCT_SIZE = 24;
     private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
     private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
-    public PayerErrorFields payer;
+    public PayerErrors payer;
     public AddressErrors shippingAddress;
 
     private PaymentValidationErrors(int version) {
@@ -58,7 +58,7 @@ public final class PaymentValidationErrors extends org.chromium.mojo.bindings.St
                 {
                     
                 org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
-                result.payer = PayerErrorFields.decode(decoder1);
+                result.payer = PayerErrors.decode(decoder1);
                 }
                 {
                     

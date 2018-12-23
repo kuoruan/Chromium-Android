@@ -6,6 +6,8 @@ package org.chromium.chrome.browser;
 
 import android.app.Activity;
 
+import org.chromium.base.Callback;
+import org.chromium.base.ThreadUtils;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.ui.base.WindowAndroid;
 
@@ -19,19 +21,29 @@ import org.chromium.ui.base.WindowAndroid;
  * constructor.
  */
 public class ChromeHttpAuthHandler {
+    private static Callback<ChromeHttpAuthHandler> sTestCreationCallback;
+
     private final long mNativeChromeHttpAuthHandler;
     private AutofillObserver mAutofillObserver;
     private String mAutofillUsername;
     private String mAutofillPassword;
+    private LoginPrompt mLoginPrompt;
 
     private ChromeHttpAuthHandler(long nativeChromeHttpAuthHandler) {
         assert nativeChromeHttpAuthHandler != 0;
         mNativeChromeHttpAuthHandler = nativeChromeHttpAuthHandler;
+        if (sTestCreationCallback != null) sTestCreationCallback.onResult(this);
     }
 
     @CalledByNative
     private static ChromeHttpAuthHandler create(long nativeChromeHttpAuthHandler) {
         return new ChromeHttpAuthHandler(nativeChromeHttpAuthHandler);
+    }
+
+    /** Set a test callback to be notified of all ChromeHttpAuthHandlers created. */
+    public static void setTestCreationCallback(Callback<ChromeHttpAuthHandler> callback) {
+        ThreadUtils.assertOnUiThread();
+        sTestCreationCallback = callback;
     }
 
     // ---------------------------------------------
@@ -52,6 +64,7 @@ public class ChromeHttpAuthHandler {
      * Cancel the authorization request.
      */
     public void cancel() {
+        mLoginPrompt = null;
         nativeCancelAuth(mNativeChromeHttpAuthHandler);
     }
 
@@ -59,6 +72,7 @@ public class ChromeHttpAuthHandler {
      * Proceed with the authorization with the given credentials.
      */
     public void proceed(String username, String password) {
+        mLoginPrompt = null;
         nativeSetAuth(mNativeChromeHttpAuthHandler, username, password);
     }
 
@@ -66,14 +80,27 @@ public class ChromeHttpAuthHandler {
         return nativeGetMessageBody(mNativeChromeHttpAuthHandler);
     }
 
+    /** Return whether the auth dialog is being shown. */
+    public boolean isShowingAuthDialog() {
+        return mLoginPrompt != null && mLoginPrompt.isShowing();
+    }
+
     @CalledByNative
     private void showDialog(WindowAndroid windowAndroid) {
         if (windowAndroid == null) cancel();
         Activity activity = windowAndroid.getActivity().get();
         if (activity == null) cancel();
-        LoginPrompt authDialog = new LoginPrompt(activity, this);
-        setAutofillObserver(authDialog);
-        authDialog.show();
+        mLoginPrompt = new LoginPrompt(activity, this);
+        setAutofillObserver(mLoginPrompt);
+        mLoginPrompt.show();
+    }
+
+    @CalledByNative
+    private void closeDialog() {
+        if (mLoginPrompt != null) {
+            mLoginPrompt.dismiss();
+            mLoginPrompt = null;
+        }
     }
 
     // ---------------------------------------------

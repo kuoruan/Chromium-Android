@@ -46,12 +46,20 @@ public class AutofillPaymentApp implements PaymentApp {
     @Override
     public void getInstruments(Map<String, PaymentMethodData> methodDataMap, String unusedOrigin,
             String unusedIFRameOrigin, byte[][] unusedCertificateChain,
-            Map<String, PaymentDetailsModifier> modifiers, final InstrumentsCallback callback) {
+            Map<String, PaymentDetailsModifier> unusedModifiers,
+            final InstrumentsCallback callback) {
+        new Handler().post(()
+                                   -> callback.onInstrumentsReady(
+                                           AutofillPaymentApp.this, getInstruments(methodDataMap)));
+    }
+
+    /** Method to get instruments synchronously. */
+    public List<PaymentInstrument> getInstruments(Map<String, PaymentMethodData> methodDataMap) {
         PersonalDataManager pdm = PersonalDataManager.getInstance();
         List<CreditCard> cards =
                 pdm.getCreditCardsToSuggest(/*includeServerCards=*/ChromeFeatureList.isEnabled(
                         ChromeFeatureList.WEB_PAYMENTS_RETURN_GOOGLE_PAY_IN_BASIC_CARD));
-        final List<PaymentInstrument> instruments = new ArrayList<>(cards.size());
+        List<PaymentInstrument> instruments = new ArrayList<>(cards.size());
 
         if (methodDataMap.containsKey(BasicCardUtils.BASIC_CARD_METHOD_NAME)) {
             mBasicCardSupportedNetworks = BasicCardUtils.convertBasicCardToNetworks(
@@ -69,7 +77,7 @@ public class AutofillPaymentApp implements PaymentApp {
             if (instrument != null) instruments.add(instrument);
         }
 
-        new Handler().post(() -> callback.onInstrumentsReady(AutofillPaymentApp.this, instruments));
+        return instruments;
     }
 
     /**

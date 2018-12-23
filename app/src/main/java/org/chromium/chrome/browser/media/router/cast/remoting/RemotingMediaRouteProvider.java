@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 /**
  * A {@link MediaRouteProvider} implementation for media remote playback.
  */
+// Migrated to CafRemotingMediaRouteProvider. See https://crbug.com/711860.
 public class RemotingMediaRouteProvider extends BaseMediaRouteProvider {
     private static final String TAG = "MediaRemoting";
 
@@ -64,7 +65,7 @@ public class RemotingMediaRouteProvider extends BaseMediaRouteProvider {
 
         if (mSession == null) {
             mRoutes.remove(routeId);
-            mManager.onRouteClosed(routeId);
+            mManager.onRouteTerminated(routeId);
             return;
         }
 
@@ -77,9 +78,8 @@ public class RemotingMediaRouteProvider extends BaseMediaRouteProvider {
     }
 
     @Override
-    public void sendStringMessage(String routeId, String message, int nativeCallbackId) {
+    public void sendStringMessage(String routeId, String message) {
         Log.e(TAG, "Remote playback does not support sending messages");
-        mManager.onMessageSentResult(false, nativeCallbackId);
     }
 
     @VisibleForTesting
@@ -91,7 +91,7 @@ public class RemotingMediaRouteProvider extends BaseMediaRouteProvider {
     public void onSessionEnded() {
         if (mSession == null) return;
 
-        for (String routeId : mRoutes.keySet()) mManager.onRouteClosed(routeId);
+        for (String routeId : mRoutes.keySet()) mManager.onRouteTerminated(routeId);
         mRoutes.clear();
 
         mSession = null;

@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewCompat;
 import android.text.TextUtils;
@@ -16,7 +17,6 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 
-import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.WindowDelegate;
@@ -31,16 +31,15 @@ import java.util.ArrayList;
  */
 @VisibleForTesting
 public class OmniboxSuggestionsList extends ListView {
-    private static final int OMNIBOX_RESULTS_BG_COLOR = 0xFFF5F5F6;
-    private static final int OMNIBOX_RESULTS_CHROME_MODERN_BG_COLOR = 0xFFFFFFFF;
-    private static final int OMNIBOX_INCOGNITO_RESULTS_BG_COLOR = 0xFF323232;
-    private static final int OMNIBOX_INCOGNITO_RESULTS_CHROME_MODERN_BG_COLOR = 0xFF3C4043;
+    private static final int OMNIBOX_RESULTS_BG_COLOR = 0xFFFFFFFF;
+    private static final int OMNIBOX_INCOGNITO_RESULTS_BG_COLOR = 0xFF3C4043;
 
     private final OmniboxSuggestionListEmbedder mEmbedder;
     private final int mSuggestionHeight;
     private final int mSuggestionAnswerHeight;
     private final int mSuggestionDefinitionHeight;
     private final View mAnchorView;
+    private final View mAlignmentView;
 
     private final int[] mTempPosition = new int[2];
     private final Rect mTempRect = new Rect();
@@ -57,15 +56,20 @@ public class OmniboxSuggestionsList extends ListView {
         /** Return the anchor view the suggestion list should be drawn below. */
         View getAnchorView();
 
+        /**
+         * Return the view that the omnibox suggestions should be aligned horizontally to.  The
+         * view must be a descendant of {@link #getAnchorView()}.  If null, the suggestions will
+         * be aligned to the start of {@link #getAnchorView()}.
+         */
+        @Nullable
+        View getAlignmentView();
+
         /** Return the bottom sheet for the containing UI to be used in sizing. */
         @Nullable
         BottomSheet getBottomSheet();
 
         /** Return the delegate used to interact with the Window. */
         WindowDelegate getWindowDelegate();
-
-        /** Return whether modern design should be used when styling the popup. */
-        boolean useModernDesign();
 
         /** Return whether the suggestions are being rendered in the tablet UI. */
         boolean isTablet();
@@ -94,13 +98,9 @@ public class OmniboxSuggestionsList extends ListView {
         mSuggestionDefinitionHeight = context.getResources().getDimensionPixelOffset(
                 R.dimen.omnibox_suggestion_definition_height);
 
-        int paddingTop = mEmbedder.useModernDesign()
-                ? 0
-                : context.getResources().getDimensionPixelOffset(
-                          R.dimen.omnibox_suggestion_list_padding_top);
         int paddingBottom = context.getResources().getDimensionPixelOffset(
                 R.dimen.omnibox_suggestion_list_padding_bottom);
-        ViewCompat.setPaddingRelative(this, 0, paddingTop, 0, paddingBottom);
+        ViewCompat.setPaddingRelative(this, 0, 0, 0, paddingBottom);
 
         refreshPopupBackground();
         getBackground().getPadding(mTempRect);
@@ -109,6 +109,26 @@ public class OmniboxSuggestionsList extends ListView {
                 mTempRect.top + mTempRect.bottom + getPaddingTop() + getPaddingBottom();
 
         mAnchorView = mEmbedder.getAnchorView();
+        mAlignmentView = mEmbedder.getAlignmentView();
+        if (mAlignmentView != null) {
+            adjustSidePadding();
+            mAlignmentView.addOnLayoutChangeListener(new OnLayoutChangeListener() {
+                @Override
+                public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                        int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                    adjustSidePadding();
+                }
+            });
+        }
+    }
+
+    private void adjustSidePadding() {
+        if (mAlignmentView == null) return;
+
+        ViewUtils.getRelativeLayoutPosition(mAnchorView, mAlignmentView, mTempPosition);
+        setPadding(mTempPosition[0], getPaddingTop(),
+                mAnchorView.getWidth() - mAlignmentView.getWidth() - mTempPosition[0],
+                getPaddingBottom());
     }
 
     /**
@@ -135,12 +155,6 @@ public class OmniboxSuggestionsList extends ListView {
     private Drawable getSuggestionPopupBackground() {
         int omniboxResultsColorForNonIncognito = OMNIBOX_RESULTS_BG_COLOR;
         int omniboxResultsColorForIncognito = OMNIBOX_INCOGNITO_RESULTS_BG_COLOR;
-        if (mEmbedder.useModernDesign()) {
-            omniboxResultsColorForNonIncognito = OMNIBOX_RESULTS_CHROME_MODERN_BG_COLOR;
-            if (!mEmbedder.isTablet()) {
-                omniboxResultsColorForIncognito = OMNIBOX_INCOGNITO_RESULTS_CHROME_MODERN_BG_COLOR;
-            }
-        }
 
         int color = mEmbedder.isIncognito() ? omniboxResultsColorForIncognito
                                             : omniboxResultsColorForNonIncognito;
@@ -207,7 +221,15 @@ public class OmniboxSuggestionsList extends ListView {
     /**
      * Update the layout params to ensure the suggestion popup is properly sized.
      */
+    // TODO(tedchoc): This should likely be done in measure/layout instead of just manipulating
+    //                the layout params.  Investigate converting to that flow.
     void updateLayoutParams() {
+        // If in the middle of a layout pass, post till it is completed to avoid the layout param
+        // update being ignored.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && isInLayout()) {
+            post(this::updateLayoutParams);
+            return;
+        }
         boolean updateLayout = false;
         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) getLayoutParams();
         if (layoutParams == null) {
@@ -250,9 +272,8 @@ public class OmniboxSuggestionsList extends ListView {
                 Math.min(mTempRect.height(), decorHeight) + additionalHeightForBottomNavMenu;
         int availableListHeight = availableViewportHeight - anchorBottomRelativeToContent;
         // The suggestions should consume all available space in Modern on phone.
-        int desiredHeight = mEmbedder.useModernDesign() && !mEmbedder.isTablet()
-                ? availableListHeight
-                : Math.min(availableListHeight, getIdealHeight());
+        int desiredHeight = !mEmbedder.isTablet() ? availableListHeight
+                                                  : Math.min(availableListHeight, getIdealHeight());
         if (layoutParams.height != desiredHeight) {
             layoutParams.height = desiredHeight;
             updateLayout = true;
@@ -313,7 +334,7 @@ public class OmniboxSuggestionsList extends ListView {
         for (int i = 0; i < getChildCount(); i++) {
             View childView = getChildAt(i);
             if (!(childView instanceof SuggestionView)) continue;
-            ApiCompatibilityUtils.setLayoutDirection(childView, layoutDirection);
+            ViewCompat.setLayoutDirection(childView, layoutDirection);
         }
     }
 

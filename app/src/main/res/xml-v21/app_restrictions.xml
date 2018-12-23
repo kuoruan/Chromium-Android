@@ -370,12 +370,6 @@
         android:restrictionType="bool"/>
 
     <restriction
-        android:key="SupervisedUserContentProviderEnabled"
-        android:title="@string/SupervisedUserContentProviderEnabledTitle"
-        android:description="@string/SupervisedUserContentProviderEnabledDesc"
-        android:restrictionType="bool"/>
-
-    <restriction
         android:key="ManagedBookmarks"
         android:title="@string/ManagedBookmarksTitle"
         android:description="@string/ManagedBookmarksDesc"
@@ -507,6 +501,12 @@
         android:key="UrlKeyedAnonymizedDataCollectionEnabled"
         android:title="@string/UrlKeyedAnonymizedDataCollectionEnabledTitle"
         android:description="@string/UrlKeyedAnonymizedDataCollectionEnabledDesc"
+        android:restrictionType="bool"/>
+
+    <restriction
+        android:key="EnterpriseHardwarePlatformAPIEnabled"
+        android:title="@string/EnterpriseHardwarePlatformAPIEnabledTitle"
+        android:description="@string/EnterpriseHardwarePlatformAPIEnabledDesc"
         android:restrictionType="bool"/>
 
 </restrictions>

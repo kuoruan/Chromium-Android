@@ -25,17 +25,17 @@ public interface PaymentHandlerResponseCallback extends org.chromium.mojo.bindin
 
 
     void onResponseForAbortPayment(
-boolean paymentAborted, org.chromium.mojo_base.mojom.Time dispatchEventTime);
+boolean paymentAborted, org.chromium.mojo_base.mojom.TimeTicks dispatchEventTime);
 
 
 
     void onResponseForCanMakePayment(
-boolean canMakePayment, org.chromium.mojo_base.mojom.Time dispatchEventTime);
+boolean canMakePayment, org.chromium.mojo_base.mojom.TimeTicks dispatchEventTime);
 
 
 
     void onResponseForPaymentRequest(
-PaymentHandlerResponse response, org.chromium.mojo_base.mojom.Time dispatchEventTime);
+PaymentHandlerResponse response, org.chromium.mojo_base.mojom.TimeTicks dispatchEventTime);
 
 
 }

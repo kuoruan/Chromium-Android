@@ -40,7 +40,7 @@ public abstract class SiteSectionViewHolder extends NewTabPageViewHolder {
      * @param tile The tile that holds the data to populate the tile view.
      */
     public void updateIconView(Tile tile) {
-        TileView tileView = findTileView(tile.getData());
+        SuggestionsTileView tileView = findTileView(tile.getData());
         if (tileView != null) tileView.renderIcon(tile);
     }
 
@@ -49,7 +49,7 @@ public abstract class SiteSectionViewHolder extends NewTabPageViewHolder {
      * @param tile The tile that holds the data to populate the tile view.
      */
     public void updateOfflineBadge(Tile tile) {
-        TileView tileView = findTileView(tile.getData());
+        SuggestionsTileView tileView = findTileView(tile.getData());
         if (tileView != null) tileView.renderOfflineBadge(tile);
     }
 
@@ -57,5 +57,5 @@ public abstract class SiteSectionViewHolder extends NewTabPageViewHolder {
     public abstract void refreshData();
 
     @Nullable
-    public abstract TileView findTileView(SiteSuggestion data);
+    public abstract SuggestionsTileView findTileView(SiteSuggestion data);
 }

@@ -5,11 +5,12 @@
 package org.chromium.chrome.browser.autofill.keyboard_accessory;
 
 import android.support.annotation.Nullable;
-import android.view.ViewStub;
+import android.support.v4.view.ViewPager;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryData.Provider;
 import org.chromium.ui.DropdownPopupWindow;
+import org.chromium.ui.ViewProvider;
 import org.chromium.ui.base.WindowAndroid;
 
 /**
@@ -24,18 +25,23 @@ public class ManualFillingCoordinator {
     private final ManualFillingMediator mMediator = new ManualFillingMediator();
 
     /**
-     * Initializes the manual filling component. Calls to this class are NoOps until
-     * {@link #initialize(WindowAndroid, ViewStub, ViewStub)} is called.
+     * Initializes the manual filling component. Calls to this class are NoOps until this method is
+     * called.
      * @param windowAndroid The window needed to listen to the keyboard and to connect to activity.
-     * @param keyboardAccessoryStub The view stub for keyboard accessory bar.
-     * @param accessorySheetStub The view stub for the keyboard accessory bottom sheet.
+     * @param accessoryViewProvider The view provider for the keyboard accessory bar.
+     * @param viewPagerProvider The view provider for the keyboard accessory bottom sheet.
      */
-    public void initialize(WindowAndroid windowAndroid, ViewStub keyboardAccessoryStub,
-            ViewStub accessorySheetStub) {
+    public void initialize(WindowAndroid windowAndroid,
+            ViewProvider<KeyboardAccessoryView> accessoryViewProvider,
+            ViewProvider<ViewPager> viewPagerProvider) {
         KeyboardAccessoryCoordinator keyboardAccessory =
-                new KeyboardAccessoryCoordinator(keyboardAccessoryStub, mMediator);
-        AccessorySheetCoordinator accessorySheet = new AccessorySheetCoordinator(
-                accessorySheetStub, keyboardAccessory::getPageChangeListener);
+                new KeyboardAccessoryCoordinator(mMediator, accessoryViewProvider);
+        viewPagerProvider.whenLoaded(viewPager -> {
+            accessoryViewProvider.whenLoaded(accessoryView -> {
+                viewPager.addOnPageChangeListener(accessoryView.getPageChangeListener());
+            });
+        });
+        AccessorySheetCoordinator accessorySheet = new AccessorySheetCoordinator(viewPagerProvider);
         mMediator.initialize(keyboardAccessory, accessorySheet, windowAndroid);
     }
 
@@ -93,12 +99,30 @@ public class ManualFillingCoordinator {
         mMediator.registerPasswordProvider(itemProvider);
     }
 
+    public void showWhenKeyboardIsVisible() {
+        mMediator.showWhenKeyboardIsVisible();
+    }
+
+    public void hide() {
+        mMediator.hide();
+    }
+
     public void onResume() {
         mMediator.resume();
     }
 
     public void onPause() {
         mMediator.pause();
+    }
+
+    /**
+     * Returns a size manager that allows to access the combined height of
+     * {@link KeyboardAccessoryCoordinator} and {@link AccessorySheetCoordinator}, and to be
+     * notified when it changes.
+     * @return A {@link KeyboardExtensionSizeManager}.
+     */
+    public KeyboardExtensionSizeManager getKeyboardExtensionSizeManager() {
+        return mMediator.getKeyboardExtensionSizeManager();
     }
 
     // TODO(fhorschig): Should be @VisibleForTesting.

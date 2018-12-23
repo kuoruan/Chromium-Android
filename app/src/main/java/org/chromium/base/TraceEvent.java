@@ -221,7 +221,7 @@ public class TraceEvent implements AutoCloseable {
      * Note that if tracing is not enabled, this will not result in allocating an object.
      *
      * @param name Trace event name.
-     * @param name The arguments of the event.
+     * @param arg The arguments of the event.
      * @return a TraceEvent, or null if tracing is not enabled.
      */
     public static TraceEvent scoped(String name, String arg) {

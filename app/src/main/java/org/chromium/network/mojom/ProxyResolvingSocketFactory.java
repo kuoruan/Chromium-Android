@@ -25,7 +25,7 @@ public interface ProxyResolvingSocketFactory extends org.chromium.mojo.bindings.
 
 
     void createProxyResolvingSocket(
-org.chromium.url.mojom.Url url, boolean useTls, MutableNetworkTrafficAnnotationTag trafficAnnotation, org.chromium.mojo.bindings.InterfaceRequest<ProxyResolvingSocket> socket, 
+org.chromium.url.mojom.Url url, boolean useTls, MutableNetworkTrafficAnnotationTag trafficAnnotation, org.chromium.mojo.bindings.InterfaceRequest<ProxyResolvingSocket> socket, SocketObserver observer, 
 CreateProxyResolvingSocketResponse callback);
 
     interface CreateProxyResolvingSocketResponse extends org.chromium.mojo.bindings.Callbacks.Callback5<Integer, org.chromium.net.interfaces.IpEndPoint, org.chromium.net.interfaces.IpEndPoint, org.chromium.mojo.system.DataPipe.ConsumerHandle, org.chromium.mojo.system.DataPipe.ProducerHandle> { }

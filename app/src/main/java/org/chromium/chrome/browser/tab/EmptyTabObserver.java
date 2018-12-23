@@ -8,6 +8,8 @@ import android.graphics.Bitmap;
 import android.view.ContextMenu;
 
 import org.chromium.chrome.browser.fullscreen.FullscreenOptions;
+import org.chromium.chrome.browser.tab.Tab.TabHidingType;
+import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.content_public.browser.LoadUrlParams;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.content_public.common.BrowserControlsState;
@@ -19,12 +21,11 @@ import org.chromium.content_public.common.BrowserControlsState;
  * bloats the number of methods. See https://crbug.com/781359.
  */
 public class EmptyTabObserver implements TabObserver {
+    @Override
+    public void onShown(Tab tab, @TabSelectionType int type) {}
 
     @Override
-    public void onShown(Tab tab) { }
-
-    @Override
-    public void onHidden(Tab tab) { }
+    public void onHidden(Tab tab, @TabHidingType int reason) {}
 
     @Override
     public void onClosingStateChanged(Tab tab, boolean closing) { }
@@ -48,6 +49,9 @@ public class EmptyTabObserver implements TabObserver {
     public void onPageLoadFailed(Tab tab, int errorCode) { }
 
     @Override
+    public void onRestoreStarted(Tab tab) {}
+
+    @Override
     public void onFaviconUpdated(Tab tab, Bitmap icon) { }
 
     @Override
@@ -60,7 +64,7 @@ public class EmptyTabObserver implements TabObserver {
     public void onSSLStateUpdated(Tab tab) { }
 
     @Override
-    public void onCrash(Tab tab, boolean sadTabShown) { }
+    public void onCrash(Tab tab) {}
 
     @Override
     public void onWebContentsSwapped(Tab tab, boolean didStartLoad, boolean didFinishLoad) { }
@@ -130,9 +134,15 @@ public class EmptyTabObserver implements TabObserver {
     public void onInteractabilityChanged(boolean isInteractable) {}
 
     @Override
+    public void onRendererResponsiveStateChanged(boolean isResponsive) {}
+
+    @Override
     public void onNavigationEntriesDeleted(Tab tab) {}
 
     @Override
     public void onBrowserControlsConstraintsUpdated(
             Tab tab, @BrowserControlsState int constraints) {}
+
+    @Override
+    public void didReloadLoFiImages(Tab tab) {}
 }

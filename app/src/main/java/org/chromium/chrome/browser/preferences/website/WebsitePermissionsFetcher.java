@@ -131,6 +131,9 @@ public class WebsitePermissionsFetcher {
         // Background sync permission is per-origin.
         queue.add(new ExceptionInfoFetcher(
                 ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC));
+        // Automatic Downloads permission is per-origin.
+        queue.add(new ExceptionInfoFetcher(
+                ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOMATIC_DOWNLOADS));
         // Autoplay permission is per-origin.
         queue.add(new ExceptionInfoFetcher(ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY));
         // USB device permission is per-origin and per-embedder.
@@ -196,6 +199,10 @@ public class WebsitePermissionsFetcher {
             // Background sync info is per-origin.
             queue.add(new ExceptionInfoFetcher(
                     ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC));
+        } else if (category.showSites(SiteSettingsCategory.Type.AUTOMATIC_DOWNLOADS)) {
+            // Automatic downloads info is per-origin.
+            queue.add(new ExceptionInfoFetcher(
+                    ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOMATIC_DOWNLOADS));
         } else if (category.showSites(SiteSettingsCategory.Type.PROTECTED_MEDIA)) {
             // Protected media identifier permission is per-origin and per-embedder.
             queue.add(new PermissionInfoFetcher(PermissionInfo.Type.PROTECTED_MEDIA_IDENTIFIER));
@@ -227,6 +234,17 @@ public class WebsitePermissionsFetcher {
     }
 
     private void setException(int contentSettingsType) {
+        @ContentSettingException.Type
+        int exceptionType;
+        for (exceptionType = 0; exceptionType < ContentSettingException.Type.NUM_ENTRIES;
+                exceptionType++) {
+            if (contentSettingsType == ContentSettingException.CONTENT_TYPES[exceptionType]) break;
+        }
+        assert contentSettingsType
+                == ContentSettingException.CONTENT_TYPES[exceptionType]
+            : "Unexpected content setting type received: "
+                        + contentSettingsType;
+
         for (ContentSettingException exception :
                 WebsitePreferenceBridge.getContentSettingsExceptions(contentSettingsType)) {
             // The pattern "*" represents the default setting, not a specific website.
@@ -234,36 +252,7 @@ public class WebsitePermissionsFetcher {
             WebsiteAddress address = WebsiteAddress.create(exception.getPattern());
             if (address == null) continue;
             Website site = findOrCreateSite(address, null);
-            switch (contentSettingsType) {
-                case ContentSettingsType.CONTENT_SETTINGS_TYPE_ADS:
-                    site.setContentSettingException(ContentSettingException.Type.ADS, exception);
-                    break;
-                case ContentSettingsType.CONTENT_SETTINGS_TYPE_AUTOPLAY:
-                    site.setContentSettingException(
-                            ContentSettingException.Type.AUTOPLAY, exception);
-                    break;
-                case ContentSettingsType.CONTENT_SETTINGS_TYPE_BACKGROUND_SYNC:
-                    site.setContentSettingException(
-                            ContentSettingException.Type.BACKGROUND_SYNC, exception);
-                    break;
-                case ContentSettingsType.CONTENT_SETTINGS_TYPE_COOKIES:
-                    site.setContentSettingException(ContentSettingException.Type.COOKIE, exception);
-                    break;
-                case ContentSettingsType.CONTENT_SETTINGS_TYPE_JAVASCRIPT:
-                    site.setContentSettingException(
-                            ContentSettingException.Type.JAVASCRIPT, exception);
-                    break;
-                case ContentSettingsType.CONTENT_SETTINGS_TYPE_POPUPS:
-                    site.setContentSettingException(ContentSettingException.Type.POPUP, exception);
-                    break;
-                case ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND:
-                    site.setContentSettingException(ContentSettingException.Type.SOUND, exception);
-                    break;
-                default:
-                    assert false : "Unexpected content setting type received: "
-                                   + contentSettingsType;
-                    break;
-            }
+            site.setContentSettingException(exceptionType, exception);
         }
     }
 

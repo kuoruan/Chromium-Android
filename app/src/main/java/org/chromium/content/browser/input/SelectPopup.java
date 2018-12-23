@@ -8,6 +8,7 @@ import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.chromium.base.UserData;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -18,7 +19,6 @@ import org.chromium.content.browser.WindowEventObserverManager;
 import org.chromium.content.browser.accessibility.WebContentsAccessibilityImpl;
 import org.chromium.content.browser.webcontents.WebContentsImpl;
 import org.chromium.content.browser.webcontents.WebContentsImpl.UserDataFactory;
-import org.chromium.content.browser.webcontents.WebContentsUserData;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.base.ViewAndroidDelegate;
@@ -31,8 +31,8 @@ import java.util.List;
  * Handles the popup UI for the lt&;select&gt; HTML tag support.
  */
 @JNINamespace("content")
-public class SelectPopup
-        implements HideablePopup, ViewAndroidDelegate.ContainerViewObserver, WindowEventObserver {
+public class SelectPopup implements HideablePopup, ViewAndroidDelegate.ContainerViewObserver,
+                                    WindowEventObserver, UserData {
     /** UI for Select popup. */
     public interface Ui {
         /**
@@ -62,8 +62,8 @@ public class SelectPopup
      * @return {@link SelectPopup} object.
      */
     public static SelectPopup fromWebContents(WebContents webContents) {
-        return WebContentsUserData.fromWebContents(
-                webContents, SelectPopup.class, UserDataFactoryLazyHolder.INSTANCE);
+        return ((WebContentsImpl) webContents)
+                .getOrSetUserData(SelectPopup.class, UserDataFactoryLazyHolder.INSTANCE);
     }
 
     @CalledByNative
@@ -172,7 +172,7 @@ public class SelectPopup
     }
 
     @CalledByNative
-    private void destroy() {
+    private void onNativeDestroyed() {
         mNativeSelectPopup = 0;
     }
 

@@ -28,7 +28,6 @@ import android.widget.TextView;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.ui.base.DeviceFormFactor;
 import org.chromium.ui.interpolators.BakedBezierInterpolator;
 
@@ -244,17 +243,13 @@ public class SnackbarView {
 
         int backgroundColor = snackbar.getBackgroundColor();
         if (backgroundColor == 0) {
-            backgroundColor = ApiCompatibilityUtils.getColor(mContainerView.getResources(),
-                    FeatureUtilities.isChromeModernDesignEnabled()
-                            ? R.color.modern_primary_color
-                            : R.color.snackbar_background_color);
+            backgroundColor = ApiCompatibilityUtils.getColor(
+                    mContainerView.getResources(), R.color.modern_primary_color);
         }
 
         int textAppearanceResId = snackbar.getTextAppearance();
         if (textAppearanceResId == 0) {
-            textAppearanceResId = FeatureUtilities.isChromeModernDesignEnabled()
-                    ? R.style.BlackBodyDefault
-                    : R.style.WhiteBody;
+            textAppearanceResId = R.style.BlackBodyDefault;
         }
         ApiCompatibilityUtils.setTextAppearance(mMessageView, textAppearanceResId);
 
@@ -282,16 +277,11 @@ public class SnackbarView {
             mProfileImageView.setVisibility(View.GONE);
         }
 
-        if (FeatureUtilities.isChromeModernDesignEnabled()) {
-            mActionButtonView.setTextColor(ApiCompatibilityUtils.getColor(
-                    mContainerView.getResources(), R.color.blue_when_enabled));
-
-            mContainerView.findViewById(R.id.snackbar_shadow_top).setVisibility(View.VISIBLE);
-            if (mIsTablet) {
-                mContainerView.findViewById(R.id.snackbar_shadow_left).setVisibility(View.VISIBLE);
-                mContainerView.findViewById(R.id.snackbar_shadow_right).setVisibility(View.VISIBLE);
-            }
+        if (mIsTablet) {
+            mContainerView.findViewById(R.id.snackbar_shadow_left).setVisibility(View.VISIBLE);
+            mContainerView.findViewById(R.id.snackbar_shadow_right).setVisibility(View.VISIBLE);
         }
+
         return true;
     }
 

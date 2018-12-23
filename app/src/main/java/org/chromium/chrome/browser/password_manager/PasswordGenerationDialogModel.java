@@ -13,15 +13,16 @@ import org.chromium.chrome.browser.modelutil.PropertyModel;
 
 class PasswordGenerationDialogModel extends PropertyModel {
     /** The generated password to be displayed in the dialog. */
-    public static final ObjectPropertyKey<String> GENERATED_PASSWORD = new ObjectPropertyKey<>();
+    public static final WritableObjectPropertyKey<String> GENERATED_PASSWORD =
+            new WritableObjectPropertyKey<>();
 
     /** Explanation text for how the generated password is saved. */
-    public static final ObjectPropertyKey<String>
-            SAVE_EXPLANATION_TEXT = new ObjectPropertyKey<>();
+    public static final WritableObjectPropertyKey<String> SAVE_EXPLANATION_TEXT =
+            new WritableObjectPropertyKey<>();
 
     /** Callback invoked when the password is accepted or rejected by the user. */
-    public static final ObjectPropertyKey<Callback<Boolean>> PASSWORD_ACTION_CALLBACK =
-            new ObjectPropertyKey<>();
+    public static final WritableObjectPropertyKey<Callback<Boolean>> PASSWORD_ACTION_CALLBACK =
+            new WritableObjectPropertyKey<>();
 
     /** Default constructor */
     public PasswordGenerationDialogModel() {

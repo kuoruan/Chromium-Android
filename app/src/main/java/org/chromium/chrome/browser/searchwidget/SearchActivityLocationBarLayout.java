@@ -7,7 +7,6 @@ package org.chromium.chrome.browser.searchwidget;
 import android.content.Context;
 import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.support.v4.view.ViewCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
@@ -16,15 +15,11 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.locale.LocaleManager;
 import org.chromium.chrome.browser.omnibox.LocationBarLayout;
 import org.chromium.chrome.browser.omnibox.LocationBarVoiceRecognitionHandler;
-import org.chromium.chrome.browser.omnibox.OmniboxSuggestion;
 import org.chromium.chrome.browser.omnibox.UrlBar;
 import org.chromium.chrome.browser.omnibox.UrlBarCoordinator.SelectionState;
 import org.chromium.chrome.browser.omnibox.UrlBarData;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.toolbar.ToolbarPhone;
-import org.chromium.ui.UiUtils;
-
-import java.util.List;
 
 /** Implementation of the {@link LocationBarLayout} that is displayed for widget searches. */
 public class SearchActivityLocationBarLayout extends LocationBarLayout {
@@ -46,24 +41,9 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
         setUrlBarFocusable(true);
         setBackground(ToolbarPhone.createModernLocationBarBackground(getResources()));
 
-        // Now you might ask yourself what these paddings are doing? Great question, really glad
-        // you asked...OH MY...LOOK BEHIND YOU!!!
-        //
-        // <Sounds of original author running away>
-        //
-        // These numbers were chosen at a single snapshot in time where they roughly equated to
-        // the padding used in the modern tabbed mode focused omnibox.  There is minimal rhyme or
-        // reason to this, but using something that approximated the toolbar logic looked even
-        // worse.
-        //
-        // Shrug. Once that layout logic is cleaned up, this should be universally replaced with
-        // something sane.
-        int toolbarSidePadding = getResources().getDimensionPixelSize(R.dimen.toolbar_edge_padding);
-        int backgroundSidePadding = getResources().getDimensionPixelSize(
-                R.dimen.modern_toolbar_background_focused_left_margin);
-        ViewCompat.setPaddingRelative(this, backgroundSidePadding + toolbarSidePadding,
-                getPaddingTop(), backgroundSidePadding, getPaddingBottom());
         mPendingSearchPromoDecision = LocaleManager.getInstance().needToCheckForSearchEnginePromo();
+        getAutocompleteCoordinator().setShouldPreventOmniboxAutocomplete(
+                mPendingSearchPromoDecision);
     }
 
     /** Set the {@link Delegate}. */
@@ -72,7 +52,7 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
     }
 
     @Override
-    protected void loadUrl(String url, int transition) {
+    public void loadUrl(String url, int transition, long inputStart) {
         mDelegate.loadUrl(url);
         LocaleManager.getInstance().recordLocaleBasedSearchMetrics(true, url, transition);
     }
@@ -80,11 +60,6 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
     @Override
     public void backKeyPressed() {
         mDelegate.backKeyPressed();
-    }
-
-    @Override
-    public boolean mustQueryUrlBarLocationForSuggestions() {
-        return true;
     }
 
     @Override
@@ -98,13 +73,8 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
         setAutocompleteProfile(Profile.getLastUsedProfile().getOriginalProfile());
 
         mPendingSearchPromoDecision = LocaleManager.getInstance().needToCheckForSearchEnginePromo();
-    }
-
-    @Override
-    public void onSuggestionsReceived(
-            List<OmniboxSuggestion> newSuggestions, String inlineAutocompleteText) {
-        if (mPendingSearchPromoDecision) return;
-        super.onSuggestionsReceived(newSuggestions, inlineAutocompleteText);
+        getAutocompleteCoordinator().setShouldPreventOmniboxAutocomplete(
+                mPendingSearchPromoDecision);
     }
 
     /** Called when the SearchActivity has finished initialization. */
@@ -114,12 +84,14 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
                     mVoiceRecognitionHandler.isVoiceSearchEnabled());
         }
         if (isVoiceSearchIntent && mUrlBar.isFocused()) onUrlFocusChange(true);
-        if (!TextUtils.isEmpty(mUrlCoordinator.getTextWithAutocomplete())) {
-            onTextChangedForAutocomplete();
-        }
 
         assert !LocaleManager.getInstance().needToCheckForSearchEnginePromo();
         mPendingSearchPromoDecision = false;
+        getAutocompleteCoordinator().setShouldPreventOmniboxAutocomplete(
+                mPendingSearchPromoDecision);
+        if (!TextUtils.isEmpty(mUrlCoordinator.getTextWithAutocomplete())) {
+            mAutocompleteCoordinator.onTextChangedForAutocomplete();
+        }
 
         if (mPendingBeginQuery) {
             beginQueryInternal(isVoiceSearchIntent);
@@ -172,18 +144,13 @@ public class SearchActivityLocationBarLayout extends LocationBarLayout {
     //                is finalized after native has been initialized.
     private void focusTextBox() {
         if (!mUrlBar.hasFocus()) mUrlBar.requestFocus();
-        setShowCachedZeroSuggestResults(true);
+        getAutocompleteCoordinator().setShowCachedZeroSuggestResults(true);
 
         new Handler().post(new Runnable() {
             @Override
             public void run() {
-                UiUtils.showKeyboard(mUrlBar);
+                getWindowAndroid().getKeyboardDelegate().showKeyboard(mUrlBar);
             }
         });
-    }
-
-    @Override
-    public boolean useModernDesign() {
-        return true;
     }
 }

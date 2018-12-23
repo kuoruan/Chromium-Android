@@ -6,34 +6,28 @@ package org.chromium.chrome.browser.download.home;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.support.graphics.drawable.VectorDrawableCompat;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-import android.view.LayoutInflater;
-import android.view.MenuItem;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
+import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ObserverList;
-import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.base.metrics.RecordUserAction;
-import org.chromium.chrome.R;
-import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.download.home.filter.Filters;
 import org.chromium.chrome.browser.download.home.filter.Filters.FilterType;
 import org.chromium.chrome.browser.download.home.list.DateOrderedListCoordinator;
+import org.chromium.chrome.browser.download.home.list.DateOrderedListCoordinator.DateOrderedListObserver;
 import org.chromium.chrome.browser.download.home.list.ListItem;
 import org.chromium.chrome.browser.download.home.snackbars.DeleteUndoCoordinator;
-import org.chromium.chrome.browser.download.home.toolbar.DownloadHomeToolbar;
+import org.chromium.chrome.browser.download.home.toolbar.ToolbarCoordinator;
 import org.chromium.chrome.browser.download.items.OfflineContentAggregatorFactory;
-import org.chromium.chrome.browser.download.ui.DownloadManagerUi;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
 import org.chromium.chrome.browser.preferences.download.DownloadPreferences;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.snackbar.SnackbarManager;
-import org.chromium.chrome.browser.widget.selection.SelectableListLayout;
-import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
 import org.chromium.chrome.browser.widget.selection.SelectionDelegate;
+import org.chromium.chrome.download.R;
 
 import java.io.Closeable;
 
@@ -42,80 +36,73 @@ import java.io.Closeable;
  * is not fully fleshed out yet.
  */
 class DownloadManagerCoordinatorImpl
-        implements DownloadManagerCoordinator, Toolbar.OnMenuItemClickListener {
+        implements DownloadManagerCoordinator, ToolbarCoordinator.ToolbarActionDelegate {
     private final ObserverList<Observer> mObservers = new ObserverList<>();
     private final DateOrderedListCoordinator mListCoordinator;
     private final DeleteUndoCoordinator mDeleteCoordinator;
 
-    private SelectableListLayout<ListItem> mSelectableListLayout;
+    private final ToolbarCoordinator mToolbarCoordinator;
+    private final SelectionDelegate<ListItem> mSelectionDelegate;
+
+    private final Activity mActivity;
+
     private ViewGroup mMainView;
-    private DownloadHomeToolbar mToolbar;
-    private Activity mActivity;
 
     private boolean mMuteFilterChanges;
-    private boolean mIsSeparateActivity;
-    private int mSearchMenuId;
-
-    private SelectionDelegate<ListItem> mSelectionDelegate;
-
-    private SelectableListToolbar.SearchDelegate mSearchDelegate =
-            new SelectableListToolbar.SearchDelegate() {
-                @Override
-                public void onSearchTextChanged(String query) {
-                    mListCoordinator.setSearchQuery(query);
-                }
-
-                @Override
-                public void onEndSearch() {
-                    mSelectableListLayout.onEndSearch();
-                    mListCoordinator.setSearchQuery(null);
-                }
-            };
 
     /** Builds a {@link DownloadManagerCoordinatorImpl} instance. */
-    @SuppressWarnings({"unchecked"}) // mSelectableListLayout
-    public DownloadManagerCoordinatorImpl(Profile profile, Activity activity, boolean offTheRecord,
-            boolean isSeparateActivity, SnackbarManager snackbarManager) {
+    public DownloadManagerCoordinatorImpl(Profile profile, Activity activity,
+            DownloadManagerUiConfig config, SnackbarManager snackbarManager) {
         mActivity = activity;
         mDeleteCoordinator = new DeleteUndoCoordinator(snackbarManager);
         mSelectionDelegate = new SelectionDelegate<ListItem>();
-        mListCoordinator = new DateOrderedListCoordinator(mActivity, offTheRecord,
+        mListCoordinator = new DateOrderedListCoordinator(mActivity, config,
                 OfflineContentAggregatorFactory.forProfile(profile),
-                mDeleteCoordinator::showSnackbar, mSelectionDelegate, this ::notifyFilterChanged);
+                mDeleteCoordinator::showSnackbar, mSelectionDelegate, this ::notifyFilterChanged,
+                createDateOrderedListObserver());
+        mToolbarCoordinator = new ToolbarCoordinator(
+                mActivity, this, mListCoordinator, mSelectionDelegate, config.isSeparateActivity);
 
-        mMainView =
-                (ViewGroup) LayoutInflater.from(mActivity).inflate(R.layout.download_main, null);
-        mSelectableListLayout =
-                (SelectableListLayout<ListItem>) mMainView.findViewById(R.id.selectable_list);
-
-        // TODO(shaktisahu): Maybe refactor SelectableListLayout to work without supplying empty
-        // view.
-        mSelectableListLayout.initializeEmptyView(
-                VectorDrawableCompat.create(
-                        mActivity.getResources(), R.drawable.downloads_big, mActivity.getTheme()),
-                R.string.download_manager_ui_empty, R.string.download_manager_no_results);
-
-        RecyclerView recyclerView = (RecyclerView) mListCoordinator.getView();
-        mSelectableListLayout.initializeRecyclerView(recyclerView.getAdapter(), recyclerView);
-
-        boolean isLocationEnabled =
-                ChromeFeatureList.isEnabled(ChromeFeatureList.DOWNLOADS_LOCATION_CHANGE);
-        int normalGroupId =
-                isLocationEnabled ? R.id.with_settings_normal_menu_group : R.id.normal_menu_group;
-        mSearchMenuId = isLocationEnabled ? R.id.with_settings_search_menu_id : R.id.search_menu_id;
-
-        mToolbar = (DownloadHomeToolbar) mSelectableListLayout.initializeToolbar(
-                R.layout.download_home_toolbar, mSelectionDelegate, 0, null, normalGroupId,
-                R.id.selection_mode_menu_group, R.color.modern_primary_color, this, true,
-                isSeparateActivity);
-        mToolbar.getMenu().setGroupVisible(normalGroupId, true);
-        mToolbar.initializeSearchView(
-                mSearchDelegate, R.string.download_manager_search, mSearchMenuId);
-
-        mIsSeparateActivity = isSeparateActivity;
-        if (!mIsSeparateActivity) mToolbar.removeCloseButton();
-
+        initializeView();
         RecordUserAction.record("Android.DownloadManager.Open");
+    }
+
+    /**
+     * Creates the top level layout for download home including the toolbar.
+     * TODO(crbug.com/880468) : Investigate if it is better to do in XML.
+     */
+    private void initializeView() {
+        mMainView = new FrameLayout(mActivity);
+        mMainView.setBackgroundColor(ApiCompatibilityUtils.getColor(
+                mActivity.getResources(), R.color.modern_primary_color));
+
+        FrameLayout.LayoutParams listParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
+        listParams.setMargins(0,
+                mActivity.getResources().getDimensionPixelOffset(R.dimen.toolbar_height_no_shadow),
+                0, 0);
+        mMainView.addView(mListCoordinator.getView(), listParams);
+
+        FrameLayout.LayoutParams toolbarParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+        toolbarParams.gravity = Gravity.TOP;
+        mMainView.addView(mToolbarCoordinator.getView(), toolbarParams);
+    }
+
+    private DateOrderedListObserver createDateOrderedListObserver() {
+        return new DateOrderedListObserver() {
+            @Override
+            public void onListScroll(boolean canScrollUp) {
+                if (mToolbarCoordinator == null) return;
+                mToolbarCoordinator.setShowToolbarShadow(canScrollUp);
+            }
+
+            @Override
+            public void onEmptyStateChanged(boolean isEmpty) {
+                if (mToolbarCoordinator == null) return;
+                mToolbarCoordinator.setSearchEnabled(!isEmpty);
+            }
+        };
     }
 
     // DownloadManagerCoordinator implementation.
@@ -123,6 +110,7 @@ class DownloadManagerCoordinatorImpl
     public void destroy() {
         mDeleteCoordinator.destroy();
         mListCoordinator.destroy();
+        mToolbarCoordinator.destroy();
     }
 
     @Override
@@ -132,7 +120,8 @@ class DownloadManagerCoordinatorImpl
 
     @Override
     public boolean onBackPressed() {
-        // TODO(dtrainor): Clear selection if multi-select is supported.
+        if (mListCoordinator.handleBackPressed()) return true;
+        if (mToolbarCoordinator.handleBackPressed()) return true;
         return false;
     }
 
@@ -158,60 +147,26 @@ class DownloadManagerCoordinatorImpl
         mObservers.removeObserver(observer);
     }
 
+    // ToolbarActionDelegate implementation.
+    @Override
+    public void close() {
+        mActivity.finish();
+    }
+
+    @Override
+    public void openSettings() {
+        RecordUserAction.record("Android.DownloadManager.Settings");
+        Intent intent = PreferencesLauncher.createIntentForSettingsPage(
+                mActivity, DownloadPreferences.class.getName());
+        mActivity.startActivity(intent);
+    }
+
     private void notifyFilterChanged(@FilterType int filter) {
         mSelectionDelegate.clearSelection();
         if (mMuteFilterChanges) return;
 
         String url = Filters.toUrl(filter);
         for (Observer observer : mObservers) observer.onUrlChanged(url);
-    }
-
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        if ((item.getItemId() == R.id.close_menu_id
-                    || item.getItemId() == R.id.with_settings_close_menu_id)
-                && mIsSeparateActivity) {
-            DownloadManagerUi.recordMenuActionHistogram(DownloadManagerUi.MenuAction.CLOSE);
-            mActivity.finish();
-            return true;
-        } else if (item.getItemId() == R.id.selection_mode_delete_menu_id) {
-            DownloadManagerUi.recordMenuActionHistogram(DownloadManagerUi.MenuAction.MULTI_DELETE);
-            RecordHistogram.recordCount100Histogram(
-                    "Android.DownloadManager.Menu.Delete.SelectedCount",
-                    mSelectionDelegate.getSelectedItems().size());
-            mListCoordinator.onDeletionRequested(mSelectionDelegate.getSelectedItemsAsList());
-            mSelectionDelegate.clearSelection();
-            return true;
-        } else if (item.getItemId() == R.id.selection_mode_share_menu_id) {
-            // TODO(twellington): ideally the intent chooser would be started with
-            //                    startActivityForResult() and the selection would only be cleared
-            //                    after receiving an OK response. See https://crbug.com/638916.
-
-            DownloadManagerUi.recordMenuActionHistogram(DownloadManagerUi.MenuAction.MULTI_SHARE);
-            RecordHistogram.recordCount100Histogram(
-                    "Android.DownloadManager.Menu.Share.SelectedCount",
-                    mSelectionDelegate.getSelectedItems().size());
-
-            // TODO(shaktisahu): Share selected items.
-            mSelectionDelegate.clearSelection();
-            return true;
-        } else if (item.getItemId() == mSearchMenuId) {
-            // The header should be removed as soon as a search is started. Also it should be added
-            // back when the search is ended.
-            // TODO(shaktisahu): Check with UX and remove header.
-            mSelectableListLayout.onStartSearch();
-            mToolbar.showSearchView();
-            DownloadManagerUi.recordMenuActionHistogram(DownloadManagerUi.MenuAction.SEARCH);
-            RecordUserAction.record("Android.DownloadManager.Search");
-            return true;
-        } else if (item.getItemId() == R.id.settings_menu_id) {
-            Intent intent = PreferencesLauncher.createIntentForSettingsPage(
-                    mActivity, DownloadPreferences.class.getName());
-            mActivity.startActivity(intent);
-            RecordUserAction.record("Android.DownloadManager.Settings");
-            return true;
-        }
-        return false;
     }
 
     /**

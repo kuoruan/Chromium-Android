@@ -11,7 +11,6 @@ import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.annotation.PluralsRes;
 import android.text.TextUtils;
-import android.text.format.Formatter;
 
 import org.chromium.base.ApplicationStatus;
 import org.chromium.base.ContextUtils;
@@ -583,8 +582,8 @@ public class DownloadInfoBarController implements OfflineContentProvider.Observe
                             R.plurals.download_infobar_downloading_files, inProgressDownloadCount,
                             inProgressDownloadCount);
                 } else {
-                    String bytesString =
-                            Formatter.formatFileSize(getContext(), totalDownloadingSizeBytes);
+                    String bytesString = DownloadUtils.getStringForBytes(
+                            getContext(), totalDownloadingSizeBytes);
                     info.message = inProgressDownloadCount == 1
                             ? getContext().getString(
                                       R.string.downloading_file_with_bytes, bytesString)
@@ -747,7 +746,7 @@ public class DownloadInfoBarController implements OfflineContentProvider.Observe
         Tab currentTab = getCurrentTab();
         if (currentTab == null) return;
 
-        currentTab.getInfoBarContainer().addObserver(mInfoBarContainerObserver);
+        InfoBarContainer.get(currentTab).addObserver(mInfoBarContainerObserver);
         DownloadProgressInfoBar.createInfoBar(mClient, currentTab, info);
         recordInfoBarCreated();
     }
@@ -764,7 +763,7 @@ public class DownloadInfoBarController implements OfflineContentProvider.Observe
 
         Tab prevTab = mCurrentInfoBar.getTab();
         if (prevTab != null) {
-            prevTab.getInfoBarContainer().removeObserver(mInfoBarContainerObserver);
+            InfoBarContainer.get(prevTab).removeObserver(mInfoBarContainerObserver);
         }
 
         mCurrentInfoBar.closeInfoBar();

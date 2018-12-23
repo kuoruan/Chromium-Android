@@ -24,7 +24,7 @@ public class NoopCanvas extends Canvas {
      */
     public static class NoopException extends RuntimeException {}
 
-    private NoopException mException = null;
+    private NoopException mException;
 
     /**
      * @param bitmap The bitmap to create the Canvas from.

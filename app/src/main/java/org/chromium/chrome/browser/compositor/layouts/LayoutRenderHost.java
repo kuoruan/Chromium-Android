@@ -57,11 +57,6 @@ public interface LayoutRenderHost {
     int getBrowserControlsBackgroundColor();
 
     /**
-     * @return The alpha value of the textbox in the toolbar.
-     */
-    float getBrowserControlsUrlBarAlpha();
-
-    /**
      * @return The {@link ResourceManager}.
      */
     ResourceManager getResourceManager();

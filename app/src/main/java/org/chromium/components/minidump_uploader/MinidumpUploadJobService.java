@@ -37,7 +37,7 @@ public abstract class MinidumpUploadJobService extends JobService {
     // Used in Debug builds to assert that this job service never attempts to run more than one job
     // at a time:
     private final Object mRunningLock = new Object();
-    private boolean mRunningJob = false;
+    private boolean mRunningJob;
 
     /**
      * Schedules uploading of all pending minidumps.

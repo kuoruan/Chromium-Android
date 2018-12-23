@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.preferences;
 
-import android.accounts.Account;
 import android.content.Context;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
@@ -27,6 +26,7 @@ import org.chromium.chrome.browser.signin.SigninAccessPoint;
 import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.signin.SigninManager.SignInAllowedObserver;
 import org.chromium.chrome.browser.signin.SigninPromoController;
+import org.chromium.chrome.browser.signin.SigninPromoUtil;
 import org.chromium.chrome.browser.sync.ProfileSyncService;
 import org.chromium.chrome.browser.sync.ProfileSyncService.SyncStateChangedListener;
 import org.chromium.chrome.browser.util.ViewUtils;
@@ -277,21 +277,15 @@ public class SignInPreference
             return;
         }
 
-        DisplayableProfileData profileData = null;
-        Account[] accounts = AccountManagerFacade.get().tryGetGoogleAccounts();
-        if (accounts.length > 0) {
-            String defaultAccountName = accounts[0].name;
-            mProfileDataCache.update(Collections.singletonList(defaultAccountName));
-            profileData = mProfileDataCache.getProfileDataOrDefault(defaultAccountName);
-        }
         PersonalizedSigninPromoView signinPromoView =
                 view.findViewById(R.id.signin_promo_view_container);
-        mSigninPromoController.detach();
-        mSigninPromoController.setupPromoView(getContext(), signinPromoView, profileData, () -> {
-            ChromePreferenceManager.getInstance().writeBoolean(
-                    ChromePreferenceManager.SETTINGS_PERSONALIZED_SIGNIN_PROMO_DISMISSED, true);
-            update();
-        });
+        SigninPromoUtil.setupPromoViewFromCache(
+                mSigninPromoController, mProfileDataCache, signinPromoView, () -> {
+                    ChromePreferenceManager.getInstance().writeBoolean(
+                            ChromePreferenceManager.SETTINGS_PERSONALIZED_SIGNIN_PROMO_DISMISSED,
+                            true);
+                    update();
+                });
 
         if (ChromeFeatureList.isEnabled(ChromeFeatureList.UNIFIED_CONSENT)) {
             View divider = view.findViewById(R.id.divider);

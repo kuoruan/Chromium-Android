@@ -5,6 +5,7 @@
 package org.chromium.chrome.browser.tab;
 
 import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 
 import java.util.ArrayList;
 
@@ -44,7 +45,7 @@ class ChildBackgroundTabShowObserver extends EmptyTabObserver {
     }
 
     @Override
-    public void onShown(Tab tab) {
+    public void onShown(Tab tab, @TabSelectionType int type) {
         int rank = mTabCreationOrder.indexOf(tab);
         int reverseRank = mTabCreationOrder.size() - rank - 1;
 

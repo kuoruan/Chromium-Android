@@ -12,8 +12,8 @@ import android.widget.Spinner;
 
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.metrics.RecordUserAction;
-import org.chromium.chrome.R;
 import org.chromium.chrome.browser.widget.selection.SelectableListToolbar;
+import org.chromium.chrome.download.R;
 
 import java.util.List;
 
@@ -50,10 +50,12 @@ public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistor
     }
 
     /**
-     * Removes the close button from the toolbar.
+     * Removes a menu item from the toolbar.
+     * @param menuItemId The menu item to be removed. Nothing happens if there is no menu item
+     *                   associated with this ID.
      */
-    public void removeCloseButton() {
-        getMenu().removeItem(R.id.close_menu_id);
+    public void removeMenuItem(int menuItemId) {
+        getMenu().removeItem(menuItemId);
     }
 
     /** Called whenever the selected filter on this adapter should change. */
@@ -73,7 +75,7 @@ public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistor
         boolean wasSelectionEnabled = mIsSelectionEnabled;
         super.onSelectionStateChange(selectedItems);
 
-        mSpinner.setVisibility((mIsSelectionEnabled || mIsSearching) ? GONE : VISIBLE);
+        mSpinner.setVisibility((mIsSelectionEnabled || isSearching()) ? GONE : VISIBLE);
         if (mIsSelectionEnabled) {
             int numSelected = mSelectionDelegate.getSelectedItems().size();
 
@@ -100,10 +102,10 @@ public class DownloadManagerToolbar extends SelectableListToolbar<DownloadHistor
     }
 
     @Override
-    protected void onDataChanged(int numItems) {
-        super.onDataChanged(numItems);
+    public void setSearchEnabled(boolean searchEnabled) {
+        super.setSearchEnabled(searchEnabled);
         MenuItem item = getMenu().findItem(mInfoMenuItemId);
-        if (item != null) item.setVisible(!mIsSearching && !mIsSelectionEnabled && numItems > 0);
+        if (item != null) item.setVisible(!isSearching() && !mIsSelectionEnabled && searchEnabled);
     }
 
     @Override

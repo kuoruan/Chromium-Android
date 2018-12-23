@@ -23,10 +23,12 @@ import org.chromium.base.CommandLine;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
 import org.chromium.base.StrictModeContext;
+import org.chromium.base.library_loader.LibraryProcessType;
 import org.chromium.base.metrics.CachedMetrics;
 import org.chromium.chrome.browser.browserservices.BrowserSessionContentUtils;
 import org.chromium.chrome.browser.customtabs.CustomTabActivity;
 import org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider;
+import org.chromium.chrome.browser.customtabs.PaymentHandlerActivity;
 import org.chromium.chrome.browser.customtabs.SeparateTaskCustomTabActivity;
 import org.chromium.chrome.browser.firstrun.FirstRunFlowSequencer;
 import org.chromium.chrome.browser.incognito.IncognitoDisclosureActivity;
@@ -45,6 +47,7 @@ import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.vr.VrModuleProvider;
 import org.chromium.chrome.browser.webapps.ActivityAssigner;
 import org.chromium.chrome.browser.webapps.WebappLauncherActivity;
+import org.chromium.content_public.browser.BrowserStartupController;
 import org.chromium.ui.widget.Toast;
 
 import java.lang.annotation.Retention;
@@ -288,6 +291,13 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
         newIntent.setData(uri);
         newIntent.setClassName(context, CustomTabActivity.class.getName());
 
+        // Use a custom tab with a unique theme for payment handlers.
+        if (intent.getIntExtra(CustomTabIntentDataProvider.EXTRA_UI_TYPE,
+                    CustomTabIntentDataProvider.CustomTabsUiType.DEFAULT)
+                == CustomTabIntentDataProvider.CustomTabsUiType.PAYMENT_REQUEST) {
+            newIntent.setClassName(context, PaymentHandlerActivity.class.getName());
+        }
+
         // If |uri| is a content:// URI, we want to propagate the URI permissions. This can't be
         // achieved by simply adding the FLAG_GRANT_READ_URI_PERMISSION to the Intent, since the
         // data URI on the Intent isn't |uri|, it just has |uri| as a query parameter.
@@ -300,36 +310,52 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
             newIntent.setFlags(newIntent.getFlags() | Intent.FLAG_ACTIVITY_NEW_TASK);
         }
 
-        // If a CCT intent triggers First Run, then NEW_TASK will be automatically applied.  As
-        // part of that, it will inherit the EXCLUDE_FROM_RECENTS bit from ChromeLauncherActivity,
-        // so explicitly remove it to ensure the CCT does not get lost in recents.
+        // Handle activity started in a new task.
+        // See https://developer.android.com/guide/components/activities/tasks-and-back-stack
         if ((newIntent.getFlags() & Intent.FLAG_ACTIVITY_NEW_TASK) != 0
                 || (newIntent.getFlags() & Intent.FLAG_ACTIVITY_NEW_DOCUMENT) != 0) {
+            // If a CCT intent triggers First Run, then NEW_TASK will be automatically applied. As
+            // part of that, it will inherit the EXCLUDE_FROM_RECENTS bit from
+            // ChromeLauncherActivity, so explicitly remove it to ensure the CCT does not get lost
+            // in recents.
             newIntent.setFlags(newIntent.getFlags() & ~Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-            String uuid = UUID.randomUUID().toString();
+
+            // Android will try to find and reuse an existing CCT activity in the background. Use
+            // this flag to always start a new one instead.
             newIntent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                // Force a new document L+ to ensure the proper task/stack creation.
-                newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
-                newIntent.setClassName(context, SeparateTaskCustomTabActivity.class.getName());
-            } else {
+
+            // Provide the general feeling of supporting multi tasks in Android version that did not
+            // fully support them. Reuse the least recently used SeparateTaskCustomTabActivity
+            // instance.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                String uuid = UUID.randomUUID().toString();
                 int activityIndex = ActivityAssigner
                                             .instance(ActivityAssigner.ActivityAssignerNamespace
                                                               .SEPARATE_TASK_CCT_NAMESPACE)
                                             .assign(uuid);
                 String className = SeparateTaskCustomTabActivity.class.getName() + activityIndex;
                 newIntent.setClassName(context, className);
-            }
 
-            String url = IntentHandler.getUrlFromIntent(newIntent);
-            assert url != null;
-            newIntent.setData(new Uri.Builder()
-                                      .scheme(UrlConstants.CUSTOM_TAB_SCHEME)
-                                      .authority(uuid)
-                                      .query(url)
-                                      .build());
+                String url = IntentHandler.getUrlFromIntent(newIntent);
+                assert url != null;
+                newIntent.setData(new Uri.Builder()
+                                          .scheme(UrlConstants.CUSTOM_TAB_SCHEME)
+                                          .authority(uuid)
+                                          .query(url)
+                                          .build());
+            } else {
+                // Force a new document to ensure the proper task/stack creation.
+                newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+            }
         }
-        IntentUtils.safeRemoveExtra(intent, CustomTabIntentDataProvider.EXTRA_IS_OPENED_BY_CHROME);
+
+        // If the previous caller was not Chrome, but added EXTRA_IS_OPENED_BY_CHROME for malicious
+        // purpose, remove it. The new intent will be sent by Chrome, but was not sent by Chrome
+        // initially.
+        if (!IntentHandler.wasIntentSenderChrome(intent)) {
+            IntentUtils.safeRemoveExtra(
+                    newIntent, CustomTabIntentDataProvider.EXTRA_IS_OPENED_BY_CHROME);
+        }
 
         return newIntent;
     }
@@ -347,9 +373,14 @@ public class LaunchIntentDispatcher implements IntentHandler.IntentHandlerDelega
         // Create and fire a launch intent.
         Intent launchIntent = createCustomTabActivityIntent(mActivity, mIntent);
 
+        boolean hasOffTheRecordProfile =
+                BrowserStartupController.get(LibraryProcessType.PROCESS_BROWSER)
+                        .isStartupSuccessfullyCompleted()
+                && Profile.getLastUsedProfile().hasOffTheRecordProfile();
+
         boolean shouldShowIncognitoDisclosure =
                 CustomTabIntentDataProvider.isValidExternalIncognitoIntent(launchIntent)
-                && Profile.getLastUsedProfile().hasOffTheRecordProfile();
+                && hasOffTheRecordProfile;
 
         if (shouldShowIncognitoDisclosure) {
             IncognitoDisclosureActivity.launch(mActivity, launchIntent);

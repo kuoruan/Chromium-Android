@@ -36,7 +36,7 @@ public class PasswordReauthenticationFragment extends Fragment {
 
     protected static final String HAS_BEEN_SUSPENDED_KEY = "has_been_suspended";
 
-    private static boolean sPreventLockDevice = false;
+    private static boolean sPreventLockDevice;
 
     private FragmentManager mFragmentManager;
 

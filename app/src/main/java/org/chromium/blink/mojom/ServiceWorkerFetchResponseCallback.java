@@ -25,17 +25,17 @@ public interface ServiceWorkerFetchResponseCallback extends org.chromium.mojo.bi
 
 
     void onResponse(
-FetchApiResponse response, org.chromium.mojo_base.mojom.Time dispatchEventTime);
+FetchApiResponse response, ServiceWorkerFetchEventTiming timing);
 
 
 
     void onResponseStream(
-FetchApiResponse response, ServiceWorkerStreamHandle bodyAsStream, org.chromium.mojo_base.mojom.Time dispatchEventTime);
+FetchApiResponse response, ServiceWorkerStreamHandle bodyAsStream, ServiceWorkerFetchEventTiming timing);
 
 
 
     void onFallback(
-org.chromium.mojo_base.mojom.Time dispatchEventTime);
+ServiceWorkerFetchEventTiming timing);
 
 
 }

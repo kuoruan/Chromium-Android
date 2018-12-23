@@ -1,8 +1,11 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: ../../chrome/android/java/src/org/chromium/chrome/browser/customtabs/dynamicmodule/IActivityHost.aidl
+ * Original file: ../../third_party/cct_dynamic_module/src/src/java/org/chromium/chrome/browser/customtabs/dynamicmodule/IActivityHost.aidl
  */
 package org.chromium.chrome.browser.customtabs.dynamicmodule;
+/**
+ * API to customize the Chrome activity.
+ */
 public interface IActivityHost extends android.os.IInterface
 {
 /** Local-side IPC implementation stub class. */
@@ -91,6 +94,24 @@ this.loadUri(_arg0);
 reply.writeNoException();
 return true;
 }
+case TRANSACTION_setTopBarView:
+{
+data.enforceInterface(DESCRIPTOR);
+org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper _arg0;
+_arg0 = org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper.Stub.asInterface(data.readStrongBinder());
+this.setTopBarView(_arg0);
+reply.writeNoException();
+return true;
+}
+case TRANSACTION_setTopBarHeight:
+{
+data.enforceInterface(DESCRIPTOR);
+int _arg0;
+_arg0 = data.readInt();
+this.setTopBarHeight(_arg0);
+reply.writeNoException();
+return true;
+}
 }
 return super.onTransact(code, data, reply, flags);
 }
@@ -109,6 +130,7 @@ public java.lang.String getInterfaceDescriptor()
 {
 return DESCRIPTOR;
 }
+/** Activity context of Chrome. */
 @Override public org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper getActivityContext() throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
@@ -156,13 +178,13 @@ _reply.recycle();
 _data.recycle();
 }
 }
-@Override public void setBottomBarHeight(int height) throws android.os.RemoteException
+@Override public void setBottomBarHeight(int heightInPx) throws android.os.RemoteException
 {
 android.os.Parcel _data = android.os.Parcel.obtain();
 android.os.Parcel _reply = android.os.Parcel.obtain();
 try {
 _data.writeInterfaceToken(DESCRIPTOR);
-_data.writeInt(height);
+_data.writeInt(heightInPx);
 mRemote.transact(Stub.TRANSACTION_setBottomBarHeight, _data, _reply, 0);
 _reply.readException();
 }
@@ -198,17 +220,65 @@ _reply.recycle();
 _data.recycle();
 }
 }
+/**
+   * Sets the top bar view in CCT. This will not attempt to hide or remove
+   * the CCT header. It should only be called once in the lifecycle of an
+   * activity.
+   *
+   * Experimental API.
+   * Introduced in API version 4.
+   */
+@Override public void setTopBarView(org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper topBarView) throws android.os.RemoteException
+{
+android.os.Parcel _data = android.os.Parcel.obtain();
+android.os.Parcel _reply = android.os.Parcel.obtain();
+try {
+_data.writeInterfaceToken(DESCRIPTOR);
+_data.writeStrongBinder((((topBarView!=null))?(topBarView.asBinder()):(null)));
+mRemote.transact(Stub.TRANSACTION_setTopBarView, _data, _reply, 0);
+_reply.readException();
+}
+finally {
+_reply.recycle();
+_data.recycle();
+}
+}
+/**
+   * Sets the height of the top bar. This is needed for CCT to calculate the
+   * web content area.
+   *
+   * Experimental API.
+   * Introduced in API version 4.
+   */
+@Override public void setTopBarHeight(int heightInPx) throws android.os.RemoteException
+{
+android.os.Parcel _data = android.os.Parcel.obtain();
+android.os.Parcel _reply = android.os.Parcel.obtain();
+try {
+_data.writeInterfaceToken(DESCRIPTOR);
+_data.writeInt(heightInPx);
+mRemote.transact(Stub.TRANSACTION_setTopBarHeight, _data, _reply, 0);
+_reply.readException();
+}
+finally {
+_reply.recycle();
+_data.recycle();
+}
+}
 }
 static final int TRANSACTION_getActivityContext = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
 static final int TRANSACTION_setBottomBarView = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
 static final int TRANSACTION_setOverlayView = (android.os.IBinder.FIRST_CALL_TRANSACTION + 2);
 static final int TRANSACTION_setBottomBarHeight = (android.os.IBinder.FIRST_CALL_TRANSACTION + 3);
 static final int TRANSACTION_loadUri = (android.os.IBinder.FIRST_CALL_TRANSACTION + 4);
+static final int TRANSACTION_setTopBarView = (android.os.IBinder.FIRST_CALL_TRANSACTION + 5);
+static final int TRANSACTION_setTopBarHeight = (android.os.IBinder.FIRST_CALL_TRANSACTION + 6);
 }
+/** Activity context of Chrome. */
 public org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper getActivityContext() throws android.os.RemoteException;
 public void setBottomBarView(org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper bottomBarView) throws android.os.RemoteException;
 public void setOverlayView(org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper overlayView) throws android.os.RemoteException;
-public void setBottomBarHeight(int height) throws android.os.RemoteException;
+public void setBottomBarHeight(int heightInPx) throws android.os.RemoteException;
 /**
    * Loads a URI in the existing CCT activity. This is used by features that
    * want to show web content (e.g. saves when reopening a saved page).
@@ -216,4 +286,21 @@ public void setBottomBarHeight(int height) throws android.os.RemoteException;
    * Introduced in API version 3.
    */
 public void loadUri(android.net.Uri uri) throws android.os.RemoteException;
+/**
+   * Sets the top bar view in CCT. This will not attempt to hide or remove
+   * the CCT header. It should only be called once in the lifecycle of an
+   * activity.
+   *
+   * Experimental API.
+   * Introduced in API version 4.
+   */
+public void setTopBarView(org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper topBarView) throws android.os.RemoteException;
+/**
+   * Sets the height of the top bar. This is needed for CCT to calculate the
+   * web content area.
+   *
+   * Experimental API.
+   * Introduced in API version 4.
+   */
+public void setTopBarHeight(int heightInPx) throws android.os.RemoteException;
 }

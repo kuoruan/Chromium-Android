@@ -10,11 +10,15 @@ import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.os.SystemClock;
 import android.provider.Browser;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import org.chromium.base.UserData;
+import org.chromium.base.UserDataHost;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.LaunchIntentDispatcher;
 import org.chromium.chrome.browser.customtabs.CustomTabIntentDataProvider;
+import org.chromium.chrome.browser.tab.Tab.TabHidingType;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.ui.base.PageTransition;
 
@@ -25,7 +29,8 @@ import java.util.List;
 /**
  * This class contains the logic to determine effective navigation/redirect.
  */
-public class TabRedirectHandler {
+public class TabRedirectHandler extends EmptyTabObserver implements UserData {
+    private static final Class<TabRedirectHandler> USER_DATA_KEY = TabRedirectHandler.class;
     /**
      * An invalid entry index.
      */
@@ -54,8 +59,59 @@ public class TabRedirectHandler {
 
     private final Context mContext;
 
-    public TabRedirectHandler(Context context) {
+    /**
+     * Returns {@link TabRedirectHandler} that hangs on to a given {@link Tab}.
+     * If not present, creates a new instance and associate it with the {@link UserDataHost}
+     * that the {@link Tab} manages.
+     * @param tab Tab instance that the TabRedirectHandler hangs on to.
+     * @return TabRedirectHandler for a given Tab.
+     */
+    public static TabRedirectHandler from(Tab tab) {
+        UserDataHost host = tab.getUserDataHost();
+        TabRedirectHandler handler = host.getUserData(USER_DATA_KEY);
+        if (handler == null) {
+            handler = new TabRedirectHandler(tab.getThemedApplicationContext());
+            host.setUserData(USER_DATA_KEY, handler);
+            tab.addObserver(handler);
+        }
+        return handler;
+    }
+
+    /**
+     * @return {@link TabRedirectHandler} hanging to the given {@link Tab},
+     *     or {@code null} if there is no instance available.
+     */
+    @Nullable
+    public static TabRedirectHandler get(Tab tab) {
+        return tab.getUserDataHost().getUserData(USER_DATA_KEY);
+    }
+
+    /**
+     * Replace {@link TabRedirectHandler} instance for the Tab with the new one.
+     * @return Old {@link TabRedirectHandler} associated with the Tab. Could be {@code null}.
+     */
+    public static TabRedirectHandler swapFor(Tab tab, @Nullable TabRedirectHandler newHandler) {
+        UserDataHost host = tab.getUserDataHost();
+        TabRedirectHandler oldHandler = host.getUserData(USER_DATA_KEY);
+        if (newHandler != null) {
+            host.setUserData(USER_DATA_KEY, newHandler);
+        } else {
+            host.removeUserData(USER_DATA_KEY);
+        }
+        return oldHandler;
+    }
+
+    public static TabRedirectHandler create(Context context) {
+        return new TabRedirectHandler(context);
+    }
+
+    protected TabRedirectHandler(Context context) {
         mContext = context;
+    }
+
+    @Override
+    public void onHidden(Tab tab, @TabHidingType int type) {
+        clear();
     }
 
     /**
@@ -198,17 +254,38 @@ public class TabRedirectHandler {
      * @return whether we should stay in Chrome or not.
      */
     public boolean shouldStayInChrome(boolean hasExternalProtocol) {
-        return (mIsInitialIntentHeadingToChrome && !hasExternalProtocol)
-                || shouldNavigationTypeStayInChrome();
+        return shouldStayInChrome(hasExternalProtocol, false);
+    }
 
+    /**
+     * @param hasExternalProtocol whether the destination URI has an external protocol or not.
+     * @param isForTrustedCallingApp whether the app we would launch to is trusted and what launched
+     *                               Chrome.
+     * @return whether we should stay in Chrome or not.
+     */
+    public boolean shouldStayInChrome(boolean hasExternalProtocol,
+            boolean isForTrustedCallingApp) {
+        return (mIsInitialIntentHeadingToChrome && !hasExternalProtocol)
+                || shouldNavigationTypeStayInChrome(isForTrustedCallingApp);
     }
 
     /**
      * @return Whether the current navigation is of the type that should always stay in Chrome.
      */
     public boolean shouldNavigationTypeStayInChrome() {
-        return mInitialNavigationType == NAVIGATION_TYPE_FROM_LINK_WITHOUT_USER_GESTURE
-                || mInitialNavigationType == NAVIGATION_TYPE_FROM_RELOAD;
+        return shouldNavigationTypeStayInChrome(false);
+    }
+
+    private boolean shouldNavigationTypeStayInChrome(boolean isForTrustedCallingApp) {
+        // Never leave Chrome from a refresh.
+        if (mInitialNavigationType == NAVIGATION_TYPE_FROM_RELOAD) return true;
+
+        // If the app we would navigate to is trusted and what launched Chrome, allow the
+        // navigation.
+        if (isForTrustedCallingApp) return false;
+
+        // Otherwise allow navigation out of the app only with a user gesture.
+        return mInitialNavigationType == NAVIGATION_TYPE_FROM_LINK_WITHOUT_USER_GESTURE;
     }
 
     /**

@@ -26,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.preferences.MainPreferences;
 import org.chromium.chrome.browser.preferences.PreferenceUtils;
 import org.chromium.chrome.browser.widget.FadingEdgeScrollView;
 import org.chromium.chrome.browser.widget.prefeditor.EditorDialog;
@@ -51,10 +52,10 @@ public abstract class AutofillEditorBase
         mContext = container.getContext();
 
         // We know which profile to edit based on the GUID stuffed in
-        // our extras by AutofillAndPaymentsPreferences.
+        // our extras by MainPreferences.
         Bundle extras = getArguments();
         if (extras != null) {
-            mGUID = extras.getString(AutofillAndPaymentsPreferences.AUTOFILL_GUID);
+            mGUID = extras.getString(MainPreferences.AUTOFILL_GUID);
         }
         if (mGUID == null) {
             mGUID = "";

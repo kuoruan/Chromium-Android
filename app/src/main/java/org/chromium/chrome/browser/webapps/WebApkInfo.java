@@ -4,16 +4,19 @@
 
 package org.chromium.chrome.browser.webapps;
 
+import android.annotation.TargetApi;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.IntDef;
 import android.text.TextUtils;
-import android.util.DisplayMetrics;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
@@ -26,10 +29,12 @@ import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.content_public.common.ScreenOrientationValues;
 import org.chromium.webapk.lib.common.WebApkConstants;
 import org.chromium.webapk.lib.common.WebApkMetaDataKeys;
+import org.chromium.webapk.lib.common.WebApkMetaDataUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -57,6 +62,8 @@ public class WebApkInfo extends WebappInfo {
     private String mManifestUrl;
     private String mManifestStartUrl;
     private @WebApkDistributor int mDistributor;
+    // A serialized string of the Share Target details (if any) for the WebAPK.
+    private String mSerializedShareTarget;
     private Map<String, String> mIconUrlToMurmur2HashMap;
 
     public static WebApkInfo createEmpty() {
@@ -157,10 +164,11 @@ public class WebApkInfo extends WebappInfo {
                 IntentUtils.safeGetString(bundle, WebApkMetaDataKeys.DISPLAY_MODE));
         int orientation = orientationFromString(
                 IntentUtils.safeGetString(bundle, WebApkMetaDataKeys.ORIENTATION));
-        long themeColor = getLongFromMetaData(bundle, WebApkMetaDataKeys.THEME_COLOR,
-                ShortcutHelper.MANIFEST_COLOR_INVALID_OR_MISSING);
-        long backgroundColor = getLongFromMetaData(bundle, WebApkMetaDataKeys.BACKGROUND_COLOR,
-                ShortcutHelper.MANIFEST_COLOR_INVALID_OR_MISSING);
+        long themeColor = WebApkMetaDataUtils.getLongFromMetaData(bundle,
+                WebApkMetaDataKeys.THEME_COLOR, ShortcutHelper.MANIFEST_COLOR_INVALID_OR_MISSING);
+        long backgroundColor =
+                WebApkMetaDataUtils.getLongFromMetaData(bundle, WebApkMetaDataKeys.BACKGROUND_COLOR,
+                        ShortcutHelper.MANIFEST_COLOR_INVALID_OR_MISSING);
 
         int shellApkVersion =
                 IntentUtils.safeGetInt(bundle, WebApkMetaDataKeys.SHELL_APK_VERSION, 0);
@@ -178,13 +186,15 @@ public class WebApkInfo extends WebappInfo {
         int badgeIconId = IntentUtils.safeGetInt(bundle, WebApkMetaDataKeys.BADGE_ICON_ID, 0);
         Bitmap badgeIcon = decodeBitmapFromDrawable(res, badgeIconId);
 
-        Bitmap splashIcon = decodeSplashIcon(bundle, res, primaryIconId);
+        int splashIconId = IntentUtils.safeGetInt(bundle, WebApkMetaDataKeys.SPLASH_ID, 0);
+        Bitmap splashIcon = decodeBitmapFromDrawable(res, splashIconId);
+        String serializedShareTarget = extractSerializedShareTarget(webApkPackageName);
 
         return create(WebApkConstants.WEBAPK_ID_PREFIX + webApkPackageName, url, scope,
                 new Icon(primaryIcon), new Icon(badgeIcon), new Icon(splashIcon), name, shortName,
                 displayMode, orientation, source, themeColor, backgroundColor, webApkPackageName,
                 shellApkVersion, manifestUrl, manifestStartUrl, distributor,
-                iconUrlToMurmur2HashMap, forceNavigation);
+                iconUrlToMurmur2HashMap, serializedShareTarget, forceNavigation);
     }
 
     /**
@@ -212,6 +222,8 @@ public class WebApkInfo extends WebappInfo {
      * @param distributor             The source from where the WebAPK is installed.
      * @param iconUrlToMurmur2HashMap Map of the WebAPK's icon URLs to Murmur2 hashes of the
      *                                icon untransformed bytes.
+     * @param serializedShareTarget   The serialized string of the Share Target details (if any) for
+     *                                the WebAPK.
      * @param forceNavigation         Whether the WebAPK should navigate to {@link url} if the
      *                                WebAPK is already open.
      */
@@ -220,7 +232,8 @@ public class WebApkInfo extends WebappInfo {
             @WebDisplayMode int displayMode, int orientation, int source, long themeColor,
             long backgroundColor, String webApkPackageName, int shellApkVersion, String manifestUrl,
             String manifestStartUrl, @WebApkDistributor int distributor,
-            Map<String, String> iconUrlToMurmur2HashMap, boolean forceNavigation) {
+            Map<String, String> iconUrlToMurmur2HashMap, String serializedShareTarget,
+            boolean forceNavigation) {
         if (id == null || url == null || manifestStartUrl == null || webApkPackageName == null) {
             Log.e(TAG,
                     "Incomplete data provided: " + id + ", " + url + ", " + manifestStartUrl + ", "
@@ -238,7 +251,7 @@ public class WebApkInfo extends WebappInfo {
         return new WebApkInfo(id, url, scope, primaryIcon, badgeIcon, splashIcon, name, shortName,
                 displayMode, orientation, source, themeColor, backgroundColor, webApkPackageName,
                 shellApkVersion, manifestUrl, manifestStartUrl, distributor,
-                iconUrlToMurmur2HashMap, forceNavigation);
+                iconUrlToMurmur2HashMap, serializedShareTarget, forceNavigation);
     }
 
     protected WebApkInfo(String id, String url, String scope, Icon primaryIcon, Icon badgeIcon,
@@ -246,7 +259,8 @@ public class WebApkInfo extends WebappInfo {
             int orientation, int source, long themeColor, long backgroundColor,
             String webApkPackageName, int shellApkVersion, String manifestUrl,
             String manifestStartUrl, @WebApkDistributor int distributor,
-            Map<String, String> iconUrlToMurmur2HashMap, boolean forceNavigation) {
+            Map<String, String> iconUrlToMurmur2HashMap, String serializedShareTarget,
+            boolean forceNavigation) {
         super(id, url, scope, primaryIcon, name, shortName, displayMode, orientation, source,
                 themeColor, backgroundColor, null /* splash_screen_url */,
                 false /* isIconGenerated */, forceNavigation);
@@ -258,6 +272,7 @@ public class WebApkInfo extends WebappInfo {
         mManifestStartUrl = manifestStartUrl;
         mDistributor = distributor;
         mIconUrlToMurmur2HashMap = iconUrlToMurmur2HashMap;
+        mSerializedShareTarget = serializedShareTarget;
     }
 
     protected WebApkInfo() {}
@@ -274,6 +289,13 @@ public class WebApkInfo extends WebappInfo {
      */
     public Bitmap splashIcon() {
         return (mSplashIcon == null) ? null : mSplashIcon.decoded();
+    }
+
+    /**
+     * Returns the serialized string which contains all of the information about a share target.
+     */
+    public String serializedShareTarget() {
+        return mSerializedShareTarget;
     }
 
     @Override
@@ -341,91 +363,6 @@ public class WebApkInfo extends WebappInfo {
         } catch (Resources.NotFoundException e) {
             return null;
         }
-    }
-
-    /**
-     * Decodes a bitmap drawable from the WebAPK's resources for a specific density.
-     */
-    private static Bitmap decodeBitmapFromDrawableForDensity(
-            Resources webApkResources, int resourceId, int density) {
-        if (resourceId == 0) {
-            return null;
-        }
-        try {
-            BitmapDrawable bitmapDrawable =
-                    (BitmapDrawable) ApiCompatibilityUtils.getDrawableForDensity(
-                            webApkResources, resourceId, density);
-            return bitmapDrawable != null ? bitmapDrawable.getBitmap() : null;
-        } catch (Resources.NotFoundException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Computes the density of app icon to use for the splash screen based on the device density.
-     */
-    private static int computeDensityforSplashIcon(int deviceDensity) {
-        if (deviceDensity < DisplayMetrics.DENSITY_HIGH) {
-            return DisplayMetrics.DENSITY_XHIGH;
-        }
-        if (deviceDensity < DisplayMetrics.DENSITY_XHIGH) {
-            return DisplayMetrics.DENSITY_XXHIGH;
-        }
-        return DisplayMetrics.DENSITY_XXXHIGH;
-    }
-
-    /**
-     * Decodes a splash icon with logic dependent on the device's density.
-     */
-    private static Bitmap decodeSplashIcon(
-            Bundle bundle, Resources webApkResources, int appIconId) {
-        DisplayMetrics metrics = webApkResources.getDisplayMetrics();
-        if (metrics == null) {
-            // We have no basis on which to choose a higher DPI, so default to primary icon.
-            return null;
-        }
-        int deviceDensity = metrics.densityDpi;
-        int splashIconId = IntentUtils.safeGetInt(bundle, WebApkMetaDataKeys.SPLASH_ID, 0);
-        boolean hasLargeSplashIcons = IntentUtils.safeGetBoolean(
-                bundle, WebApkMetaDataKeys.HAS_LARGE_SPLASH_ICONS, false);
-
-        if (deviceDensity >= DisplayMetrics.DENSITY_XXHIGH && hasLargeSplashIcons) {
-            // If the server was able to provide larger splash icons we use those. This can be
-            // one or both of xxhdpi and xxxhdpi. If only one exists the up/down sampling is only
-            // for a single density and will still look good.
-            return decodeBitmapFromDrawable(webApkResources, splashIconId);
-        }
-        // If there is no drawable for a density this will down-sample or up-sample whatever app
-        // icons are provided to fit the target density. This can result in lower graphical
-        // fidelity; however, Chrome already does this for xxxhdpi icons in most cases so this isn't
-        // a concern.
-        return decodeBitmapFromDrawableForDensity(
-                webApkResources, appIconId, computeDensityforSplashIcon(deviceDensity));
-    }
-
-    /**
-     * Extracts long value from the WebAPK's meta data.
-     * @param metaData WebAPK meta data to extract the long from.
-     * @param name Name of the <meta-data> tag to extract the value from.
-     * @param defaultValue Value to return if long value could not be extracted.
-     * @return long value.
-     */
-    private static long getLongFromMetaData(Bundle metaData, String name, long defaultValue) {
-        String value = metaData.getString(name);
-
-        // The value should be terminated with 'L' to force the value to be a string. According to
-        // https://developer.android.com/guide/topics/manifest/meta-data-element.html numeric
-        // meta data values can only be retrieved via {@link Bundle#getInt()} and
-        // {@link Bundle#getFloat()}. We cannot use {@link Bundle#getFloat()} due to loss of
-        // precision.
-        if (value == null || !value.endsWith("L")) {
-            return defaultValue;
-        }
-        try {
-            return Long.parseLong(value.substring(0, value.length() - 1));
-        } catch (NumberFormatException e) {
-        }
-        return defaultValue;
     }
 
     /**
@@ -508,5 +445,41 @@ public class WebApkInfo extends WebappInfo {
         } else {
             return ScreenOrientationValues.DEFAULT;
         }
+    }
+
+    /**
+     * Returns the serialized string which contains all of the information about a share target for
+     * the given WebAPK. Returns null if there isn't a ShareActivity declared in the WebAPK.
+     */
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    static String extractSerializedShareTarget(String webApkPackageName) {
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND);
+        shareIntent.setPackage(webApkPackageName);
+        shareIntent.setType("text/plain");
+        List<ResolveInfo> resInfos =
+                ContextUtils.getApplicationContext().getPackageManager().queryIntentActivities(
+                        shareIntent, PackageManager.GET_META_DATA);
+        if (resInfos.isEmpty()) return null;
+
+        ActivityInfo activityInfo = resInfos.get(0).activityInfo;
+        if (activityInfo.metaData == null) return null;
+
+        Bundle metaData = activityInfo.metaData;
+        return getSerializedShareTarget(metaData.getString(WebApkMetaDataKeys.SHARE_ACTION),
+                metaData.getString(WebApkMetaDataKeys.SHARE_PARAM_TITLE),
+                metaData.getString(WebApkMetaDataKeys.SHARE_PARAM_TEXT),
+                metaData.getString(WebApkMetaDataKeys.SHARE_PARAM_URL));
+    }
+
+    /**
+     * Returns the serialized Share Target String.
+     */
+    static String getSerializedShareTarget(String shareAction, String shareParamsTitle,
+            String shareParamsText, String shareParamsUrl) {
+        if (shareAction == null) return null;
+
+        return String.format("action: \"%s\", title: \"%s\", text: \"%s\", url: \"%s\"",
+                shareAction, shareParamsTitle, shareParamsText, shareParamsUrl);
     }
 }

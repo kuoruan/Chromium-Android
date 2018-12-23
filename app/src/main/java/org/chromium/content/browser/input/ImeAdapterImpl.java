@@ -31,6 +31,7 @@ import android.view.inputmethod.InputMethodManager;
 
 import org.chromium.base.Log;
 import org.chromium.base.TraceEvent;
+import org.chromium.base.UserData;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
@@ -43,7 +44,6 @@ import org.chromium.content.browser.WindowEventObserverManager;
 import org.chromium.content.browser.picker.InputDialogContainer;
 import org.chromium.content.browser.webcontents.WebContentsImpl;
 import org.chromium.content.browser.webcontents.WebContentsImpl.UserDataFactory;
-import org.chromium.content.browser.webcontents.WebContentsUserData;
 import org.chromium.content_public.browser.ImeAdapter;
 import org.chromium.content_public.browser.ImeEventObserver;
 import org.chromium.content_public.browser.InputMethodManagerWrapper;
@@ -81,7 +81,7 @@ import java.util.List;
  * lifetime of the object.
  */
 @JNINamespace("content")
-public class ImeAdapterImpl implements ImeAdapter, WindowEventObserver {
+public class ImeAdapterImpl implements ImeAdapter, WindowEventObserver, UserData {
     private static final String TAG = "cr_Ime";
     private static final boolean DEBUG_LOGS = false;
 
@@ -173,8 +173,8 @@ public class ImeAdapterImpl implements ImeAdapter, WindowEventObserver {
      * @return {@link ImeAdapter} object.
      */
     public static ImeAdapterImpl fromWebContents(WebContents webContents) {
-        return WebContentsUserData.fromWebContents(
-                webContents, ImeAdapterImpl.class, UserDataFactoryLazyHolder.INSTANCE);
+        return ((WebContentsImpl) webContents)
+                .getOrSetUserData(ImeAdapterImpl.class, UserDataFactoryLazyHolder.INSTANCE);
     }
 
     /**
@@ -685,7 +685,7 @@ public class ImeAdapterImpl implements ImeAdapter, WindowEventObserver {
     }
 
     @CalledByNative
-    private void destroy() {
+    private void onNativeDestroyed() {
         resetAndHideKeyboard();
         mNativeImeAdapterAndroid = 0;
         mIsConnected = false;

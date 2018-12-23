@@ -21,8 +21,6 @@ import org.chromium.chrome.browser.util.MathUtils;
  * A layout that arranges tiles in a grid.
  */
 public class TileGridLayout extends FrameLayout {
-    /** Whether tiles should be spread across all the available width or clustered in its center. */
-    private final boolean mUseFullWidth;
     private final int mVerticalSpacing;
     private final int mMinHorizontalSpacing;
     private final int mMaxHorizontalSpacing;
@@ -40,19 +38,12 @@ public class TileGridLayout extends FrameLayout {
     public TileGridLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        mUseFullWidth = SuggestionsConfig.useModernLayout();
-
         Resources res = getResources();
-        mVerticalSpacing = SuggestionsConfig.useModernLayout()
-                ? res.getDimensionPixelOffset(R.dimen.tile_grid_layout_vertical_spacing_modern)
-                : res.getDimensionPixelOffset(R.dimen.tile_grid_layout_vertical_spacing);
+        mVerticalSpacing = res.getDimensionPixelOffset(R.dimen.tile_grid_layout_vertical_spacing);
         mMinHorizontalSpacing =
                 res.getDimensionPixelOffset(R.dimen.tile_grid_layout_min_horizontal_spacing);
-        mMaxHorizontalSpacing = mUseFullWidth
-                ? Integer.MAX_VALUE
-                : res.getDimensionPixelOffset(R.dimen.tile_grid_layout_max_horizontal_spacing);
-        mMaxWidth = mUseFullWidth ? Integer.MAX_VALUE
-                                  : res.getDimensionPixelOffset(R.dimen.tile_grid_layout_max_width);
+        mMaxHorizontalSpacing = Integer.MAX_VALUE;
+        mMaxWidth = Integer.MAX_VALUE;
     }
 
     /**
@@ -96,7 +87,7 @@ public class TileGridLayout extends FrameLayout {
         // Determine how much padding to use between and around the tiles.
         int gridWidthMinusColumns = Math.max(0, totalWidth - numColumns * childWidth);
         Pair<Integer, Integer> gridProperties =
-                computeHorizontalDimensions(mUseFullWidth, gridWidthMinusColumns, numColumns);
+                computeHorizontalDimensions(true, gridWidthMinusColumns, numColumns);
         int gridStart = gridProperties.first;
         int horizontalSpacing = gridProperties.second;
 
@@ -170,10 +161,10 @@ public class TileGridLayout extends FrameLayout {
     }
 
     @Nullable
-    public TileView getTileView(SiteSuggestion suggestion) {
+    public SuggestionsTileView getTileView(SiteSuggestion suggestion) {
         int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
-            TileView tileView = (TileView) getChildAt(i);
+            SuggestionsTileView tileView = (SuggestionsTileView) getChildAt(i);
             if (suggestion.equals(tileView.getData())) return tileView;
         }
         return null;

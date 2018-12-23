@@ -490,8 +490,8 @@ public class ToolbarProgressBar extends ClipDrawableProgressBar {
      */
     public void setThemeColor(int color, boolean isIncognito) {
         mThemeColor = color;
-        boolean isDefaultTheme = ColorUtils.isUsingDefaultToolbarColor(
-                getResources(), mUseStatusBarColorAsBackground, isIncognito, mThemeColor);
+        boolean isDefaultTheme =
+                ColorUtils.isUsingDefaultToolbarColor(getResources(), isIncognito, mThemeColor);
 
         // All colors use a single path if using the status bar color as the background.
         if (mUseStatusBarColorAsBackground) {

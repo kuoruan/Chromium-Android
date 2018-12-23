@@ -10,8 +10,10 @@
       <module fileurl="file://$PROJECT_DIR$/content/content.iml" filepath="$PROJECT_DIR$/content/content.iml" />
       <module fileurl="file://$PROJECT_DIR$/customtabs/customtabs.iml" filepath="$PROJECT_DIR$/customtabs/customtabs.iml" />
       <module fileurl="file://$PROJECT_DIR$/data_chart/data_chart.iml" filepath="$PROJECT_DIR$/data_chart/data_chart.iml" />
+      <module fileurl="file://$PROJECT_DIR$/download/download.iml" filepath="$PROJECT_DIR$/download/download.iml" />
       <module fileurl="file://$PROJECT_DIR$/components/embedder_support/embedder_support.iml" filepath="$PROJECT_DIR$/components/embedder_support/embedder_support.iml" />
       <module fileurl="file://$PROJECT_DIR$/media/media.iml" filepath="$PROJECT_DIR$/media/media.iml" />
+      <module fileurl="file://$PROJECT_DIR$/splash/splash.iml" filepath="$PROJECT_DIR$/splash/splash.iml" />
       <module fileurl="file://$PROJECT_DIR$/ui/ui.iml" filepath="$PROJECT_DIR$/ui/ui.iml" />
     </modules>
   </component>

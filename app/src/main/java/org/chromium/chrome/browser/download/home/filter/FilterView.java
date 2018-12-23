@@ -13,8 +13,8 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 
 import org.chromium.base.Callback;
-import org.chromium.chrome.R;
 import org.chromium.chrome.browser.download.home.filter.FilterCoordinator.TabType;
+import org.chromium.chrome.download.R;
 
 /**
  * A View class responsible for setting specific properties from a {@link FilterModel} to a

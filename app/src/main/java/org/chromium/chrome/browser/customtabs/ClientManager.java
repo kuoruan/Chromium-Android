@@ -15,6 +15,7 @@ import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.customtabs.CustomTabsCallback;
 import android.support.customtabs.CustomTabsService;
 import android.support.customtabs.CustomTabsService.Relation;
@@ -31,6 +32,7 @@ import org.chromium.chrome.browser.browserservices.Origin;
 import org.chromium.chrome.browser.browserservices.OriginVerifier;
 import org.chromium.chrome.browser.browserservices.OriginVerifier.OriginVerificationListener;
 import org.chromium.chrome.browser.browserservices.PostMessageHandler;
+import org.chromium.chrome.browser.customtabs.dynamicmodule.ActivityDelegate;
 import org.chromium.chrome.browser.installedapp.InstalledAppProviderImpl;
 import org.chromium.chrome.browser.util.UrlUtilities;
 import org.chromium.content_public.browser.WebContents;
@@ -162,6 +164,7 @@ class ClientManager {
     /** Per-session values. */
     private static class SessionParams {
         public final int uid;
+        private CustomTabsCallback mCustomTabsCallback;
         public final DisconnectCallback disconnectCallback;
         public final PostMessageHandler postMessageHandler;
         public final Set<Origin> mLinkedOrigins = new HashSet<>();
@@ -182,10 +185,11 @@ class ClientManager {
         private boolean mAllowResourcePrefetch;
         private boolean mShouldGetPageLoadMetrics;
 
-        public SessionParams(Context context, int uid, DisconnectCallback callback,
-                PostMessageHandler postMessageHandler) {
+        public SessionParams(Context context, int uid, CustomTabsCallback customTabsCallback,
+                             DisconnectCallback callback, PostMessageHandler postMessageHandler) {
             this.uid = uid;
             mPackageName = getPackageName(context, uid);
+            mCustomTabsCallback = customTabsCallback;
             disconnectCallback = callback;
             this.postMessageHandler = postMessageHandler;
             if (postMessageHandler != null) this.postMessageHandler.setPackageName(mPackageName);
@@ -253,9 +257,30 @@ class ClientManager {
         public boolean isDefault() {
             return !mIgnoreFragments && !mShouldSpeculateLoadOnCellular;
         }
+
+        public CustomTabsCallback getCustomTabsCallback() {
+            return mCustomTabsCallback;
+        }
+
+        public void setCustomTabsCallback(CustomTabsCallback customTabsCallback) {
+            mCustomTabsCallback = customTabsCallback;
+        }
     }
 
     private final Map<CustomTabsSessionToken, SessionParams> mSessionParams = new HashMap<>();
+
+    static class DynamicModuleSessionParams {
+        public final ActivityDelegate activityDelegate;
+        public final int moduleVersion;
+
+        DynamicModuleSessionParams(ActivityDelegate activityDelegate, int moduleVersion) {
+            this.activityDelegate = activityDelegate;
+            this.moduleVersion = moduleVersion;
+        }
+    }
+
+    private final Map<CustomTabsSessionToken, DynamicModuleSessionParams>
+            mDynamicModuleSessionParams = new HashMap<>();
     private final SparseBooleanArray mUidHasCalledWarmup = new SparseBooleanArray();
     private boolean mWarmupHasBeenCalled;
 
@@ -271,15 +296,17 @@ class ClientManager {
      * @param postMessageHandler The handler to be used for postMessage related operations.
      * @return true for success.
      */
-    public boolean newSession(CustomTabsSessionToken session, int uid,
+    public synchronized boolean newSession(CustomTabsSessionToken session, int uid,
             DisconnectCallback onDisconnect, @NonNull PostMessageHandler postMessageHandler) {
-        if (session == null) return false;
-        SessionParams params = new SessionParams(
-                ContextUtils.getApplicationContext(), uid, onDisconnect, postMessageHandler);
-        synchronized (this) {
-            if (mSessionParams.containsKey(session)) return false;
+        if (session == null || session.getCallback() == null) return false;
+        if (mSessionParams.containsKey(session)) {
+            mSessionParams.get(session).setCustomTabsCallback(session.getCallback());
+        } else {
+            SessionParams params = new SessionParams(ContextUtils.getApplicationContext(), uid,
+                    session.getCallback(), onDisconnect, postMessageHandler);
             mSessionParams.put(session, params);
         }
+
         return true;
     }
 
@@ -518,7 +545,10 @@ class ClientManager {
      * @return The callback {@link CustomTabsSessionToken} for the given session.
      */
     public synchronized CustomTabsCallback getCallbackForSession(CustomTabsSessionToken session) {
-        return session != null ? session.getCallback() : null;
+        if (session != null && mSessionParams.containsKey(session)) {
+            return mSessionParams.get(session).getCustomTabsCallback();
+        }
+        return null;
     }
 
     /**
@@ -748,6 +778,7 @@ class ClientManager {
      * Cleans up all data associated with all sessions.
      */
     public synchronized void cleanupAll() {
+        // cleanupSessionInternal modifies mSessionParams therefore we need a copy
         List<CustomTabsSessionToken> sessions = new ArrayList<>(mSessionParams.keySet());
         for (CustomTabsSessionToken session : sessions) cleanupSession(session);
     }
@@ -756,14 +787,57 @@ class ClientManager {
      * Handle any clean up left after a session is destroyed.
      * @param session The session that has been destroyed.
      */
-    public synchronized void cleanupSession(CustomTabsSessionToken session) {
+    private synchronized void cleanupSessionInternal(CustomTabsSessionToken session) {
         SessionParams params = mSessionParams.get(session);
         if (params == null) return;
         mSessionParams.remove(session);
-        if (params.postMessageHandler != null)
+        if (params.postMessageHandler != null) {
             params.postMessageHandler.cleanup(ContextUtils.getApplicationContext());
+        }
         if (params.originVerifier != null) params.originVerifier.cleanUp();
         if (params.disconnectCallback != null) params.disconnectCallback.run(session);
         mUidHasCalledWarmup.delete(params.uid);
+        mDynamicModuleSessionParams.remove(session);
+    }
+
+    /**
+     * Destroys session when its callback become invalid if the callback is used as identifier.
+     *
+     * @param session The session with invalid callback.
+     */
+    public synchronized void cleanupSession(CustomTabsSessionToken session) {
+        if (session.hasId()) {
+            // Leave session parameters, so client might update callback later.
+            // The session will be completely removed when system runs low on memory.
+            // {@see #cleanupUnusedSessions}
+            mSessionParams.get(session).setCustomTabsCallback(null);
+        } else {
+            cleanupSessionInternal(session);
+        }
+    }
+
+    /**
+     * Clean up all sessions which are not currently used.
+     */
+    public synchronized void cleanupUnusedSessions() {
+        // cleanupSessionInternal modifies mSessionParams therefore we need a copy
+        List<CustomTabsSessionToken> sessions = new ArrayList<>(mSessionParams.keySet());
+        for (CustomTabsSessionToken session : sessions) {
+            if (mSessionParams.get(session).getCustomTabsCallback() == null) {
+                cleanupSessionInternal(session);
+            }
+        }
+    }
+
+    void setActivityDelegateForSession(CustomTabsSessionToken sessionToken,
+            ActivityDelegate activityDelegate, int moduleVersion) {
+        mDynamicModuleSessionParams.put(sessionToken,
+                new DynamicModuleSessionParams(activityDelegate, moduleVersion));
+    }
+
+    @Nullable
+    DynamicModuleSessionParams getDynamicModuleParamsForSession(
+            CustomTabsSessionToken sessionToken) {
+        return mDynamicModuleSessionParams.get(sessionToken);
     }
 }

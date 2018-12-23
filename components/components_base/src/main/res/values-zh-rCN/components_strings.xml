@@ -23,7 +23,7 @@
 <string name="autofill_card_unmask_expiration_date_separator">"/"</string>
 <string name="autofill_card_unmask_new_card_link">"更新信用卡"</string>
 <string name="autofill_enable_profiles_toggle_sublabel">"包括电话号码、电子邮件地址和送货地址等信息"</string>
-<string name="autofill_enable_credit_cards_toggle_sublabel">"加快在线支付速度"</string>
+<string name="autofill_enable_credit_cards_toggle_sublabel">"在付款表单中填入已保存的付款方式"</string>
 <string name="autofill_addresses_settings_title">"地址和其他信息"</string>
 <string name="autofill_payment_methods">"付款方式"</string>
 <string name="autofill_enable_profiles_toggle_label">"保存并填写地址"</string>
@@ -64,7 +64,7 @@
         &lt;/ul&gt;"</string>
 <string name="ntp_title_no_suggestions">"暂无新内容"</string>
 <string name="ntp_article_suggestions_section_header">"为您推荐的文章"</string>
-<string name="page_info_permission_ads_subtitle">"网站常常会展示侵扰性广告"</string>
+<string name="page_info_permission_ads_subtitle">"网站展示过侵扰性或误导性广告"</string>
 <string name="payments_method_of_payment_label">"付款方式"</string>
 <string name="payments_contact_details_label">"联系信息"</string>
 <string name="payments_add_contact_details_label">"添加联系信息"</string>

@@ -1,8 +1,11 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: ../../chrome/android/java/src/org/chromium/chrome/browser/customtabs/dynamicmodule/IActivityDelegate.aidl
+ * Original file: ../../third_party/cct_dynamic_module/src/src/java/org/chromium/chrome/browser/customtabs/dynamicmodule/IActivityDelegate.aidl
  */
 package org.chromium.chrome.browser.customtabs.dynamicmodule;
+/**
+ * Runtime providing additional features to a Chrome activity.
+ */
 public interface IActivityDelegate extends android.os.IInterface
 {
 /** Local-side IPC implementation stub class. */
@@ -156,6 +159,22 @@ data.enforceInterface(DESCRIPTOR);
 org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper _arg0;
 _arg0 = org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper.Stub.asInterface(data.readStrongBinder());
 this.onBackPressedAsync(_arg0);
+reply.writeNoException();
+return true;
+}
+case TRANSACTION_onNavigationEvent:
+{
+data.enforceInterface(DESCRIPTOR);
+int _arg0;
+_arg0 = data.readInt();
+android.os.Bundle _arg1;
+if ((0!=data.readInt())) {
+_arg1 = android.os.Bundle.CREATOR.createFromParcel(data);
+}
+else {
+_arg1 = null;
+}
+this.onNavigationEvent(_arg0, _arg1);
 reply.writeNoException();
 return true;
 }
@@ -384,6 +403,34 @@ _reply.recycle();
 _data.recycle();
 }
 }
+/**
+   * Notify module about navigation events.
+   * {@see android.support.customtabs.CustomTabsCallback#onNavigationEvent}
+   *
+   * Introduced in API version 4.
+   */
+@Override public void onNavigationEvent(int navigationEvent, android.os.Bundle extras) throws android.os.RemoteException
+{
+android.os.Parcel _data = android.os.Parcel.obtain();
+android.os.Parcel _reply = android.os.Parcel.obtain();
+try {
+_data.writeInterfaceToken(DESCRIPTOR);
+_data.writeInt(navigationEvent);
+if ((extras!=null)) {
+_data.writeInt(1);
+extras.writeToParcel(_data, 0);
+}
+else {
+_data.writeInt(0);
+}
+mRemote.transact(Stub.TRANSACTION_onNavigationEvent, _data, _reply, 0);
+_reply.readException();
+}
+finally {
+_reply.recycle();
+_data.recycle();
+}
+}
 }
 static final int TRANSACTION_onCreate = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
 static final int TRANSACTION_onPostCreate = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
@@ -397,6 +444,7 @@ static final int TRANSACTION_onPause = (android.os.IBinder.FIRST_CALL_TRANSACTIO
 static final int TRANSACTION_onDestroy = (android.os.IBinder.FIRST_CALL_TRANSACTION + 9);
 static final int TRANSACTION_onBackPressed = (android.os.IBinder.FIRST_CALL_TRANSACTION + 10);
 static final int TRANSACTION_onBackPressedAsync = (android.os.IBinder.FIRST_CALL_TRANSACTION + 11);
+static final int TRANSACTION_onNavigationEvent = (android.os.IBinder.FIRST_CALL_TRANSACTION + 12);
 }
 public void onCreate(android.os.Bundle savedInstanceState) throws android.os.RemoteException;
 public void onPostCreate(android.os.Bundle savedInstanceState) throws android.os.RemoteException;
@@ -416,4 +464,11 @@ public boolean onBackPressed() throws android.os.RemoteException;
    * Introduced in API version 2.
    */
 public void onBackPressedAsync(org.chromium.chrome.browser.customtabs.dynamicmodule.IObjectWrapper notHandledRunnable) throws android.os.RemoteException;
+/**
+   * Notify module about navigation events.
+   * {@see android.support.customtabs.CustomTabsCallback#onNavigationEvent}
+   *
+   * Introduced in API version 4.
+   */
+public void onNavigationEvent(int navigationEvent, android.os.Bundle extras) throws android.os.RemoteException;
 }

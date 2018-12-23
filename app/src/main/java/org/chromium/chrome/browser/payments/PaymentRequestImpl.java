@@ -32,10 +32,10 @@ import org.chromium.chrome.browser.payments.ui.PaymentRequestSection.OptionSecti
 import org.chromium.chrome.browser.payments.ui.PaymentRequestUI;
 import org.chromium.chrome.browser.payments.ui.SectionInformation;
 import org.chromium.chrome.browser.payments.ui.ShoppingCart;
+import org.chromium.chrome.browser.preferences.MainPreferences;
 import org.chromium.chrome.browser.preferences.Pref;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.PreferencesLauncher;
-import org.chromium.chrome.browser.preferences.autofill.AutofillAndPaymentsPreferences;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.ssl.SecurityStateModel;
 import org.chromium.chrome.browser.tab.Tab;
@@ -546,6 +546,7 @@ public class PaymentRequestImpl
 
         setIsAnyPaymentRequestShowing(true);
         mUI = new PaymentRequestUI(activity, this, mRequestShipping,
+                /* requestShippingOption= */ mRequestShipping,
                 mRequestPayerName || mRequestPayerPhone || mRequestPayerEmail,
                 mMerchantSupportsAutofillPaymentInstruments,
                 !PaymentPreferencesUtil.isPaymentCompleteOnce(), mMerchantName, mTopLevelOrigin,
@@ -692,6 +693,7 @@ public class PaymentRequestImpl
                                && !mIsUserGestureShow)) {
                 mUI.show();
             } else {
+                mUI.dimBackground();
                 mDidRecordShowEvent = true;
                 mShouldRecordAbortReason = true;
                 mJourneyLogger.setEventOccurred(Event.SKIPPED_SHOW);
@@ -1504,7 +1506,7 @@ public class PaymentRequestImpl
         }
 
         Intent intent = PreferencesLauncher.createIntentForSettingsPage(
-                context, AutofillAndPaymentsPreferences.class.getName());
+                context, MainPreferences.class.getName());
         context.startActivity(intent);
     }
 

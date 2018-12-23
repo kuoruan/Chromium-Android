@@ -18,7 +18,6 @@ import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.ChildAccountStatus;
-import org.chromium.components.signin.ChromeSigninController;
 
 import javax.annotation.Nullable;
 
@@ -48,17 +47,19 @@ public final class ForcedSigninProcessor {
      * changes with early exit if an account has already been signed in.
      */
     public static void start(final Context appContext, @Nullable final Runnable onComplete) {
-        if (ChromeSigninController.get().isSignedIn()) return;
         new AndroidEduAndChildAccountHelper() {
             @Override
             public void onParametersReady() {
                 boolean isAndroidEduDevice = isAndroidEduDevice();
                 boolean hasChildAccount = ChildAccountStatus.isChild(getChildAccountStatus());
-                // If neither a child account or and EDU device, we return.
-                if (!isAndroidEduDevice && !hasChildAccount) return;
                 // Child account and EDU device at the same time is not supported.
                 assert !(isAndroidEduDevice && hasChildAccount);
-                processForcedSignIn(appContext, onComplete);
+
+                boolean forceSignin = isAndroidEduDevice || hasChildAccount;
+                AccountManagementFragment.setSignOutAllowedPreferenceValue(!forceSignin);
+                if (forceSignin) {
+                    processForcedSignIn(appContext, onComplete);
+                }
             }
         }.start();
     }
@@ -86,8 +87,6 @@ public final class ForcedSigninProcessor {
                 signinManager.signIn(accounts[0], null, new SigninManager.SignInCallback() {
                     @Override
                     public void onSignInComplete() {
-                        // Since this is a forced signin, signout is not allowed.
-                        AccountManagementFragment.setSignOutAllowedPreferenceValue(false);
                         if (onComplete != null) {
                             onComplete.run();
                         }

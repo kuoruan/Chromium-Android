@@ -109,10 +109,12 @@ int processId, int routingId, int requestId, org.chromium.url.mojom.Url url, org
 
         @Override
         public void onCertificateRequested(
-int processId, int routingId, int requestId, SslCertRequestInfo certInfo, 
+org.chromium.mojo_base.mojom.UnguessableToken windowId, int processId, int routingId, int requestId, SslCertRequestInfo certInfo, 
 OnCertificateRequestedResponse callback) {
 
             NetworkServiceClientOnCertificateRequestedParams _message = new NetworkServiceClientOnCertificateRequestedParams();
+
+            _message.windowId = windowId;
 
             _message.processId = processId;
 
@@ -411,7 +413,7 @@ OnClearSiteDataResponse callback) {
                         NetworkServiceClientOnCertificateRequestedParams data =
                                 NetworkServiceClientOnCertificateRequestedParams.deserialize(messageWithHeader.getPayload());
 
-                        getImpl().onCertificateRequested(data.processId, data.routingId, data.requestId, data.certInfo, new NetworkServiceClientOnCertificateRequestedResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        getImpl().onCertificateRequested(data.windowId, data.processId, data.routingId, data.requestId, data.certInfo, new NetworkServiceClientOnCertificateRequestedResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
                         return true;
                     }
 
@@ -624,9 +626,10 @@ OnClearSiteDataResponse callback) {
     
     static final class NetworkServiceClientOnCertificateRequestedParams extends org.chromium.mojo.bindings.Struct {
 
-        private static final int STRUCT_SIZE = 32;
-        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(32, 0)};
+        private static final int STRUCT_SIZE = 40;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
         private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public org.chromium.mojo_base.mojom.UnguessableToken windowId;
         public int processId;
         public int routingId;
         public int requestId;
@@ -667,19 +670,24 @@ OnClearSiteDataResponse callback) {
                 result = new NetworkServiceClientOnCertificateRequestedParams(elementsOrVersion);
                     {
                         
-                    result.processId = decoder0.readInt(8);
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, true);
+                    result.windowId = org.chromium.mojo_base.mojom.UnguessableToken.decode(decoder1);
                     }
                     {
                         
-                    result.routingId = decoder0.readInt(12);
+                    result.processId = decoder0.readInt(16);
                     }
                     {
                         
-                    result.requestId = decoder0.readInt(16);
+                    result.routingId = decoder0.readInt(20);
                     }
                     {
                         
-                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(24, false);
+                    result.requestId = decoder0.readInt(24);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(32, false);
                     result.certInfo = SslCertRequestInfo.decode(decoder1);
                     }
 
@@ -694,13 +702,15 @@ OnClearSiteDataResponse callback) {
         protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
             org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
             
-            encoder0.encode(this.processId, 8);
+            encoder0.encode(this.windowId, 8, true);
             
-            encoder0.encode(this.routingId, 12);
+            encoder0.encode(this.processId, 16);
             
-            encoder0.encode(this.requestId, 16);
+            encoder0.encode(this.routingId, 20);
             
-            encoder0.encode(this.certInfo, 24, false);
+            encoder0.encode(this.requestId, 24);
+            
+            encoder0.encode(this.certInfo, 32, false);
         }
     }
 

@@ -60,8 +60,8 @@ public class PureJavaExceptionReporter {
     private static final String RN = "\r\n";
     private static final String FORM_DATA_MESSAGE = "Content-Disposition: form-data; name=\"";
 
-    protected File mMinidumpFile = null;
-    private FileOutputStream mMinidumpFileStream = null;
+    protected File mMinidumpFile;
+    private FileOutputStream mMinidumpFileStream;
     private final String mLocalId = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
     private final String mBoundary = "------------" + UUID.randomUUID() + RN;
 

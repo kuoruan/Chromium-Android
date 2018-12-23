@@ -68,6 +68,8 @@ public class PermissionDialogView {
     /* Shows the dialog */
     public void show() {
         mDialog.show();
+        getButton(DialogInterface.BUTTON_POSITIVE).setFilterTouchesWhenObscured(true);
+        getButton(DialogInterface.BUTTON_NEGATIVE).setFilterTouchesWhenObscured(true);
     }
 
     /* Dismiss the dialog */

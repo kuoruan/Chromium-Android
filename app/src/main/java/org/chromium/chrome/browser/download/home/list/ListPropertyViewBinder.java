@@ -16,7 +16,7 @@ class ListPropertyViewBinder implements ViewBinder<PropertyModel, RecyclerView, 
     @Override
     public void bind(PropertyModel model, RecyclerView view, PropertyKey propertyKey) {
         if (propertyKey == ListProperties.ENABLE_ITEM_ANIMATIONS) {
-            if (model.getValue(ListProperties.ENABLE_ITEM_ANIMATIONS)) {
+            if (model.get(ListProperties.ENABLE_ITEM_ANIMATIONS)) {
                 if (view.getItemAnimator() == null) {
                     view.setItemAnimator((ItemAnimator) view.getTag(R.id.item_animator));
                     view.setTag(R.id.item_animator, null);

@@ -26,7 +26,6 @@ import org.chromium.chrome.browser.UrlConstants;
 import org.chromium.chrome.browser.compositor.layouts.content.InvalidationAwareThumbnailProvider;
 import org.chromium.chrome.browser.native_page.NativePage;
 import org.chromium.chrome.browser.util.ColorUtils;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.ViewUtils;
 
 import java.util.concurrent.TimeUnit;
@@ -153,8 +152,7 @@ public class RecentTabsPage
 
     @Override
     public int getThemeColor() {
-        return ColorUtils.getDefaultThemeColor(
-                mActivity.getResources(), FeatureUtilities.isChromeModernDesignEnabled(), false);
+        return ColorUtils.getDefaultThemeColor(mActivity.getResources(), false);
     }
 
     @Override

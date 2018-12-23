@@ -4,19 +4,24 @@
 
 package org.chromium.chrome.browser.customtabs.dynamicmodule;
 
+import android.content.ComponentCallbacks2;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.os.Process;
 import android.support.annotation.Nullable;
 
-import org.chromium.base.AsyncTask;
 import org.chromium.base.Callback;
 import org.chromium.base.ContextUtils;
 import org.chromium.base.Log;
+import org.chromium.base.task.AsyncTask;
+import org.chromium.chrome.browser.ChromeApplication;
+import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.crash.CrashKeyIndex;
 import org.chromium.chrome.browser.crash.CrashKeys;
+import org.chromium.chrome.browser.customtabs.dynamicmodule.ModuleMetrics.DestructionReason;
 
 /**
  * Dynamically loads a module from another apk.
@@ -27,7 +32,30 @@ public class ModuleLoader {
     /** Specifies the module package name and entry point class name. */
     private final ComponentName mComponentName;
     private final String mModuleId;
+
+    /**
+     * Tracks the number of usages of the module. If it is no longer used, it may be destroyed, but
+     * the time of destruction depends on the caching policy.
+     */
     private int mModuleUseCount;
+
+    /**
+     * The timestamp of the moment the module became unused. This is used to determine whether or
+     * not to continue caching it. A value of -1 indicates there is no usable value.
+     */
+    private long mModuleUnusedTimeMs = -1;
+
+    /**
+     * The name of the experiment parameter for setting the caching time limit.
+     */
+    private static final String MODULE_CACHE_TIME_LIMIT_MS_NAME = "cct_module_cache_time_limit_ms";
+
+    /**
+     * The default time limit for caching an unused module under mild memory pressure, in
+     * milliseconds.
+     */
+    private static final int MODULE_CACHE_TIME_LIMIT_MS_DEFAULT = 300000; // 5 minutes
+
     @Nullable
     private ModuleEntryPoint mModuleEntryPoint;
 
@@ -38,17 +66,19 @@ public class ModuleLoader {
     public ModuleLoader(ComponentName componentName) {
         mComponentName = componentName;
         String packageName = componentName.getPackageName();
-        String version = "";
+        int versionCode = 0;
+        String versionName = "";
         try {
-            version = ContextUtils.getApplicationContext()
-                              .getPackageManager()
-                              .getPackageInfo(packageName, 0)
-                              .versionName;
+            PackageInfo info = ContextUtils.getApplicationContext()
+                                     .getPackageManager()
+                                     .getPackageInfo(packageName, 0);
+            versionCode = info.versionCode;
+            versionName = info.versionName;
         } catch (PackageManager.NameNotFoundException ignored) {
             // Ignore the exception. Failure to find the package name will be handled in
             // getModuleContext() below.
         }
-        mModuleId = packageName + ":" + version;
+        mModuleId = String.format("%s v%s (%s)", packageName, versionCode, versionName);
     }
 
     public ComponentName getComponentName() {
@@ -71,6 +101,7 @@ public class ModuleLoader {
     public Runnable loadModule(Callback<ModuleEntryPoint> callback) {
         if (mModuleEntryPoint != null) {
             mModuleUseCount++;
+            mModuleUnusedTimeMs = -1;
             ModuleMetrics.recordLoadResult(ModuleMetrics.LoadResult.SUCCESS_CACHED);
             callback.onResult(mModuleEntryPoint);
             return null;
@@ -93,14 +124,52 @@ public class ModuleLoader {
         };
     }
 
-    public void maybeUnloadModule() {
+    public void decrementModuleUseCount() {
         if (mModuleEntryPoint == null) return;
         mModuleUseCount--;
         if (mModuleUseCount == 0) {
-            mModuleEntryPoint.onDestroy();
-            CrashKeys.getInstance().set(CrashKeyIndex.ACTIVE_DYNAMIC_MODULE, null);
-            mModuleEntryPoint = null;
+            mModuleUnusedTimeMs = ModuleMetrics.now();
+            if (!ChromeFeatureList.isEnabled(ChromeFeatureList.CCT_MODULE_CACHE)) {
+                destroyModule(DestructionReason.NO_CACHING_UNUSED);
+            }
         }
+    }
+
+    /**
+     * Destroys the unused cached module (if present) under certain circumstances. If the memory
+     * signal is considered severe, the module will always be destroyed. If the memory signal is
+     * considered mild, the module will only be destroyed if the time limit has passed.
+     * @param level The type of signal as defined in {@link ComponentCallbacks2}.
+     */
+    public void onTrimMemory(int level) {
+        if (mModuleEntryPoint == null || mModuleUseCount > 0) return;
+
+        if (ChromeApplication.isSevereMemorySignal(level)) {
+            destroyModule(DestructionReason.CACHED_SEVERE_MEMORY_PRESSURE);
+        } else if (cacheExceededTimeLimit()) {
+            if (level == ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
+                destroyModule(DestructionReason.CACHED_UI_HIDDEN_TIME_EXCEEDED);
+            } else {
+                destroyModule(DestructionReason.CACHED_MILD_MEMORY_PRESSURE_TIME_EXCEEDED);
+            }
+        }
+    }
+
+    private boolean cacheExceededTimeLimit() {
+        if (mModuleUnusedTimeMs == -1) return false;
+        long limit = ChromeFeatureList.getFieldTrialParamByFeatureAsInt(
+                ChromeFeatureList.CCT_MODULE_CACHE, MODULE_CACHE_TIME_LIMIT_MS_NAME,
+                MODULE_CACHE_TIME_LIMIT_MS_DEFAULT);
+        return ModuleMetrics.now() - mModuleUnusedTimeMs > limit;
+    }
+
+    private void destroyModule(@DestructionReason int reason) {
+        assert mModuleEntryPoint != null;
+        ModuleMetrics.recordDestruction(reason);
+        mModuleEntryPoint.onDestroy();
+        CrashKeys.getInstance().set(CrashKeyIndex.ACTIVE_DYNAMIC_MODULE, null);
+        mModuleEntryPoint = null;
+        mModuleUnusedTimeMs = -1;
     }
 
     /**
@@ -185,6 +254,7 @@ public class ModuleLoader {
                 ModuleMetrics.recordLoadResult(ModuleMetrics.LoadResult.SUCCESS_NEW);
                 mModuleEntryPoint = entryPoint;
                 mModuleUseCount = 1;
+                mModuleUnusedTimeMs = -1;
                 mCallback.onResult(entryPoint);
                 return;
             } catch (Exception e) {

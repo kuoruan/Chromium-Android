@@ -122,7 +122,7 @@ public class AutofillPopupBridge implements AutofillDelegate, DialogInterface.On
     }
 
     private static boolean shouldUseRefreshStyle() {
-        return ChromeFeatureList.isEnabled(ChromeFeatureList.AUTOFILL_EXPANDED_POPUP_VIEWS);
+        return ChromeFeatureList.isEnabled(ChromeFeatureList.AUTOFILL_REFRESH_STYLE_ANDROID);
     }
 
     // Helper methods for AutofillSuggestion

@@ -32,6 +32,14 @@ WriteResponse callback);
 
 
 
+    void writeStream(
+long position, org.chromium.mojo.system.DataPipe.ConsumerHandle stream, 
+WriteStreamResponse callback);
+
+    interface WriteStreamResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Integer, Long> { }
+
+
+
     void truncate(
 long length, 
 TruncateResponse callback);

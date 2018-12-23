@@ -40,6 +40,7 @@ import org.chromium.chrome.browser.preferences.ChromeSwitchPreference;
 import org.chromium.chrome.browser.preferences.SyncedAccountPreference;
 import org.chromium.chrome.browser.profiles.Profile;
 import org.chromium.chrome.browser.signin.SigninManager;
+import org.chromium.chrome.browser.signin.SignoutReason;
 import org.chromium.chrome.browser.sync.GoogleServiceAuthError;
 import org.chromium.chrome.browser.sync.ProfileSyncService;
 import org.chromium.chrome.browser.sync.SyncAccountSwitcher;
@@ -677,7 +678,9 @@ public class SyncCustomizationFragment extends PreferenceFragment
 
         if (mCurrentSyncError == SyncError.OTHER_ERRORS) {
             final Account account = ChromeSigninController.get().getSignedInUser();
-            SigninManager.get().signOut(() -> SigninManager.get().signIn(account, null, null));
+            // TODO(https://crbug.com/873116): Pass the correct reason for the signout.
+            SigninManager.get().signOut(SignoutReason.USER_CLICKED_SIGNOUT_SETTINGS,
+                    () -> SigninManager.get().signIn(account, null, null));
             return;
         }
 

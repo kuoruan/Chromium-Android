@@ -5,9 +5,11 @@
 package org.chromium.chrome.browser.infobar;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.view.View;
 
 import org.chromium.chrome.R;
+import org.chromium.chrome.browser.download.DownloadInfoBarController;
 import org.chromium.chrome.browser.download.DownloadManagerService;
 import org.chromium.chrome.browser.feature_engagement.TrackerFactory;
 import org.chromium.chrome.browser.infobar.IPHInfoBarSupport.PopupState;
@@ -65,15 +67,16 @@ class IPHBubbleDelegateImpl implements IPHInfoBarSupport.IPHBubbleDelegate {
         }
     }
 
-    private TrackerParameters getTrackerParameters(@InfoBarIdentifier int infoBarId) {
+    private @Nullable TrackerParameters getTrackerParameters(@InfoBarIdentifier int infoBarId) {
         switch (infoBarId) {
             case InfoBarIdentifier.DATA_REDUCTION_PROXY_PREVIEW_INFOBAR_DELEGATE:
                 return new TrackerParameters(FeatureConstants.DATA_SAVER_PREVIEW_FEATURE,
                         R.string.iph_data_saver_preview_text, R.string.iph_data_saver_preview_text);
             case InfoBarIdentifier.DOWNLOAD_PROGRESS_INFOBAR_ANDROID:
-                return DownloadManagerService.getDownloadManagerService()
-                        .getInfoBarController(Profile.getLastUsedProfile().isOffTheRecord())
-                        .getTrackerParameters();
+                DownloadInfoBarController controller =
+                        DownloadManagerService.getDownloadManagerService()
+                        .getInfoBarController(Profile.getLastUsedProfile().isOffTheRecord());
+                return controller != null ? controller.getTrackerParameters() : null;
             default:
                 return null;
         }

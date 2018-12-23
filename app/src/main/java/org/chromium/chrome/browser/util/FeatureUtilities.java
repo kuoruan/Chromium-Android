@@ -21,7 +21,6 @@ import org.chromium.base.StrictModeContext;
 import org.chromium.base.SysUtils;
 import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
-import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.library_loader.LibraryLoader;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.ChromeSwitches;
@@ -394,15 +393,6 @@ public class FeatureUtilities {
     }
 
     /**
-     * Deprecated!
-     * @return Whether Chrome modern design is enabled. This returns true if Chrome Home is enabled.
-     */
-    @CalledByNative
-    public static boolean isChromeModernDesignEnabled() {
-        return true;
-    }
-
-    /**
      * @param activityContext The context for the containing activity.
      * @return Whether contextual suggestions are enabled.
      */
@@ -411,12 +401,9 @@ public class FeatureUtilities {
                 activityContext.getResources().getConfiguration().smallestScreenWidthDp;
         return !DeviceFormFactor.isNonMultiDisplayContextOnTablet(activityContext)
                 && !LocaleManager.getInstance().needToCheckForSearchEnginePromo()
-                && isChromeModernDesignEnabled()
-                && (ChromeFeatureList.isEnabled(
-                            ChromeFeatureList.CONTEXTUAL_SUGGESTIONS_BOTTOM_SHEET)
-                    || (smallestScreenWidth >= CONTEXTUAL_SUGGESTIONS_TOOLBAR_MIN_DP
-                        && ChromeFeatureList.isEnabled(
-                                ChromeFeatureList.CONTEXTUAL_SUGGESTIONS_BUTTON)));
+                && (smallestScreenWidth >= CONTEXTUAL_SUGGESTIONS_TOOLBAR_MIN_DP
+                           && ChromeFeatureList.isEnabled(
+                                      ChromeFeatureList.CONTEXTUAL_SUGGESTIONS_BUTTON));
     }
 
     /**

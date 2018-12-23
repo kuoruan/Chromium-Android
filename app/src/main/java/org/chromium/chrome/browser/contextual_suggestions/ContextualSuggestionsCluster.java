@@ -59,15 +59,18 @@ class ContextualSuggestionsCluster extends InnerNode<NewTabPageViewHolder, Parti
     /**
      * Called to build the tree node's children. Should be called after all suggestions have been
      * added.
+     *
+     * @param globalIndexOffset The index offset for setting global suggestion rank. This should be
+     *                          the total number of suggestions displayed before this cluster.
      */
-    void buildChildren() {
+    void buildChildren(int globalIndexOffset) {
         if (mShouldShowTitle) {
             mHeader = new SectionHeader(mTitle);
             addChildren(mHeader);
         }
 
         mSuggestionsList = new SuggestionsList();
-        mSuggestionsList.addAll(mSuggestions);
+        mSuggestionsList.addAll(mSuggestions, globalIndexOffset);
         addChildren(mSuggestionsList);
 
         // Only add observer after suggestions have been added to the cluster node to avoid
@@ -120,10 +123,13 @@ class ContextualSuggestionsCluster extends InnerNode<NewTabPageViewHolder, Parti
             return mSuggestions.get(position);
         }
 
-        public void addAll(List<SnippetArticle> suggestions) {
+        public void addAll(List<SnippetArticle> suggestions, int globalIndexOffset) {
             if (suggestions.isEmpty()) return;
 
             int insertionPointIndex = mSuggestions.size();
+            for (int i = 0; i < suggestions.size(); i++) {
+                suggestions.get(i).setRank(i, i + globalIndexOffset);
+            }
             mSuggestions.addAll(suggestions);
             notifyItemRangeInserted(insertionPointIndex, suggestions.size());
         }

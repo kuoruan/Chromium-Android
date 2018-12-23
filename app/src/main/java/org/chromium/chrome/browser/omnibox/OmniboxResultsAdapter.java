@@ -5,13 +5,21 @@
 package org.chromium.chrome.browser.omnibox;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.support.annotation.Nullable;
+import android.support.v4.view.ViewCompat;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import org.chromium.base.ThreadUtils;
 import org.chromium.base.VisibleForTesting;
+import org.chromium.chrome.browser.toolbar.ToolbarDataProvider;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Adapter for providing data and views to the omnibox results list.
@@ -21,17 +29,16 @@ public class OmniboxResultsAdapter extends BaseAdapter {
 
     private final List<OmniboxResultItem> mSuggestionItems;
     private final Context mContext;
-    private final LocationBar mLocationBar;
+    private ToolbarDataProvider mDataProvider;
     private OmniboxSuggestionDelegate mSuggestionDelegate;
     private boolean mUseDarkColors = true;
-    private boolean mUseModernDesign;
+    private Set<String> mPendingAnswerRequestUrls = new HashSet<>();
+    private int mLayoutDirection;
 
     public OmniboxResultsAdapter(
             Context context,
-            LocationBar locationBar,
             List<OmniboxResultItem> suggestionItems) {
         mContext = context;
-        mLocationBar = locationBar;
         mSuggestionItems = suggestionItems;
     }
 
@@ -60,11 +67,71 @@ public class OmniboxResultsAdapter extends BaseAdapter {
         if (convertView instanceof SuggestionView) {
             suggestionView = (SuggestionView) convertView;
         } else {
-            suggestionView = new SuggestionView(mContext, mLocationBar);
+            suggestionView = new SuggestionView(mContext);
         }
-        suggestionView.init(mSuggestionItems.get(position), mSuggestionDelegate, position,
-                mUseDarkColors, mUseModernDesign);
+        OmniboxResultItem item = mSuggestionItems.get(position);
+        maybeFetchAnswerIcon(item);
+
+        suggestionView.init(item, mSuggestionDelegate, position, mUseDarkColors);
+        ViewCompat.setLayoutDirection(suggestionView, mLayoutDirection);
+
         return suggestionView;
+    }
+
+    private void maybeFetchAnswerIcon(OmniboxResultItem item) {
+        ThreadUtils.assertOnUiThread();
+
+        // Attempting to fetch answer data before we have a profile to request it for.
+        if (mDataProvider == null) return;
+
+        // Do not refetch an answer image if it already exists.
+        if (item.getAnswerImage() != null) return;
+        OmniboxSuggestion suggestion = item.getSuggestion();
+        final String url = getAnswerImageRequestUrl(suggestion);
+        if (url == null) return;
+
+        // Do not make duplicate answer image requests for the same URL (to avoid generating
+        // duplicate bitmaps for the same image).
+        if (mPendingAnswerRequestUrls.contains(url)) return;
+
+        mPendingAnswerRequestUrls.add(url);
+        AnswersImage.requestAnswersImage(
+                mDataProvider.getProfile(), url, new AnswersImage.AnswersImageObserver() {
+                    @Override
+                    public void onAnswersImageChanged(Bitmap bitmap) {
+                        ThreadUtils.assertOnUiThread();
+
+                        onAnswerImageReceived(url, bitmap);
+                        boolean retVal = mPendingAnswerRequestUrls.remove(url);
+                        assert retVal : "Pending answer URL should exist";
+                    }
+                });
+    }
+
+    private String getAnswerImageRequestUrl(OmniboxSuggestion suggestion) {
+        if (!suggestion.hasAnswer()) return null;
+        return suggestion.getAnswer().getSecondLine().getImage();
+    }
+
+    private void onAnswerImageReceived(String url, Bitmap bitmap) {
+        boolean didUpdateImage = false;
+        for (int i = 0; i < mSuggestionItems.size(); i++) {
+            String answerUrl = getAnswerImageRequestUrl(mSuggestionItems.get(i).getSuggestion());
+            if (TextUtils.equals(answerUrl, url)) {
+                mSuggestionItems.get(i).setAnswerImage(bitmap);
+                didUpdateImage = true;
+            }
+        }
+        if (didUpdateImage) {
+            notifyDataSetChanged();
+        }
+    }
+
+    /**
+     * Sets the data provider for the toolbar.
+     */
+    public void setToolbarDataProvider(ToolbarDataProvider provider) {
+        mDataProvider = provider;
     }
 
     /**
@@ -74,6 +141,14 @@ public class OmniboxResultsAdapter extends BaseAdapter {
      */
     public void setSuggestionDelegate(OmniboxSuggestionDelegate delegate) {
         mSuggestionDelegate = delegate;
+    }
+
+    /**
+     * Sets the layout direction to be used for any new suggestion views.
+     * @see View#setLayoutDirection(int)
+     */
+    public void setLayoutDirection(int layoutDirection) {
+        mLayoutDirection = layoutDirection;
     }
 
     /**
@@ -93,14 +168,6 @@ public class OmniboxResultsAdapter extends BaseAdapter {
     }
 
     /**
-     * Specifies whether suggestions should use the modern design.
-     * @param useModernDesign Whether modern design should be used for suggestion views.
-     */
-    public void setUseModernDesign(boolean useModernDesign) {
-        mUseModernDesign = useModernDesign;
-    }
-
-    /**
      * Handler for actions that happen on suggestion view.
      */
     @VisibleForTesting
@@ -114,37 +181,33 @@ public class OmniboxResultsAdapter extends BaseAdapter {
 
         /**
          * Triggered when the user selects to refine one of the omnibox suggestions.
-         * @param suggestion
+         * @param suggestion The suggestion selected.
          */
         public void onRefineSuggestion(OmniboxSuggestion suggestion);
 
         /**
+         * Triggered when the user long presses the omnibox suggestion.
+         * @param suggestion The suggestion selected.
+         * @param position The position of the suggestion.
+         */
+        public void onLongPress(OmniboxSuggestion suggestion, int position);
+
+        /**
          * Triggered when the user navigates to one of the suggestions without clicking on it.
-         * @param suggestion
+         * @param suggestion The suggestion that was selected.
          */
         public void onSetUrlToSuggestion(OmniboxSuggestion suggestion);
-
-        /**
-         * Triggered before we show a modal dialog triggered through suggestions UI (e.g. the
-         * delete suggestions confirmation dialog).
-         */
-        public void onShowModal();
-
-        /**
-         * Triggered during the modal dialog dismissal.
-         */
-        public void onHideModal();
-
-        /**
-         * Triggered when the user indicates they want to delete a suggestion.
-         * @param position The position of the suggestion in the drop down view.
-         */
-        public void onDeleteSuggestion(OmniboxSuggestion suggestion, int position);
 
         /**
          * Triggered when the user touches the suggestion view.
          */
         public void onGestureDown();
+
+        /**
+         * Triggered when the user touch on the suggestion view finishes.
+         * @param ev the event for the ACTION_UP.
+         */
+        public void onGestureUp(long timetamp);
 
         /**
          * Triggered when text width information is updated.
@@ -173,6 +236,7 @@ public class OmniboxResultsAdapter extends BaseAdapter {
     public static class OmniboxResultItem {
         private final OmniboxSuggestion mSuggestion;
         private final String mMatchedQuery;
+        private Bitmap mAnswerImage;
 
         public OmniboxResultItem(OmniboxSuggestion suggestion, String matchedQuery) {
             mSuggestion = suggestion;
@@ -191,6 +255,18 @@ public class OmniboxResultsAdapter extends BaseAdapter {
          */
         public String getMatchedQuery() {
             return mMatchedQuery;
+        }
+
+        /**
+         * @return The image associated with the answer for this suggestion (if applicable).
+         */
+        @Nullable
+        public Bitmap getAnswerImage() {
+            return mAnswerImage;
+        }
+
+        private void setAnswerImage(Bitmap bitmap) {
+            mAnswerImage = bitmap;
         }
 
         @Override

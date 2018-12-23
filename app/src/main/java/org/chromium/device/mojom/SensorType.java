@@ -16,9 +16,7 @@ import org.chromium.mojo.bindings.DeserializationException;
 public final class SensorType {
 
 
-    public static final int FIRST = (int) (1L);
-
-    public static final int AMBIENT_LIGHT = (int) (SensorType.FIRST);
+    public static final int AMBIENT_LIGHT = 0;
 
     public static final int PROXIMITY = AMBIENT_LIGHT + 1;
 
@@ -40,13 +38,12 @@ public final class SensorType {
 
     public static final int RELATIVE_ORIENTATION_QUATERNION = RELATIVE_ORIENTATION_EULER_ANGLES + 1;
 
-    public static final int LAST = (int) (SensorType.RELATIVE_ORIENTATION_QUATERNION);
-
 
     private static final boolean IS_EXTENSIBLE = false;
 
     public static boolean isKnownValue(int value) {
         switch (value) {
+            case 0:
             case 1:
             case 2:
             case 3:
@@ -57,7 +54,6 @@ public final class SensorType {
             case 8:
             case 9:
             case 10:
-            case 11:
                 return true;
         }
         return false;

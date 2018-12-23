@@ -31,7 +31,7 @@ public class ExploreSitesCategoryTile {
     public ExploreSitesCategoryTile(String categoryName, String iconUrl, String navigationUrl) {
         mCategoryName = categoryName;
         mIconUrl = iconUrl;
-        mNavigationUrl = ExploreSitesBridge.nativeGetCatalogUrl() + navigationUrl;
+        mNavigationUrl = ExploreSitesBridgeExperimental.nativeGetCatalogUrl() + navigationUrl;
     }
 
     public String getNavigationUrl() {

@@ -9,11 +9,11 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 
 import org.chromium.base.ActivityState;
 import org.chromium.base.ApplicationState;
 import org.chromium.base.ApplicationStatus;
-import org.chromium.base.AsyncTask;
 import org.chromium.base.BuildConfig;
 import org.chromium.base.CommandLineInitUtil;
 import org.chromium.base.ContextUtils;
@@ -26,11 +26,17 @@ import org.chromium.base.annotations.MainDex;
 import org.chromium.base.library_loader.ProcessInitException;
 import org.chromium.base.memory.MemoryPressureMonitor;
 import org.chromium.base.multidex.ChromiumMultiDexInstaller;
+import org.chromium.base.task.AsyncTask;
 import org.chromium.build.BuildHooks;
 import org.chromium.build.BuildHooksAndroid;
 import org.chromium.build.BuildHooksConfig;
 import org.chromium.chrome.browser.crash.PureJavaExceptionHandler;
 import org.chromium.chrome.browser.crash.PureJavaExceptionReporter;
+import org.chromium.chrome.browser.customtabs.CustomTabsConnection;
+import org.chromium.chrome.browser.dependency_injection.ChromeAppComponent;
+import org.chromium.chrome.browser.dependency_injection.ChromeAppModule;
+import org.chromium.chrome.browser.dependency_injection.DaggerChromeAppComponent;
+import org.chromium.chrome.browser.dependency_injection.ModuleFactoryOverrides;
 import org.chromium.chrome.browser.init.InvalidStartupDialog;
 import org.chromium.chrome.browser.metrics.UmaUtils;
 import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
@@ -47,16 +53,19 @@ public class ChromeApplication extends Application {
 
     private DiscardableReferencePool mReferencePool;
 
+    @Nullable
+    private static ChromeAppComponent sComponent;
+
     // Called by the framework for ALL processes. Runs before ContentProviders are created.
     // Quirk: context.getApplicationContext() returns null during this method.
     @Override
     protected void attachBaseContext(Context context) {
-        boolean browserProcess = ContextUtils.isMainProcess();
-        if (browserProcess) UmaUtils.recordMainEntryPointTime();
+        boolean isBrowserProcess = !ContextUtils.getProcessName().contains(":");
+        if (isBrowserProcess) UmaUtils.recordMainEntryPointTime();
         super.attachBaseContext(context);
         ContextUtils.initApplicationContext(this);
 
-        if (browserProcess) {
+        if (isBrowserProcess) {
             if (BuildConfig.IS_MULTIDEX_ENABLED) {
                 ChromiumMultiDexInstaller.install(this);
             }
@@ -128,12 +137,19 @@ public class ChromeApplication extends Application {
     @Override
     public void onTrimMemory(int level) {
         super.onTrimMemory(level);
+        if (isSevereMemorySignal(level) && mReferencePool != null) mReferencePool.drain();
+        CustomTabsConnection.onTrimMemory(level);
+    }
+
+    /**
+     * Determines whether the given memory signal is considered severe.
+     * @param level The type of signal as defined in {@link android.content.ComponentCallbacks2}.
+     */
+    public static boolean isSevereMemorySignal(int level) {
         // The conditions are expressed using ranges to capture intermediate levels possibly added
         // to the API in the future.
-        if ((level >= TRIM_MEMORY_RUNNING_LOW && level < TRIM_MEMORY_UI_HIDDEN)
-                || level >= TRIM_MEMORY_MODERATE) {
-            if (mReferencePool != null) mReferencePool.drain();
-        }
+        return (level >= TRIM_MEMORY_RUNNING_LOW && level < TRIM_MEMORY_UI_HIDDEN)
+                || level >= TRIM_MEMORY_MODERATE;
     }
 
     /**
@@ -185,5 +201,21 @@ public class ChromeApplication extends Application {
             @Override
             public void onDenied() {}
         });
+    }
+
+    /** Returns the application-scoped component. */
+    public static ChromeAppComponent getComponent() {
+        if (sComponent == null) {
+            sComponent = createComponent();
+        }
+        return sComponent;
+    }
+
+    private static ChromeAppComponent createComponent() {
+        ChromeAppModule.Factory overriddenFactory =
+                ModuleFactoryOverrides.getOverrideFor(ChromeAppModule.Factory.class);
+        ChromeAppModule module =
+                overriddenFactory == null ? new ChromeAppModule() : overriddenFactory.create();
+        return DaggerChromeAppComponent.builder().chromeAppModule(module).build();
     }
 }

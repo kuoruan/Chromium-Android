@@ -28,6 +28,10 @@ class PhotoCapabilities {
     public final double minZoom;
     public final double currentZoom;
     public final double stepZoom;
+    public final double currentFocusDistance;
+    public final double maxFocusDistance;
+    public final double minFocusDistance;
+    public final double stepFocusDistance;
     public final int focusMode;
     public final int[] focusModes;
     public final int exposureMode;
@@ -36,6 +40,10 @@ class PhotoCapabilities {
     public final double minExposureCompensation;
     public final double currentExposureCompensation;
     public final double stepExposureCompensation;
+    public final double maxExposureTime;
+    public final double minExposureTime;
+    public final double currentExposureTime;
+    public final double stepExposureTime;
     public final int whiteBalanceMode;
     public final int[] whiteBalanceModes;
     public final int[] fillLightModes;
@@ -50,12 +58,15 @@ class PhotoCapabilities {
     PhotoCapabilities(int maxIso, int minIso, int currentIso, int stepIso, int maxHeight,
             int minHeight, int currentHeight, int stepHeight, int maxWidth, int minWidth,
             int currentWidth, int stepWidth, double maxZoom, double minZoom, double currentZoom,
-            double stepZoom, int focusMode, int[] focusModes, int exposureMode, int[] exposureModes,
-            double maxExposureCompensation, double minExposureCompensation,
-            double currentExposureCompensation, double stepExposureCompensation,
-            int whiteBalanceMode, int[] whiteBalanceModes, int[] fillLightModes,
-            boolean supportsTorch, boolean torch, boolean redEyeReduction, int maxColorTemperature,
-            int minColorTemperature, int currentColorTemperature, int stepColorTemperature) {
+            double stepZoom, double currentFocusDistance, double maxFocusDistance,
+            double minFocusDistance, double stepFocusDistance, int focusMode, int[] focusModes,
+            int exposureMode, int[] exposureModes, double maxExposureCompensation,
+            double minExposureCompensation, double currentExposureCompensation,
+            double stepExposureCompensation, double maxExposureTime, double minExposureTime,
+            double currentExposureTime, double stepExposureTime, int whiteBalanceMode,
+            int[] whiteBalanceModes, int[] fillLightModes, boolean supportsTorch, boolean torch,
+            boolean redEyeReduction, int maxColorTemperature, int minColorTemperature,
+            int currentColorTemperature, int stepColorTemperature) {
         this.maxIso = maxIso;
         this.minIso = minIso;
         this.currentIso = currentIso;
@@ -72,6 +83,10 @@ class PhotoCapabilities {
         this.minZoom = minZoom;
         this.currentZoom = currentZoom;
         this.stepZoom = stepZoom;
+        this.currentFocusDistance = currentFocusDistance;
+        this.maxFocusDistance = maxFocusDistance;
+        this.minFocusDistance = minFocusDistance;
+        this.stepFocusDistance = stepFocusDistance;
         this.focusMode = focusMode;
         this.focusModes = focusModes;
         this.exposureMode = exposureMode;
@@ -80,6 +95,10 @@ class PhotoCapabilities {
         this.minExposureCompensation = minExposureCompensation;
         this.currentExposureCompensation = currentExposureCompensation;
         this.stepExposureCompensation = stepExposureCompensation;
+        this.maxExposureTime = maxExposureTime;
+        this.minExposureTime = minExposureTime;
+        this.currentExposureTime = currentExposureTime;
+        this.stepExposureTime = stepExposureTime;
         this.whiteBalanceMode = whiteBalanceMode;
         this.whiteBalanceModes = whiteBalanceModes;
         this.fillLightModes = fillLightModes;
@@ -173,6 +192,26 @@ class PhotoCapabilities {
     }
 
     @CalledByNative
+    public double getCurrentFocusDistance() {
+        return currentFocusDistance;
+    }
+
+    @CalledByNative
+    public double getMaxFocusDistance() {
+        return maxFocusDistance;
+    }
+
+    @CalledByNative
+    public double getMinFocusDistance() {
+        return minFocusDistance;
+    }
+
+    @CalledByNative
+    public double getStepFocusDistance() {
+        return stepFocusDistance;
+    }
+
+    @CalledByNative
     public int getFocusMode() {
         return focusMode;
     }
@@ -210,6 +249,25 @@ class PhotoCapabilities {
     @CalledByNative
     public double getStepExposureCompensation() {
         return stepExposureCompensation;
+    }
+    @CalledByNative
+    public double getMinExposureTime() {
+        return minExposureTime;
+    }
+
+    @CalledByNative
+    public double getMaxExposureTime() {
+        return maxExposureTime;
+    }
+
+    @CalledByNative
+    public double getCurrentExposureTime() {
+        return currentExposureTime;
+    }
+
+    @CalledByNative
+    public double getStepExposureTime() {
+        return stepExposureTime;
     }
 
     @CalledByNative
@@ -279,6 +337,10 @@ class PhotoCapabilities {
         public double minZoom;
         public double currentZoom;
         public double stepZoom;
+        public double currentFocusDistance;
+        public double maxFocusDistance;
+        public double minFocusDistance;
+        public double stepFocusDistance;
         public int focusMode;
         public int[] focusModes;
         public int exposureMode;
@@ -287,6 +349,10 @@ class PhotoCapabilities {
         public double minExposureCompensation;
         public double currentExposureCompensation;
         public double stepExposureCompensation;
+        public double maxExposureTime;
+        public double minExposureTime;
+        public double currentExposureTime;
+        public double stepExposureTime;
         public int whiteBalanceMode;
         public int[] whiteBalanceModes;
         public int[] fillLightModes;
@@ -380,6 +446,26 @@ class PhotoCapabilities {
             return this;
         }
 
+        public Builder setCurrentFocusDistance(double currentFocusDistance) {
+            this.currentFocusDistance = currentFocusDistance;
+            return this;
+        }
+
+        public Builder setMaxFocusDistance(double maxFocusDistance) {
+            this.maxFocusDistance = maxFocusDistance;
+            return this;
+        }
+
+        public Builder setMinFocusDistance(double minFocusDistance) {
+            this.minFocusDistance = minFocusDistance;
+            return this;
+        }
+
+        public Builder setStepFocusDistance(double stepFocusDistance) {
+            this.stepFocusDistance = stepFocusDistance;
+            return this;
+        }
+
         public Builder setFocusMode(int focusMode) {
             this.focusMode = focusMode;
             return this;
@@ -417,6 +503,26 @@ class PhotoCapabilities {
 
         public Builder setStepExposureCompensation(double stepExposureCompensation) {
             this.stepExposureCompensation = stepExposureCompensation;
+            return this;
+        }
+
+        public Builder setMaxExposureTime(double maxExposureTime) {
+            this.maxExposureTime = maxExposureTime;
+            return this;
+        }
+
+        public Builder setMinExposureTime(double minExposureTime) {
+            this.minExposureTime = minExposureTime;
+            return this;
+        }
+
+        public Builder setCurrentExposureTime(double currentExposureTime) {
+            this.currentExposureTime = currentExposureTime;
+            return this;
+        }
+
+        public Builder setStepExposureTime(double stepExposureTime) {
+            this.stepExposureTime = stepExposureTime;
             return this;
         }
 
@@ -473,9 +579,11 @@ class PhotoCapabilities {
         public PhotoCapabilities build() {
             return new PhotoCapabilities(maxIso, minIso, currentIso, stepIso, maxHeight, minHeight,
                     currentHeight, stepHeight, maxWidth, minWidth, currentWidth, stepWidth, maxZoom,
-                    minZoom, currentZoom, stepZoom, focusMode, focusModes, exposureMode,
+                    minZoom, currentZoom, stepZoom, currentFocusDistance, maxFocusDistance,
+                    minFocusDistance, stepFocusDistance, focusMode, focusModes, exposureMode,
                     exposureModes, maxExposureCompensation, minExposureCompensation,
-                    currentExposureCompensation, stepExposureCompensation, whiteBalanceMode,
+                    currentExposureCompensation, stepExposureCompensation, maxExposureTime,
+                    minExposureTime, currentExposureTime, stepExposureTime, whiteBalanceMode,
                     whiteBalanceModes, fillLightModes, supportsTorch, torch, redEyeReduction,
                     maxColorTemperature, minColorTemperature, currentColorTemperature,
                     stepColorTemperature);

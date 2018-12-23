@@ -14,8 +14,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ListView;
 
-import org.chromium.chrome.R;
 import org.chromium.chrome.browser.download.DirectoryOption;
+import org.chromium.chrome.download.R;
 
 /**
  * The preference used to save the download directory in download settings page.

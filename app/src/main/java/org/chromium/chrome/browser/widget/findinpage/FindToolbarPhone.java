@@ -14,7 +14,6 @@ import android.view.View;
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.util.ColorUtils;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 
 /**
  * A phone specific version of the {@link FindToolbar}.
@@ -46,21 +45,20 @@ public class FindToolbarPhone extends FindToolbar {
     protected void updateVisualsForTabModel(boolean isIncognito) {
         int queryTextColorId;
         if (isIncognito) {
-            setBackgroundColor(ColorUtils.getDefaultThemeColor(
-                    getResources(), FeatureUtilities.isChromeModernDesignEnabled(), true));
+            setBackgroundColor(ColorUtils.getDefaultThemeColor(getResources(), true));
             ColorStateList white =
                     AppCompatResources.getColorStateList(getContext(), R.color.light_mode_tint);
-            mFindNextButton.setTint(white);
-            mFindPrevButton.setTint(white);
-            mCloseFindButton.setTint(white);
+            ApiCompatibilityUtils.setImageTintList(mFindNextButton, white);
+            ApiCompatibilityUtils.setImageTintList(mFindPrevButton, white);
+            ApiCompatibilityUtils.setImageTintList(mCloseFindButton, white);
             queryTextColorId = R.color.find_in_page_query_white_color;
         } else {
             setBackgroundColor(Color.WHITE);
             ColorStateList dark =
                     AppCompatResources.getColorStateList(getContext(), R.color.dark_mode_tint);
-            mFindNextButton.setTint(dark);
-            mFindPrevButton.setTint(dark);
-            mCloseFindButton.setTint(dark);
+            ApiCompatibilityUtils.setImageTintList(mFindNextButton, dark);
+            ApiCompatibilityUtils.setImageTintList(mFindPrevButton, dark);
+            ApiCompatibilityUtils.setImageTintList(mCloseFindButton, dark);
             queryTextColorId = R.color.default_text_color;
         }
         mFindQuery.setTextColor(

@@ -13,15 +13,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.chromium.base.LocaleUtils;
+import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.browser.modaldialog.DialogDismissalCause;
 import org.chromium.chrome.browser.modaldialog.ModalDialogManager;
 import org.chromium.chrome.browser.modaldialog.ModalDialogView;
 import org.chromium.chrome.browser.preferences.PrefServiceBridge;
 import org.chromium.chrome.browser.preferences.languages.LanguageItem;
+import org.chromium.components.language.AndroidLanguageMetricsBridge;
 import org.chromium.components.language.GeoLanguageProviderBridge;
 
 import java.util.ArrayList;
@@ -36,6 +41,17 @@ import java.util.List;
  * once at browser startup when no other promo or modals are shown.
  */
 public class LanguageAskPrompt implements ModalDialogView.Controller {
+    // Enum values for the Translate.ExplicitLanguageAsk.Event histogram.
+    private static final int PROMPT_EVENT_SHOWN = 0;
+    private static final int PROMPT_EVENT_SAVED = 1;
+    private static final int PROMPT_EVENT_CANCELLED = 2;
+    private static final int PROMPT_EVENT_MAX = PROMPT_EVENT_CANCELLED;
+
+    private void recordPromptEvent(int event) {
+        RecordHistogram.recordEnumeratedHistogram(
+                "Translate.ExplicitLanguageAsk.Event", event, PROMPT_EVENT_MAX);
+    }
+
     private class SeparatorViewHolder extends ViewHolder {
         SeparatorViewHolder(View view) {
             super(view);
@@ -47,6 +63,7 @@ public class LanguageAskPrompt implements ModalDialogView.Controller {
         private TextView mLanguageNameTextView;
         private TextView mNativeNameTextView;
         private CheckBox mCheckbox;
+        private ImageView mDeviceLanguageIcon;
         private String mCode;
         private HashSet<String> mLanguagesUpdate;
 
@@ -58,6 +75,7 @@ public class LanguageAskPrompt implements ModalDialogView.Controller {
             mNativeNameTextView =
                     ((TextView) itemView.findViewById(R.id.native_language_representation));
             mCheckbox = ((CheckBox) itemView.findViewById(R.id.language_ask_checkbox));
+            mDeviceLanguageIcon = ((ImageView) itemView.findViewById(R.id.device_language_icon));
             mCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton button, boolean isChecked) {
@@ -91,6 +109,9 @@ public class LanguageAskPrompt implements ModalDialogView.Controller {
             mCode = code;
             mLanguagesUpdate = languagesUpdate;
             mCheckbox.setChecked(mLanguagesUpdate.contains(mCode));
+            mDeviceLanguageIcon.setVisibility(LocaleUtils.getDefaultLocaleString().equals(code)
+                            ? View.VISIBLE
+                            : View.INVISIBLE);
         }
     }
 
@@ -184,6 +205,34 @@ public class LanguageAskPrompt implements ModalDialogView.Controller {
         }
     }
 
+    private class ListScrollListener extends RecyclerView.OnScrollListener {
+        private RecyclerView mList;
+        private ImageView mTopShadow;
+        private ImageView mBottomShadow;
+
+        public ListScrollListener(RecyclerView list, ImageView topShadow, ImageView bottomShadow) {
+            mList = list;
+            mTopShadow = topShadow;
+            mBottomShadow = bottomShadow;
+            mList.setOnScrollListener(this);
+        }
+
+        @Override
+        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+            if (mList.canScrollVertically(-1)) {
+                mTopShadow.setVisibility(View.VISIBLE);
+            } else {
+                mTopShadow.setVisibility(View.GONE);
+            }
+
+            if (mList.canScrollVertically(1)) {
+                mBottomShadow.setVisibility(View.VISIBLE);
+            } else {
+                mBottomShadow.setVisibility(View.GONE);
+            }
+        }
+    }
+
     /**
      * Displays the Explicit Language Ask prompt if the experiment is enabled.
      * @param activity The current activity to display the prompt into.
@@ -201,6 +250,7 @@ public class LanguageAskPrompt implements ModalDialogView.Controller {
         return true;
     }
 
+    private ListScrollListener mListScrollListener;
     private ModalDialogManager mModalDialogManager;
     private ModalDialogView mDialog;
     private HashSet<String> mLanguagesUpdate;
@@ -218,6 +268,7 @@ public class LanguageAskPrompt implements ModalDialogView.Controller {
 
         for (String language : languagesToAdd) {
             PrefServiceBridge.getInstance().updateUserAcceptLanguages(language, true);
+            AndroidLanguageMetricsBridge.reportExplicitLanguageAskStateChanged(language, true);
         }
 
         HashSet<String> languagesToRemove = new HashSet<String>(mInitialLanguages);
@@ -225,6 +276,7 @@ public class LanguageAskPrompt implements ModalDialogView.Controller {
 
         for (String language : languagesToRemove) {
             PrefServiceBridge.getInstance().updateUserAcceptLanguages(language, false);
+            AndroidLanguageMetricsBridge.reportExplicitLanguageAskStateChanged(language, false);
         }
     }
 
@@ -234,6 +286,8 @@ public class LanguageAskPrompt implements ModalDialogView.Controller {
      */
     public void show(ChromeActivity activity) {
         if (activity == null) return;
+
+        recordPromptEvent(PROMPT_EVENT_SHOWN);
 
         List<String> userAcceptLanguagesList =
                 PrefServiceBridge.getInstance().getUserLanguageCodes();
@@ -247,14 +301,19 @@ public class LanguageAskPrompt implements ModalDialogView.Controller {
         params.negativeButtonTextId = R.string.cancel;
         params.cancelOnTouchOutside = true;
 
-        RecyclerView list = new RecyclerView(activity);
+        params.customView = LayoutInflater.from(activity).inflate(
+                R.layout.language_ask_prompt_content, null, false);
+        RecyclerView list = (RecyclerView) params.customView.findViewById(R.id.recycler_view);
         LanguageItemAdapter adapter = new LanguageItemAdapter(activity, mLanguagesUpdate);
         list.setAdapter(adapter);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(activity);
         linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         list.setLayoutManager(linearLayoutManager);
         list.setHasFixedSize(true);
-        params.customView = list;
+
+        ImageView topShadow = (ImageView) params.customView.findViewById(R.id.top_shadow);
+        ImageView bottomShadow = (ImageView) params.customView.findViewById(R.id.bottom_shadow);
+        mListScrollListener = new ListScrollListener(list, topShadow, bottomShadow);
 
         List<LanguageItem> languages = PrefServiceBridge.getInstance().getChromeLanguageList();
         LinkedHashSet<String> currentGeoLanguages =
@@ -295,16 +354,21 @@ public class LanguageAskPrompt implements ModalDialogView.Controller {
     @Override
     public void onClick(int buttonType) {
         if (buttonType == ModalDialogView.ButtonType.NEGATIVE) {
-            mModalDialogManager.cancelDialog(mDialog);
+            mModalDialogManager.dismissDialog(
+                    mDialog, DialogDismissalCause.NEGATIVE_BUTTON_CLICKED);
         } else {
             saveLanguages();
-            mModalDialogManager.dismissDialog(mDialog);
+            mModalDialogManager.dismissDialog(
+                    mDialog, DialogDismissalCause.POSITIVE_BUTTON_CLICKED);
         }
     }
 
     @Override
-    public void onCancel() {}
-
-    @Override
-    public void onDismiss() {}
+    public void onDismiss(@DialogDismissalCause int dismissalCause) {
+        if (dismissalCause == DialogDismissalCause.POSITIVE_BUTTON_CLICKED) {
+            recordPromptEvent(PROMPT_EVENT_SAVED);
+        } else {
+            recordPromptEvent(PROMPT_EVENT_CANCELLED);
+        }
+    }
 }

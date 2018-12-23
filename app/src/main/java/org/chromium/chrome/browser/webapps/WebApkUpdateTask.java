@@ -24,7 +24,7 @@ import java.util.List;
  */
 public class WebApkUpdateTask extends NativeBackgroundTask {
     /** The WebappDataStorage for the WebAPK to update. */
-    private WebappDataStorage mStorageToUpdate = null;
+    private WebappDataStorage mStorageToUpdate;
 
     /** Whether there are more WebAPKs to update than just {@link mStorageToUpdate}. */
     private boolean mMoreToUpdate;

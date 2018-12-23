@@ -50,14 +50,25 @@ public class FramebustBlockInfoBar extends InfoBar {
         // Formatting the URL and requesting to omit the scheme might still include it for some of
         // them (e.g. file, filesystem). We split the output of the formatting to make sure we don't
         // end up duplicating it.
-        String formattedUrl = UrlFormatter.formatUrlForSecurityDisplay(mBlockedUrl);
-        String scheme = Uri.parse(mBlockedUrl).getScheme() + "://";
+        final String schemeSeparator = "://";
+        String scheme = Uri.parse(mBlockedUrl).getScheme();
+
+        // In case mBlockedUrl does not specify a scheme, formatUrlForSecurityDisplay returns an
+        // empty string. Temporarily adding scheme separator allows it to parse the URL correctly.
+        String urlWithScheme = mBlockedUrl;
+        if (scheme == null) {
+            scheme = "";
+            urlWithScheme = schemeSeparator + mBlockedUrl;
+        }
+
+        String textToEllipsize = UrlFormatter
+                    .formatUrlForSecurityDisplay(urlWithScheme)
+                    .substring(scheme.length() + schemeSeparator.length());
 
         TextView schemeView = ellipsizerView.findViewById(R.id.url_scheme);
         schemeView.setText(scheme);
 
         TextView urlView = ellipsizerView.findViewById(R.id.url_minus_scheme);
-        String textToEllipsize = formattedUrl.substring(scheme.length());
         // Handle adjusting the text to workaround Android crashes when ellipsizing on old versions.
         // TODO(donnd): remove this class when older versions of Android are no longer supported.
         ((TextViewEllipsizerSafe) urlView).setTextSafely(textToEllipsize);

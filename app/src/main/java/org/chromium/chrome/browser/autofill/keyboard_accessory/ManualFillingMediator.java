@@ -9,9 +9,11 @@ import android.support.annotation.Px;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.chromium.base.Supplier;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.ChromeActivity;
 import org.chromium.chrome.browser.ChromeFeatureList;
+import org.chromium.chrome.browser.InsetObserverView;
 import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryData.Action;
 import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryData.Provider;
 import org.chromium.chrome.browser.compositor.CompositorViewHolder;
@@ -20,15 +22,15 @@ import org.chromium.chrome.browser.compositor.layouts.LayoutManager;
 import org.chromium.chrome.browser.compositor.layouts.SceneChangeObserver;
 import org.chromium.chrome.browser.contextualsearch.ContextualSearchManager;
 import org.chromium.chrome.browser.fullscreen.FullscreenOptions;
+import org.chromium.chrome.browser.infobar.InfoBarContainer;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.tab.Tab.TabHidingType;
 import org.chromium.chrome.browser.tab.TabObserver;
 import org.chromium.chrome.browser.tabmodel.TabModel;
 import org.chromium.chrome.browser.tabmodel.TabModelObserver;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabModelObserver;
-import org.chromium.chrome.browser.webapps.WebappActivity;
 import org.chromium.ui.DropdownPopupWindow;
-import org.chromium.ui.UiUtils;
 import org.chromium.ui.base.WindowAndroid;
 
 import java.util.HashMap;
@@ -41,9 +43,13 @@ import java.util.Map;
 class ManualFillingMediator
         extends EmptyTabObserver implements KeyboardAccessoryCoordinator.VisibilityDelegate {
     private WindowAndroid mWindowAndroid;
-    private @Px int mPreviousControlHeight = 0;
     private final WindowAndroid.KeyboardVisibilityListener mVisibilityListener =
             this::onKeyboardVisibilityChanged;
+    private Supplier<InsetObserverView> mInsetObserverViewSupplier;
+    private boolean mShouldShow = false;
+    private @Px int mPreviousControlHeight; // TODO(fhorschig): Remove after crrev.com/c/1286426.
+    private final KeyboardExtensionSizeManager mKeyboardExtensionSizeManager =
+            new KeyboardExtensionSizeManager();
 
     /**
      * Provides a cache for a given Provider which can repeat the last notification to all
@@ -122,13 +128,14 @@ class ManualFillingMediator
 
     private final TabObserver mTabObserver = new EmptyTabObserver() {
         @Override
-        public void onHidden(Tab tab) {
+        public void onHidden(Tab tab, @TabHidingType int type) {
             pause();
         }
 
         @Override
         public void onDestroyed(Tab tab) {
             mModel.remove(tab); // Clears tab if still present.
+            if (tab == mActiveBrowserTab) mActiveBrowserTab = null;
             restoreCachedState(mActiveBrowserTab);
         }
 
@@ -141,12 +148,11 @@ class ManualFillingMediator
     void initialize(KeyboardAccessoryCoordinator keyboardAccessory,
             AccessorySheetCoordinator accessorySheet, WindowAndroid windowAndroid) {
         assert windowAndroid.getActivity().get() != null;
-        // Abort initialization for PWAs: https://crbug.com/881536.
-        if (windowAndroid.getActivity().get() instanceof WebappActivity) return;
         mWindowAndroid = windowAndroid;
         mKeyboardAccessory = keyboardAccessory;
         mAccessorySheet = accessorySheet;
         mActivity = (ChromeActivity) windowAndroid.getActivity().get();
+        setInsetObserverViewSupplier(mActivity::getInsetObserverView);
         LayoutManager manager = getLayoutManager();
         if (manager != null) manager.addSceneChangeObserver(mTabSwitcherObserver);
         windowAndroid.addKeyboardVisibilityListener(mVisibilityListener);
@@ -183,21 +189,13 @@ class ManualFillingMediator
     // TODO(fhorschig): Look for stronger signals than |keyboardVisibilityChanged|.
     // This variable remembers the last state of |keyboardVisibilityChanged| which might not be
     // sufficient for edge cases like hardware keyboards, floating keyboards, etc.
+    @VisibleForTesting
     void onKeyboardVisibilityChanged(boolean isShowing) {
         if (!mKeyboardAccessory.hasContents()) return; // Exit early to not affect the layout.
         if (isShowing) {
-            // Don't open the accessory inside the contextual search panel.
-            ContextualSearchManager contextualSearchManager =
-                    mActivity.getContextualSearchManager();
-            if (contextualSearchManager != null && contextualSearchManager.isSearchPanelOpened()) {
-                return;
+            if (mShouldShow) {
+                displayKeyboardAccessory();
             }
-            mKeyboardAccessory.requestShowing();
-            mActivity.getFullscreenManager().setBottomControlsHeight(calculateAccessoryBarHeight());
-            mKeyboardAccessory.closeActiveTab();
-            updateInfobarState(true);
-            mKeyboardAccessory.setBottomOffset(0);
-            mAccessorySheet.hide();
         } else {
             mKeyboardAccessory.close();
             onBottomControlSpaceChanged();
@@ -246,11 +244,27 @@ class ManualFillingMediator
         if (!isInitialized()) return;
         pause();
         ViewGroup contentView = getContentView();
-        if (contentView != null) UiUtils.hideKeyboard(contentView);
+        if (contentView != null) {
+            mWindowAndroid.getKeyboardDelegate().hideKeyboard(getContentView());
+        }
     }
 
     void notifyPopupOpened(DropdownPopupWindow popup) {
         mPopup = popup;
+    }
+
+    void showWhenKeyboardIsVisible() {
+        if (!isInitialized() || !mKeyboardAccessory.hasContents() || mShouldShow) return;
+        mShouldShow = true;
+        ViewGroup contentView = getContentView();
+        if (mWindowAndroid.getKeyboardDelegate().isKeyboardShowing(mActivity, contentView)) {
+            displayKeyboardAccessory();
+        }
+    }
+
+    void hide() {
+        mShouldShow = false;
+        pause();
     }
 
     public void pause() {
@@ -264,6 +278,26 @@ class ManualFillingMediator
         restoreCachedState(mActiveBrowserTab);
     }
 
+    private void displayKeyboardAccessory() {
+        // Don't open the accessory inside the contextual search panel.
+        ContextualSearchManager contextualSearchManager = mActivity.getContextualSearchManager();
+        if (contextualSearchManager != null && contextualSearchManager.isSearchPanelOpened()) {
+            return;
+        }
+        mKeyboardAccessory.requestShowing();
+        mKeyboardExtensionSizeManager.setKeyboardExtensionHeight(calculateAccessoryBarHeight());
+        // TODO(fhorschig): Remove after crrev.com/c/1286426:
+        mActivity.getFullscreenManager().setBottomControlsHeight(0);
+        mKeyboardAccessory.closeActiveTab();
+        updateInfobarState(true);
+        mKeyboardAccessory.setBottomOffset(0);
+        mAccessorySheet.hide();
+    }
+
+    KeyboardExtensionSizeManager getKeyboardExtensionSizeManager() {
+        return mKeyboardExtensionSizeManager;
+    }
+
     @Override
     public void onChangeAccessorySheet(int tabIndex) {
         assert mActivity != null : "ManualFillingMediator needs initialization.";
@@ -275,17 +309,18 @@ class ManualFillingMediator
         View rootView = contentView.getRootView();
         if (rootView == null) return;
         mAccessorySheet.setHeight(calculateAccessorySheetHeight(rootView));
-        UiUtils.hideKeyboard(contentView);
+        mWindowAndroid.getKeyboardDelegate().hideKeyboard(contentView);
     }
 
     @Override
     public void onCloseAccessorySheet() {
         ViewGroup contentView = getContentView();
         if (contentView == null || mActivity == null) return; // The tab was cleaned up already.
-        if (UiUtils.isKeyboardShowing(mActivity, contentView)) {
+        if (mWindowAndroid.getKeyboardDelegate().isKeyboardShowing(mActivity, contentView)) {
             return; // If the keyboard is showing or is starting to show, the sheet closes gently.
         }
         mActivity.getFullscreenManager().setBottomControlsHeight(mPreviousControlHeight);
+        mKeyboardExtensionSizeManager.setKeyboardExtensionHeight(0);
         mKeyboardAccessory.closeActiveTab();
         updateInfobarState(false);
         mKeyboardAccessory.setBottomOffset(0);
@@ -302,8 +337,10 @@ class ManualFillingMediator
     @Override
     public void onOpenKeyboard() {
         assert mActivity != null : "ManualFillingMediator needs initialization.";
-        mActivity.getFullscreenManager().setBottomControlsHeight(calculateAccessoryBarHeight());
-        if (mActivity.getCurrentFocus() != null) UiUtils.showKeyboard(mActivity.getCurrentFocus());
+        mKeyboardExtensionSizeManager.setKeyboardExtensionHeight(calculateAccessoryBarHeight());
+        if (mActivity.getCurrentFocus() != null) {
+            mWindowAndroid.getKeyboardDelegate().showKeyboard(mActivity.getCurrentFocus());
+        }
     }
 
     @Override
@@ -315,8 +352,11 @@ class ManualFillingMediator
             newControlsOffset += mAccessorySheet.getHeight();
         }
         mKeyboardAccessory.setBottomOffset(newControlsOffset);
+        mKeyboardExtensionSizeManager.setKeyboardExtensionHeight(
+                mKeyboardAccessory.isShown() ? newControlsHeight : 0);
         mActivity.getFullscreenManager().setBottomControlsHeight(
-                mKeyboardAccessory.isShown() ? newControlsHeight : mPreviousControlHeight);
+                mKeyboardAccessory.isShown() ? 0 : mPreviousControlHeight);
+        mActivity.getFullscreenManager().updateViewportSize();
     }
 
     /**
@@ -373,11 +413,12 @@ class ManualFillingMediator
     }
 
     private @Px int calculateAccessorySheetHeight(View rootView) {
-        int accessorySheetSuggestionHeight = mActivity.getResources().getDimensionPixelSize(
-                org.chromium.chrome.R.dimen.keyboard_accessory_suggestion_height);
-        // Ensure that the minimum height is always sufficient to display a suggestion.
-        return Math.max(accessorySheetSuggestionHeight,
-                UiUtils.calculateKeyboardHeight(mActivity, rootView));
+        InsetObserverView insetObserver = mInsetObserverViewSupplier.get();
+        if (insetObserver != null) return insetObserver.getSystemWindowInsetsBottom();
+        // Without known inset (which is keyboard + bottom soft keys), use the keyboard height.
+        return Math.max(mActivity.getResources().getDimensionPixelSize(
+                                org.chromium.chrome.R.dimen.keyboard_accessory_suggestion_height),
+                mWindowAndroid.getKeyboardDelegate().calculateKeyboardHeight(mActivity, rootView));
     }
 
     private @Px int calculateAccessoryBarHeight() {
@@ -394,8 +435,13 @@ class ManualFillingMediator
      */
     private void updateInfobarState(boolean shouldBeHidden) {
         if (mActiveBrowserTab == null) return;
-        if (mActiveBrowserTab.getInfoBarContainer() == null) return;
-        mActiveBrowserTab.getInfoBarContainer().setHidden(shouldBeHidden);
+        InfoBarContainer infobarContainer = InfoBarContainer.get(mActiveBrowserTab);
+        if (infobarContainer == null) return;
+        boolean suppressedByKeyboardOrAccessory = shouldBeHidden;
+        ViewGroup contentView = getContentView();
+        suppressedByKeyboardOrAccessory |= contentView != null
+                && mWindowAndroid.getKeyboardDelegate().isKeyboardShowing(mActivity, contentView);
+        infobarContainer.setHidden(suppressedByKeyboardOrAccessory);
     }
 
     @VisibleForTesting
@@ -422,6 +468,11 @@ class ManualFillingMediator
             addTab(state.mPasswordAccessorySheet.getTab());
         }
         return state.mPasswordAccessorySheet;
+    }
+
+    @VisibleForTesting
+    void setInsetObserverViewSupplier(Supplier<InsetObserverView> insetObserverViewSupplier) {
+        mInsetObserverViewSupplier = insetObserverViewSupplier;
     }
 
     // TODO(fhorschig): Should be @VisibleForTesting.

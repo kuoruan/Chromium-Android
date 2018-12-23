@@ -11,8 +11,10 @@ import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.net.Uri;
+import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.support.customtabs.trusted.TrustedWebActivityServiceConnectionManager;
+import android.support.customtabs.trusted.TrustedWebActivityServiceWrapper;
 
 import org.chromium.base.ContextUtils;
 import org.chromium.chrome.R;
@@ -63,13 +65,7 @@ public class TrustedWebActivityClient {
         String channelDisplayName = res.getString(R.string.notification_category_group_general);
 
         mConnection.execute(scope, new Origin(scope).toString(), service -> {
-            if (!builder.hasSmallIconBitmap()) {
-                int smallIconId = service.getSmallIconId();
-                if (smallIconId != -1) {
-                    builder.setSmallIconForRemoteApp(
-                            smallIconId, service.getComponentName().getPackageName());
-                }
-            }
+            fallbackToIconFromServiceIfNecessary(builder, service);
 
             Notification notification = builder.build();
 
@@ -81,6 +77,27 @@ public class TrustedWebActivityClient {
                         NotificationUmaTracker.SystemNotificationType.SITES, notification);
             }
         });
+    }
+
+    private void fallbackToIconFromServiceIfNecessary(NotificationBuilderBase builder,
+            TrustedWebActivityServiceWrapper service) throws RemoteException {
+        if (builder.hasSmallIconForContent() && builder.hasStatusBarIconBitmap()) {
+            return;
+        }
+
+        int smallIconId = service.getSmallIconId();
+        if (smallIconId == -1) {
+            return;
+        }
+
+        String packageName = service.getComponentName().getPackageName();
+
+        if (!builder.hasStatusBarIconBitmap()) {
+            builder.setStatusBarIconForRemoteApp(smallIconId, packageName);
+        }
+        if (!builder.hasSmallIconForContent()) {
+            builder.setContentSmallIconForRemoteApp(smallIconId, packageName);
+        }
     }
 
     /**

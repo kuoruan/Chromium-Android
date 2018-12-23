@@ -8,6 +8,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
+import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardExtensionSizeManager;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager.FullscreenListener;
 import org.chromium.chrome.browser.widget.bottomsheet.BottomSheet;
@@ -17,9 +18,13 @@ import org.chromium.chrome.browser.widget.bottomsheet.EmptyBottomSheetObserver;
  * The container that holds both infobars and snackbars. It will be translated up and down when the
  * bottom controls' offset changes.
  */
-public class BottomContainer extends FrameLayout implements FullscreenListener {
+public class BottomContainer
+        extends FrameLayout implements FullscreenListener, KeyboardExtensionSizeManager.Observer {
     /** The {@link ChromeFullscreenManager} to listen for controls offset changes. */
     private ChromeFullscreenManager mFullscreenManager;
+
+    /** A {@link KeyboardExtensionSizeManager} to listen to for keyboard extension size changes. */
+    private KeyboardExtensionSizeManager mKeyboardExtensionSizeManager;
 
     /** The desired Y offset if unaffected by other UI. */
     private float mBaseYOffset;
@@ -37,9 +42,12 @@ public class BottomContainer extends FrameLayout implements FullscreenListener {
     /**
      * Initializes this container.
      */
-    public void initialize(ChromeFullscreenManager fullscreenManager) {
+    public void initialize(ChromeFullscreenManager fullscreenManager,
+            KeyboardExtensionSizeManager keyboardExtensionSizeManager) {
         mFullscreenManager = fullscreenManager;
         mFullscreenManager.addListener(this);
+        mKeyboardExtensionSizeManager = keyboardExtensionSizeManager;
+        mKeyboardExtensionSizeManager.addObserver(this);
         setTranslationY(mBaseYOffset);
     }
 
@@ -62,6 +70,12 @@ public class BottomContainer extends FrameLayout implements FullscreenListener {
         });
     }
 
+    // KeyboardExtensionSizeManager methods
+    @Override
+    public void onKeyboardExtensionHeightChanged(int keyboardHeight) {
+        setTranslationY(mBaseYOffset);
+    }
+
     // FullscreenListener methods
     @Override
     public void onControlsOffsetChanged(float topOffset, float bottomOffset, boolean needsAnimate) {
@@ -74,6 +88,7 @@ public class BottomContainer extends FrameLayout implements FullscreenListener {
 
         float offsetFromControls = mFullscreenManager.getBottomControlOffset()
                 - mFullscreenManager.getBottomControlsHeight();
+        offsetFromControls -= mKeyboardExtensionSizeManager.getKeyboardExtensionHeight();
 
         // Sit on top of either the bottom sheet or the bottom toolbar depending on which is larger
         // (offsets are negative).

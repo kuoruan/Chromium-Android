@@ -8,9 +8,9 @@ import android.content.res.Configuration;
 
 import org.chromium.base.ActivityState;
 import org.chromium.base.ObserverList;
+import org.chromium.base.UserData;
 import org.chromium.content.browser.webcontents.WebContentsImpl;
 import org.chromium.content.browser.webcontents.WebContentsImpl.UserDataFactory;
-import org.chromium.content.browser.webcontents.WebContentsUserData;
 import org.chromium.content_public.browser.WebContents;
 import org.chromium.ui.base.WindowAndroid;
 import org.chromium.ui.display.DisplayAndroid;
@@ -19,7 +19,7 @@ import org.chromium.ui.display.DisplayAndroid.DisplayAndroidObserver;
 /**
  * Manages {@link WindowEventObserver} instances used for WebContents.
  */
-public final class WindowEventObserverManager implements DisplayAndroidObserver {
+public final class WindowEventObserverManager implements DisplayAndroidObserver, UserData {
     private final ObserverList<WindowEventObserver> mWindowEventObservers = new ObserverList<>();
 
     private WindowAndroid mWindowAndroid;
@@ -36,8 +36,9 @@ public final class WindowEventObserverManager implements DisplayAndroidObserver 
     }
 
     public static WindowEventObserverManager from(WebContents webContents) {
-        return WebContentsUserData.fromWebContents(
-                webContents, WindowEventObserverManager.class, UserDataFactoryLazyHolder.INSTANCE);
+        return ((WebContentsImpl) webContents)
+                .getOrSetUserData(
+                        WindowEventObserverManager.class, UserDataFactoryLazyHolder.INSTANCE);
     }
 
     private WindowEventObserverManager(WebContents webContents) {

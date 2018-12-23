@@ -83,8 +83,8 @@ public class PostMessageHandler
             @Override
             public void didFinishNavigation(String url, boolean isInMainFrame, boolean isErrorPage,
                     boolean hasCommitted, boolean isSameDocument, boolean isFragmentNavigation,
-                    Integer pageTransition, int errorCode, String errorDescription,
-                    int httpStatusCode) {
+                    boolean isRendererInitiated, boolean isDownload, Integer pageTransition,
+                    int errorCode, String errorDescription, int httpStatusCode) {
                 if (mNavigatedOnce && hasCommitted && isInMainFrame && !isSameDocument
                         && mChannel != null) {
                     webContents.removeObserver(this);

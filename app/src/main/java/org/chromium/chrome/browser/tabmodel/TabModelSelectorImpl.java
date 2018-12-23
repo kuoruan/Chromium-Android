@@ -10,7 +10,9 @@ import android.os.Handler;
 import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.compositor.layouts.OverviewModeBehavior;
 import org.chromium.chrome.browser.compositor.layouts.content.TabContentManager;
+import org.chromium.chrome.browser.tab.SadTab;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.tab.Tab.TabHidingType;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.chrome.browser.tabmodel.TabPersistentStore.TabPersistentStoreObserver;
@@ -189,10 +191,8 @@ public class TabModelSelectorImpl extends TabModelSelectorBase implements TabMod
             }
 
             @Override
-            public void onCrash(Tab tab, boolean sadTabShown) {
-                if (sadTabShown) {
-                    mTabContentManager.removeTabThumbnail(tab.getId());
-                }
+            public void onCrash(Tab tab) {
+                if (SadTab.isShowing(tab)) mTabContentManager.removeTabThumbnail(tab.getId());
                 mUma.onTabCrashed(tab.getId());
             }
 
@@ -356,7 +356,7 @@ public class TabModelSelectorImpl extends TabModelSelectorBase implements TabMod
                         && (!isFromExternalApp || type != TabSelectionType.FROM_NEW)) {
                     cacheTabBitmap(mVisibleTab);
                 }
-                mVisibleTab.hide();
+                mVisibleTab.hide(TabHidingType.CHANGED_TABS);
                 mTabSaver.addTabToSaveQueue(mVisibleTab);
             }
             tabToDropImportance = mVisibleTab;

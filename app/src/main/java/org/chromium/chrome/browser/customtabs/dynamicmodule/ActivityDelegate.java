@@ -115,4 +115,12 @@ public class ActivityDelegate {
             assert false;
         }
     }
+
+    public void onNavigationEvent(int navigationEvent, Bundle extras) {
+        try {
+            mActivityDelegate.onNavigationEvent(navigationEvent, extras);
+        } catch (RemoteException e) {
+            assert false;
+        }
+    }
 }

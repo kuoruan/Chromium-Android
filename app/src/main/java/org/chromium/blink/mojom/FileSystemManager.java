@@ -163,7 +163,7 @@ CreateWriterResponse callback);
 
 
     void chooseEntry(
-int renderFrameId, 
+int type, ChooseFileSystemEntryAcceptsOption[] accepts, boolean includeAcceptsAll, 
 ChooseEntryResponse callback);
 
     interface ChooseEntryResponse extends org.chromium.mojo.bindings.Callbacks.Callback2<Integer, FileSystemEntry[]> { }

@@ -18,6 +18,7 @@ import org.chromium.chrome.browser.prerender.ExternalPrerenderHandler;
 import org.chromium.chrome.browser.share.ShareHelper;
 import org.chromium.chrome.browser.tab.EmptyTabObserver;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.tab.Tab.TabHidingType;
 import org.chromium.chrome.browser.tab.TabObserver;
 import org.chromium.components.security_state.ConnectionSecurityLevel;
 import org.chromium.content_public.browser.LoadUrlParams;
@@ -119,7 +120,7 @@ class CustomTabObserver extends EmptyTabObserver {
     }
 
     @Override
-    public void onHidden(Tab tab) {
+    public void onHidden(Tab tab, @TabHidingType int reason) {
         mNavigationInfoCaptureTrigger.onHide(tab);
     }
 

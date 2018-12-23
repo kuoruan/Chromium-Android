@@ -38,7 +38,6 @@ import org.chromium.chrome.browser.IntentHandler;
 import org.chromium.chrome.browser.browserservices.BrowserSessionDataProvider;
 import org.chromium.chrome.browser.externalauth.ExternalAuthUtils;
 import org.chromium.chrome.browser.util.ColorUtils;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.IntentUtils;
 import org.chromium.chrome.browser.widget.TintedDrawable;
 
@@ -67,6 +66,16 @@ public class CustomTabIntentDataProvider extends BrowserSessionDataProvider {
         int READER_MODE = 4;
         int MINIMAL_UI_WEBAPP = 5;
         int OFFLINE_PAGE = 6;
+    }
+
+    @IntDef({LaunchSourceType.OTHER, LaunchSourceType.WEBAPP, LaunchSourceType.WEBAPK,
+            LaunchSourceType.MEDIA_LAUNCHER_ACTIVITY})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface LaunchSourceType {
+        int OTHER = -1;
+        int WEBAPP = 0;
+        int WEBAPK = 1;
+        int MEDIA_LAUNCHER_ACTIVITY = 3;
     }
 
     /**
@@ -134,6 +143,7 @@ public class CustomTabIntentDataProvider extends BrowserSessionDataProvider {
     private final int mTitleVisibilityState;
     private final String mMediaViewerUrl;
     private final boolean mEnableEmbeddedMediaExperience;
+    private final boolean mIsFromMediaLauncherActivity;
     private final int mInitialBackgroundColor;
     private final boolean mDisableStar;
     private final boolean mDisableDownload;
@@ -249,6 +259,10 @@ public class CustomTabIntentDataProvider extends BrowserSessionDataProvider {
         mEnableEmbeddedMediaExperience = isTrustedIntent()
                 && IntentUtils.safeGetBooleanExtra(
                            intent, EXTRA_ENABLE_EMBEDDED_MEDIA_EXPERIENCE, false);
+        mIsFromMediaLauncherActivity = isTrustedIntent()
+                && (IntentUtils.safeGetIntExtra(
+                            intent, EXTRA_BROWSER_LAUNCH_SOURCE, LaunchSourceType.OTHER)
+                           == LaunchSourceType.MEDIA_LAUNCHER_ACTIVITY);
         mDisableStar = IntentUtils.safeGetBooleanExtra(intent, EXTRA_DISABLE_STAR_BUTTON, false);
         mDisableDownload =
                 IntentUtils.safeGetBooleanExtra(intent, EXTRA_DISABLE_DOWNLOAD_BUTTON, false);
@@ -344,8 +358,7 @@ public class CustomTabIntentDataProvider extends BrowserSessionDataProvider {
      * Processes the color passed from the client app and updates {@link #mToolbarColor}.
      */
     private void retrieveToolbarColor(Intent intent, Context context) {
-        int defaultColor = ColorUtils.getDefaultThemeColor(context.getResources(),
-                FeatureUtilities.isChromeModernDesignEnabled(), isIncognito());
+        int defaultColor = ColorUtils.getDefaultThemeColor(context.getResources(), isIncognito());
         if (isIncognito()) {
             mToolbarColor = defaultColor;
             return; // Don't allow toolbar color customization for incognito tabs.
@@ -389,9 +402,10 @@ public class CustomTabIntentDataProvider extends BrowserSessionDataProvider {
 
     /**
      * @return Whether url bar hiding should be enabled in the custom tab. Default is false.
+     * It should be impossible to hide the url bar when the tab is opened for Payment Request.
      */
     public boolean shouldEnableUrlBarHiding() {
-        return mEnableUrlBarHiding;
+        return mEnableUrlBarHiding && !isForPaymentRequest();
     }
 
     /**
@@ -618,6 +632,13 @@ public class CustomTabIntentDataProvider extends BrowserSessionDataProvider {
      */
     boolean shouldEnableEmbeddedMediaExperience() {
         return mEnableEmbeddedMediaExperience;
+    }
+
+    /**
+     * @return See {@link #EXTRA_IS_FROM_MEDIA_LAUNCHER_ACTIVITY}
+     */
+    boolean isFromMediaLauncherActivity() {
+        return mIsFromMediaLauncherActivity;
     }
 
     /**

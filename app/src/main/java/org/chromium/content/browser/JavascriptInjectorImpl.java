@@ -6,10 +6,11 @@ package org.chromium.content.browser;
 
 import android.util.Pair;
 
+import org.chromium.base.UserData;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
+import org.chromium.content.browser.webcontents.WebContentsImpl;
 import org.chromium.content.browser.webcontents.WebContentsImpl.UserDataFactory;
-import org.chromium.content.browser.webcontents.WebContentsUserData;
 import org.chromium.content_public.browser.JavascriptInjector;
 import org.chromium.content_public.browser.WebContents;
 
@@ -23,7 +24,7 @@ import java.util.Set;
  * Implementation class of the interface {@link JavascriptInjector}.
  */
 @JNINamespace("content")
-public class JavascriptInjectorImpl implements JavascriptInjector {
+public class JavascriptInjectorImpl implements JavascriptInjector, UserData {
     private static final class UserDataFactoryLazyHolder {
         private static final UserDataFactory<JavascriptInjectorImpl> INSTANCE =
                 JavascriptInjectorImpl::new;
@@ -39,8 +40,8 @@ public class JavascriptInjectorImpl implements JavascriptInjector {
      *         Creates one if not present.
      */
     public static JavascriptInjector fromWebContents(WebContents webContents) {
-        return WebContentsUserData.fromWebContents(
-                webContents, JavascriptInjectorImpl.class, UserDataFactoryLazyHolder.INSTANCE);
+        return ((WebContentsImpl) webContents)
+                .getOrSetUserData(JavascriptInjectorImpl.class, UserDataFactoryLazyHolder.INSTANCE);
     }
 
     public JavascriptInjectorImpl(WebContents webContents) {

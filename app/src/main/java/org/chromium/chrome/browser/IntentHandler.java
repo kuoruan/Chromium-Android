@@ -508,7 +508,7 @@ public class IntentHandler {
             return referrerUrl;
         } else if (isValidReferrerHeader(referrerExtra)) {
             return referrerExtra.toString();
-        } else if (IntentHandler.isIntentChromeOrFirstParty(intent)
+        } else if (IntentHandler.notSecureIsIntentChromeOrFirstParty(intent)
                 || BrowserSessionContentUtils.canActiveContentHandlerUseReferrer(
                            intent, referrerExtra)) {
             return referrerExtra.toString();
@@ -813,7 +813,7 @@ public class IntentHandler {
 
             // Determine if this intent came from a trustworthy source (either Chrome or Google
             // first party applications).
-            boolean isInternal = isIntentChromeOrFirstParty(intent);
+            boolean isInternal = notSecureIsIntentChromeOrFirstParty(intent);
             boolean isFromChrome = wasIntentSenderChrome(intent);
 
             // "Open new incognito tab" is currently limited to Chrome.
@@ -926,13 +926,22 @@ public class IntentHandler {
     }
 
     /**
+     * Attempts to verify that an Intent was sent from either Chrome or a first-
+     * party app by evaluating a PendingIntent token within the passed Intent.
+     *
+     * This method of verifying first-party apps is not secure, as it is not
+     * possible to determine the sender of an Intent. This method only verifies
+     * the creator of the PendingIntent token. But a malicious app may be able
+     * to obtain a PendingIntent from another application and use it to
+     * masquerade as it for the purposes of this check. Do not use this method.
+     *
      * @param intent An Intent to be checked.
      * @return Whether an intent originates from Chrome or a first-party app.
      *
      * @deprecated This method is not reliable, see https://crbug.com/832124
      */
     @Deprecated
-    public static boolean isIntentChromeOrFirstParty(Intent intent) {
+    public static boolean notSecureIsIntentChromeOrFirstParty(Intent intent) {
         if (intent == null) return false;
 
         PendingIntent token = fetchAuthenticationTokenFromIntent(intent);
@@ -948,21 +957,6 @@ public class IntentHandler {
             return true;
         }
         return false;
-    }
-
-    /**
-     * @param intent An Intent to be checked.
-     * @param packageName The app where the intent is expected to originate from
-     * @return Whether the intent originates from the first-party app with the given package name.
-     */
-    public static boolean isIntentFromTrustedApp(Intent intent, String packageName) {
-        if (intent == null) return false;
-
-        PendingIntent token = fetchAuthenticationTokenFromIntent(intent);
-        if (token == null) return false;
-
-        return isIntentChromeOrFirstParty(intent)
-                && ApiCompatibilityUtils.getCreatorPackage(token).equals(packageName);
     }
 
     @VisibleForTesting
@@ -1254,7 +1248,7 @@ public class IntentHandler {
         if (transitionType == PageTransition.TYPED) {
             return transitionType;
         } else if (transitionType != PageTransition.LINK
-                && isIntentChromeOrFirstParty(intent)) {
+                && notSecureIsIntentChromeOrFirstParty(intent)) {
             // 1st party applications may specify any transition type.
             return transitionType;
         }

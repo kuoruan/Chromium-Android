@@ -47,12 +47,42 @@ class ProxyResolvingSocket_Internal {
     };
 
 
+    private static final int UPGRADE_TO_TLS_ORDINAL = 0;
+
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements ProxyResolvingSocket.Proxy {
 
         Proxy(org.chromium.mojo.system.Core core,
               org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             super(core, messageReceiver);
+        }
+
+
+        @Override
+        public void upgradeToTls(
+HostPortPair hostPortPair, MutableNetworkTrafficAnnotationTag trafficAnnotation, org.chromium.mojo.bindings.InterfaceRequest<TlsClientSocket> request, SocketObserver observer, 
+UpgradeToTlsResponse callback) {
+
+            ProxyResolvingSocketUpgradeToTlsParams _message = new ProxyResolvingSocketUpgradeToTlsParams();
+
+            _message.hostPortPair = hostPortPair;
+
+            _message.trafficAnnotation = trafficAnnotation;
+
+            _message.request = request;
+
+            _message.observer = observer;
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    UPGRADE_TO_TLS_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new ProxyResolvingSocketUpgradeToTlsResponseParamsForwardToCallback(callback));
+
         }
 
 
@@ -80,6 +110,8 @@ class ProxyResolvingSocket_Internal {
                                 ProxyResolvingSocket_Internal.MANAGER, messageWithHeader);
 
 
+
+
                     default:
                         return false;
                 }
@@ -105,6 +137,21 @@ class ProxyResolvingSocket_Internal {
                                 getCore(), ProxyResolvingSocket_Internal.MANAGER, messageWithHeader, receiver);
 
 
+
+
+
+
+
+                    case UPGRADE_TO_TLS_ORDINAL: {
+
+                        ProxyResolvingSocketUpgradeToTlsParams data =
+                                ProxyResolvingSocketUpgradeToTlsParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().upgradeToTls(data.hostPortPair, data.trafficAnnotation, data.request, data.observer, new ProxyResolvingSocketUpgradeToTlsResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
                     default:
                         return false;
                 }
@@ -114,6 +161,236 @@ class ProxyResolvingSocket_Internal {
             }
         }
     }
+
+
+    
+    static final class ProxyResolvingSocketUpgradeToTlsParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 40;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(40, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public HostPortPair hostPortPair;
+        public MutableNetworkTrafficAnnotationTag trafficAnnotation;
+        public org.chromium.mojo.bindings.InterfaceRequest<TlsClientSocket> request;
+        public SocketObserver observer;
+
+        private ProxyResolvingSocketUpgradeToTlsParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public ProxyResolvingSocketUpgradeToTlsParams() {
+            this(0);
+        }
+
+        public static ProxyResolvingSocketUpgradeToTlsParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static ProxyResolvingSocketUpgradeToTlsParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static ProxyResolvingSocketUpgradeToTlsParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            ProxyResolvingSocketUpgradeToTlsParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ProxyResolvingSocketUpgradeToTlsParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    result.hostPortPair = HostPortPair.decode(decoder1);
+                    }
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(16, false);
+                    result.trafficAnnotation = MutableNetworkTrafficAnnotationTag.decode(decoder1);
+                    }
+                    {
+                        
+                    result.request = decoder0.readInterfaceRequest(24, false);
+                    }
+                    {
+                        
+                    result.observer = decoder0.readServiceInterface(28, true, SocketObserver.MANAGER);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.hostPortPair, 8, false);
+            
+            encoder0.encode(this.trafficAnnotation, 16, false);
+            
+            encoder0.encode(this.request, 24, false);
+            
+            encoder0.encode(this.observer, 28, true, SocketObserver.MANAGER);
+        }
+    }
+
+
+
+    
+    static final class ProxyResolvingSocketUpgradeToTlsResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 24;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(24, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public int netError;
+        public org.chromium.mojo.system.DataPipe.ConsumerHandle receiveStream;
+        public org.chromium.mojo.system.DataPipe.ProducerHandle sendStream;
+
+        private ProxyResolvingSocketUpgradeToTlsResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+            this.receiveStream = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+            this.sendStream = org.chromium.mojo.system.InvalidHandle.INSTANCE;
+        }
+
+        public ProxyResolvingSocketUpgradeToTlsResponseParams() {
+            this(0);
+        }
+
+        public static ProxyResolvingSocketUpgradeToTlsResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static ProxyResolvingSocketUpgradeToTlsResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static ProxyResolvingSocketUpgradeToTlsResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            ProxyResolvingSocketUpgradeToTlsResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new ProxyResolvingSocketUpgradeToTlsResponseParams(elementsOrVersion);
+                    {
+                        
+                    result.netError = decoder0.readInt(8);
+                    }
+                    {
+                        
+                    result.receiveStream = decoder0.readConsumerHandle(12, true);
+                    }
+                    {
+                        
+                    result.sendStream = decoder0.readProducerHandle(16, true);
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            encoder0.encode(this.netError, 8);
+            
+            encoder0.encode(this.receiveStream, 12, true);
+            
+            encoder0.encode(this.sendStream, 16, true);
+        }
+    }
+
+    static class ProxyResolvingSocketUpgradeToTlsResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final ProxyResolvingSocket.UpgradeToTlsResponse mCallback;
+
+        ProxyResolvingSocketUpgradeToTlsResponseParamsForwardToCallback(ProxyResolvingSocket.UpgradeToTlsResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(UPGRADE_TO_TLS_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                ProxyResolvingSocketUpgradeToTlsResponseParams response = ProxyResolvingSocketUpgradeToTlsResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.netError, response.receiveStream, response.sendStream);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class ProxyResolvingSocketUpgradeToTlsResponseParamsProxyToResponder implements ProxyResolvingSocket.UpgradeToTlsResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        ProxyResolvingSocketUpgradeToTlsResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(Integer netError, org.chromium.mojo.system.DataPipe.ConsumerHandle receiveStream, org.chromium.mojo.system.DataPipe.ProducerHandle sendStream) {
+            ProxyResolvingSocketUpgradeToTlsResponseParams _response = new ProxyResolvingSocketUpgradeToTlsResponseParams();
+
+            _response.netError = netError;
+
+            _response.receiveStream = receiveStream;
+
+            _response.sendStream = sendStream;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    UPGRADE_TO_TLS_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
 
 
 }

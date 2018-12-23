@@ -20,7 +20,9 @@ import java.lang.annotation.RetentionPolicy;
     UserFriendlyElementName.FORWARD_BUTTON, UserFriendlyElementName.RELOAD_BUTTON,
     UserFriendlyElementName.OVERFLOW_MENU, UserFriendlyElementName.PAGE_INFO_BUTTON,
     UserFriendlyElementName.BROWSING_DIALOG, UserFriendlyElementName.CONTENT_QUAD,
-    UserFriendlyElementName.NEW_INCOGNITO_TAB, UserFriendlyElementName.CLOSE_INCOGNITO_TABS
+    UserFriendlyElementName.NEW_INCOGNITO_TAB, UserFriendlyElementName.CLOSE_INCOGNITO_TABS,
+    UserFriendlyElementName.EXIT_PROMPT, UserFriendlyElementName.SUGGESTION_BOX,
+    UserFriendlyElementName.OMNIBOX_TEXT_FIELD, UserFriendlyElementName.OMNIBOX_CLOSE_BUTTON
 })
 @Retention(RetentionPolicy.SOURCE)
 public @interface UserFriendlyElementName {
@@ -34,4 +36,14 @@ public @interface UserFriendlyElementName {
   int CONTENT_QUAD = 7;
   int NEW_INCOGNITO_TAB = 8;
   int CLOSE_INCOGNITO_TABS = 9;
+  /**
+   * menu
+   */
+  int EXIT_PROMPT = 10;
+  int SUGGESTION_BOX = 11;
+  int OMNIBOX_TEXT_FIELD = 12;
+  /**
+   * URL bar is clicked.
+   */
+  int OMNIBOX_CLOSE_BUTTON = 13;
 }

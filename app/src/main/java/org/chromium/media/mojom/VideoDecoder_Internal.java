@@ -47,15 +47,17 @@ class VideoDecoder_Internal {
     };
 
 
-    private static final int CONSTRUCT_ORDINAL = 0;
+    private static final int GET_SUPPORTED_CONFIGS_ORDINAL = 0;
 
-    private static final int INITIALIZE_ORDINAL = 1;
+    private static final int CONSTRUCT_ORDINAL = 1;
 
-    private static final int DECODE_ORDINAL = 2;
+    private static final int INITIALIZE_ORDINAL = 2;
 
-    private static final int RESET_ORDINAL = 3;
+    private static final int DECODE_ORDINAL = 3;
 
-    private static final int ON_OVERLAY_INFO_CHANGED_ORDINAL = 4;
+    private static final int RESET_ORDINAL = 4;
+
+    private static final int ON_OVERLAY_INFO_CHANGED_ORDINAL = 5;
 
 
     static final class Proxy extends org.chromium.mojo.bindings.Interface.AbstractProxy implements VideoDecoder.Proxy {
@@ -63,6 +65,26 @@ class VideoDecoder_Internal {
         Proxy(org.chromium.mojo.system.Core core,
               org.chromium.mojo.bindings.MessageReceiverWithResponder messageReceiver) {
             super(core, messageReceiver);
+        }
+
+
+        @Override
+        public void getSupportedConfigs(
+
+GetSupportedConfigsResponse callback) {
+
+            VideoDecoderGetSupportedConfigsParams _message = new VideoDecoderGetSupportedConfigsParams();
+
+
+            getProxyHandler().getMessageReceiver().acceptWithResponder(
+                    _message.serializeWithHeader(
+                            getProxyHandler().getCore(),
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    GET_SUPPORTED_CONFIGS_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_EXPECTS_RESPONSE_FLAG,
+                                    0)),
+                    new VideoDecoderGetSupportedConfigsResponseParamsForwardToCallback(callback));
+
         }
 
 
@@ -205,6 +227,8 @@ OverlayInfo overlayInfo) {
 
 
 
+
+
                     case CONSTRUCT_ORDINAL: {
 
                         VideoDecoderConstructParams data =
@@ -264,6 +288,20 @@ OverlayInfo overlayInfo) {
 
 
 
+                    case GET_SUPPORTED_CONFIGS_ORDINAL: {
+
+                        VideoDecoderGetSupportedConfigsParams.deserialize(messageWithHeader.getPayload());
+
+                        getImpl().getSupportedConfigs(new VideoDecoderGetSupportedConfigsResponseParamsProxyToResponder(getCore(), receiver, header.getRequestId()));
+                        return true;
+                    }
+
+
+
+
+
+
+
 
 
                     case INITIALIZE_ORDINAL: {
@@ -316,6 +354,203 @@ OverlayInfo overlayInfo) {
             }
         }
     }
+
+
+    
+    static final class VideoDecoderGetSupportedConfigsParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 8;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(8, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+
+        private VideoDecoderGetSupportedConfigsParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public VideoDecoderGetSupportedConfigsParams() {
+            this(0);
+        }
+
+        public static VideoDecoderGetSupportedConfigsParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static VideoDecoderGetSupportedConfigsParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static VideoDecoderGetSupportedConfigsParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            VideoDecoderGetSupportedConfigsParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoDecoderGetSupportedConfigsParams(elementsOrVersion);
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+        }
+    }
+
+
+
+    
+    static final class VideoDecoderGetSupportedConfigsResponseParams extends org.chromium.mojo.bindings.Struct {
+
+        private static final int STRUCT_SIZE = 16;
+        private static final org.chromium.mojo.bindings.DataHeader[] VERSION_ARRAY = new org.chromium.mojo.bindings.DataHeader[] {new org.chromium.mojo.bindings.DataHeader(16, 0)};
+        private static final org.chromium.mojo.bindings.DataHeader DEFAULT_STRUCT_INFO = VERSION_ARRAY[0];
+        public SupportedVideoDecoderConfig[] supportedConfigs;
+
+        private VideoDecoderGetSupportedConfigsResponseParams(int version) {
+            super(STRUCT_SIZE, version);
+        }
+
+        public VideoDecoderGetSupportedConfigsResponseParams() {
+            this(0);
+        }
+
+        public static VideoDecoderGetSupportedConfigsResponseParams deserialize(org.chromium.mojo.bindings.Message message) {
+            return decode(new org.chromium.mojo.bindings.Decoder(message));
+        }
+
+        /**
+         * Similar to the method above, but deserializes from a |ByteBuffer| instance.
+         *
+         * @throws org.chromium.mojo.bindings.DeserializationException on deserialization failure.
+         */
+        public static VideoDecoderGetSupportedConfigsResponseParams deserialize(java.nio.ByteBuffer data) {
+            return deserialize(new org.chromium.mojo.bindings.Message(
+                    data, new java.util.ArrayList<org.chromium.mojo.system.Handle>()));
+        }
+
+        @SuppressWarnings("unchecked")
+        public static VideoDecoderGetSupportedConfigsResponseParams decode(org.chromium.mojo.bindings.Decoder decoder0) {
+            if (decoder0 == null) {
+                return null;
+            }
+            decoder0.increaseStackDepth();
+            VideoDecoderGetSupportedConfigsResponseParams result;
+            try {
+                org.chromium.mojo.bindings.DataHeader mainDataHeader = decoder0.readAndValidateDataHeader(VERSION_ARRAY);
+                final int elementsOrVersion = mainDataHeader.elementsOrVersion;
+                result = new VideoDecoderGetSupportedConfigsResponseParams(elementsOrVersion);
+                    {
+                        
+                    org.chromium.mojo.bindings.Decoder decoder1 = decoder0.readPointer(8, false);
+                    {
+                        org.chromium.mojo.bindings.DataHeader si1 = decoder1.readDataHeaderForPointerArray(org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                        result.supportedConfigs = new SupportedVideoDecoderConfig[si1.elementsOrVersion];
+                        for (int i1 = 0; i1 < si1.elementsOrVersion; ++i1) {
+                            
+                            org.chromium.mojo.bindings.Decoder decoder2 = decoder1.readPointer(org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i1, false);
+                            result.supportedConfigs[i1] = SupportedVideoDecoderConfig.decode(decoder2);
+                        }
+                    }
+                    }
+
+            } finally {
+                decoder0.decreaseStackDepth();
+            }
+            return result;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        protected final void encode(org.chromium.mojo.bindings.Encoder encoder) {
+            org.chromium.mojo.bindings.Encoder encoder0 = encoder.getEncoderAtDataOffset(DEFAULT_STRUCT_INFO);
+            
+            if (this.supportedConfigs == null) {
+                encoder0.encodeNullPointer(8, false);
+            } else {
+                org.chromium.mojo.bindings.Encoder encoder1 = encoder0.encodePointerArray(this.supportedConfigs.length, 8, org.chromium.mojo.bindings.BindingsHelper.UNSPECIFIED_ARRAY_LENGTH);
+                for (int i0 = 0; i0 < this.supportedConfigs.length; ++i0) {
+                    
+                    encoder1.encode(this.supportedConfigs[i0], org.chromium.mojo.bindings.DataHeader.HEADER_SIZE + org.chromium.mojo.bindings.BindingsHelper.POINTER_SIZE * i0, false);
+                }
+            }
+        }
+    }
+
+    static class VideoDecoderGetSupportedConfigsResponseParamsForwardToCallback extends org.chromium.mojo.bindings.SideEffectFreeCloseable
+            implements org.chromium.mojo.bindings.MessageReceiver {
+        private final VideoDecoder.GetSupportedConfigsResponse mCallback;
+
+        VideoDecoderGetSupportedConfigsResponseParamsForwardToCallback(VideoDecoder.GetSupportedConfigsResponse callback) {
+            this.mCallback = callback;
+        }
+
+        @Override
+        public boolean accept(org.chromium.mojo.bindings.Message message) {
+            try {
+                org.chromium.mojo.bindings.ServiceMessage messageWithHeader =
+                        message.asServiceMessage();
+                org.chromium.mojo.bindings.MessageHeader header = messageWithHeader.getHeader();
+                if (!header.validateHeader(GET_SUPPORTED_CONFIGS_ORDINAL,
+                                           org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG)) {
+                    return false;
+                }
+
+                VideoDecoderGetSupportedConfigsResponseParams response = VideoDecoderGetSupportedConfigsResponseParams.deserialize(messageWithHeader.getPayload());
+
+                mCallback.call(response.supportedConfigs);
+                return true;
+            } catch (org.chromium.mojo.bindings.DeserializationException e) {
+                return false;
+            }
+        }
+    }
+
+    static class VideoDecoderGetSupportedConfigsResponseParamsProxyToResponder implements VideoDecoder.GetSupportedConfigsResponse {
+
+        private final org.chromium.mojo.system.Core mCore;
+        private final org.chromium.mojo.bindings.MessageReceiver mMessageReceiver;
+        private final long mRequestId;
+
+        VideoDecoderGetSupportedConfigsResponseParamsProxyToResponder(
+                org.chromium.mojo.system.Core core,
+                org.chromium.mojo.bindings.MessageReceiver messageReceiver,
+                long requestId) {
+            mCore = core;
+            mMessageReceiver = messageReceiver;
+            mRequestId = requestId;
+        }
+
+        @Override
+        public void call(SupportedVideoDecoderConfig[] supportedConfigs) {
+            VideoDecoderGetSupportedConfigsResponseParams _response = new VideoDecoderGetSupportedConfigsResponseParams();
+
+            _response.supportedConfigs = supportedConfigs;
+
+            org.chromium.mojo.bindings.ServiceMessage _message =
+                    _response.serializeWithHeader(
+                            mCore,
+                            new org.chromium.mojo.bindings.MessageHeader(
+                                    GET_SUPPORTED_CONFIGS_ORDINAL,
+                                    org.chromium.mojo.bindings.MessageHeader.MESSAGE_IS_RESPONSE_FLAG,
+                                    mRequestId));
+            mMessageReceiver.accept(_message);
+        }
+    }
+
 
 
     

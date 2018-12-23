@@ -5,7 +5,6 @@
 package org.chromium.net;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.os.Build;
@@ -16,6 +15,7 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.base.annotations.NativeClassQualifiedName;
+import org.chromium.base.compat.ApiHelperForM;
 
 import java.util.ArrayList;
 
@@ -390,7 +390,6 @@ public class NetworkChangeNotifier {
     /**
      * Is the process bound to a network?
      */
-    @TargetApi(Build.VERSION_CODES.M)
     private boolean isProcessBoundToNetworkInternal() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             return false;
@@ -399,7 +398,7 @@ public class NetworkChangeNotifier {
             boolean returnValue = ConnectivityManager.getProcessDefaultNetwork() != null;
             return returnValue;
         } else {
-            return mConnectivityManager.getBoundNetworkForProcess() != null;
+            return ApiHelperForM.getBoundNetworkForProcess(mConnectivityManager) != null;
         }
     }
 

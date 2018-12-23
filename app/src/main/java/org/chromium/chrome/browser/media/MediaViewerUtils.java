@@ -9,6 +9,7 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.RestrictionsManager;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -21,7 +22,7 @@ import android.text.TextUtils;
 
 import org.chromium.base.ApiCompatibilityUtils;
 import org.chromium.base.ContextUtils;
-import org.chromium.base.StrictModeContext;
+import org.chromium.base.task.AsyncTask;
 import org.chromium.chrome.R;
 import org.chromium.chrome.browser.ChromeFeatureList;
 import org.chromium.chrome.browser.IntentHandler;
@@ -40,7 +41,7 @@ public class MediaViewerUtils {
     private static final String MIMETYPE_IMAGE = "image";
     private static final String MIMETYPE_VIDEO = "video";
 
-    private static boolean sIsMediaLauncherActivityForceEnabledForTest = false;
+    private static boolean sIsMediaLauncherActivityForceEnabledForTest;
 
     /**
      * Creates an Intent that allows viewing the given file in an internal media viewer.
@@ -65,7 +66,7 @@ public class MediaViewerUtils {
         builder.setCloseButtonIcon(closeIcon);
         builder.setShowTitle(true);
 
-        if (allowExternalAppHandlers) {
+        if (allowExternalAppHandlers && !willExposeFileUri(contentUri)) {
             // Create a PendingIntent that can be used to view the file externally.
             // TODO(https://crbug.com/795968): Check if this is problematic in multi-window mode,
             //                                 where two different viewers could be visible at the
@@ -82,8 +83,7 @@ public class MediaViewerUtils {
         // Create a PendingIntent that shares the file with external apps.
         // If the URI is a file URI and the Android version is N or later, this will throw a
         // FileUriExposedException. In this case, we just don't add the share button.
-        if (!contentUri.getScheme().equals(ContentResolver.SCHEME_FILE)
-                || Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+        if (!willExposeFileUri(contentUri)) {
             PendingIntent pendingShareIntent = PendingIntent.getActivity(context, 0,
                     createShareIntent(contentUri, mimeType), PendingIntent.FLAG_CANCEL_CURRENT);
             builder.setActionButton(
@@ -150,8 +150,10 @@ public class MediaViewerUtils {
     public static void setOriginalUrlAndReferralExtraToIntent(
             Intent intent, String originalUrl, String referrer) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) return;
-        if (originalUrl != null) intent.putExtra(Intent.EXTRA_ORIGINATING_URI, originalUrl);
-        if (referrer != null) intent.putExtra(Intent.EXTRA_REFERRER, referrer);
+        if (originalUrl != null) {
+            intent.putExtra(Intent.EXTRA_ORIGINATING_URI, Uri.parse(originalUrl));
+        }
+        if (referrer != null) intent.putExtra(Intent.EXTRA_REFERRER, Uri.parse(originalUrl));
     }
 
     /**
@@ -182,20 +184,22 @@ public class MediaViewerUtils {
      * @param context The application Context.
      */
     public static void updateMediaLauncherActivityEnabled(Context context) {
+        AsyncTask.THREAD_POOL_EXECUTOR.execute(
+                () -> { synchronousUpdateMediaLauncherActivityEnabled(context); });
+    }
+
+    static void synchronousUpdateMediaLauncherActivityEnabled(Context context) {
         PackageManager packageManager = context.getPackageManager();
         ComponentName componentName = new ComponentName(context, MediaLauncherActivity.class);
-        int newState = shouldEnableMediaLauncherActivity()
+        int newState = shouldEnableMediaLauncherActivity(context)
                 ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED
                 : PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
-        // This indicates that we don't want to kill Chrome when changing component enabled state.
+        // This indicates that we don't want to kill Chrome when changing component enabled
+        // state.
         int flags = PackageManager.DONT_KILL_APP;
 
         if (packageManager.getComponentEnabledSetting(componentName) != newState) {
-            // setComponentEnabledSetting ends up both reading and writing to disk, which ends up
-            // causing StrictMode violations. So, explicitly allow them briefly.
-            try (StrictModeContext unused = StrictModeContext.allowDiskReads().allowDiskWrites()) {
-                packageManager.setComponentEnabledSetting(componentName, newState, flags);
-            }
+            packageManager.setComponentEnabledSetting(componentName, newState, flags);
         }
     }
 
@@ -205,7 +209,8 @@ public class MediaViewerUtils {
      */
     public static void forceEnableMediaLauncherActivityForTest(Context context) {
         sIsMediaLauncherActivityForceEnabledForTest = true;
-        updateMediaLauncherActivityEnabled(context);
+        // Synchronously update to avoid race conditions in tests.
+        synchronousUpdateMediaLauncherActivityEnabled(context);
     }
 
     /**
@@ -214,13 +219,23 @@ public class MediaViewerUtils {
      */
     public static void stopForcingEnableMediaLauncherActivityForTest(Context context) {
         sIsMediaLauncherActivityForceEnabledForTest = false;
-        updateMediaLauncherActivityEnabled(context);
+        // Synchronously update to avoid race conditions in tests.
+        synchronousUpdateMediaLauncherActivityEnabled(context);
     }
 
-    private static boolean shouldEnableMediaLauncherActivity() {
+    private static boolean shouldEnableMediaLauncherActivity(Context context) {
         return sIsMediaLauncherActivityForceEnabledForTest
-                || (FeatureUtilities.isAndroidGo()
+                || ((FeatureUtilities.isAndroidGo() || isEnterpriseManaged(context))
                            && ChromeFeatureList.isEnabled(ChromeFeatureList.HANDLE_MEDIA_INTENTS));
+    }
+
+    private static boolean isEnterpriseManaged(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return false;
+
+        RestrictionsManager restrictionsManager =
+                (RestrictionsManager) context.getSystemService(Context.RESTRICTIONS_SERVICE);
+        return restrictionsManager.hasRestrictionsProvider()
+                || !restrictionsManager.getApplicationRestrictions().isEmpty();
     }
 
     private static Intent createShareIntent(Uri fileUri, String mimeType) {
@@ -241,5 +256,11 @@ public class MediaViewerUtils {
         if (pieces.length != 2) return false;
 
         return MIMETYPE_IMAGE.equals(pieces[0]);
+    }
+
+    private static boolean willExposeFileUri(Uri uri) {
+        // On Android N and later, an Exception is thrown if we try to expose a file:// URI.
+        return uri.getScheme().equals(ContentResolver.SCHEME_FILE)
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N;
     }
 }

@@ -8,6 +8,8 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawable;
+import android.support.v4.graphics.drawable.RoundedBitmapDrawableFactory;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
@@ -24,6 +26,9 @@ import java.util.List;
  * A container class for a view showing a contact in the Contacts Picker.
  */
 public class ContactView extends SelectableItemView<ContactDetails> {
+    // The length of the fade in animation (in ms).
+    private static final int IMAGE_FADE_IN_DURATION = 150;
+
     // Our context.
     private Context mContext;
 
@@ -36,7 +41,8 @@ public class ContactView extends SelectableItemView<ContactDetails> {
     // The details of the contact shown.
     private ContactDetails mContactDetails;
 
-    // The image view containing the abbreviated letters of the name.
+    // The image view containing the profile image of the contact, or the abbreviated letters of the
+    // contact's name.
     private ImageView mImage;
 
     // The control that signifies the contact has been selected.
@@ -45,8 +51,8 @@ public class ContactView extends SelectableItemView<ContactDetails> {
     // The display name of the contact.
     public TextView mDisplayName;
 
-    // The emails for the contact.
-    public TextView mEmails;
+    // The contact details for the contact.
+    public TextView mDetailsView;
 
     /**
      * Constructor for inflating from XML.
@@ -62,7 +68,7 @@ public class ContactView extends SelectableItemView<ContactDetails> {
 
         mImage = (ImageView) findViewById(R.id.image);
         mDisplayName = (TextView) findViewById(R.id.name);
-        mEmails = (TextView) findViewById(R.id.email);
+        mDetailsView = (TextView) findViewById(R.id.details);
         mSelectedView = (ImageView) findViewById(R.id.selected);
     }
 
@@ -113,8 +119,9 @@ public class ContactView extends SelectableItemView<ContactDetails> {
      * Completes the initialization of the ContactView. Must be called before the
      * {@link ContactView} can respond to click events.
      * @param contactDetails The details about the contact represented by this ContactView.
+     * @param bitmap The icon to show for the contact (or null if not loaded yet).
      */
-    public void initialize(ContactDetails contactDetails) {
+    public void initialize(ContactDetails contactDetails, Bitmap icon) {
         resetTile();
 
         mContactDetails = contactDetails;
@@ -122,12 +129,29 @@ public class ContactView extends SelectableItemView<ContactDetails> {
 
         String displayName = contactDetails.getDisplayName();
         mDisplayName.setText(displayName);
-        mEmails.setText(contactDetails.getEmailsAsString());
-        Bitmap icon = mCategoryView.getIconGenerator().generateIconForText(
-                contactDetails.getDisplayNameAbbreviation(), 2);
-        mImage.setImageBitmap(icon);
+        mDetailsView.setText(contactDetails.getContactDetailsAsString());
+        if (icon == null) {
+            icon = mCategoryView.getIconGenerator().generateIconForText(
+                    contactDetails.getDisplayNameAbbreviation(), 2);
+            mImage.setImageBitmap(icon);
+        } else {
+            Resources resources = mContext.getResources();
+            RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(resources, icon);
+            drawable.setCircular(true);
+            mImage.setImageDrawable(drawable);
+        }
 
         updateSelectionState();
+    }
+
+    /**
+     * Sets the icon to display for the contact and fade it into view.
+     * @param icon The icon to display.
+     */
+    public void setIconBitmap(Bitmap icon) {
+        mImage.setImageBitmap(icon);
+        mImage.setAlpha(0.0f);
+        mImage.animate().alpha(1.0f).setDuration(IMAGE_FADE_IN_DURATION).start();
     }
 
     /**
@@ -137,7 +161,7 @@ public class ContactView extends SelectableItemView<ContactDetails> {
     private void resetTile() {
         mImage.setImageBitmap(null);
         mDisplayName.setText("");
-        mEmails.setText("");
+        mDetailsView.setText("");
         mSelectedView.setVisibility(View.GONE);
     }
 

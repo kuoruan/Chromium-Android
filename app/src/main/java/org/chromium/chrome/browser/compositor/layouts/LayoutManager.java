@@ -36,18 +36,20 @@ import org.chromium.chrome.browser.contextualsearch.ContextualSearchManagementDe
 import org.chromium.chrome.browser.fullscreen.ChromeFullscreenManager;
 import org.chromium.chrome.browser.fullscreen.FullscreenManager;
 import org.chromium.chrome.browser.ntp.NewTabPage;
+import org.chromium.chrome.browser.tab.SadTab;
 import org.chromium.chrome.browser.tab.Tab;
+import org.chromium.chrome.browser.tab.Tab.TabHidingType;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModelObserver;
 import org.chromium.chrome.browser.tabmodel.EmptyTabModelSelectorObserver;
 import org.chromium.chrome.browser.tabmodel.TabCreatorManager;
 import org.chromium.chrome.browser.tabmodel.TabModel;
+import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
 import org.chromium.chrome.browser.tabmodel.TabModelObserver;
 import org.chromium.chrome.browser.tabmodel.TabModelSelector;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorObserver;
 import org.chromium.chrome.browser.tabmodel.TabModelSelectorTabObserver;
 import org.chromium.chrome.browser.tabmodel.TabModelUtils;
 import org.chromium.chrome.browser.util.ColorUtils;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.ui.base.LocalizationUtils;
 import org.chromium.ui.base.SPenSupport;
 import org.chromium.ui.resources.ResourceManager;
@@ -183,18 +185,8 @@ public class LayoutManager implements LayoutUpdateHost, LayoutProvider,
         }
 
         @Override
-        public void tabClosureUndone(Tab tab) {
-            tabClosureCancelled(tab.getId(), tab.isIncognito());
-        }
-
-        @Override
         public void tabClosureCommitted(Tab tab) {
             LayoutManager.this.tabClosureCommitted(tab.getId(), tab.isIncognito());
-        }
-
-        @Override
-        public void didMoveTab(Tab tab, int newIndex, int curIndex) {
-            tabMoved(tab.getId(), curIndex, newIndex, tab.isIncognito());
         }
 
         @Override
@@ -395,12 +387,12 @@ public class LayoutManager implements LayoutUpdateHost, LayoutProvider,
         mTabModelSelector = selector;
         mTabModelSelectorTabObserver = new TabModelSelectorTabObserver(mTabModelSelector) {
             @Override
-            public void onShown(Tab tab) {
+            public void onShown(Tab tab, @TabSelectionType int type) {
                 initLayoutTabFromHost(tab.getId());
             }
 
             @Override
-            public void onHidden(Tab tab) {
+            public void onHidden(Tab tab, @TabHidingType int type) {
                 initLayoutTabFromHost(tab.getId());
             }
 
@@ -417,36 +409,6 @@ public class LayoutManager implements LayoutUpdateHost, LayoutProvider,
             @Override
             public void onDidChangeThemeColor(Tab tab, int color) {
                 initLayoutTabFromHost(tab.getId());
-            }
-
-            @Override
-            public void onLoadStarted(Tab tab, boolean toDifferentDocument) {
-                tabLoadStarted(tab.getId(), tab.isIncognito());
-            }
-
-            @Override
-            public void onLoadStopped(Tab tab, boolean toDifferentDocument) {
-                tabLoadFinished(tab.getId(), tab.isIncognito());
-            }
-
-            @Override
-            public void onPageLoadStarted(Tab tab, String url) {
-                tabPageLoadStarted(tab.getId(), tab.isIncognito());
-            }
-
-            @Override
-            public void onPageLoadFinished(Tab tab) {
-                tabPageLoadFinished(tab.getId(), tab.isIncognito());
-            }
-
-            @Override
-            public void onPageLoadFailed(Tab tab, int errorCode) {
-                tabPageLoadFinished(tab.getId(), tab.isIncognito());
-            }
-
-            @Override
-            public void onCrash(Tab tab, boolean sadTabShown) {
-                tabPageLoadFinished(tab.getId(), tab.isIncognito());
             }
         };
 
@@ -632,34 +594,6 @@ public class LayoutManager implements LayoutUpdateHost, LayoutProvider,
         if (getActiveLayout() != null) getActiveLayout().onTabModelSwitched(incognito);
     }
 
-    private void tabMoved(int id, int oldIndex, int newIndex, boolean incognito) {
-        if (getActiveLayout() != null) {
-            getActiveLayout().onTabMoved(time(), id, oldIndex, newIndex, incognito);
-        }
-    }
-
-    private void tabPageLoadStarted(int id, boolean incognito) {
-        if (getActiveLayout() != null) getActiveLayout().onTabPageLoadStarted(id, incognito);
-    }
-
-    private void tabPageLoadFinished(int id, boolean incognito) {
-        if (getActiveLayout() != null) getActiveLayout().onTabPageLoadFinished(id, incognito);
-    }
-
-    private void tabLoadStarted(int id, boolean incognito) {
-        if (getActiveLayout() != null) getActiveLayout().onTabLoadStarted(id, incognito);
-    }
-
-    private void tabLoadFinished(int id, boolean incognito) {
-        if (getActiveLayout() != null) getActiveLayout().onTabLoadFinished(id, incognito);
-    }
-
-    private void tabClosureCancelled(int id, boolean incognito) {
-        if (getActiveLayout() != null) {
-            getActiveLayout().onTabClosureCancelled(time(), id, incognito);
-        }
-    }
-
     @Override
     public boolean closeAllTabsRequest(boolean incognito) {
         if (!getActiveLayout().handlesCloseAll()) return false;
@@ -684,18 +618,16 @@ public class LayoutManager implements LayoutUpdateHost, LayoutProvider,
                 || (url != null && url.startsWith(UrlConstants.CHROME_NATIVE_URL_PREFIX));
         int themeColor = tab.getThemeColor();
 
-        boolean canUseLiveTexture = tab.getWebContents() != null && !tab.isShowingSadTab()
+        boolean canUseLiveTexture = tab.getWebContents() != null && !SadTab.isShowing(tab)
                 && !isNativePage && !tab.isHidden();
 
         boolean isNtp = tab.getNativePage() instanceof NewTabPage;
         boolean isLocationBarShownInNtp =
                 isNtp ? ((NewTabPage) tab.getNativePage()).isLocationBarShownInNTP() : false;
-        boolean useModernDesign = FeatureUtilities.isChromeModernDesignEnabled()
-                && tab.getActivity() != null && tab.getActivity().supportsModernDesign();
         boolean needsUpdate = layoutTab.initFromHost(tab.getBackgroundColor(), tab.shouldStall(),
                 canUseLiveTexture, themeColor,
-                ColorUtils.getTextBoxColorForToolbarBackground(mContext.getResources(),
-                        isLocationBarShownInNtp, themeColor, useModernDesign),
+                ColorUtils.getTextBoxColorForToolbarBackground(
+                        mContext.getResources(), isLocationBarShownInNtp, themeColor),
                 ColorUtils.getTextBoxAlphaForToolbarBackground(tab));
         if (needsUpdate) requestUpdate();
 

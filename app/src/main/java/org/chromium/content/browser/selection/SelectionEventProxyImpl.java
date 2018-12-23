@@ -33,7 +33,7 @@ public class SelectionEventProxyImpl implements SmartSelectionMetricsLogger.Sele
     private static Method sSelectionModifiedSelectionMethod;
     private static Method sSelectionActionMethod;
     private static Method sSelectionActionClassificationMethod;
-    private static boolean sReflectionFailed = false;
+    private static boolean sReflectionFailed;
 
     public static SelectionEventProxyImpl create() {
         if (sReflectionFailed) return null;

@@ -13,6 +13,8 @@ import org.chromium.base.metrics.RecordHistogram;
 import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryData.Item;
 import org.chromium.chrome.browser.modelutil.ListModel;
 import org.chromium.chrome.browser.modelutil.ListObservable;
+import org.chromium.chrome.browser.modelutil.PropertyKey;
+import org.chromium.chrome.browser.modelutil.PropertyModel;
 import org.chromium.chrome.browser.modelutil.PropertyObservable;
 
 import java.util.HashSet;
@@ -20,8 +22,9 @@ import java.util.Set;
 
 /**
  * This class provides helpers to record metrics related to the keyboard accessory and its sheets.
- * It can set up observers to observe {@link KeyboardAccessoryModel}s, {@link AccessorySheetModel}s
- * or {@link ListObservable<Item>}s changes and records metrics accordingly.
+ * It can set up observers to observe {@link KeyboardAccessoryProperties}-based models, {@link
+ * AccessorySheetProperties}-based models or {@link ListObservable<Item>}s, and records metrics
+ * accordingly.
  */
 public class KeyboardAccessoryMetricsRecorder {
     static final String UMA_KEYBOARD_ACCESSORY_ACTION_IMPRESSION =
@@ -43,38 +46,40 @@ public class KeyboardAccessoryMetricsRecorder {
     private KeyboardAccessoryMetricsRecorder() {}
 
     /**
-     * This observer will react to changes of the {@link KeyboardAccessoryModel} and store each
+     * This observer will react to changes of the {@link KeyboardAccessoryProperties} and store each
      * impression once per visibility change.
      */
     private static class AccessoryBarObserver
             implements ListObservable.ListObserver<Void>,
-                       PropertyObservable.PropertyObserver<KeyboardAccessoryModel.PropertyKey> {
+                       PropertyObservable.PropertyObserver<PropertyKey> {
         private final Set<Integer> mRecordedBarBuckets = new HashSet<>();
         private final Set<Integer> mRecordedActionImpressions = new HashSet<>();
-        private final KeyboardAccessoryModel mModel;
+        private final PropertyModel mModel;
 
-        AccessoryBarObserver(KeyboardAccessoryModel keyboardAccessoryModel) {
+        AccessoryBarObserver(PropertyModel keyboardAccessoryModel) {
             mModel = keyboardAccessoryModel;
         }
 
         @Override
-        public void onPropertyChanged(PropertyObservable<KeyboardAccessoryModel.PropertyKey> source,
-                @Nullable KeyboardAccessoryModel.PropertyKey propertyKey) {
-            if (propertyKey == KeyboardAccessoryModel.PropertyKey.VISIBLE) {
-                if (mModel.isVisible()) {
+        public void onPropertyChanged(
+                PropertyObservable<PropertyKey> source, @Nullable PropertyKey propertyKey) {
+            if (propertyKey == KeyboardAccessoryProperties.VISIBLE) {
+                if (mModel.get(KeyboardAccessoryProperties.VISIBLE)) {
                     recordFirstImpression();
                     maybeRecordBarBucket(AccessoryBarContents.WITH_AUTOFILL_SUGGESTIONS);
-                    recordUnrecordedList(mModel.getTabList(), 0, mModel.getTabList().size());
-                    recordUnrecordedList(mModel.getActionList(), 0, mModel.getActionList().size());
+                    recordUnrecordedList(mModel.get(KeyboardAccessoryProperties.TABS), 0,
+                            mModel.get(KeyboardAccessoryProperties.TABS).size());
+                    recordUnrecordedList(mModel.get(KeyboardAccessoryProperties.ACTIONS), 0,
+                            mModel.get(KeyboardAccessoryProperties.ACTIONS).size());
                 } else {
                     mRecordedBarBuckets.clear();
                     mRecordedActionImpressions.clear();
                 }
                 return;
             }
-            if (propertyKey == KeyboardAccessoryModel.PropertyKey.ACTIVE_TAB
-                    || propertyKey == KeyboardAccessoryModel.PropertyKey.BOTTOM_OFFSET
-                    || propertyKey == KeyboardAccessoryModel.PropertyKey.TAB_SELECTION_CALLBACKS) {
+            if (propertyKey == KeyboardAccessoryProperties.ACTIVE_TAB
+                    || propertyKey == KeyboardAccessoryProperties.BOTTOM_OFFSET_PX
+                    || propertyKey == KeyboardAccessoryProperties.TAB_SELECTION_CALLBACKS) {
                 return;
             }
             assert false : "Every property update needs to be handled explicitly!";
@@ -89,20 +94,22 @@ public class KeyboardAccessoryMetricsRecorder {
          * @param count Number of elements starting with |first| that were added or changed.
          */
         private void recordUnrecordedList(ListObservable list, int first, int count) {
-            if (!mModel.isVisible()) return;
-            if (list == mModel.getTabList()) {
+            if (!mModel.get(KeyboardAccessoryProperties.VISIBLE)) return;
+            if (list == mModel.get(KeyboardAccessoryProperties.TABS)) {
                 maybeRecordBarBucket(AccessoryBarContents.WITH_TABS);
                 return;
             }
-            if (list == mModel.getActionList()) {
+            if (list == mModel.get(KeyboardAccessoryProperties.ACTIONS)) {
                 // Remove all actions that were changed, so changes are treated as new recordings.
                 for (int index = first; index < first + count; ++index) {
-                    KeyboardAccessoryData.Action action = mModel.getActionList().get(index);
+                    KeyboardAccessoryData.Action action =
+                            mModel.get(KeyboardAccessoryProperties.ACTIONS).get(index);
                     mRecordedActionImpressions.remove(action.getActionType());
                 }
                 // Record any unrecorded type, but not more than once (i.e. one set of suggestion).
                 for (int index = first; index < first + count; ++index) {
-                    KeyboardAccessoryData.Action action = mModel.getActionList().get(index);
+                    KeyboardAccessoryData.Action action =
+                            mModel.get(KeyboardAccessoryProperties.ACTIONS).get(index);
                     maybeRecordBarBucket(
                             action.getActionType() == AccessoryAction.AUTOFILL_SUGGESTION
                                     ? AccessoryBarContents.WITH_AUTOFILL_SUGGESTIONS
@@ -165,18 +172,20 @@ public class KeyboardAccessoryMetricsRecorder {
          * @return
          */
         private boolean shouldRecordAccessoryBarImpression(int bucket) {
-            if (!mModel.isVisible()) return false;
+            if (!mModel.get(KeyboardAccessoryProperties.VISIBLE)) return false;
             if (mRecordedBarBuckets.contains(bucket)) return false;
             switch (bucket) {
                 case AccessoryBarContents.WITH_ACTIONS:
-                    return hasAtLeastOneActionOfType(mModel.getActionList(),
+                    return hasAtLeastOneActionOfType(
+                            mModel.get(KeyboardAccessoryProperties.ACTIONS),
                             AccessoryAction.MANAGE_PASSWORDS,
                             AccessoryAction.GENERATE_PASSWORD_AUTOMATIC);
                 case AccessoryBarContents.WITH_AUTOFILL_SUGGESTIONS:
                     return hasAtLeastOneActionOfType(
-                            mModel.getActionList(), AccessoryAction.AUTOFILL_SUGGESTION);
+                            mModel.get(KeyboardAccessoryProperties.ACTIONS),
+                            AccessoryAction.AUTOFILL_SUGGESTION);
                 case AccessoryBarContents.WITH_TABS:
-                    return mModel.getTabList().size() > 0;
+                    return mModel.get(KeyboardAccessoryProperties.TABS).size() > 0;
                 case AccessoryBarContents.ANY_CONTENTS: // Intentional fallthrough.
                 case AccessoryBarContents.NO_CONTENTS:
                     return true; // Logged on first impression.
@@ -188,27 +197,32 @@ public class KeyboardAccessoryMetricsRecorder {
 
     /**
      * Registers an observer to the given model that records changes for all properties.
-     * @param keyboardAccessoryModel The observable {@link KeyboardAccessoryModel}.
+     * @param keyboardAccessoryModel The observable {@link KeyboardAccessoryProperties}.
      */
-    static void registerMetricsObserver(KeyboardAccessoryModel keyboardAccessoryModel) {
+    static void registerKeyboardAccessoryModelMetricsObserver(
+            PropertyModel keyboardAccessoryModel) {
         AccessoryBarObserver observer = new AccessoryBarObserver(keyboardAccessoryModel);
         keyboardAccessoryModel.addObserver(observer);
-        keyboardAccessoryModel.addTabListObserver(observer);
-        keyboardAccessoryModel.addActionListObserver(observer);
+        keyboardAccessoryModel.get(KeyboardAccessoryProperties.TABS).addObserver(observer);
+        keyboardAccessoryModel.get(KeyboardAccessoryProperties.ACTIONS).addObserver(observer);
     }
 
     /**
      * Registers an observer to the given model that records changes for all properties.
-     * @param accessorySheetModel The observable {@link AccessorySheetModel}.
+     * @param accessorySheetModel The observable {@link AccessorySheetProperties}.
      */
-    static void registerMetricsObserver(AccessorySheetModel accessorySheetModel) {
+    static void registerAccessorySheetModelMetricsObserver(PropertyModel accessorySheetModel) {
         accessorySheetModel.addObserver((source, propertyKey) -> {
-            if (propertyKey == AccessorySheetModel.PropertyKey.VISIBLE) {
-                if (accessorySheetModel.isVisible()) {
-                    int activeTab = accessorySheetModel.getActiveTabIndex();
-                    if (activeTab >= 0 && activeTab < accessorySheetModel.getTabList().size()) {
-                        recordSheetTrigger(
-                                accessorySheetModel.getTabList().get(activeTab).getRecordingType(),
+            if (propertyKey == AccessorySheetProperties.VISIBLE) {
+                if (accessorySheetModel.get(AccessorySheetProperties.VISIBLE)) {
+                    int activeTab =
+                            accessorySheetModel.get(AccessorySheetProperties.ACTIVE_TAB_INDEX);
+                    if (activeTab >= 0
+                            && activeTab < accessorySheetModel.get(AccessorySheetProperties.TABS)
+                                                   .size()) {
+                        recordSheetTrigger(accessorySheetModel.get(AccessorySheetProperties.TABS)
+                                                   .get(activeTab)
+                                                   .getRecordingType(),
                                 MANUAL_OPEN);
                     }
                 } else {
@@ -216,8 +230,8 @@ public class KeyboardAccessoryMetricsRecorder {
                 }
                 return;
             }
-            if (propertyKey == AccessorySheetModel.PropertyKey.ACTIVE_TAB_INDEX
-                    || propertyKey == AccessorySheetModel.PropertyKey.HEIGHT) {
+            if (propertyKey == AccessorySheetProperties.ACTIVE_TAB_INDEX
+                    || propertyKey == AccessorySheetProperties.HEIGHT) {
                 return;
             }
             assert false : "Every property update needs to be handled explicitly!";
@@ -270,9 +284,17 @@ public class KeyboardAccessoryMetricsRecorder {
                 UMA_KEYBOARD_ACCESSORY_ACTION_SELECTED, bucket, AccessoryAction.COUNT);
     }
 
-    static void recordSuggestionSelected(@AccessorySuggestionType int bucket) {
-        RecordHistogram.recordEnumeratedHistogram(UMA_KEYBOARD_ACCESSORY_SHEET_SUGGESTION_SELECTED,
+    static void recordSuggestionSelected(
+            @AccessoryTabType int tabType, @AccessorySuggestionType int bucket) {
+        RecordHistogram.recordEnumeratedHistogram(
+                getHistogramForType(
+                        UMA_KEYBOARD_ACCESSORY_SHEET_SUGGESTION_SELECTED, AccessoryTabType.ALL),
                 bucket, AccessorySuggestionType.COUNT);
+        if (tabType != AccessoryTabType.ALL) { // If recorded for all, don't record again.
+            RecordHistogram.recordEnumeratedHistogram(
+                    getHistogramForType(UMA_KEYBOARD_ACCESSORY_SHEET_SUGGESTION_SELECTED, tabType),
+                    bucket, AccessorySuggestionType.COUNT);
+        }
     }
 
     /**

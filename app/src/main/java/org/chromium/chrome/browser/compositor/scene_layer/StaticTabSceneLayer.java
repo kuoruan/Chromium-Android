@@ -19,12 +19,6 @@ public class StaticTabSceneLayer extends SceneLayer {
     // downcast using reinterpret_cast<>. We keep a separate pointer to avoid it.
     private long mNativePtr;
 
-    private final int mResToolbarControlContainer;
-
-    public StaticTabSceneLayer(int resToolbarControlContainer) {
-        mResToolbarControlContainer = resToolbarControlContainer;
-    }
-
     /**
      * Update {@link StaticTabSceneLayer} with the given parameters.
      *
@@ -48,9 +42,9 @@ public class StaticTabSceneLayer extends SceneLayer {
         float y = contentOffset + layoutTab.getRenderY() * dpToPx;
 
         nativeUpdateTabLayer(mNativePtr, tabContentManager, layoutTab.getId(),
-                mResToolbarControlContainer, layoutTab.canUseLiveTexture(),
-                layoutTab.getBackgroundColor(), x, y, layoutTab.getStaticToViewBlend(),
-                layoutTab.getSaturation(), layoutTab.getBrightness());
+                layoutTab.canUseLiveTexture(), layoutTab.getBackgroundColor(), x, y,
+                layoutTab.getStaticToViewBlend(), layoutTab.getSaturation(),
+                layoutTab.getBrightness());
     }
 
     @Override
@@ -69,7 +63,7 @@ public class StaticTabSceneLayer extends SceneLayer {
 
     private native long nativeInit();
     private native void nativeUpdateTabLayer(long nativeStaticTabSceneLayer,
-            TabContentManager tabContentManager, int id, int toolbarResourceId,
-            boolean canUseLiveLayer, int backgroundColor, float x, float y, float staticToViewBlend,
-            float saturation, float brightness);
+            TabContentManager tabContentManager, int id, boolean canUseLiveLayer,
+            int backgroundColor, float x, float y, float staticToViewBlend, float saturation,
+            float brightness);
 }

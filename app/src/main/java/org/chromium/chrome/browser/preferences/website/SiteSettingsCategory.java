@@ -37,10 +37,10 @@ import java.lang.annotation.RetentionPolicy;
  * A base class for dealing with website settings categories.
  */
 public class SiteSettingsCategory {
-    @IntDef({Type.ALL_SITES, Type.ADS, Type.AUTOPLAY, Type.BACKGROUND_SYNC, Type.CAMERA,
-            Type.CLIPBOARD, Type.COOKIES, Type.DEVICE_LOCATION, Type.JAVASCRIPT, Type.MICROPHONE,
-            Type.NOTIFICATIONS, Type.POPUPS, Type.PROTECTED_MEDIA, Type.SENSORS, Type.SOUND,
-            Type.USE_STORAGE, Type.USB})
+    @IntDef({Type.ALL_SITES, Type.ADS, Type.AUTOMATIC_DOWNLOADS, Type.AUTOPLAY,
+            Type.BACKGROUND_SYNC, Type.CAMERA, Type.CLIPBOARD, Type.COOKIES, Type.DEVICE_LOCATION,
+            Type.JAVASCRIPT, Type.MICROPHONE, Type.NOTIFICATIONS, Type.POPUPS, Type.PROTECTED_MEDIA,
+            Type.SENSORS, Type.SOUND, Type.USE_STORAGE, Type.USB})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Type {
         // Values used to address array index. Should be enumerated from 0 and
@@ -63,15 +63,18 @@ public class SiteSettingsCategory {
         int SOUND = 14;
         int USE_STORAGE = 15;
         int USB = 16;
+        int AUTOMATIC_DOWNLOADS = 17;
         /**
          * Number of handled categories used for calculating array sizes.
          */
-        int NUM_ENTRIES = 17;
+        int NUM_ENTRIES = 18;
     }
 
     /**
      * Mapping from Type to String used in preferences. Values are sorted like
      * Type constants.
+     * TODO(https://crbug.com:/616321) Add a unit test to verify that Type and
+     * PREFERENCE_KEYS are in sync.
      */
     private static final String[] PREFERENCE_KEYS = {
             "all_sites", // Type.ALL_SITES
@@ -91,6 +94,7 @@ public class SiteSettingsCategory {
             "sound", // Type.SOUND
             "use_storage", // Type.USE_STORAGE
             "usb", // Type.USB
+            "automatic_downloads", // Type.AUTOMATIC_DOWNLOADS
     };
 
     /**
@@ -117,6 +121,8 @@ public class SiteSettingsCategory {
             ContentSettingsType.CONTENT_SETTINGS_TYPE_SOUND, // Type.SOUND
             -1, // Type.USE_STORAGE
             ContentSettingsType.CONTENT_SETTINGS_TYPE_USB_GUARD, // Type.USB
+            ContentSettingsType
+                    .CONTENT_SETTINGS_TYPE_AUTOMATIC_DOWNLOADS, // Type.AUTOMATIC_DOWNLOADS,
     };
 
     // The id of this category.
@@ -217,7 +223,9 @@ public class SiteSettingsCategory {
      */
     public boolean isManaged() {
         PrefServiceBridge prefs = PrefServiceBridge.getInstance();
-        if (showSites(Type.BACKGROUND_SYNC)) {
+        if (showSites(Type.AUTOMATIC_DOWNLOADS)) {
+            return prefs.isAutomaticDownloadsManaged();
+        } else if (showSites(Type.BACKGROUND_SYNC)) {
             return prefs.isBackgroundSyncManaged();
         } else if (showSites(Type.COOKIES)) {
             return !prefs.isAcceptCookiesUserModifiable();

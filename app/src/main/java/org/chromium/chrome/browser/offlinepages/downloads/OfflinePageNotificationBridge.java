@@ -72,7 +72,7 @@ public class OfflinePageNotificationBridge {
         DownloadInfo downloadInfo = new DownloadInfo.Builder()
                 .setIsOfflinePage(true).setDownloadGuid(guid).setFileName(displayName).build();
 
-        notifier.notifyDownloadFailed(downloadInfo, failState);
+        notifier.notifyDownloadFailed(downloadInfo);
     }
 
     /**

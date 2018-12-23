@@ -4,7 +4,6 @@
 
 package org.chromium.chrome.browser.ntp;
 
-import android.accounts.Account;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.support.annotation.IntDef;
@@ -21,13 +20,13 @@ import org.chromium.chrome.browser.invalidation.InvalidationController;
 import org.chromium.chrome.browser.ntp.ForeignSessionHelper.ForeignSession;
 import org.chromium.chrome.browser.ntp.ForeignSessionHelper.ForeignSessionTab;
 import org.chromium.chrome.browser.profiles.Profile;
-import org.chromium.chrome.browser.signin.DisplayableProfileData;
 import org.chromium.chrome.browser.signin.PersonalizedSigninPromoView;
 import org.chromium.chrome.browser.signin.ProfileDataCache;
 import org.chromium.chrome.browser.signin.SigninAccessPoint;
 import org.chromium.chrome.browser.signin.SigninManager;
 import org.chromium.chrome.browser.signin.SigninManager.SignInStateObserver;
 import org.chromium.chrome.browser.signin.SigninPromoController;
+import org.chromium.chrome.browser.signin.SigninPromoUtil;
 import org.chromium.chrome.browser.tab.Tab;
 import org.chromium.components.signin.AccountManagerFacade;
 import org.chromium.components.signin.AccountsChangeObserver;
@@ -380,15 +379,8 @@ public class RecentTabsManager implements AndroidSyncSettingsObserver, SignInSta
      * @param view The view to be configured.
      */
     void setupPersonalizedSigninPromo(PersonalizedSigninPromoView view) {
-        DisplayableProfileData profileData = null;
-        Account[] accounts = AccountManagerFacade.get().tryGetGoogleAccounts();
-        if (accounts.length > 0) {
-            String defaultAccountName = accounts[0].name;
-            mProfileDataCache.update(Collections.singletonList(defaultAccountName));
-            profileData = mProfileDataCache.getProfileDataOrDefault(defaultAccountName);
-        }
-        mSigninPromoController.detach();
-        mSigninPromoController.setupPromoView(mContext, view, profileData, null);
+        SigninPromoUtil.setupPromoViewFromCache(
+                mSigninPromoController, mProfileDataCache, view, null);
     }
 
     // SignInStateObserver implementation.

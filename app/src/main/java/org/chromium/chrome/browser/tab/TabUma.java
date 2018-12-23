@@ -7,8 +7,14 @@ package org.chromium.chrome.browser.tab;
 import android.os.SystemClock;
 import android.support.annotation.IntDef;
 
+import org.chromium.base.UserData;
 import org.chromium.base.metrics.RecordHistogram;
+import org.chromium.chrome.browser.tab.Tab.TabHidingType;
+import org.chromium.chrome.browser.tabmodel.EmptyTabModelSelectorObserver;
+import org.chromium.chrome.browser.tabmodel.TabModel;
+import org.chromium.chrome.browser.tabmodel.TabModel.TabLaunchType;
 import org.chromium.chrome.browser.tabmodel.TabModel.TabSelectionType;
+import org.chromium.chrome.browser.tabmodel.TabModelSelectorObserver;
 import org.chromium.net.NetError;
 
 import java.lang.annotation.Retention;
@@ -21,7 +27,9 @@ import java.util.concurrent.TimeUnit;
  * eviction.
  * All calls must be made from the UI thread.
  */
-public class TabUma {
+public class TabUma extends EmptyTabObserver implements UserData {
+    private static final Class<TabUma> USER_DATA_KEY = TabUma.class;
+
     // TabStatus defined in tools/metrics/histograms/histograms.xml.
     static final int TAB_STATUS_MEMORY_RESIDENT = 0;
     static final int TAB_STATUS_RELOAD_EVICTED = 1;
@@ -93,11 +101,25 @@ public class TabUma {
     // first.
     private ChildBackgroundTabShowObserver mChildBackgroundTabShowObserver;
 
+    private TabModelSelectorObserver mNewTabObserver;
+
+    static TabUma create(Tab tab, @TabCreationState int creationState) {
+        TabUma tabUma = get(tab);
+        if (tabUma != null) tabUma.removeObservers(tab);
+
+        return tab.getUserDataHost().setUserData(USER_DATA_KEY, new TabUma(tab, creationState));
+    }
+
+    private static TabUma get(Tab tab) {
+        return tab.getUserDataHost().getUserData(USER_DATA_KEY);
+    }
+
     /**
      * Constructs a new UMA tracker for a specific tab.
+     * @param Tab The Tab being monitored for stats.
      * @param creationState In what state the tab was created.
      */
-    public TabUma(@TabCreationState int creationState) {
+    private TabUma(Tab tab, @TabCreationState int creationState) {
         mTabCreationState = creationState;
 
         mLastTabStateChangeMillis = System.currentTimeMillis();
@@ -115,6 +137,7 @@ public class TabUma {
             case TabCreationState.FROZEN_FOR_LAZY_LOAD:
                 updateTabState(TAB_STATE_INACTIVE);
         }
+        tab.addObserver(this);
     }
 
     /**
@@ -191,7 +214,7 @@ public class TabUma {
      * Updates saved TabState and its timestamp. Records the state transition into the histogram.
      * @param newState New state of the tab.
      */
-    void updateTabState(int newState) {
+    private void updateTabState(int newState) {
         if (mLastTabState == newState) {
             return;
         }
@@ -202,14 +225,27 @@ public class TabUma {
     }
 
     /**
-     * Called upon tab display.
-     * @param selectionType determines how the tab was being shown
-     * @param previousTimestampMillis time of the previous display or creation time for the tabs
-     *                                opened in background and not yet displayed
-     * @param rank The MRU rank for this tab within the model.
+     * @return The most recently used rank for this tab in the given TabModel.
      */
-    void onShow(@TabSelectionType int selectionType, long previousTimestampMillis, int rank) {
+    private static int computeMRURank(Tab tab, TabModel model) {
+        final long tabLastShow = get(tab).getLastShownTimestamp();
+        int mruRank = 0;
+        for (int i = 0; i < model.getCount(); i++) {
+            Tab otherTab = model.getTabAt(i);
+            if (otherTab != tab && TabUma.get(otherTab) != null
+                    && TabUma.get(otherTab).getLastShownTimestamp() > tabLastShow) {
+                mruRank++;
+            }
+        }
+        return mruRank;
+    }
+
+    @Override
+    public void onShown(Tab tab, @TabSelectionType int selectionType) {
+        int rank = computeMRURank(tab, tab.getTabModelSelector().getModel(tab.isIncognito()));
+        long previousTimestampMillis = tab.getTimestampMillis();
         long now = SystemClock.elapsedRealtime();
+
         // Do not collect the tab switching data for the first switch to a tab after the cold start
         // and for the tab switches that were not user-originated (e.g. the user closes the last
         // incognito tab and the current normal mode tab is shown).
@@ -254,8 +290,8 @@ public class TabUma {
                     "Tab.StatusWhenSwitchedBackToForeground", status, TAB_STATUS_LIM);
         }
 
-        // Record Tab.BackgroundLoadStatus.
         if (mLastShownTimestamp == -1) {
+            // Record Tab.BackgroundLoadStatus.
             if (mTabCreationState == TabCreationState.LIVE_IN_BACKGROUND) {
                 if (mRestoreStartedAtMillis == -1) {
                     RecordHistogram.recordEnumeratedHistogram("Tab.BackgroundLoadStatus",
@@ -276,6 +312,19 @@ public class TabUma {
                 RecordHistogram.recordEnumeratedHistogram("Tab.BackgroundLoadStatus",
                         TAB_BACKGROUND_LOAD_SKIPPED, TAB_BACKGROUND_LOAD_LIM);
             }
+
+            // Register the observer for context menu-triggering event here to avoid the case
+            // where this is created too early and we start missing out on metrics suddenly.
+            mNewTabObserver = new EmptyTabModelSelectorObserver() {
+                @Override
+                public void onNewTabCreated(Tab newTab) {
+                    if (newTab.getParentId() == tab.getId()
+                            && newTab.getLaunchType() == TabLaunchType.FROM_LONGPRESS_BACKGROUND) {
+                        onBackgroundTabOpenedFromContextMenu(newTab);
+                    }
+                }
+            };
+            tab.getTabModelSelector().addObserver(mNewTabObserver);
         }
 
         // Record "tab age upon first display" metrics. previousTimestampMillis is persisted through
@@ -297,16 +346,19 @@ public class TabUma {
         updateTabState(TAB_STATE_ACTIVE);
     }
 
-    void onHide() {
-        updateTabState(TAB_STATE_INACTIVE);
+    // TabObserver
+
+    @Override
+    public void onHidden(Tab tab, @TabHidingType int type) {
+        if (type == TabHidingType.ACTIVITY_HIDDEN) {
+            recordNumBackgroundTabsOpened();
+        } else {
+            updateTabState(TAB_STATE_INACTIVE);
+        }
     }
 
-    /** Called when the corresponding activity is stopped. */
-    void onActivityHidden() {
-        recordNumBackgroundTabsOpened();
-    }
-
-    void onDestroy() {
+    @Override
+    public void onDestroyed(Tab tab) {
         updateTabState(TAB_STATE_CLOSED);
 
         if (mTabCreationState == TabCreationState.LIVE_IN_BACKGROUND
@@ -316,20 +368,28 @@ public class TabUma {
         }
 
         recordNumBackgroundTabsOpened();
+        removeObservers(tab);
     }
 
-    /** Called when restore of the corresponding tab is triggered. */
-    void onRestoreStarted() {
+    private void removeObservers(Tab tab) {
+        if (mNewTabObserver != null) tab.getTabModelSelector().removeObserver(mNewTabObserver);
+        tab.removeObserver(this);
+    }
+
+    @Override
+    public void onRestoreStarted(Tab tab) {
         mRestoreStartedAtMillis = SystemClock.elapsedRealtime();
     }
 
     /** Called when the corresponding tab starts a page load. */
-    void onPageLoadStarted() {
+    @Override
+    public void onPageLoadStarted(Tab tab, String url) {
         recordNumBackgroundTabsOpened();
     }
 
     /** Called when the correspoding tab completes a page load. */
-    void onPageLoadFinished() {
+    @Override
+    public void onPageLoadFinished(Tab tab) {
         // Record only tab restores that the user became aware of. If the restore is triggered
         // speculatively and completes before the user switches to the tab, then this case is
         // reflected in Tab.StatusWhenSwitchedBackToForeground metric.
@@ -343,7 +403,8 @@ public class TabUma {
     }
 
     /** Called when the correspoding tab fails a page load. */
-    void onLoadFailed(int errorCode) {
+    @Override
+    public void onPageLoadFailed(Tab tab, int errorCode) {
         if (mRestoreStartedAtMillis != -1 && mLastShownTimestamp >= mRestoreStartedAtMillis) {
             // Load time is ignored for failed loads.
             recordTabRestoreResult(false, -1, -1, errorCode);
@@ -352,7 +413,8 @@ public class TabUma {
     }
 
     /** Called when the renderer of the correspoding tab crashes. */
-    void onRendererCrashed() {
+    @Override
+    public void onCrash(Tab tab) {
         if (mRestoreStartedAtMillis != -1) {
             // TODO(ppi): Add a bucket in Tab.RestoreResult for restores failed due to
             //            renderer crashes and start to track that.
@@ -365,7 +427,7 @@ public class TabUma {
      * from the context menu.
      * @param backgroundTab The background tab.
      */
-    void onBackgroundTabOpenedFromContextMenu(Tab backgroundTab) {
+    private void onBackgroundTabOpenedFromContextMenu(Tab backgroundTab) {
         ++mNumBackgroundTabsOpened;
 
         if (mChildBackgroundTabShowObserver == null) {
@@ -378,7 +440,7 @@ public class TabUma {
     /**
      * @return The timestamp for when this tab was last shown.
      */
-    long getLastShownTimestamp() {
+    private long getLastShownTimestamp() {
         return mLastShownTimestamp;
     }
 

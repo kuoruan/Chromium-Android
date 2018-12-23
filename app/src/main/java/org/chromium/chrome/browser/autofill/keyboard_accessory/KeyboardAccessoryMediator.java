@@ -5,6 +5,12 @@
 package org.chromium.chrome.browser.autofill.keyboard_accessory;
 
 import static org.chromium.chrome.browser.autofill.keyboard_accessory.AccessorySheetTrigger.MANUAL_CLOSE;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.ACTIONS;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.ACTIVE_TAB;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.BOTTOM_OFFSET_PX;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.TABS;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.TAB_SELECTION_CALLBACKS;
+import static org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryProperties.VISIBLE;
 
 import android.support.annotation.Nullable;
 import android.support.annotation.Px;
@@ -14,6 +20,8 @@ import org.chromium.base.VisibleForTesting;
 import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryCoordinator.VisibilityDelegate;
 import org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryData.Action;
 import org.chromium.chrome.browser.modelutil.ListObservable;
+import org.chromium.chrome.browser.modelutil.PropertyKey;
+import org.chromium.chrome.browser.modelutil.PropertyModel;
 import org.chromium.chrome.browser.modelutil.PropertyObservable;
 
 import java.util.ArrayList;
@@ -22,31 +30,30 @@ import java.util.List;
 
 /**
  * This is the second part of the controller of the keyboard accessory component.
- * It is responsible to update the {@link KeyboardAccessoryModel} based on Backend calls and notify
- * the Backend if the {@link KeyboardAccessoryModel} changes.
- * From the backend, it receives all actions that the accessory can perform (most prominently
- * generating passwords) and lets the {@link KeyboardAccessoryModel} know of these actions and which
- * callback to trigger when selecting them.
+ * It is responsible for updating the model based on backend calls and notify the backend if the
+ * model changes. From the backend, it receives all actions that the accessory can perform (most
+ * prominently generating passwords) and lets the model know of these actions and which callback to
+ * trigger when selecting them.
  */
 class KeyboardAccessoryMediator
         implements ListObservable.ListObserver<Void>,
-                   PropertyObservable.PropertyObserver<KeyboardAccessoryModel.PropertyKey>,
+                   PropertyObservable.PropertyObserver<PropertyKey>,
                    KeyboardAccessoryData.Observer<KeyboardAccessoryData.Action>,
                    TabLayout.OnTabSelectedListener {
-    private final KeyboardAccessoryModel mModel;
+    private final PropertyModel mModel;
     private final VisibilityDelegate mVisibilityDelegate;
 
     private boolean mShowIfNotEmpty;
 
-    KeyboardAccessoryMediator(KeyboardAccessoryModel model, VisibilityDelegate visibilityDelegate) {
+    KeyboardAccessoryMediator(PropertyModel model, VisibilityDelegate visibilityDelegate) {
         mModel = model;
         mVisibilityDelegate = visibilityDelegate;
 
         // Add mediator as observer so it can use model changes as signal for accessory visibility.
         mModel.addObserver(this);
-        mModel.getTabList().addObserver(this);
-        mModel.getActionList().addObserver(this);
-        mModel.setTabSelectionCallbacks(this);
+        mModel.get(TABS).addObserver(this);
+        mModel.get(ACTIONS).addObserver(this);
+        mModel.set(TAB_SELECTION_CALLBACKS, this);
     }
 
     @Override
@@ -55,14 +62,14 @@ class KeyboardAccessoryMediator
         // If there is a new list, retain all actions that are of a different type than the provided
         // actions.
         List<Action> retainedActions = new ArrayList<>();
-        for (Action a : mModel.getActionList()) {
+        for (Action a : mModel.get(ACTIONS)) {
             if (a.getActionType() == typeId) continue;
             retainedActions.add(a);
         }
         // Always append autofill suggestions to the very end.
         int insertPos = typeId == AccessoryAction.AUTOFILL_SUGGESTION ? retainedActions.size() : 0;
         retainedActions.addAll(insertPos, Arrays.asList(actions));
-        mModel.setActions(retainedActions.toArray(new Action[retainedActions.size()]));
+        mModel.get(ACTIONS).set(retainedActions);
     }
 
     void requestShowing() {
@@ -76,15 +83,15 @@ class KeyboardAccessoryMediator
     }
 
     void addTab(KeyboardAccessoryData.Tab tab) {
-        mModel.addTab(tab);
+        mModel.get(TABS).add(tab);
     }
 
     void removeTab(KeyboardAccessoryData.Tab tab) {
-        mModel.removeTab(tab);
+        mModel.get(TABS).remove(tab);
     }
 
     void setTabs(KeyboardAccessoryData.Tab[] tabs) {
-        mModel.getTabList().set(tabs);
+        mModel.get(TABS).set(tabs);
     }
 
     void dismiss() {
@@ -93,50 +100,50 @@ class KeyboardAccessoryMediator
     }
 
     void closeActiveTab() {
-        mModel.setActiveTab(null);
+        mModel.set(ACTIVE_TAB, null);
     }
 
     @VisibleForTesting
-    KeyboardAccessoryModel getModelForTesting() {
+    PropertyModel getModelForTesting() {
         return mModel;
     }
 
     @Override
     public void onItemRangeInserted(ListObservable source, int index, int count) {
-        assert source == mModel.getActionList() || source == mModel.getTabList();
+        assert source == mModel.get(ACTIONS) || source == mModel.get(TABS);
         updateVisibility();
     }
 
     @Override
     public void onItemRangeRemoved(ListObservable source, int index, int count) {
-        assert source == mModel.getActionList() || source == mModel.getTabList();
+        assert source == mModel.get(ACTIONS) || source == mModel.get(TABS);
         updateVisibility();
     }
 
     @Override
     public void onItemRangeChanged(
             ListObservable source, int index, int count, @Nullable Void payload) {
-        assert source == mModel.getActionList() || source == mModel.getTabList();
+        assert source == mModel.get(ACTIONS) || source == mModel.get(TABS);
         assert payload == null;
         updateVisibility();
     }
 
     @Override
-    public void onPropertyChanged(PropertyObservable<KeyboardAccessoryModel.PropertyKey> source,
-            @Nullable KeyboardAccessoryModel.PropertyKey propertyKey) {
+    public void onPropertyChanged(
+            PropertyObservable<PropertyKey> source, @Nullable PropertyKey propertyKey) {
         // Update the visibility only if we haven't set it just now.
-        if (propertyKey == KeyboardAccessoryModel.PropertyKey.VISIBLE) {
+        if (propertyKey == VISIBLE) {
             // When the accessory just (dis)appeared, there should be no active tab.
             closeActiveTab();
             mVisibilityDelegate.onBottomControlSpaceChanged();
-            if (!mModel.isVisible()) {
+            if (!mModel.get(VISIBLE)) {
                 // TODO(fhorschig|ioanap): Maybe the generation bridge should take care of that.
                 onItemsAvailable(AccessoryAction.GENERATE_PASSWORD_AUTOMATIC, new Action[0]);
             }
             return;
         }
-        if (propertyKey == KeyboardAccessoryModel.PropertyKey.ACTIVE_TAB) {
-            Integer activeTab = mModel.activeTab();
+        if (propertyKey == ACTIVE_TAB) {
+            Integer activeTab = mModel.get(ACTIVE_TAB);
             if (activeTab == null) {
                 mVisibilityDelegate.onCloseAccessorySheet();
                 updateVisibility();
@@ -145,8 +152,7 @@ class KeyboardAccessoryMediator
             mVisibilityDelegate.onChangeAccessorySheet(activeTab);
             return;
         }
-        if (propertyKey == KeyboardAccessoryModel.PropertyKey.BOTTOM_OFFSET
-                || propertyKey == KeyboardAccessoryModel.PropertyKey.TAB_SELECTION_CALLBACKS) {
+        if (propertyKey == BOTTOM_OFFSET_PX || propertyKey == TAB_SELECTION_CALLBACKS) {
             return;
         }
         assert false : "Every property update needs to be handled explicitly!";
@@ -154,7 +160,7 @@ class KeyboardAccessoryMediator
 
     @Override
     public void onTabSelected(TabLayout.Tab tab) {
-        mModel.setActiveTab(tab.getPosition());
+        mModel.set(ACTIVE_TAB, tab.getPosition());
     }
 
     @Override
@@ -162,37 +168,37 @@ class KeyboardAccessoryMediator
 
     @Override
     public void onTabReselected(TabLayout.Tab tab) {
-        if (mModel.activeTab() == null) {
-            mModel.setActiveTab(tab.getPosition());
+        if (mModel.get(ACTIVE_TAB) == null) {
+            mModel.set(ACTIVE_TAB, tab.getPosition());
         } else {
             KeyboardAccessoryMetricsRecorder.recordSheetTrigger(
-                    mModel.getTabList().get(mModel.activeTab()).getRecordingType(), MANUAL_CLOSE);
+                    mModel.get(TABS).get(mModel.get(ACTIVE_TAB)).getRecordingType(), MANUAL_CLOSE);
             mVisibilityDelegate.onOpenKeyboard(); // This will close the active tab gently.
         }
     }
 
     boolean hasContents() {
-        return mModel.getActionList().size() > 0 || mModel.getTabList().size() > 0;
+        return mModel.get(ACTIONS).size() > 0 || mModel.get(TABS).size() > 0;
     }
 
     private boolean shouldShowAccessory() {
-        if (!mShowIfNotEmpty && mModel.activeTab() == null) return false;
+        if (!mShowIfNotEmpty && mModel.get(ACTIVE_TAB) == null) return false;
         return hasContents();
     }
 
     private void updateVisibility() {
-        mModel.setVisible(shouldShowAccessory());
+        mModel.set(VISIBLE, shouldShowAccessory());
     }
 
     public void setBottomOffset(@Px int bottomOffset) {
-        mModel.setBottomOffset(bottomOffset);
+        mModel.set(BOTTOM_OFFSET_PX, bottomOffset);
     }
 
     public boolean isShown() {
-        return mModel.isVisible();
+        return mModel.get(VISIBLE);
     }
 
     public boolean hasActiveTab() {
-        return mModel.isVisible() && mModel.activeTab() != null;
+        return mModel.get(VISIBLE) && mModel.get(ACTIVE_TAB) != null;
     }
 }

@@ -4,9 +4,14 @@
 
 package org.chromium.chrome.browser.explore_sites;
 
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.util.DisplayMetrics;
+import android.view.WindowManager;
 
 import org.chromium.base.Callback;
+import org.chromium.base.ContextUtils;
+import org.chromium.base.annotations.CalledByNative;
 import org.chromium.base.annotations.JNINamespace;
 import org.chromium.chrome.browser.profiles.Profile;
 
@@ -22,6 +27,8 @@ public class ExploreSitesBridge {
 
     /**
      * Fetches the catalog data for Explore page.
+     *
+     * Callback will be called with |null| if an error occurred.
      */
     public static void getEspCatalog(
             Profile profile, Callback<List<ExploreSitesCategory>> callback) {
@@ -29,45 +36,69 @@ public class ExploreSitesBridge {
         nativeGetEspCatalog(profile, result, callback);
     }
 
-    /**
-     * Fetches the catalog data for New Tab page.
-     */
-    public static void getNtpCatalog(
-            Profile profile, Callback<List<ExploreSitesCategory>> callback) {
-        List<ExploreSitesCategory> result = new ArrayList<>();
-        nativeGetNtpCatalog(profile, result, callback);
+    public static void getSiteImage(Profile profile, int siteID, Callback<Bitmap> callback) {
+        nativeGetIcon(profile, siteID, callback);
     }
 
-    /* These methods for Experimental Explore Sites */
-
-    /**
-     * Fetches a JSON string from URL, returning the parsed JSONobject in a callback.
-     * This will cancel any pending JSON fetches.
-     */
-    public static void getNtpCategories(
-            Profile profile, final Callback<List<ExploreSitesCategoryTile>> callback) {
-        List<ExploreSitesCategoryTile> result = new ArrayList<>();
-        nativeGetNtpCategories(profile, result, callback);
+    public static void getCategoryImage(
+            Profile profile, int categoryID, int pixelSize, Callback<Bitmap> callback) {
+        nativeGetCategoryImage(profile, categoryID, pixelSize, callback);
     }
 
     /**
-     * Fetches an icon from a url and returns in a Bitmap image. The callback argument will be null
-     * if the operation fails.
+     * Causes a network request for updating the catalog.
      */
-    public static void getIcon(
-            Profile profile, final String iconUrl, final Callback<Bitmap> callback) {
-        nativeGetIcon(profile, iconUrl, callback);
+    public static void updateCatalogFromNetwork(
+            Profile profile, boolean isImmediateFetch, Callback<Boolean> finishedCallback) {
+        nativeUpdateCatalogFromNetwork(profile, isImmediateFetch, finishedCallback);
+    }
+    /**
+     * Adds a site to the blacklist when the user chooses "remove" from the long press menu.
+     */
+    public static void blacklistSite(Profile profile, String url) {
+        nativeBlacklistSite(profile, url);
     }
 
-    private static native void nativeGetNtpCategories(Profile profile,
-            List<ExploreSitesCategoryTile> result,
-            Callback<List<ExploreSitesCategoryTile>> callback);
-    private static native void nativeGetIcon(
-            Profile profile, String iconUrl, Callback<Bitmap> callback);
-    public static native String nativeGetCatalogUrl();
+    /**
+     * Gets the current Finch variation that is configured by flag or experiment.
+     */
+    @ExploreSitesVariation
+    public static int getVariation() {
+        return nativeGetVariation();
+    }
 
-    private static native void nativeGetNtpCatalog(Profile profile,
-            List<ExploreSitesCategory> result, Callback<List<ExploreSitesCategory>> callback);
+    @CalledByNative
+    static void scheduleDailyTask() {
+        ExploreSitesBackgroundTask.schedule(false /* updateCurrent */);
+    }
+
+    /**
+     * Returns the scale factor on this device.
+     */
+    @CalledByNative
+    static float getScaleFactorFromDevice() {
+        // Get DeviceMetrics from context.
+        DisplayMetrics metrics = new DisplayMetrics();
+        ((WindowManager) ContextUtils.getApplicationContext().getSystemService(
+                 Context.WINDOW_SERVICE))
+                .getDefaultDisplay()
+                .getMetrics(metrics);
+        // Get density and return it.
+        return metrics.density;
+    }
+
+    static native int nativeGetVariation();
     private static native void nativeGetEspCatalog(Profile profile,
             List<ExploreSitesCategory> result, Callback<List<ExploreSitesCategory>> callback);
+
+    private static native void nativeGetIcon(
+            Profile profile, int siteID, Callback<Bitmap> callback);
+
+    private static native void nativeUpdateCatalogFromNetwork(
+            Profile profile, boolean isImmediateFetch, Callback<Boolean> callback);
+
+    private static native void nativeGetCategoryImage(
+            Profile profile, int categoryID, int pixelSize, Callback<Bitmap> callback);
+
+    private static native void nativeBlacklistSite(Profile profile, String url);
 }

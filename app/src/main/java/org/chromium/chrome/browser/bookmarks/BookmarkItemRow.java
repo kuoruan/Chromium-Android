@@ -13,7 +13,6 @@ import org.chromium.chrome.R;
 import org.chromium.chrome.browser.bookmarks.BookmarkBridge.BookmarkItem;
 import org.chromium.chrome.browser.favicon.IconType;
 import org.chromium.chrome.browser.favicon.LargeIconBridge.LargeIconCallback;
-import org.chromium.chrome.browser.util.FeatureUtilities;
 import org.chromium.chrome.browser.util.ViewUtils;
 import org.chromium.chrome.browser.widget.RoundedIconGenerator;
 import org.chromium.components.bookmarks.BookmarkId;
@@ -35,8 +34,7 @@ public class BookmarkItemRow extends BookmarkRow implements LargeIconCallback {
         super(context, attrs);
         mMinIconSize = (int) getResources().getDimension(R.dimen.default_favicon_min_size);
         mDisplayedIconSize = getResources().getDimensionPixelSize(R.dimen.default_favicon_size);
-        mIconGenerator = ViewUtils.createDefaultRoundedIconGenerator(
-                FeatureUtilities.isChromeModernDesignEnabled());
+        mIconGenerator = ViewUtils.createDefaultRoundedIconGenerator(true);
     }
 
     // BookmarkRow implementation.
