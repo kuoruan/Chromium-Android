@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2018 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/suggestions_url_view"
+    android:minHeight="@dimen/omnibox_suggestion_edit_url_min_height"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground" >
+
+    <LinearLayout
+        android:id="@+id/edit_url_suggestion_icons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:orientation="horizontal"
+        android:layout_marginEnd="@dimen/omnibox_suggestion_refine_view_modern_end_padding">
+
+        <org.chromium.ui.widget.ChromeImageButton
+            android:id="@+id/url_copy_icon"
+            style="@style/OmniboxSuggestionIconButton"
+            app:srcCompat="@drawable/ic_content_copy_black"
+            android:contentDescription="@string/copy_link"
+            android:visibility="gone" />
+
+        <org.chromium.ui.widget.ChromeImageButton
+            android:id="@+id/url_share_icon"
+            style="@style/OmniboxSuggestionIconButton"
+            app:srcCompat="@drawable/ic_share_white_24dp"
+            android:contentDescription="@string/menu_share_page"
+            android:visibility="gone" />
+
+        <org.chromium.ui.widget.ChromeImageButton
+            android:id="@+id/url_edit_icon"
+            style="@style/OmniboxSuggestionIconButton"
+            app:srcCompat="@drawable/bookmark_edit_active"
+            android:contentDescription="@string/bookmark_item_edit" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@id/edit_url_suggestion_icons"
+        android:orientation="vertical"
+        android:layout_marginStart="@dimen/omnibox_suggestion_start_offset">
+
+        <TextView
+            android:id="@+id/title_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:textAppearance="@style/TextAppearance.BlackTitle1"
+            android:singleLine="true" />
+
+        <TextView
+            android:id="@+id/full_url_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:textAppearance="@style/TextAppearance.OmniboxSuggestionSecondLine"
+            android:singleLine="true" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_alignParentBottom="true"
+        android:importantForAccessibility="no"
+        style="@style/HorizontalDivider" />
+
+</RelativeLayout>

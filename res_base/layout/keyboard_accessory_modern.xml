@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2018 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryModernView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/keyboard_accessory"
+    android:layout_gravity="start|bottom"
+    android:contentDescription="@string/autofill_keyboard_accessory_content_description"
+    android:scrollbars="none"
+    android:visibility="gone"
+    android:orientation="vertical"
+    android:layout_height="@dimen/keyboard_accessory_height_with_shadow"
+    android:layout_width="match_parent"
+    android:paddingEnd="0dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <ImageView
+        android:id="@+id/accessory_shadow"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/toolbar_shadow_height"
+        android:src="@drawable/modern_toolbar_shadow"
+        android:scaleType="fitXY"
+        android:scaleY="-1"
+        tools:ignore="ContentDescription" />
+
+    <LinearLayout
+        android:id="@+id/accessory_bar_contents"
+        android:layout_width="match_parent"
+        android:minHeight="@dimen/keyboard_accessory_bar_item_height"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start|bottom"
+        android:orientation="horizontal"
+        android:background="@color/modern_primary_color">
+
+        <ImageView
+            android:id="@+id/show_keyboard"
+            android:layout_width="wrap_content"
+            android:layout_weight="0"
+            android:layout_height="match_parent"
+            android:paddingStart="@dimen/keyboard_accessory_bar_item_padding"
+            android:paddingEnd="@dimen/keyboard_accessory_bar_item_padding"
+            android:paddingTop="@dimen/keyboard_accessory_padding"
+            android:paddingBottom="@dimen/keyboard_accessory_padding"
+            android:clickable="true"
+            android:focusable="true"
+            android:contentDescription="@string/keyboard_accessory_sheet_hide"
+            android:background="?attr/selectableItemBackground"/>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/bar_items_view"
+            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <View
+            android:id="@+id/tabs_items_spacer"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:background="@null" />
+
+        <View
+            android:id="@+id/tabs_items_divider"
+            android:layout_weight="0"
+            style="@style/VerticalDivider" />
+
+        <include layout="@layout/keyboard_accessory_tabs" />
+    </LinearLayout>
+
+</org.chromium.chrome.browser.autofill.keyboard_accessory.KeyboardAccessoryModernView>

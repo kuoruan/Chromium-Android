@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2018 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<!-- Autofill Assistant specific PaymentRequestUI dialog
+     Sits at the bottom of the screen like a Bottom Sheet.
+-->
+<org.chromium.chrome.browser.widget.BoundedLinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/autofill_assistant_payment_request"
+    android:orientation="vertical"
+    android:gravity="center"
+    app:maxWidthLandscape="@dimen/payments_ui_max_dialog_width"
+    app:maxWidthPortrait="@dimen/payments_ui_max_dialog_width"
+    android:background="@android:color/white" >
+
+    <!-- TODO(crbug.com/806868): Spinny is probably also obsolete. -->
+    <include layout="@layout/payment_request_spinny" />
+
+    <org.chromium.chrome.browser.widget.FadingEdgeScrollView
+        android:id="@+id/option_container"
+        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:visibility="gone" >
+
+        <LinearLayout
+            android:id="@+id/payment_container_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+    </org.chromium.chrome.browser.widget.FadingEdgeScrollView>
+
+    <!-- 3rd party terms & conditions.
+         Set margins to align the background box with the other payment request sections. -->
+    <RadioGroup
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="18dp"
+        android:background="@drawable/autofill_assistant_lightblue_rect_bg">
+
+        <!-- Set paddingStart to add padding between radio-button and text.
+             Set margins to add some padding between text and start/end of background box. -->
+        <Space android:layout_width="0dp" android:layout_height="9dp"/>
+        <android.support.v7.widget.AppCompatRadioButton
+            android:id="@+id/terms_checkbox_agree"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="9dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:text="@string/autofill_assistant_3rd_party_terms_accept"
+            android:textAppearance="@style/TextAppearance.BlackCaption"/>
+        <Space android:layout_width="0dp" android:layout_height="5dp"/>
+        <android.support.v7.widget.AppCompatRadioButton
+            android:id="@+id/terms_checkbox_review"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="9dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:text="@string/autofill_assistant_3rd_party_terms_review"
+            android:textAppearance="@style/TextAppearance.BlackCaption"/>
+        <Space android:layout_width="0dp" android:layout_height="9dp"/>
+    </RadioGroup>
+
+    <include layout="@layout/autofill_assistant_payment_request_bottom_bar" />
+
+</org.chromium.chrome.browser.widget.BoundedLinearLayout>

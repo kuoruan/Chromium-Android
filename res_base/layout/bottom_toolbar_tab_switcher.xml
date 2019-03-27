@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2018 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/bottom_toolbar_tab_switcher"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:visibility="gone"
+    android:clickable="true" >
+
+    <ImageView
+        android:id="@+id/bottom_toolbar_top_shadow"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/toolbar_shadow_height"
+        android:src="@drawable/modern_toolbar_shadow"
+        android:scaleType="fitXY"
+        android:scaleY="-1"
+        tools:ignore="ContentDescription" />
+
+    <LinearLayout
+        android:id="@+id/bottom_toolbar_buttons"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/bottom_toolbar_height"
+        android:background="@color/modern_primary_color"
+        android:paddingStart="@dimen/bottom_toolbar_start_padding"
+        android:paddingEnd="@dimen/bottom_toolbar_end_padding"
+        android:layout_marginTop="@dimen/toolbar_shadow_height" >
+
+      <org.chromium.chrome.browser.toolbar.bottom.CloseAllTabsButton
+          android:id="@+id/close_all_tabs_button"
+          style="@style/BottomToolbarButton"
+          android:src="@drawable/ic_close_all_tabs"
+          android:contentDescription="@string/accessibility_toolbar_btn_close_all_tabs"
+          app:tint="@color/dark_mode_tint" />
+
+      <include layout="@layout/toolbar_space" />
+
+      <org.chromium.chrome.browser.toolbar.bottom.BottomToolbarNewTabButton
+          android:id="@+id/tab_switcher_new_tab_button"
+          android:layout_width="@dimen/search_accelerator_height"
+          android:layout_height="@dimen/search_accelerator_height"
+          android:layout_gravity="center"
+          android:paddingTop="@dimen/search_accelerator_height_padding"
+          android:paddingBottom="@dimen/search_accelerator_height_padding"
+          android:contentDescription="@string/accessibility_toolbar_btn_new_tab" />
+
+      <include layout="@layout/toolbar_space" />
+
+      <include layout="@layout/menu_button" />
+
+    </LinearLayout>
+
+</FrameLayout>

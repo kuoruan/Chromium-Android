@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+<string name="low_memory_error">"内存不足，无法完成上一操作"</string>
+<string name="opening_file_error">"无法打开所选文件"</string>
+<string name="copy_to_clipboard_failure_message">"未能复制到剪贴板"</string>
+<string name="url_copied">"已复制网址。"</string>
+<string name="current_detected_ui_locale_name">zh-CN</string>
+</resources>

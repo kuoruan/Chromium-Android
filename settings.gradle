@@ -1,0 +1,2 @@
+include ':app', ':ui', ':data_chart', ':media', ':content', ':components:autofill', ':customtabs', ':download',
+        ':splash', ':autofill_assistant', ':feed', ':components:embedder_support', ':components:components_base'

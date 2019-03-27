@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2015 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<org.chromium.chrome.browser.toolbar.top.CustomTabToolbar
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/toolbar"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/custom_tabs_control_container_height">
+    <ImageButton
+        android:id="@+id/close_button"
+        style="@style/ToolbarButton"
+        android:layout_gravity="start|center_vertical"
+        android:contentDescription="@string/close_tab" />
+    <FrameLayout
+        android:id="@+id/location_bar_frame_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical" >
+        <org.chromium.ui.widget.ChromeImageButton
+            android:id="@+id/security_button"
+            style="@style/LocationBarButton"
+            android:layout_width="@dimen/location_bar_icon_width"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:scaleType="center"
+            android:visibility="invisible"
+            app:tint="@color/dark_mode_tint" />
+        <view
+            class="org.chromium.chrome.browser.toolbar.top.CustomTabToolbar$InterceptTouchLayout"
+            android:id="@+id/title_url_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:background="@null" >
+            <TextView
+                android:id="@+id/title_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:layout_marginBottom="@dimen/custom_tabs_toolbar_vertical_padding"
+                android:background="@null"
+                android:ellipsize="end"
+                android:inputType="none"
+                android:maxLines="1"
+                android:paddingEnd="@dimen/toolbar_edge_padding"
+                style="@style/TextAppearance.BlackTitle1"
+                android:visibility="gone" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom" >
+                <TextView
+                    android:id="@+id/url_bar_lite_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:background="@null"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/location_bar_preview_lite_page_status"
+                    style="@style/TextAppearance.BlackCaptionDefault"
+                    android:visibility="gone" />
+
+                <!-- This separator is in line with text and is used in lieu
+                     of a | character. Therefore, use the text size for its
+                     height and not a dp value. -->
+                <View
+                    android:id="@+id/url_bar_lite_status_separator"
+                    android:layout_height="@dimen/custom_tabs_url_text_size"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="@dimen/custom_tabs_url_lite_separator_margin"
+                    android:layout_marginEnd="@dimen/custom_tabs_url_lite_separator_margin"
+                    style="@style/VerticalDivider"
+                    android:visibility="gone" />
+
+                <org.chromium.chrome.browser.omnibox.UrlBar
+                    android:id="@+id/url_bar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:inputType="none"
+                    android:singleLine="true"
+                    android:paddingEnd="@dimen/toolbar_edge_padding"
+                    style="@style/TextAppearance.BlackCaptionDefault" />
+            </LinearLayout>
+        </view>
+    </FrameLayout>
+    <LinearLayout
+        android:id="@+id/action_buttons"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="42dp"
+        android:layout_gravity="center_vertical|end"
+        android:gravity="center_vertical"
+        android:orientation="horizontal" />
+    <org.chromium.ui.widget.ChromeImageButton
+        android:id="@+id/menu_button"
+        style="@style/ToolbarButton"
+        android:layout_gravity="center_vertical|end"
+        android:layout_width="42dp"
+        android:paddingEnd="4dp"
+        android:src="@drawable/ic_more_vert_black_24dp"
+        android:contentDescription="@string/accessibility_toolbar_btn_menu"
+        android:background="@null"
+        app:tint="@color/dark_mode_tint" />
+</org.chromium.chrome.browser.toolbar.top.CustomTabToolbar>

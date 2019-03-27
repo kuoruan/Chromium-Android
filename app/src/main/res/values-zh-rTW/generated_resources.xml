@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+<string name="infobar_update_permissions_button_text">"繼續"</string>
+<string name="search_or_type_web_address">"搜尋或輸入網址"</string>
+<string name="options_homepage_title">"首頁"</string>
+<string name="autofill_from_google_account">"Google Pay"</string>
+<string name="sync_confirmation_chrome_sync_title">"Google Chrome 同步功能"</string>
+<string name="sync_confirmation_chrome_sync_message">"您的書籤、歷史記錄、密碼和其他設定都會在您的 Google 帳戶中保持同步，讓您在所有個人裝置上使用。"</string>
+<string name="sync_confirmation_personalize_services_title">"享有個人化的 Google 服務"</string>
+<string name="sync_confirmation_personalize_services_body">"Google 可能會使用您的瀏覽記錄，為您提供個人化的搜尋服務、廣告內容和其他各項 Google 服務"</string>
+<string name="sync_confirmation_personalize_services_body_child_account">"Google 可能會使用您的瀏覽記錄，為您提供個人化的搜尋服務和其他各項 Google 服務。"</string>
+<string name="external_app_leave_incognito_warning">"這個網站即將與外部應用程式分享資訊，分享時會自動退出無痕模式。"</string>
+<string name="external_app_leave_incognito_warning_title">"要退出無痕模式嗎？"</string>
+<string name="external_app_leave_incognito_stay">"不離開"</string>
+<string name="external_app_leave_incognito_leave">"離開"</string>
+<string name="external_app_restricted_access_error">"Chrome 無法存取要求的資源。"</string>
+<string name="blocked_ads_prompt_title">"已封鎖廣告"</string>
+<string name="video_call_notification_text_2">"正在存取視訊輸入"</string>
+<string name="audio_call_notification_text_2">"正在存取音訊輸入"</string>
+<string name="video_audio_call_notification_text_2">"正在存取音訊和視訊輸入"</string>
+<string name="video_call_incognito_notification_text_2">"有某個網站正在存取視訊輸入內容"</string>
+<string name="audio_call_incognito_notification_text_2">"有某個網站正在存取音訊輸入內容"</string>
+<string name="video_audio_call_incognito_notification_text_2">"有某個網站正在存取音訊和視訊輸入內容"</string>
+</resources>

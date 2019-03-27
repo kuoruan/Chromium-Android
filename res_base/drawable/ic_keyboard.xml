@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2018 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:targetApi="21"
+        android:width="24dp"
+        android:height="24dp"
+        android:viewportWidth="24.0"
+        android:viewportHeight="24.0">
+    <path
+        android:fillColor="@color/default_icon_color"
+        android:pathData="M 21.55 3.12 L 2.464 3.12 C 1.145 3.12 0.087 4.19 0.087 5.505 L 0.075 17.436 C 0.075 18.755 1.145 19.821 2.464 19.821 L 21.55 19.821 C 22.869 19.821 23.939 18.755 23.939 17.436 L 23.939 5.505 C 23.939 4.19 22.869 3.12 21.55 3.12 Z M 10.814 6.701 L 13.199 6.701 L 13.199 9.086 L 10.814 9.086 L 10.814 6.701 Z M 10.814 10.278 L 13.199 10.278 L 13.199 12.663 L 10.814 12.663 L 10.814 10.278 Z M 7.233 6.701 L 9.622 6.701 L 9.622 9.086 L 7.233 9.086 L 7.233 6.701 Z M 7.233 10.278 L 9.622 10.278 L 9.622 12.663 L 7.233 12.663 L 7.233 10.278 Z M 6.041 12.663 L 3.657 12.663 L 3.657 10.278 L 6.041 10.278 L 6.041 12.663 Z M 6.041 9.086 L 3.657 9.086 L 3.657 6.701 L 6.041 6.701 L 6.041 9.086 Z M 16.78 17.436 L 7.233 17.436 L 7.233 15.052 L 16.78 15.052 L 16.78 17.436 Z M 16.78 12.663 L 14.392 12.663 L 14.392 10.278 L 16.78 10.278 L 16.78 12.663 Z M 16.78 9.086 L 14.392 9.086 L 14.392 6.701 L 16.78 6.701 L 16.78 9.086 Z M 20.357 12.663 L 17.973 12.663 L 17.973 10.278 L 20.357 10.278 L 20.357 12.663 Z M 20.357 9.086 L 17.973 9.086 L 17.973 6.701 L 20.357 6.701 L 20.357 9.086 Z M 12.007 26.983"/>
+</vector>

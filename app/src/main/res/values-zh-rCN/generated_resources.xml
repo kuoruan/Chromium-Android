@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+<string name="infobar_update_permissions_button_text">"继续"</string>
+<string name="search_or_type_web_address">"搜索或输入网址"</string>
+<string name="options_homepage_title">"主页"</string>
+<string name="autofill_from_google_account">"Google Pay"</string>
+<string name="sync_confirmation_chrome_sync_title">"Chrome 浏览器同步"</string>
+<string name="sync_confirmation_chrome_sync_message">"您的书签、历史记录、密码及其他设置均将同步到您的 Google 帐号，以便您在自己的任意设备上使用"</string>
+<string name="sync_confirmation_personalize_services_title">"对 Google 服务进行个性化设置"</string>
+<string name="sync_confirmation_personalize_services_body">"Google 可能会利用您的浏览记录为您提供个性化的 Google 搜索、广告和其他 Google 服务"</string>
+<string name="sync_confirmation_personalize_services_body_child_account">"Google 可能会使用您的浏览记录对 Google 搜索和其他 Google 服务进行个性化设置"</string>
+<string name="external_app_leave_incognito_warning">"该网站即将与某个并非处于隐身模式下的应用共享信息。"</string>
+<string name="external_app_leave_incognito_warning_title">"退出隐身模式？"</string>
+<string name="external_app_leave_incognito_stay">"留下"</string>
+<string name="external_app_leave_incognito_leave">"离开"</string>
+<string name="external_app_restricted_access_error">"Chrome 无权访问请求的资源。"</string>
+<string name="blocked_ads_prompt_title">"广告已被拦截"</string>
+<string name="video_call_notification_text_2">"正在存取视频输入"</string>
+<string name="audio_call_notification_text_2">"正在存取音频输入"</string>
+<string name="video_audio_call_notification_text_2">"正在存取音频和视频输入"</string>
+<string name="video_call_incognito_notification_text_2">"网站正在使用视频输入"</string>
+<string name="audio_call_incognito_notification_text_2">"网站正在使用音频输入"</string>
+<string name="video_audio_call_incognito_notification_text_2">"网站正在使用音频和视频输入"</string>
+</resources>

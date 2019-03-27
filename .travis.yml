@@ -1,0 +1,72 @@
+language: android
+sudo: false
+jdk: oraclejdk8
+before_cache:
+  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.android/build-cache
+
+env:
+  global:
+    - ANDROID_API=28
+    - ANDROID_BUILD_TOOLS=28.0.3
+    - secure: "gCI6oCqJwEZe9B8S4I2qNOXG8Ujv3B/beFsbacMOZIA+8Q6OeR7kV7+VMcCvjGa5ZhcBhCcDfwFz13sDOExj1qE0rRaYmwsWc0sFomZqUE2QtvidB2OgZGX1JeTHNqObb36JxfXYn2QZJ8II8SE0ZiEsy30q5FlOqNo3uEqr3ETDYK/X44JgYWMeqqFiATycYu21jK7aJeHHt+Z3tlpda+bsAaMm909EhblkiJq/wyQuvl1fu/elVTcyERkbQcOnIjJ1zbYHr3Wm6gUz7FaipVrsYFlQ8xyCHyaub6DdNt2Yi6fF5LhCjl4hUwGGwNKxo5xu3d9jfNU8va5mxXzw6R4fNr85oI/1kwT8ofuDfzBJiAM3yfhyTpnuv5LL99HTILToJT7tAtoOsxGSH+Po3LMJJ8/JDNt/ade37qPyfmKK+SoVdh3nPhFcSe/u4uxNuFkOvbDSWRdsWLp1N8zDhajTNiZaS6/mhIRxAJqCyQ2689yk4lqEVQa8zXlibd/WmPIGzfQ5gJdFmSxj+RmZmMENtAi4i51jP8QMiaClGY0uxDkuCmehvC2yn0/O6eF9g7e2NmiV3BUb24UZeHBUu563p/ZfgGuJVMgkaB4t+ZMiX/hzw6URrs/y9Tg0i6b1oSv6F1+UQ2z3LszYdi9Uc/ZIFsDIfxQA3500AqB9JG0="
+    - secure: "Zs7zBbaiKQAJrAh5MjU7/kGGh4vI9FdtblclWpuXspYtkaHlM1xmgzo+DlQ/VY+WIFaJLrW362skVbh7VE/6qwa4AE0+/MSMTaDdPPXkmOuaQ+0vesd9m2QqrmKuTX/RE5gioULg1tAWYgGbBVE7fLhSiv5fbt1PKhOkgDx+AnzJ/0J+JapOVWIKQ9dHMKRSNZIG4705XgXMoKeQJWSnV12ZPnId2Gp0a95zV2B8LwJPZs5javfi63ZYvHEttCdp1ri+0XqyMCnO472gxbJffvPCXF5oxj1CIl54I2EmdKWV5F2qHGqkf55gFrnCUUpKbwcHin1PQvSEKbwEyMNpQFGGyroqPiMNheyT3v/2/z6H4/ybSjPwuxfuaXibQPyVUMqHsysfAov4JRlwgpfpoWlPDZaWxBEKKoTAYuSY///cHCCw3BqJHIn+jgD0TFzmQaBzM6yWuRG9IQOmwh6boxe7ed24H2LQZV9++L82tnGaHD8kWwQ1A3y0BpQvPrUtLf/KdO1YNG2nMEbtIQvN3bPaEFdJmTKQvUdj/JYVkhu0MdjlC1T95LgZi43f0W88d65U7DjlN7M6StfF3jXdrTRQg6viq8KbKdRd11v/NkaElps6B4uBOYWfqnsf//ka4yKgR2ts52q293wK75PC0Y+yZsn2HUnOSsstNxBsEmQ="
+
+android:
+  components:
+    - tools
+    - platform-tools
+    - tools
+    - build-tools-$ANDROID_BUILD_TOOLS
+    - android-$ANDROID_API
+    - extra-google-google_play_services
+    - extra-google-m2repository
+    - extra-android-m2repository
+  licenses:
+    - 'android-sdk-license-.+'
+    - 'android-sdk-preview-license-.+'
+    - 'google-gdk-license-.+'
+
+notifications:
+  email: false
+
+git:
+  depth: 1
+  submodules: false
+
+before_install:
+  - yes | sdkmanager "platforms;android-28"
+  - openssl aes-256-cbc -K $encrypted_fe6090d19007_key -iv $encrypted_fe6090d19007_iv -in chrome.jks.enc -out chrome.jks -d
+  - chmod +x gradlew
+  - ./gradlew dependencies
+
+script:
+  - travis_wait ./gradlew clean build -PdisablePreDex --stacktrace
+
+before_deploy:
+  - cp $TRAVIS_BUILD_DIR/chrome.jks $HOME
+  - cd app/build/outputs/apk/release/
+  - jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore $HOME/chrome.jks -storepass $storepass -keypass $keypass app-release-unsigned.apk key0
+
+  # Verification
+  - jarsigner -verify app-release-unsigned.apk
+  - ${ANDROID_HOME}/build-tools/${ANDROID_BUILD_TOOLS}/zipalign -v 4 app-release-unsigned.apk Chromium.apk
+
+deploy:
+  provider: releases
+  file: Chromium.apk
+  skip_cleanup: true
+
+  on:
+    repo: kuoruan/Chromium-Android
+    tags: true
+    jdk: oraclejdk8
+
+  api_key:
+    secure: "V1pV11IkOWeY3FaUY8QSFG2+Q6Z3QmKf+iU4TDInSI2RQqb9e0y6dvQJG8hs9zaa0wxBcyJpKQ6Ub5OzZXKJ4aIycI8S7BIn6NVmWiuT+3gwsXd+85urbdPwui07tWmms7YpgR4+V/k3iwvCIsCknBzdLxsMwfle5sP06sij33nTGydM0A8xCLFmDFx4HVY7jrxg/7mu/s5c16ErrZupnWHA9R/VHFkxr0Y6Tt4ZoTZF/fSSdOYfp8utUy1O7DwaID6paF2eJadEXqjTNoUtwALyVnUqM6WY7igTuJDDTNcLDS3gNhopZGglCYKXHW/i0IllFlhZ2iZebQBoyLJTkdKmWiFwL5pRizk2UKd02JSfmneKqn3JWw5eGVQRrlYvEUJrDMpmTEKqxs5tawPKOA3Vzo736GZ983OeesWyNqso2TO88lB4fwaQ0Mlt7qCpNaPJnBUnE4qc7GxV0ZbcwslwW9uTvGelxsG5zXWWxDeHuJXFpS4XJvQeZ5Ri86CwXxAJhLYJs6KELgRRWMCcQXoH3gT1v1HGyRT4EHOXKwQ1JrP4mPd1AqpbLsCXKsIt/p1xe7w+mDMmkJ22hE7KBCczRlrBQtBUVGtm0ddPQMkzhn18OiGeVLYrE35IV3LWFl5mNe50+K3U4eXLJOuehwfSX5WWvHPFxrdD3BXAh5w="

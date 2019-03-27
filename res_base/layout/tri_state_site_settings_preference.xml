@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2018 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<!-- Layout used by the TriStateSiteSettingsPreference. -->
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/PreferenceLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <org.chromium.chrome.browser.widget.RadioButtonWithDescription
+        android:id="@+id/allowed"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:titleText="@string/website_settings_category_allowed" />
+
+    <org.chromium.chrome.browser.widget.RadioButtonWithDescription
+        android:id="@+id/ask"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:titleText="@string/website_settings_category_ask" />
+
+    <org.chromium.chrome.browser.widget.RadioButtonWithDescription
+        android:id="@+id/blocked"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:titleText="@string/website_settings_category_blocked" />
+</LinearLayout>

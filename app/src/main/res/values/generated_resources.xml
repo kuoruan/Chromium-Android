@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+<string name="infobar_update_permissions_button_text">"Continue"</string>
+<string name="search_or_type_web_address">"Search or type web address"</string>
+<string name="options_homepage_title">"Home page"</string>
+<string name="autofill_from_google_account">"Google Pay"</string>
+<string name="sync_confirmation_chrome_sync_title">"Chrome Sync"</string>
+<string name="sync_confirmation_chrome_sync_message">"Your bookmarks, history, passwords, and other settings will be synced to your Google Account so you can use them on all your devices"</string>
+<string name="sync_confirmation_personalize_services_title">"Personalize Google services"</string>
+<string name="sync_confirmation_personalize_services_body">"Google may use your browsing history to personalize Search, ads, and other Google services"</string>
+<string name="sync_confirmation_personalize_services_body_child_account">"Google may use your browsing history to personalize Search and other Google services"</string>
+<string name="external_app_leave_incognito_warning">"This site is about to share information with an app outside of incognito mode."</string>
+<string name="external_app_leave_incognito_warning_title">"Leave incognito mode?"</string>
+<string name="external_app_leave_incognito_stay">"Stay"</string>
+<string name="external_app_leave_incognito_leave">"Leave"</string>
+<string name="external_app_restricted_access_error">"Chrome does not have access to the requested resource."</string>
+<string name="blocked_ads_prompt_title">"Ads blocked"</string>
+<string name="video_call_notification_text_2">"Accessing video input"</string>
+<string name="audio_call_notification_text_2">"Accessing audio input"</string>
+<string name="video_audio_call_notification_text_2">"Accessing audio and video input"</string>
+<string name="video_call_incognito_notification_text_2">"A site is accessing video input"</string>
+<string name="audio_call_incognito_notification_text_2">"A site is accessing audio input"</string>
+<string name="video_audio_call_incognito_notification_text_2">"A site is accessing audio and video input"</string>
+</resources>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2018 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<org.chromium.chrome.browser.toolbar.top.TabSwitcherModeTTPhone
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tab_switcher_toolbar"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/toolbar_height_no_shadow" >
+
+    <org.chromium.chrome.browser.toolbar.NewTabButton
+        android:id="@+id/new_tab_button"
+        style="@style/ToolbarButton"
+        android:layout_width="wrap_content"
+        android:layout_gravity="start|top"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:contentDescription="@string/accessibility_toolbar_btn_new_tab" />
+
+    <ViewStub
+        android:id="@+id/incognito_tabs_stub"
+        android:inflatedId="@+id/incognito_toggle_tabs"
+        android:layout="@layout/incognito_toggle_tabs"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end" >
+
+        <!-- TODO(crbug.com/912358): Enable touch highlight on this button. -->
+        <org.chromium.chrome.browser.toolbar.top.ToggleTabStackButton
+            android:id="@+id/tab_switcher_mode_tab_switcher_button"
+            style="@style/ToolbarButton"
+            android:background="@android:color/transparent"
+            android:paddingStart="8dp"
+            android:layout_gravity="top"
+            android:contentDescription="@string/accessibility_toolbar_btn_tabswitcher_toggle_default" />
+
+        <include layout="@layout/menu_button" />
+
+    </LinearLayout>
+
+</org.chromium.chrome.browser.toolbar.top.TabSwitcherModeTTPhone>

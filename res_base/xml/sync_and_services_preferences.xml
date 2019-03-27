@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2018 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <org.chromium.chrome.browser.preferences.SignInPreference
+        android:key="sign_in"
+        android:title="@string/sign_in_to_chrome"/>
+
+    <PreferenceCategory
+        android:key="sync_category"
+        android:title="@string/sync_category_title">
+
+        <Preference
+            android:key="sync_error_card"
+            android:icon="@drawable/sync_error"
+            android:title="@string/sync_error_card_title"/>
+        <org.chromium.chrome.browser.preferences.ChromeSwitchPreference
+            android:key="sync_requested"
+            android:title="@string/sync_switch_title"
+            android:persistent="false"/>
+
+        <org.chromium.chrome.browser.preferences.ChromeBasePreference
+            android:key="manage_sync"
+            android:title="@string/manage_sync_title"
+            android:fragment="org.chromium.chrome.browser.preferences.ManageSyncPreferences"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="services_category"
+        android:title="@string/services_category_title">
+
+        <org.chromium.chrome.browser.preferences.ChromeSwitchPreference
+            android:key="search_suggestions"
+            android:title="@string/autocomplete_searches_and_urls_title"
+            android:summary="@string/autocomplete_searches_and_urls_summary"
+            android:persistent="false"/>
+        <org.chromium.chrome.browser.preferences.ChromeSwitchPreference
+            android:key="network_predictions"
+            android:title="@string/preload_pages_title"
+            android:summary="@string/preload_pages_summary"
+            android:persistent="false"/>
+        <org.chromium.chrome.browser.preferences.ChromeSwitchPreference
+            android:key="navigation_error"
+            android:title="@string/navigation_error_suggestions_title"
+            android:summary="@string/navigation_error_suggestions_summary"
+            android:persistent="false"/>
+        <org.chromium.chrome.browser.preferences.ChromeSwitchPreference
+            android:key="safe_browsing"
+            android:title="@string/safe_browsing_title"
+            android:summary="@string/safe_browsing_summary"
+            android:persistent="false"/>
+        <org.chromium.chrome.browser.preferences.ChromeSwitchPreference
+            android:key="safe_browsing_scout_reporting"
+            android:title="@string/safe_browsing_scout_reporting_title"
+            android:summary="@string/safe_browsing_scout_reporting_summary"
+            android:persistent="false"/>
+        <org.chromium.chrome.browser.preferences.ChromeSwitchPreference
+            android:key="usage_and_crash_reports"
+            android:title="@string/usage_and_crash_reports_title"
+            android:summary="@string/usage_and_crash_reports_summary"
+            android:persistent="false"/>
+        <org.chromium.chrome.browser.preferences.ChromeSwitchPreference
+            android:key="url_keyed_anonymized_data"
+            android:title="@string/url_keyed_anonymized_data_title"
+            android:summary="@string/url_keyed_anonymized_data_summary"
+            android:persistent="false"/>
+        <org.chromium.chrome.browser.preferences.ChromeBasePreference
+            android:key="contextual_search"
+            android:title="@string/contextual_search_title"
+            android:fragment="org.chromium.chrome.browser.preferences.privacy.ContextualSearchPreferenceFragment"/>
+        <Preference
+            android:key="contextual_suggestions"
+            android:title="@string/prefs_contextual_suggestions"
+            android:fragment="org.chromium.chrome.browser.preferences.ContextualSuggestionsPreference"/>
+    </PreferenceCategory>
+</PreferenceScreen>

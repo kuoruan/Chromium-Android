@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copyright 2018 The Feed Authors.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/zero_state_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ProgressBar
+        android:id="@+id/loading_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminateTintMode="src_atop"
+        android:indeterminateTint="@color/google_blue_500" />
+    <RelativeLayout
+        android:id="@+id/zero_state"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/snippets_padding">
+
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="@dimen/zero_state_image_length"
+            android:layout_height="@dimen/zero_state_image_length"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/zero_state_image_margin_top"
+            android:layout_marginBottom="@dimen/zero_state_image_margin_bottom"
+            android:layout_marginStart="@dimen/zero_state_image_margin_side"
+            android:layout_marginEnd="@dimen/zero_state_image_margin_side"
+            android:contentDescription="@null"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ntp_all_dismissed_white" />
+
+        <TextView
+            android:id="@+id/title_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/image"
+            android:layout_alignParentStart="true"
+            android:layout_marginBottom="@dimen/zero_state_title_margin_bottom"
+            android:gravity="center_horizontal"
+            android:text="@string/no_suggestions"
+            android:textAppearance="@style/FeedBlackTitle1"/>
+
+        <TextView
+            android:id="@+id/body_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/title_text"
+            android:layout_alignParentStart="true"
+            android:gravity="center_horizontal"
+            android:text="@string/zero_state_text_morning"
+            android:textSize="@dimen/text_size_medium"
+            android:textColor="@color/feed_default_text_color_secondary"/>
+
+        <Button
+            android:id="@+id/action_button"
+            style="@style/FeedSuggestionCardAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/body_text"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/zero_state_button_margin_top"
+            android:text="@string/feed_refresh" />
+
+    </RelativeLayout>
+</FrameLayout>

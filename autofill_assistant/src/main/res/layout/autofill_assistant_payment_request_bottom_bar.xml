@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2018 The Chromium Authors. All rights reserved.
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file. -->
+
+<!-- Autofill Assistant specific bottom of the payment request UI. -->
+<org.chromium.chrome.browser.autofill_assistant.payment.PaymentRequestBottomBar
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bottom_bar"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:paddingTop="@dimen/editor_dialog_section_large_spacing"
+    android:background="@android:color/white"
+    android:gravity="end"
+    android:orientation="horizontal"
+    android:visibility="gone" >
+
+    <org.chromium.ui.widget.ButtonCompat
+        android:id="@+id/button_primary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="36dp"
+        android:text="@string/next"
+        style="@style/FilledButton.Flat" />
+</org.chromium.chrome.browser.autofill_assistant.payment.PaymentRequestBottomBar>
