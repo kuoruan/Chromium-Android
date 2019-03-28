@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply from: "$rootDir/gradle/android-lint.gradle"
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -8,7 +9,6 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
@@ -16,18 +16,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    lintOptions {
-        abortOnError false
-        ignoreWarnings true
-        disable 'MissingTranslation'
-    }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':components:components_base')
     implementation project(':ui')
-    androidTestImplementation "com.android.support.test:runner:$rootProject.ext.runnerVersion"
-    androidTestImplementation "com.android.support.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
-    testImplementation "junit:junit:$rootProject.ext.junitVersion"
 }

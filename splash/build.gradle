@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply from: "$rootDir/gradle/android-lint.gradle"
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -8,9 +9,6 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
-
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
     }
 
     buildTypes {
@@ -24,8 +22,4 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
-    androidTestImplementation "com.android.support.test:runner:$rootProject.ext.runnerVersion"
-    androidTestImplementation "com.android.support.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
-    testImplementation "junit:junit:$rootProject.ext.junitVersion"
 }

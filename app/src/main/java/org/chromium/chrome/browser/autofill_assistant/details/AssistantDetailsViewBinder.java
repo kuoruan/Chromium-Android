@@ -47,7 +47,7 @@ import java.util.Set;
  */
 class AssistantDetailsViewBinder
         implements PropertyModelChangeProcessor.ViewBinder<AssistantDetailsModel,
-                AssistantDetailsViewBinder.ViewHolder, PropertyKey> {
+        AssistantDetailsViewBinder.ViewHolder, PropertyKey> {
     private static final int IMAGE_BORDER_RADIUS = 4;
     private static final int PULSING_DURATION_MS = 1_000;
     private static final String DETAILS_TIME_FORMAT = "H:mma";

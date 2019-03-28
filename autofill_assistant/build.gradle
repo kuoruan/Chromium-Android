@@ -1,53 +1,48 @@
 apply plugin: 'com.android.library'
+apply from: "$rootDir/gradle/android-lint.gradle"
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
-
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
-
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
         }
     }
-
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
     sourceSets {
         main {
             res {
-                srcDirs = [
-                        "src/main/res",
-                        "${rootProject.projectDir}/res_base",
-                ]
-                excludes = [
+                srcDirs += [
+                        "$rootDir/base_res",
                 ]
             }
         }
     }
+}
 
-    lintOptions {
-        abortOnError false
-        ignoreWarnings true
-        disable 'MissingTranslation'
-    }
+afterEvaluate {
+    project ->
+        project.tasks.verifyReleaseResources {
+            onlyIf {
+                println 'Skipping...'
+                return false
+            }
+        }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "com.android.support:appcompat-v7:$rootProject.ext.supportLibraryVersion"
     implementation project(':components:components_base')
     implementation project(':ui')
-    androidTestImplementation "com.android.support.test:runner:$rootProject.ext.runnerVersion"
-    androidTestImplementation "com.android.support.test.espresso:espresso-core:$rootProject.ext.espressoVersion"
-    testImplementation "junit:junit:$rootProject.ext.junitVersion"
 }
