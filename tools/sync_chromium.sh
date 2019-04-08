@@ -30,6 +30,7 @@ sync_components() {
 		${components}/dom_distiller/content/browser/android/java/src/* \
 		${components}/dom_distiller/core/android/java/src/* \
 		${components}/download/internal/background_service/android/java/src/* \
+		${components}/download/network/android/java/src/* \
 		${components}/embedder_support/android/java/src/* \
 		${components}/feature_engagement/internal/android/java/src/* \
 		${components}/feature_engagement/public/android/java/src/* \
@@ -39,8 +40,11 @@ sync_components() {
 		${components}/language/android/java/src/* \
 		${components}/location/android/java/src/* \
 		${components}/minidump_uploader/android/java/src/* \
+		${components}/module_installer/android/java/src-common/* \
+		${components}/module_installer/android/java/src-impl/* \
 		${components}/navigation_interception/android/java/src/* \
 		${components}/offline_items_collection/core/android/java/src/* \
+		${components}/omnibox/browser/android/java/src/* \
 		${components}/payments/content/android/java/src/* \
 		${components}/policy/android/java/src/* \
 		${components}/safe_browsing/android/java/src/* \
@@ -52,6 +56,9 @@ sync_components() {
 		${components}/version_info/android/java/src/* \
 		${components}/viz/service/java/src/* \
 		${components}/web_restrictions/browser/java/src/* \
+		"${APP_DIR}/src/main/java"
+
+	cp -r ${RELEASE_DIR}/gen/components/version_info/android/java/* \
 		"${APP_DIR}/src/main/java"
 
 	cp -r ${components}/autofill/android/java/res/* \
@@ -110,10 +117,17 @@ sync_media() {
 }
 
 sync_download() {
-        mkdir -p ${MODULES_DIR}/download/src/main/res/{drawable,layout}
+        mkdir -p ${MODULES_DIR}/download/src/main/res
 
 	cp -r ${BASE_DIR}/chrome/android/java/res_download/* \
 		"${MODULES_DIR}/download/src/main/res"
+}
+
+sync_autofill_assistant() {
+	mkdir -p ${MODULES_DIR}/autofill_assistant/src/main/res
+
+	cp -r ${BASE_DIR}/chrome/android/java/res_autofill_assistant/* \
+		"${MODULES_DIR}/autofill_assistant/src/main/res"
 }
 
 sync_customtabs() {
@@ -131,6 +145,25 @@ sync_splash() {
 
        cp -r ${BASE_DIR}/chrome/android/webapk/libs/common/res_splash/* \
 	       "${MODULES_DIR}/splash/src/main/res"
+}
+
+sync_feed() {
+	mkdir -p ${MODULES_DIR}/feed/{shared_res,shared_public_res,basic_res,basic_view_res,piet_res}
+
+	cp -r ${BASE_DIR}/third_party/feed/src/src/main/java/com/google/android/libraries/feed/sharedstream/res/* \
+	"${MODULES_DIR}/feed/shared_res"
+
+	cp -r ${BASE_DIR}/third_party/feed/src/src/main/java/com/google/android/libraries/feed/sharedstream/publicapi/menumeasurer/res/* \
+	"${MODULES_DIR}/feed/shared_public_res"
+
+	cp -r ${BASE_DIR}/third_party/feed/src/src/main/java/com/google/android/libraries/feed/basicstream/res/* \
+	"${MODULES_DIR}/feed/basic_res"
+
+	cp -r ${BASE_DIR}/third_party/feed/src/src/main/java/com/google/android/libraries/feed/basicstream/internal/viewholders/res/* \
+	"${MODULES_DIR}/feed/basic_view_res"
+
+	cp -r ${BASE_DIR}/third_party/feed/src/src/main/java/com/google/android/libraries/feed/piet/res/* \
+	"${MODULES_DIR}/feed/piet_res"
 }
 
 sync_aidl() {
@@ -181,6 +214,7 @@ sync_chrome() {
 		${BASE_DIR}/services/device/time_zone_monitor/android/java/src/* \
 		${BASE_DIR}/services/device/vibration/android/java/src/* \
 		${BASE_DIR}/services/device/wake_lock/power_save_blocker/android/java/src/* \
+		${BASE_DIR}/services/media_session/public/cpp/android/java/src/* \
 		${BASE_DIR}/services/service_manager/public/java/src/* \
 		${BASE_DIR}/services/shape_detection/android/java/src/* \
 		${BASE_DIR}/third_party/android_protobuf/src/java/src/device/main/java/* \
@@ -195,6 +229,9 @@ sync_chrome() {
 
 	cp -r ${RELEASE_DIR}/gradle/chrome/android/chrome_public_apk/extracted-srcjars/* \
 		"$src_dir"
+
+	cp -r ${RELEASE_DIR}/gen/chrome/android/templates/org/* \
+		"$src_dir/org"
 
 	mkdir -p ${PRO_DIR}/res_base
 
@@ -222,6 +259,7 @@ sync_chrome() {
 		${RELEASE_DIR}/gen/chrome/android/chrome_java/generated_java/* \
 		${RELEASE_DIR}/gen/base/base_build_config_gen/java_cpp_template/* \
 		${RELEASE_DIR}/gen/net/android/net_errors_java/java_cpp_template/* \
+		${RELEASE_DIR}/gen/base/base_java/generated_java/* \
 		"$src_dir"
 }
 
@@ -230,22 +268,23 @@ sync_assets() {
 	mkdir -p "$asset_dir"
 	mkdir -p "${asset_dir}/locales"
 
-	cp ${RELEASE_DIR}/*.pak \
-		${RELEASE_DIR}/*.dat \
+	cp ${RELEASE_DIR}/*.dat \
 		${RELEASE_DIR}/natives_blob.bin \
+		${RELEASE_DIR}/gen/chrome/android/chrome_apk_paks/*.pak \
 		${RELEASE_DIR}/gen/chrome/android/chrome_public_apk_unwind_assets/* \
 		"$asset_dir"
 
-	cp ${RELEASE_DIR}/locales/{en-US,zh-CN,zh-TW}.pak \
+	cp ${RELEASE_DIR}/gen/chrome/android/chrome_apk_paks/locales/{en-US,zh-CN,zh-TW}.pak \
 		"${asset_dir}/locales"
 	cp ${RELEASE_DIR}/snapshot_blob.bin "$asset_dir"/snapshot_blob_32.bin
 }
 
 sync_libs() {
-	local lib="${APP_DIR}/libs"
-	mkdir -p "${lib}"
+	mkdir -p "${APP_DIR}/libs"
 
-	cp ${RELEASE_DIR}/lib.java/third_party/android_tools/gcm.jar "$lib"
+	cp ${BASE_DIR}/third_party/google_android_play_core/*.aar \
+		${RELEASE_DIR}/lib.java/third_party/android_tools/gcm.jar \
+		"${APP_DIR}/libs"
 }
 
 sync_jniLibs() {
@@ -312,6 +351,8 @@ do_sync() {
 	sync_customtabs
 	sync_download
 	sync_splash
+	sync_autofill_assistant
+	sync_feed
 	sync_aidl
 
 	sync_assets
